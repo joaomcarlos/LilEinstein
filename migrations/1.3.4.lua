@@ -1,0 +1,1 @@
+-- Rerequest all translations for all players

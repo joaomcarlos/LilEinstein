@@ -1,0 +1,6 @@
+-- data:extend({
+--    type = "bool-setting",
+--    name = "lil_einstein-player_use-manual-character-mapping",
+--    setting_type = "runtime-per-user",
+--    default_value = false
+-- })
