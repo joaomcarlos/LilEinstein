@@ -1,10 +1,25 @@
 -- Magic numbers
-local outer_gui_height = 800
-local left_frame_width = 450
-local right_bottomleft_frame_width = 250
-local right_bottomright_frame_width = 400
+local ui_slices = require("lib.ui_slices")
+local outer_gui_height = 941
+local left_frame_width = 552
+local right_bottomleft_frame_width = 382
+local right_bottomright_frame_width = 660
 local tab_width = (left_frame_width) / 2 -- TODO: Update when adding more tabs
 local tab_left_padding = (tab_width - 64) / 2
+
+local slice_graphical_set = function(key, fallback_width, fallback_height)
+    local slice = ui_slices.by_key[key]
+    if not slice then
+        return nil
+    end
+    return {
+        base = {
+            filename = slice.file,
+            width = slice.w or fallback_width,
+            height = slice.h or fallback_height
+        }
+    }
+end
 
 ---------------------------------------------------------------------------------------------------
 --- Main skeleton components
@@ -86,10 +101,11 @@ data.raw["gui-style"].default["lil_einstein_vflow_leftpadded"] = {
 -- Top level frame
 data.raw["gui-style"].default["lil_einstein_main_frame"] = {
     type = "frame_style",
-    parent = "frame",
+    graphical_set = slice_graphical_set("window_background_clean", 1672, 941),
     horizontal_flow_style = data.raw["gui-style"].default["lil_einstein_main_flow"],
-    horizontally_stretchable = "on",
-    -- width = 1200,
+    vertical_flow_style = data.raw["gui-style"].default["lil_einstein_vertical_flow_nospacing"],
+    padding = 0,
+    width = 1672,
     height = outer_gui_height
 }
 
@@ -122,11 +138,12 @@ data.raw["gui-style"].default["lil_einstein_vertical_shallow_frame"] = {
 data.raw["gui-style"].default["lil_einstein_vertical_scroll_pane"] = {
     type = "scroll_pane_style",
     parent = "scroll_pane",
+    graphical_set = {},
     horizontally_stretchable = "on",
     extra_padding_when_activated = 0,
-    padding = 4,
-    right_margin = 12,
-    always_draw_borders = true,
+    padding = 0,
+    right_margin = 0,
+    always_draw_borders = false,
     vertically_stretchable = "stretch_and_expand",
     scrollbars_go_outside = true
 }
@@ -143,20 +160,26 @@ data.raw["gui-style"].default["lil_einstein_subheader_frame"] = {
     horizontal_align = "center"
 }
 
-data.raw["gui-style"].default["lil_einstein_brand_frame"] = {
+data.raw["gui-style"].default["lil_einstein_transparent_frame"] = {
     type = "frame_style",
-    parent = "inside_shallow_frame",
-    horizontal_flow_style = data.raw["gui-style"].default["lil_einstein_horizontal_flow_spaced"],
-    horizontally_stretchable = "on",
-    height = 112,
-    padding = 8
+    padding = 0,
+    graphical_set = {}
 }
 
-data.raw["gui-style"].default["lil_einstein_brand_portrait"] = {
+data.raw["gui-style"].default["lil_einstein_brand_frame"] = {
+    type = "frame_style",
+    horizontal_flow_style = data.raw["gui-style"].default["lil_einstein_horizontal_flow_spaced"],
+    width = 755,
+    height = 287,
+    padding = 0,
+    graphical_set = {}
+}
+
+data.raw["gui-style"].default["lil_einstein_hero_panel"] = {
     type = "image_style",
     parent = "image",
-    width = 96,
-    height = 96,
+    width = 755,
+    height = 287,
     horizontally_stretchable = "off",
     vertically_stretchable = "off",
     horizontally_squashable = "off",
@@ -164,17 +187,167 @@ data.raw["gui-style"].default["lil_einstein_brand_portrait"] = {
     stretch_image_to_widget_size = true
 }
 
-data.raw["gui-style"].default["lil_einstein_brand_title_flow"] = {
-    type = "vertical_flow_style",
-    parent = "lil_einstein_vertical_flow",
-    vertical_spacing = 2
+data.raw["gui-style"].default["lil_einstein_top_settings_frame"] = {
+    type = "frame_style",
+    width = 320,
+    height = 143,
+    vertically_stretchable = "off",
+    padding = 12,
+    top_margin = 52,
+    graphical_set = {}
 }
 
-data.raw["gui-style"].default["lil_einstein_brand_subtitle"] = {
-    type = "label_style",
-    parent = "label",
-    font = "default-small",
-    font_color = {0.9, 0.8, 0.55}
+data.raw["gui-style"].default["lil_einstein_lab_frame"] = {
+    type = "frame_style",
+    width = 529,
+    height = 195,
+    padding = 0,
+    graphical_set = {}
+}
+
+data.raw["gui-style"].default["lil_einstein_lab_panel"] = {
+    type = "image_style",
+    parent = "image",
+    width = 550,
+    height = 143,
+    horizontally_stretchable = "off",
+    vertically_stretchable = "off",
+    horizontally_squashable = "off",
+    vertically_squashable = "off",
+    stretch_image_to_widget_size = true
+}
+
+data.raw["gui-style"].default["lil_einstein_footer_frame"] = {
+    type = "frame_style",
+    width = 1672,
+    height = 56,
+    padding = 0,
+    graphical_set = {}
+}
+
+data.raw["gui-style"].default["lil_einstein_footer_panel"] = {
+    type = "image_style",
+    parent = "image",
+    width = 1635,
+    height = 40,
+    horizontally_stretchable = "off",
+    vertically_stretchable = "off",
+    horizontally_squashable = "off",
+    vertically_squashable = "off",
+    stretch_image_to_widget_size = true
+}
+
+data.raw["gui-style"].default["lil_einstein_close_button"] = {
+    type = "button_style",
+    parent = "frame_button",
+    width = 39,
+    height = 39,
+    padding = 0,
+    top_margin = 31
+}
+
+data.raw["gui-style"].default["lil_einstein_border_top"] = {
+    type = "image_style",
+    parent = "image",
+    width = 1672,
+    height = 38,
+    stretch_image_to_widget_size = true
+}
+
+data.raw["gui-style"].default["lil_einstein_border_side"] = {
+    type = "image_style",
+    parent = "image",
+    width = 25,
+    height = 848,
+    stretch_image_to_widget_size = true
+}
+
+data.raw["gui-style"].default["lil_einstein_border_bottom"] = {
+    type = "image_style",
+    parent = "image",
+    width = 1672,
+    height = 55,
+    stretch_image_to_widget_size = true
+}
+
+data.raw["gui-style"].default["lil_einstein_row_background"] = {
+    type = "image_style",
+    parent = "image",
+    width = 525,
+    height = 52,
+    stretch_image_to_widget_size = true
+}
+
+data.raw["gui-style"].default["lil_einstein_tech_row_background"] = {
+    type = "image_style",
+    parent = "image",
+    width = 650,
+    height = 74,
+    stretch_image_to_widget_size = true
+}
+
+data.raw["gui-style"].default["lil_einstein_drag_handle"] = {
+    type = "image_style",
+    parent = "image",
+    width = 32,
+    height = 52,
+    stretch_image_to_widget_size = true
+}
+
+data.raw["gui-style"].default["lil_einstein_row_arrow_button"] = {
+    type = "button_style",
+    parent = "frame_button",
+    width = 30,
+    height = 28,
+    padding = 0
+}
+
+data.raw["gui-style"].default["lil_einstein_radio_button"] = {
+    type = "button_style",
+    parent = "frame_button",
+    width = 14,
+    height = 14,
+    padding = 0
+}
+
+data.raw["gui-style"].default["lil_einstein_science_pack_button"] = {
+    type = "button_style",
+    parent = "slot_button",
+    width = 46,
+    height = 55,
+    padding = 0
+}
+
+data.raw["gui-style"].default["lil_einstein_row_flow"] = {
+    type = "horizontal_flow_style",
+    parent = "lil_einstein_horizontal_flow_nospacing",
+    vertical_align = "center",
+    height = 52
+}
+
+data.raw["gui-style"].default["lil_einstein_tech_row_flow"] = {
+    type = "horizontal_flow_style",
+    parent = "lil_einstein_horizontal_flow_nospacing",
+    vertical_align = "center",
+    height = 74
+}
+
+data.raw["gui-style"].default["lil_einstein_upcoming_row_frame"] = {
+    type = "frame_style",
+    horizontal_flow_style = data.raw["gui-style"].default["lil_einstein_row_flow"],
+    width = 525,
+    height = 52,
+    padding = 0,
+    graphical_set = slice_graphical_set("upcoming_row_bg", 525, 52)
+}
+
+data.raw["gui-style"].default["lil_einstein_available_row_frame"] = {
+    type = "frame_style",
+    horizontal_flow_style = data.raw["gui-style"].default["lil_einstein_tech_row_flow"],
+    width = 650,
+    height = 74,
+    padding = 0,
+    graphical_set = slice_graphical_set("tech_row_bg", 650, 74)
 }
 
 ---------------------------------------------------------------------------------------------------
@@ -183,8 +356,13 @@ data.raw["gui-style"].default["lil_einstein_brand_subtitle"] = {
 ---
 data.raw["gui-style"].default["lil_einstein_main_left_frame"] = {
     type = "frame_style",
-    parent = "lil_einstein_inside_deep_frame",
-    width = left_frame_width
+    width = 558,
+    height = 598,
+    top_padding = 10,
+    left_padding = 36,
+    right_padding = 0,
+    bottom_padding = 0,
+    graphical_set = {}
 }
 
 data.raw["gui-style"].default["lil_einstein_tabbed_pane_frame"] = {
@@ -266,21 +444,33 @@ data.raw["gui-style"].default["lil_einstein_main_right_flow"] = {
 -- Top frame
 data.raw["gui-style"].default["lil_einstein_allowed_science_frame"] = {
     type = "frame_style",
-    parent = "inside_deep_frame",
-    horizontally_stretchable = "on",
-    vertically_stretchable = "off"
+    width = 891,
+    height = 74,
+    vertically_stretchable = "off",
+    padding = 8,
+    graphical_set = {}
 }
 -- Bottom left frame
 data.raw["gui-style"].default["lil_einstein_filter_frame"] = {
     type = "frame_style",
-    parent = "lil_einstein_vertical_shallow_frame",
-    width = right_bottomleft_frame_width
+    width = 395,
+    height = 598,
+    top_padding = 12,
+    left_padding = 17,
+    right_padding = 0,
+    bottom_padding = 0,
+    graphical_set = {}
 }
 -- Bottom right frame
 data.raw["gui-style"].default["lil_einstein_technology_frame"] = {
     type = "frame_style",
-    parent = "lil_einstein_inside_deep_frame",
-    width = right_bottomright_frame_width
+    width = 693,
+    height = 598,
+    top_padding = 12,
+    left_padding = 20,
+    right_padding = 0,
+    bottom_padding = 0,
+    graphical_set = {}
 }
 
 -- Content
@@ -296,7 +486,7 @@ data.raw["gui-style"].default["lil_einstein_technology_table"] = {
 
 data.raw["gui-style"].default["lil_einstein_button"] = {
     type = "button_style",
-    parent = "frame_button",
+    parent = "slot_button",
     font = "heading-2",
     default_font_color = {0.9, 0.9, 0.9},
     minimal_width = 0,
@@ -305,11 +495,96 @@ data.raw["gui-style"].default["lil_einstein_button"] = {
     left_padding = 8
 }
 
+data.raw["gui-style"].default["lil_einstein_allowed_button_all"] = {
+    type = "button_style",
+    parent = "lil_einstein_button",
+    width = 55,
+    height = 27,
+    padding = 0,
+    default_graphical_set = slice_graphical_set("allowed_button_all", 55, 27),
+    hovered_graphical_set = slice_graphical_set("allowed_button_all", 55, 27),
+    clicked_graphical_set = slice_graphical_set("allowed_button_all", 55, 27)
+}
+
+data.raw["gui-style"].default["lil_einstein_allowed_button_none"] = {
+    type = "button_style",
+    parent = "lil_einstein_button",
+    width = 58,
+    height = 27,
+    padding = 0,
+    default_graphical_set = slice_graphical_set("allowed_button_none", 58, 27),
+    hovered_graphical_set = slice_graphical_set("allowed_button_none", 58, 27),
+    clicked_graphical_set = slice_graphical_set("allowed_button_none", 58, 27)
+}
+
+data.raw["gui-style"].default["lil_einstein_allowed_button_produced"] = {
+    type = "button_style",
+    parent = "lil_einstein_button",
+    width = 75,
+    height = 27,
+    padding = 0,
+    default_graphical_set = slice_graphical_set("allowed_button_produced", 75, 27),
+    hovered_graphical_set = slice_graphical_set("allowed_button_produced", 75, 27),
+    clicked_graphical_set = slice_graphical_set("allowed_button_produced", 75, 27)
+}
+
+data.raw["gui-style"].default["lil_einstein_allowed_button_invert"] = {
+    type = "button_style",
+    parent = "lil_einstein_button",
+    width = 66,
+    height = 27,
+    padding = 0,
+    default_graphical_set = slice_graphical_set("allowed_button_invert", 66, 27),
+    hovered_graphical_set = slice_graphical_set("allowed_button_invert", 66, 27),
+    clicked_graphical_set = slice_graphical_set("allowed_button_invert", 66, 27)
+}
+
+data.raw["gui-style"].default["lil_einstein_upcoming_header_frame"] = {
+    type = "frame_style",
+    parent = "lil_einstein_subheader_frame",
+    width = 525,
+    height = 36,
+    top_padding = 6,
+    right_padding = 6,
+    bottom_padding = 6,
+    left_padding = 36,
+    horizontal_align = "left",
+    graphical_set = {}
+}
+
+data.raw["gui-style"].default["lil_einstein_filter_header_frame"] = {
+    type = "frame_style",
+    parent = "lil_einstein_subheader_frame",
+    width = 361,
+    height = 36,
+    padding = 6,
+    horizontal_align = "left",
+    graphical_set = {}
+}
+
+data.raw["gui-style"].default["lil_einstein_tech_header_frame"] = {
+    type = "frame_style",
+    parent = "lil_einstein_subheader_frame",
+    width = 647,
+    height = 36,
+    padding = 6,
+    horizontal_align = "left",
+    graphical_set = {}
+}
+
 data.raw["gui-style"].default["lil_einstein_icon_button"] = {
     type = "button_style",
     parent = "lil_einstein_button",
     width = 24,
     height = 24,
+    padding = 0
+}
+
+data.raw["gui-style"].default["lil_einstein_enable_switch_button"] = {
+    type = "button_style",
+    parent = "lil_einstein_icon_button",
+    width = 35,
+    height = 19,
     padding = 0
 }
 

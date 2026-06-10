@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>LilEinstein Mockup Slice Audit</title>
+  <style>
+    body {
+      margin: 0;
+      background: #111;
+      color: #ddd;
+      font: 13px Consolas, monospace;
+    }
+    .toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      padding: 8px 12px;
+      background: #202020;
+      border-bottom: 1px solid #555;
+    }
+    .stage {
+      position: relative;
+      width: 1672px;
+      height: 941px;
+      margin: 16px;
+      background: #000;
+      outline: 1px solid #555;
+    }
+    .reference,
+    .slice {
+      position: absolute;
+      image-rendering: auto;
+      user-select: none;
+      pointer-events: none;
+    }
+    .reference {
+      left: 0;
+      top: 0;
+      width: 1672px;
+      height: 941px;
+      opacity: 0.35;
+    }
+    .slice {
+      opacity: 0.85;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <strong>LilEinstein slice audit</strong>
+    <label>Reference opacity <input id="refOpacity" type="range" min="0" max="1" step="0.05" value="0.35"></label>
+    <label>Slice opacity <input id="sliceOpacity" type="range" min="0" max="1" step="0.05" value="0.85"></label>
+    <label><input id="showRef" type="checkbox" checked> reference</label>
+    <label><input id="showSlices" type="checkbox" checked> slices</label>
+  </div>
+  <div class="stage" id="stage">
+    <img class="reference" id="reference" src="mockup-reference.png" alt="">
+  </div>
+  <script>
+    const slices = [
+      ["chrome_top_full", 0, 0, 1672, 38],
+      ["chrome_left_full", 0, 38, 25, 848],
+      ["chrome_right_full", 1647, 38, 25, 848],
+      ["chrome_bottom_full", 0, 886, 1672, 55],
+      ["hero_panel", 20, 45, 725, 235],
+      ["settings_panel_bg", 755, 52, 320, 143],
+      ["enable_switch_on", 770, 66, 35, 19],
+      ["checkbox_on", 772, 107, 17, 17],
+      ["checkbox_on", 772, 133, 17, 17],
+      ["number_input_bg", 971, 157, 45, 26],
+      ["stepper_left", 1016, 157, 21, 26],
+      ["stepper_right", 1038, 157, 21, 26],
+      ["lab_panel", 1100, 52, 550, 143],
+      ["allowed_panel_bg", 755, 195, 895, 92],
+      ["button_all", 1360, 202, 53, 27],
+      ["button_none", 1418, 202, 58, 27],
+      ["button_produced", 1481, 202, 72, 27],
+      ["button_invert", 1558, 202, 62, 27],
+      ["science_slot_bg", 768, 229, 46, 55],
+      ["science_slot_bg", 828, 229, 46, 55],
+      ["science_slot_bg", 889, 229, 46, 55],
+      ["science_slot_bg", 949, 229, 46, 55],
+      ["science_slot_bg", 1010, 229, 46, 55],
+      ["science_slot_bg", 1070, 229, 46, 55],
+      ["science_slot_bg", 1130, 229, 46, 55],
+      ["science_slot_bg", 1191, 229, 46, 55],
+      ["science_slot_bg", 1251, 229, 46, 55],
+      ["science_slot_bg", 1312, 229, 46, 55],
+      ["science_slot_bg", 1373, 229, 46, 55],
+      ["science_slot_bg", 1433, 229, 46, 55],
+      ["upcoming_panel_bg", 29, 286, 528, 590],
+      ["upcoming_header", 31, 297, 525, 36],
+      ["upcoming_row_bg", 31, 338, 525, 52],
+      ["upcoming_row_bg", 31, 390, 525, 52],
+      ["upcoming_row_bg", 31, 442, 525, 52],
+      ["upcoming_row_bg", 31, 494, 525, 52],
+      ["upcoming_row_bg", 31, 546, 525, 52],
+      ["drag_handle", 528, 349, 22, 32],
+      ["drag_handle", 528, 401, 22, 32],
+      ["drag_handle", 528, 453, 22, 32],
+      ["drag_handle", 528, 505, 22, 32],
+      ["drag_handle", 528, 557, 22, 32],
+      ["filter_panel_bg", 573, 286, 382, 590],
+      ["filter_header", 585, 303, 190, 25],
+      ["filter_search_button", 884, 297, 51, 28],
+      ["checkbox_on", 590, 336, 17, 17],
+      ["checkbox_off", 590, 360, 17, 17],
+      ["checkbox_off", 590, 384, 17, 17],
+      ["checkbox_off", 590, 408, 17, 17],
+      ["checkbox_off", 590, 432, 17, 17],
+      ["checkbox_off", 590, 456, 17, 17],
+      ["radio_on", 586, 500, 14, 14],
+      ["radio_off", 586, 524, 14, 14],
+      ["radio_off", 586, 548, 14, 14],
+      ["radio_off", 586, 572, 14, 14],
+      ["radio_off", 586, 596, 14, 14],
+      ["tech_panel_bg", 965, 286, 660, 590],
+      ["tech_header", 984, 303, 205, 25],
+      ["tech_search_box", 1379, 298, 213, 27],
+      ["tech_search_button", 1593, 298, 27, 27],
+      ["tech_row_bg", 965, 337, 650, 74],
+      ["tech_row_bg", 965, 411, 650, 74],
+      ["tech_row_bg", 965, 485, 650, 74],
+      ["tech_row_bg", 965, 559, 650, 74],
+      ["tech_row_bg", 965, 633, 650, 74],
+      ["tech_switch_on", 1518, 362, 35, 19],
+      ["row_arrow_up", 1568, 348, 30, 28],
+      ["row_arrow_down", 1568, 376, 30, 28],
+      ["row_scrollbar_thumb", 1609, 332, 14, 355],
+      ["footer", 18, 901, 1635, 40]
+    ];
+    const stage = document.getElementById("stage");
+    const sliceEls = [];
+    for (const [name, x, y, w, h] of slices) {
+      const img = document.createElement("img");
+      img.className = "slice";
+      img.src = `../graphics/ui/mockup_${name}.png`;
+      img.style.left = `${x}px`;
+      img.style.top = `${y}px`;
+      img.style.width = `${w}px`;
+      img.style.height = `${h}px`;
+      img.title = `${name} ${x},${y} ${w}x${h}`;
+      stage.appendChild(img);
+      sliceEls.push(img);
+    }
+    refOpacity.oninput = () => reference.style.opacity = refOpacity.value;
+    sliceOpacity.oninput = () => sliceEls.forEach(el => el.style.opacity = sliceOpacity.value);
+    showRef.onchange = () => reference.classList.toggle("hidden", !showRef.checked);
+    showSlices.onchange = () => sliceEls.forEach(el => el.classList.toggle("hidden", !showSlices.checked));
+  </script>
+</body>
+</html>

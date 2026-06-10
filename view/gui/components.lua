@@ -146,13 +146,14 @@ local populate_science_filters = function(player_index, anchor)
             type = "flow",
             direction = "vertical"
         })
-        container.style.width = 36
+        container.style.width = 46
         container.style.horizontal_align = "center"
 
         local count = science_counts[s] or 0
         local sprop = {
             type = "sprite-button",
-            sprite = "item/" .. s,
+            style = "lil_einstein_science_pack_button",
+            sprite = "lil_einstein_mockup_science_slot_bg",
             toggled = state.get_player_setting(player_index, "allowed_" .. s, false),
             tooltip = {"item-name." .. s},
             tags = {
@@ -162,8 +163,16 @@ local populate_science_filters = function(player_index, anchor)
             }
         }
         local btn = container.add(sprop)
-        btn.style.width = 36
-        btn.style.height = 36
+        btn.style.width = 46
+        btn.style.height = 55
+        local science_icon = container.add({
+            type = "sprite",
+            sprite = "item/" .. s,
+            tooltip = {"item-name." .. s},
+            ignored_by_interaction = true
+        })
+        science_icon.style.size = 28
+        science_icon.style.top_margin = -48
 
         if count > 0 then
             local count_label = container.add({
@@ -171,9 +180,9 @@ local populate_science_filters = function(player_index, anchor)
                 caption = gutil.format_cost(count),
                 ignored_by_interaction = true
             })
-            count_label.style.width = 36
-            count_label.style.horizontal_align = "right"
-            count_label.style.top_margin = -16
+            count_label.style.width = 44
+            count_label.style.horizontal_align = "center"
+            count_label.style.top_margin = -6
             count_label.style.font = "default-small"
             count_label.style.font_color = {r = 1, g = 1, b = 1}
         end
@@ -181,11 +190,11 @@ local populate_science_filters = function(player_index, anchor)
 
     -- Dynamically adjust height based on number of sciences
     local sp = gutil.get_child(anchor, "sci_scroll")
-    sp.style.height = 48
+    sp.style.height = 55
     if #sci > 14 and #sci <= 28 then
-        sp.style.height = 92
+        sp.style.height = 110
     elseif #sci > 28 then
-        sp.style.height = 136
+        sp.style.height = 165
     end
 end
 
@@ -215,28 +224,54 @@ local populate_show_categories = function(player_index, anchor)
     local setting = "show_tech_filter_category"
     local selected = state.get_player_setting(player_index, setting, const.default_settings.player.show_tech.selected)
     for k, v in pairs(const.categories) do
+        local row = flow.add({
+            type = "flow",
+            direction = "horizontal",
+            style = "lil_einstein_horizontal_flow_nospacing"
+        })
+        row.style.height = 23
         local prop = {
-            type = "radiobutton",
+            type = "sprite-button",
             name = k,
-            caption = {"lil_einstein-filter-category." .. k},
-            state = k == selected,
+            style = "lil_einstein_radio_button",
+            sprite = k == selected and "lil_einstein_mockup_radio_on" or "lil_einstein_mockup_radio_off",
+            hovered_sprite = k == selected and "lil_einstein_mockup_radio_on" or "lil_einstein_mockup_radio_off",
+            clicked_sprite = k == selected and "lil_einstein_mockup_radio_on" or "lil_einstein_mockup_radio_off",
             tags = {
-                lil_einstein_on_state_change = true,
+                lil_einstein_on_click = true,
                 handler = "toggle_radiobutton_player",
-                setting_name = setting
+                setting_name = setting,
+                value = k
             }
         }
-        flow.add(prop)
+        row.add(prop)
+        local label = row.add({
+            type = "label",
+            caption = {"lil_einstein-filter-category." .. k},
+            tags = {
+                lil_einstein_on_click = true,
+                handler = "toggle_radiobutton_player",
+                setting_name = setting,
+                value = k
+            }
+        })
+        label.style.left_margin = 6
     end
 end
 
 local set_master_enable = function(player_index, anchor)
     -- Get player and force
     local p = game.get_player(player_index)
+    if not p then
+        return
+    end
     local f = p.force
 
     -- Get the master switch
     local sw = gutil.get_child(anchor, "master_enable")
+    if not sw then
+        return
+    end
 
     -- Get the state from storage or default settings
     local st = state.get_force_setting(f.index, "master_enable")
@@ -245,7 +280,21 @@ local set_master_enable = function(player_index, anchor)
     end
 
     -- Set the state
-    sw.switch_state = st
+    if sw.type == "switch" then
+        sw.switch_state = st
+    else
+        if st == "left" then
+            sw.sprite = "lil_einstein_mockup_enable_switch_off"
+            sw.hovered_sprite = "lil_einstein_mockup_enable_switch_off"
+            sw.clicked_sprite = "lil_einstein_mockup_enable_switch_off"
+            sw.toggled = false
+        else
+            sw.sprite = "lil_einstein_mockup_enable_switch_on"
+            sw.hovered_sprite = "lil_einstein_mockup_enable_switch_on"
+            sw.clicked_sprite = "lil_einstein_mockup_enable_switch_on"
+            sw.toggled = true
+        end
+    end
 
     -- Disable/enable the rest of the content based on the state
     -- Forward delcare recursive function
@@ -253,11 +302,15 @@ local set_master_enable = function(player_index, anchor)
     -- The new enabled state for the elements
     local enbl = true
     local lbl = gutil.get_child(anchor, "master_enable_label")
-    lbl.style = "bold_label"
-    lbl.style.font_color = {0.945, 0.745, 0.392}
+    if lbl then
+        lbl.style = "bold_label"
+        lbl.style.font_color = {0.945, 0.745, 0.392}
+    end
     if st == "left" then
         enbl = false
-        lbl.style = "label"
+        if lbl then
+            lbl.style = "label"
+        end
     end
 
     -- Loop through entry point elements
@@ -270,10 +323,14 @@ end
 local update_styles = function(player_index, anchor)
     local lbl
     lbl = gutil.get_child(anchor, "available_tech_lbl")
-    lbl.style.bottom_margin = 4
+    if lbl then
+        lbl.style.bottom_margin = 4
+    end
 
     lbl = gutil.get_child(anchor, "master_enable_flow")
-    lbl.style.top_margin = 24
+    if lbl then
+        lbl.style.top_margin = 24
+    end
     -- lbl.style.bottom_margin = 10
 end
 

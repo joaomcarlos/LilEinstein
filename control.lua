@@ -345,6 +345,9 @@ script.on_event(defines.events.on_gui_click, function(e)
         else
             gui.focus_search(p.index)
         end
+    elseif h == "close" then
+        gui.toggle(p.index)
+        repopulate = false
     elseif h == "master_enable" then
         local st = state.get_force_setting(f.index, "master_enable", const.default_settings.force.master_enable)
         if st == "left" then
@@ -354,6 +357,11 @@ script.on_event(defines.events.on_gui_click, function(e)
         end
         state.set_force_setting(f.index, "master_enable", st)
         state.request_next_research(f)
+    elseif h == "toggle_tech_enabled" then
+        local enabled = queue.get_tech_enabled(f.index, t.technology)
+        queue.set_tech_enabled(f.index, t.technology, not enabled)
+    elseif h == "toggle_radiobutton_player" then
+        state.set_player_setting(p.index, t.setting_name, t.value)
     elseif h == "consecutive_tech_cap_dec" then
         local val = state.get_force_setting(f.index, "consecutive_tech_cap", const.default_settings.force.settings.consecutive_tech_cap)
         val = math.max(1, val - 1)

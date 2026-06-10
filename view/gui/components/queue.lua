@@ -41,10 +41,10 @@ local add_buttons = function(tblq, meta, i, queue)
     end
     fl.add({
         type = "sprite-button",
-        style = "lil_einstein_icon_button",
-        sprite = "lil_einstein_arrow_up_small",
-        hovered_sprite = "lil_einstein_arrow_up_small_black",
-        clicked_sprite = "lil_einstein_arrow_up_small_black",
+        style = "lil_einstein_row_arrow_button",
+        sprite = "lil_einstein_mockup_row_arrow_up",
+        hovered_sprite = "lil_einstein_mockup_row_arrow_up",
+        clicked_sprite = "lil_einstein_mockup_row_arrow_up",
         enabled = enbl,
         tags = {
             lil_einstein_on_click = true,
@@ -63,10 +63,10 @@ local add_buttons = function(tblq, meta, i, queue)
     end
     fl.add({
         type = "sprite-button",
-        style = "lil_einstein_icon_button",
-        sprite = "lil_einstein_arrow_down_small",
-        hovered_sprite = "lil_einstein_arrow_down_small_black",
-        clicked_sprite = "lil_einstein_arrow_down_small_black",
+        style = "lil_einstein_row_arrow_button",
+        sprite = "lil_einstein_mockup_row_arrow_down",
+        hovered_sprite = "lil_einstein_mockup_row_arrow_down",
+        clicked_sprite = "lil_einstein_mockup_row_arrow_down",
         enabled = enbl,
         tags = {
             lil_einstein_on_click = true,

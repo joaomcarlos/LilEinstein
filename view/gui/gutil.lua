@@ -38,7 +38,7 @@ gutil.disenable_recursive = function(elm, enbl)
         elm.enabled = enbl
     end
     for _, c in pairs(elm.children or {}) do
-        if not elm.tags.ignore_enable then
+        if not elm.tags or not elm.tags.ignore_enable then
             gutil.disenable_recursive(c, enbl)
         end
     end
@@ -46,6 +46,9 @@ end
 
 local get_child_recursive
 get_child_recursive = function(parent, target)
+    if not parent then
+        return nil
+    end
     if parent.name == target then
         return parent
     else

@@ -23,6 +23,8 @@ local get_tech_icon = function(techtbl, xcur, enbl, player_index)
         enabled = enbl,
         tooltip = gutil.get_tooltip_text(xcur, player_index)
     })
+    icn.style.width = 74
+    icn.style.height = 74
     if xcur.technology.researched then
         icn.style = "lil_einstein_tech_btn_researched"
     elseif xcur.available and xcur.meta.has_trigger then
@@ -41,12 +43,13 @@ local get_title = function(techtbl, xcur, enbl, player_index, force_index, score
     local tt = gutil.get_tooltip_text(xcur, player_index)
 
     local s = techtbl.add({
-        type = "scroll-pane",
-        style = "lil_einstein_horizontal_tech_name_pane",
+        type = "flow",
+        style = "lil_einstein_horizontal_flow_nospacing",
         direction = "horizontal",
         enabled = enbl
     })
-    s.style.minimal_height = 95
+    s.style.width = 506
+    s.style.height = 74
 
     local n = s.add({
         type = "flow",
@@ -59,6 +62,7 @@ local get_title = function(techtbl, xcur, enbl, player_index, force_index, score
     local name = xcur.technology.localised_name
     local t = n.add({
         type = "flow",
+        style = "lil_einstein_horizontal_flow_nospacing",
         direction = "horizontal",
         enabled = enbl
     })
@@ -67,10 +71,15 @@ local get_title = function(techtbl, xcur, enbl, player_index, force_index, score
 
     local is_enabled = queue.get_tech_enabled(force_index, xcur.technology.name)
     local sw = t.add({
-        type = "switch",
-        switch_state = is_enabled and "right" or "left",
+        type = "sprite-button",
+        style = "lil_einstein_enable_switch_button",
+        sprite = is_enabled and "lil_einstein_mockup_enable_switch_on" or "lil_einstein_mockup_enable_switch_off",
+        hovered_sprite = is_enabled and "lil_einstein_mockup_enable_switch_on" or
+            "lil_einstein_mockup_enable_switch_off",
+        clicked_sprite = is_enabled and "lil_einstein_mockup_enable_switch_on" or
+            "lil_einstein_mockup_enable_switch_off",
         tags = {
-            lil_einstein_on_state_change = true,
+            lil_einstein_on_click = true,
             handler = "toggle_tech_enabled",
             technology = xcur.technology.name
         },
@@ -91,6 +100,7 @@ local get_title = function(techtbl, xcur, enbl, player_index, force_index, score
     end
 
     l.style.left_margin = 5
+    l.style.maximal_width = 360
     local f = n.add({
         type = "flow",
         style = "lil_einstein_horizontal_flow_nospacing",
@@ -205,6 +215,7 @@ local get_title = function(techtbl, xcur, enbl, player_index, force_index, score
     if score_comps then
         local wf = n.add({
             type = "flow",
+            style = "lil_einstein_horizontal_flow_nospacing",
             direction = "horizontal",
             enabled = enbl
         })
@@ -229,6 +240,8 @@ local get_buttons = function(techtbl, xcur, enbl)
         style = "lil_einstein_horizontal_flow_padded",
         enabled = enbl
     })
+    fo.style.width = 70
+    fo.style.horizontal_align = "center"
     local f1 = fo.add({
         type = "flow",
         direction = "vertical",
@@ -236,10 +249,10 @@ local get_buttons = function(techtbl, xcur, enbl)
     })
     f1.add({
         type = "sprite-button",
-        style = "lil_einstein_icon_button",
-        sprite = "lil_einstein_arrow_up_small",
-        hovered_sprite = "lil_einstein_arrow_up_small_black",
-        clicked_sprite = "lil_einstein_arrow_up_small_black",
+        style = "lil_einstein_row_arrow_button",
+        sprite = "lil_einstein_mockup_row_arrow_up",
+        hovered_sprite = "lil_einstein_mockup_row_arrow_up",
+        clicked_sprite = "lil_einstein_mockup_row_arrow_up",
         tags = {
             lil_einstein_on_click = true,
             handler = "move_tech_up",
@@ -249,10 +262,10 @@ local get_buttons = function(techtbl, xcur, enbl)
     })
     f1.add({
         type = "sprite-button",
-        style = "lil_einstein_icon_button",
-        sprite = "lil_einstein_arrow_down_small",
-        hovered_sprite = "lil_einstein_arrow_down_small_black",
-        clicked_sprite = "lil_einstein_arrow_down_small_black",
+        style = "lil_einstein_row_arrow_button",
+        sprite = "lil_einstein_mockup_row_arrow_down",
+        hovered_sprite = "lil_einstein_mockup_row_arrow_down",
+        clicked_sprite = "lil_einstein_mockup_row_arrow_down",
         tags = {
             lil_einstein_on_click = true,
             handler = "move_tech_down",
@@ -338,9 +351,16 @@ gctech.populate = function(player_index, anchor)
 
     -- Render sorted list with score breakdown
     for _, entry in ipairs(scored_techs) do
-        get_tech_icon(techtbl, entry.xcur, enbl, player_index)
-        get_title(techtbl, entry.xcur, enbl, player_index, f.index, entry.score)
-        get_buttons(techtbl, entry.xcur, enbl)
+        local row = techtbl.add({
+            type = "frame",
+            direction = "horizontal",
+            style = "lil_einstein_available_row_frame",
+            enabled = enbl
+        })
+        row.style.width = 650
+        get_tech_icon(row, entry.xcur, enbl, player_index)
+        get_title(row, entry.xcur, enbl, player_index, f.index, entry.score)
+        get_buttons(row, entry.xcur, enbl)
     end
 end
 

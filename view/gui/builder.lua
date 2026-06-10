@@ -9,29 +9,21 @@ local brand_header = {
     type = "frame",
     name = "brand_header",
     style = "lil_einstein_brand_frame",
-    direction = "horizontal",
-    children = {{
-        type = "sprite",
-        name = "brand_portrait",
-        style = "lil_einstein_brand_portrait",
-        sprite = "lil_einstein_portrait_large"
-    }, {
-        type = "flow",
-        name = "brand_title_flow",
-        style = "lil_einstein_brand_title_flow",
-        direction = "vertical",
-        children = {{
-            type = "label",
-            name = "brand_title",
-            style = "heading_1_label",
-            caption = {"lil_einstein-gui.title"}
-        }, {
-            type = "label",
-            name = "brand_subtitle",
-            style = "lil_einstein_brand_subtitle",
-            caption = {"lil_einstein-gui.subtitle"}
-        }}
-    }}
+    direction = "horizontal"
+}
+
+local lab_panel = {
+    type = "frame",
+    name = "lab_panel_frame",
+    style = "lil_einstein_lab_frame",
+    direction = "horizontal"
+}
+
+local footer = {
+    type = "frame",
+    name = "footer_frame",
+    style = "lil_einstein_footer_frame",
+    direction = "horizontal"
 }
 
 local master_enable = {
@@ -41,10 +33,14 @@ local master_enable = {
     style = "lil_einstein_subheader_frame",
     direction = "horizontal",
     children = {{
-        type = "switch",
+        type = "sprite-button",
         name = "master_enable",
+        style = "lil_einstein_enable_switch_button",
+        sprite = "lil_einstein_mockup_enable_switch_off",
+        hovered_sprite = "lil_einstein_mockup_enable_switch_off",
+        clicked_sprite = "lil_einstein_mockup_enable_switch_off",
         tags = {
-            lil_einstein_on_state_change = true,
+            lil_einstein_on_click = true,
             handler = "master_enable"
         }
     }, {
@@ -94,12 +90,12 @@ local generic_settings = {
     type = "frame",
     name = "generic_settings_frame",
     -- style = "lil_einstein_subheader_frame",
-    style = "lil_einstein_allowed_science_frame",
+    style = "lil_einstein_top_settings_frame",
     direction = "vertical",
     children = {master_enable, {
         type = "frame",
         name = "subsettings",
-        style = "lil_einstein_horizontal_shallow_frame",
+        style = "lil_einstein_transparent_frame",
         direction = "vertical",
         -- children = {announcement_level, {
         children = {{
@@ -151,12 +147,12 @@ local queue = {
 -- Upcoming research preview pane
 local upcoming = {
     type = "frame",
-    style = "inside_shallow_frame",
+    style = "lil_einstein_transparent_frame",
     name = "frame_upcoming",
     direction = "vertical",
     children = {{
         type = "frame",
-        style = "lil_einstein_subheader_frame",
+        style = "lil_einstein_upcoming_header_frame",
         direction = "horizontal",
         children = {{
             type = "label",
@@ -187,66 +183,6 @@ local allowed_science = {
     name = "allowed_sciences",
     direction = "vertical",
     children = {{
-        type = "frame",
-        style = "lil_einstein_subheader_frame",
-        direction = "horizontal",
-        children = {{
-            type = "label",
-            style = "heading_2_label",
-            caption = "Allowed sciences"
-        }, {
-            type = "flow",
-            style = "lil_einstein_horizontal_flow_right",
-            children = {{
-                type = "button",
-                style = "lil_einstein_button",
-                caption = "all",
-                tags = {
-                    lil_einstein_on_click = true,
-                    handler = "all_science"
-                }
-            }, {
-                type = "button",
-                style = "lil_einstein_button",
-                caption = "none",
-                tags = {
-                    lil_einstein_on_click = true,
-                    handler = "none_science"
-                }
-            }, {
-                type = "button",
-                style = "lil_einstein_button",
-                caption = "produced",
-                tags = {
-                    lil_einstein_on_click = true,
-                    handler = "produced_science"
-                }
-            }, {
-                type = "button",
-                style = "lil_einstein_button",
-                caption = "invert",
-                tags = {
-                    lil_einstein_on_click = true,
-                    handler = "invert_science"
-                }
-            }} -- TODO: Add unlocked_science button
-        }}
-    }, {
-        -- type = "frame",
-        -- name = "sci_tbl",
-        -- style = "lil_einstein_horizontal_shallow_frame",
-        -- direction = "horizontal",
-        -- children = {{
-        --     type = "scroll-pane",
-        --     name = "sci_scroll",
-        --     direction = "vertical",
-        --     style = "lil_einstein_vertical_scroll_pane",
-        --     children = {{
-        --         type = "table",
-        --         name = "allowed_science_table",
-        --         column_count = 14
-        --     }}
-        -- }}
         type = "scroll-pane",
         name = "sci_scroll",
         direction = "vertical",
@@ -266,9 +202,14 @@ local science_filter = {
     name = "science_filter",
     direction = "vertical",
     children = {{
-        type = "label",
-        caption = "Hide by characteristic",
-        style = "heading_2_label"
+        type = "frame",
+        style = "lil_einstein_filter_header_frame",
+        direction = "horizontal",
+        children = {{
+            type = "label",
+            caption = "Hide by characteristic",
+            style = "heading_2_label"
+        }}
     }, {
         type = "flow",
         name = "hide_tech_flow",
@@ -293,7 +234,7 @@ local science_pane = {
     children = {{
         type = "frame",
         name = "filter_row",
-        style = "lil_einstein_subheader_frame",
+        style = "lil_einstein_tech_header_frame",
         direction = "horizontal",
         children = {{
             type = "label",
@@ -328,13 +269,14 @@ local science_pane = {
         type = "scroll-pane",
         style = "lil_einstein_vertical_scroll_pane",
         name = "available_sciences",
+        direction = "vertical",
         children = {{
-            type = "table",
-            name = "available_technology_table",
-            column_count = 3,
-            tags = {
-                ignore_enable = true
-            }
+        type = "table",
+        name = "available_technology_table",
+        column_count = 1,
+        tags = {
+            ignore_enable = true
+        }
 
         }}
     }}
@@ -348,39 +290,63 @@ local structure = {
     type = "frame",
     style = "lil_einstein_main_frame",
     name = "lil_einstein_gui",
-    caption = "LilEinstein",
-    direction = "horizontal",
+    direction = "vertical",
     children = {{
         type = "flow",
-        style = "lil_einstein_horizontal_flow_spaced",
-        name = "flow",
+        style = "lil_einstein_horizontal_flow_nospacing",
+        name = "top_flow",
+        direction = "horizontal",
+        children = {brand_header, {
+            type = "flow",
+            style = "lil_einstein_vertical_flow_nospacing",
+            name = "top_right",
+            direction = "vertical",
+            children = {{
+                type = "flow",
+                style = "lil_einstein_horizontal_flow_nospacing",
+                name = "top_right_upper",
+                direction = "horizontal",
+                children = {generic_settings, lab_panel, {
+                    type = "sprite-button",
+                    name = "close_button",
+                    style = "lil_einstein_close_button",
+                    sprite = "utility/close",
+                    hovered_sprite = "utility/close",
+                    clicked_sprite = "utility/close",
+                    tags = {
+                        lil_einstein_on_click = true,
+                        handler = "close"
+                    }
+                }}
+            }, allowed_science}
+        }}
+    }, {
+        type = "flow",
+        style = "lil_einstein_horizontal_flow_nospacing",
+        name = "content_flow",
         children = {{
             -- Left frame
             type = "frame",
             style = "lil_einstein_main_left_frame",
-            -- style = "lil_einstein_vertical_flow_spaced",
             name = "left",
             direction = "vertical",
-            children = {brand_header, generic_settings, upcoming}
-        }, {
-            type = "line",
-            direction = "vertical"
+            children = {upcoming}
         }, {
             -- Right frame
             type = "flow",
             -- style = "lil_einstein_main_right_flow",
-            style = "lil_einstein_vertical_flow_spaced",
+            style = "lil_einstein_vertical_flow_nospacing",
             name = "right",
             direction = "vertical",
-            children = {allowed_science, {
+            children = {{
                 type = "flow",
-                style = "lil_einstein_horizontal_flow_spaced",
+                style = "lil_einstein_horizontal_flow_nospacing",
                 name = "science_bottom",
                 direction = "horizontal",
                 children = {science_filter, science_pane}
             }}
         }}
-    }}
+    }, footer}
 }
 
 -- Builder
@@ -432,7 +398,7 @@ builder.build = function(player_index, anchor)
     -- Center the GUI and set as opened
     local main = anchor["lil_einstein_gui"]
     main.auto_center = true
-    main.style.height = 900
+    main.style.height = 941
     player.opened = main
 end
 
