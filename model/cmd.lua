@@ -3,6 +3,7 @@ local state = require("model.state")
 local tech = require("model.tech")
 local queue = require("model.queue")
 local lab = require("model.lab")
+local logger = require("lib.log")
 local gui = require("view.gui")
 
 local cmd = {}
@@ -121,7 +122,7 @@ local test1 = function(command)
 
     -- Reinit
     init()
-    game.print("[LilEinstein] Test 1 complete")
+    logger.log(nil, "Test 1 complete")
 end
 
 local unblock = function(command)
@@ -146,34 +147,27 @@ local unblock = function(command)
             -- Research it if it is available
             if available then
                 t.research_recursive()
-                game.print("[LilEinstein] Unblocked " .. n)
+                logger.log(nil, "Unblocked " .. n)
                 unblocked = unblocked + 1
             end
         end
     end
     if unblocked == 0 then
-        game.print("[LilEinstein] Nothing to unblock")
+        logger.log(nil, "Nothing to unblock")
     end
 end
 
 cmd.register_commands = function()
     commands.add_command("reinit", "Force an init", function(command)
         init(command)
-        game.print("[LilEinstein] (" .. game.tick .. ") Reinit complete")
-        log("(" .. game.tick .. ") Reinit complete")
+        logger.log(nil, "(" .. game.tick .. ") Reinit complete")
     end)
     commands.add_command("dump", "Force an init", function(command)
         local p = game.get_player(command.player_index)
         local f = p.force
-        -- log("===== technology =====")
-        -- log(serpent.block(storage.state.forces[f.index].tech))
-        -- log("===== queue =====")
-        -- log(serpent.block(storage.forces[f.index].queue))
         log("===== lab =====")
-        -- log(serpent.block(storage.lab))
-        -- log(serpent.block(storage.forces[f.index].lab))
         log(serpent.block(lab.get_labs_fill_rate(f.index)))
-        game.print("[LilEinstein] Dump complete, see factorio-current.log")
+        logger.log(nil, "Dump complete, see factorio-current.log")
         log("===== end dump =====")
     end)
     commands.add_command("unblock", "Unblocks all manual trigger tech", function(command)

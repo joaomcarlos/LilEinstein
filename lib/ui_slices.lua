@@ -14,6 +14,8 @@ local slices = {
     { name = "toggle-off",              key = "toggle_off",         file = ui .. "toggle-off.png",         w = 39,   h = 24,  image_w = 39,   image_h = 24 },
     { name = "filter-checkbox-off",     key = "filter_checkbox_off",     file = ui .. "filter-checkbox-off.png",     w = 17,   h = 17,  image_w = 17,   image_h = 17 },
     { name = "filter-checkbox-on",      key = "filter_checkbox_on",      file = ui .. "filter-checkbox-on.png",      w = 17,   h = 17,  image_w = 17,   image_h = 17 },
+    { name = "settings-checkbox-on-1",  key = "settings_checkbox_on_1",  file = ui .. "settings-checkbox-on-1.png",  w = 17,   h = 17,  image_w = 17,   image_h = 17 },
+    { name = "settings-checkbox-on-2",  key = "settings_checkbox_on_2",  file = ui .. "settings-checkbox-on-2.png",  w = 17,   h = 17,  image_w = 17,   image_h = 17 },
     { name = "filter-radio-off",        key = "filter_radio_off",        file = ui .. "filter-radio-off.png",        w = 18,   h = 18,  image_w = 18,   image_h = 18 },
     { name = "filter-radio-on",         key = "filter_radio_on",         file = ui .. "filter-radio-on.png",         w = 18,   h = 18,  image_w = 18,   image_h = 18 },
     { name = "filter-search-button",    key = "filter_search_button",    file = ui .. "filter-search-button.png",    w = 54,   h = 30,  image_w = 54,   image_h = 30 },
@@ -27,6 +29,7 @@ local slices = {
     { name = "tech-scrollbar-thumb",    key = "tech_scrollbar_thumb",    file = ui .. "tech-scrollbar-thumb.png",    w = 14,   h = 355, image_w = 14,   image_h = 355 },
     { name = "tech-search-button",      key = "tech_search_button",      file = ui .. "tech-search-button.png",      w = 29,   h = 28,  image_w = 29,   image_h = 28 },
     { name = "upcoming-drag-handle",    key = "upcoming_drag_handle",    file = ui .. "upcoming-drag-handle.png",    w = 32,   h = 52,  image_w = 32,   image_h = 52 },
+    { name = "upcoming-row-separator",  key = "upcoming_row_separator",  file = ui .. "upcoming-row-separator.png",  w = 525,  h = 74,  image_w = 525,  image_h = 74 },
     { name = "upcoming-row-bg",         key = "upcoming_row_bg",         file = ui .. "mockup_upcoming_row_bg.png",  w = 525,  h = 52,  image_w = 525,  image_h = 52 }
 }
 

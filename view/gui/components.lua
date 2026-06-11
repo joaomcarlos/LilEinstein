@@ -1,4 +1,5 @@
 local const = require("lib.const")
+local logger = require("lib.log")
 local util = require("lib.util")
 local state = require("model.state")
 local tech = require("model.tech")
@@ -10,6 +11,122 @@ local gctech = require("view.gui.components.tech")
 local gcupcoming = require("view.gui.components.upcoming")
 
 local content = {}
+local ordered_force_settings = {"requeue_infinite_tech", "auto_research"}
+
+local get_science_tooltip = function(player_index, force_index, science, total_count)
+    local item_name = state.get_translation(player_index, "item", science, "localised_name") or science
+    local detail = queue.get_science_count_breakdown(force_index, science)
+    local networks = {}
+    for _, item in pairs(detail.networks or {}) do
+        table.insert(networks, item)
+    end
+    table.sort(networks, function(a, b)
+        if a.count == b.count then
+            return a.label < b.label
+        end
+        return a.count > b.count
+    end)
+
+    local tt = "[font=heading-2]" .. tostring(item_name) .. "[/font]\n" ..
+                   "Total: " .. gutil.format_cost(total_count or 0) .. "\n" ..
+                   "In labs: " .. gutil.format_cost(detail.lab_count or 0) .. " in " ..
+                   tostring(detail.lab_entity_count or 0) .. " labs\n" ..
+                   "In networks: " .. gutil.format_cost(detail.network_total or 0)
+
+    if #networks > 0 then
+        tt = tt .. "\n\n"
+        for i, item in ipairs(networks) do
+            tt = tt .. item.label .. ": " .. gutil.format_cost(item.count or 0)
+            if i < #networks then
+                tt = tt .. "\n"
+            end
+        end
+    else
+        tt = tt .. "\n\nNo detected robot networks"
+    end
+
+    return tt
+end
+
+local refresh_science_counts = function(player_index, anchor)
+    local p = game.get_player(player_index)
+    if not p then
+        return
+    end
+    local force_index = p.force.index
+    local science_counts = queue.get_science_counts(force_index)
+
+    for _, science in pairs(util.get_all_sciences()) do
+        local count = science_counts[science] or 0
+        local btn = gutil.get_child(anchor, "allowed_science_btn_" .. science)
+        if btn then
+            btn.tooltip = get_science_tooltip(player_index, force_index, science, count)
+        end
+
+        local label_name = "allowed_science_count_" .. science
+        local count_label = gutil.get_child(anchor, label_name)
+        if count > 0 then
+            local caption = gutil.format_cost(count)
+            if count_label then
+                count_label.caption = caption
+            elseif btn and btn.parent then
+                count_label = btn.parent.add({
+                    type = "label",
+                    name = label_name,
+                    caption = caption,
+                    ignored_by_interaction = true
+                })
+                count_label.style.width = 44
+                count_label.style.horizontal_align = "center"
+                count_label.style.top_margin = -6
+                count_label.style.font = "default-small"
+                count_label.style.font_color = {r = 1, g = 1, b = 1}
+            end
+        elseif count_label then
+            count_label.destroy()
+        end
+    end
+end
+
+local add_force_setting_row = function(flow, force_index, setting_name, top_margin)
+    local st = state.get_force_setting(force_index, setting_name, const.default_settings.force.settings[setting_name])
+    local row = flow.add({
+        type = "flow",
+        name = setting_name .. "_row",
+        direction = "horizontal",
+        style = "lil_einstein_horizontal_flow_nospacing"
+    })
+    row.style.height = 21
+    row.style.top_margin = top_margin or 0
+    row.style.vertical_align = "center"
+
+    row.add({
+        type = "button",
+        name = setting_name,
+        style = st and "lil_einstein_settings_checkbox_on" or "lil_einstein_settings_checkbox_off",
+        tags = {
+            lil_einstein_on_click = true,
+            handler = "toggle_checkbox_force_click",
+            setting_name = setting_name
+        },
+        tooltip = {"lil_einstein-force-settings." .. setting_name}
+    })
+
+    local label = row.add({
+        type = "label",
+        name = setting_name .. "_label",
+        caption = {"lil_einstein-force-settings." .. setting_name},
+        tags = {
+            lil_einstein_on_click = true,
+            handler = "toggle_checkbox_force_click",
+            setting_name = setting_name
+        },
+        tooltip = {"lil_einstein-force-settings." .. setting_name}
+    })
+    label.style.left_margin = 7
+    label.style.top_margin = -1
+    label.style.font_color = {0.92, 0.92, 0.92}
+end
 
 local populate_force_settings = function(player_index, anchor)
     -- Dropdown
@@ -38,23 +155,8 @@ local populate_force_settings = function(player_index, anchor)
     local p = game.get_player(player_index)
     local force_index = p and p.force.index or player_index
 
-    for k, v in pairs(const.default_settings.force.settings) do
-        if k == "consecutive_tech_cap" then goto skip_setting end
-        local st = state.get_force_setting(force_index, k, v)
-        local prop = {
-            type = "checkbox",
-            name = k,
-            caption = {"lil_einstein-force-settings." .. k},
-            state = st,
-            -- state = false,
-            tags = {
-                lil_einstein_on_state_change = true,
-                handler = "toggle_checkbox_force",
-                setting_name = k
-            }
-        }
-        flow.add(prop)
-        ::skip_setting::
+    for i, setting_name in ipairs(ordered_force_settings) do
+        add_force_setting_row(flow, force_index, setting_name, i == 1 and 0 or 5)
     end
 
     if const.default_settings.force.global_settings then
@@ -88,36 +190,53 @@ local populate_force_settings = function(player_index, anchor)
     local cap_val = state.get_force_setting(force_index, "consecutive_tech_cap", const.default_settings.force.settings.consecutive_tech_cap)
     local cap_fl = flow.add({
         type = "flow",
-        direction = "horizontal"
+        name = "consecutive_tech_cap_row",
+        direction = "horizontal",
+        style = "lil_einstein_horizontal_flow_nospacing"
     })
+    cap_fl.style.top_margin = 8
+    cap_fl.style.vertical_align = "center"
     cap_fl.add({
         type = "label",
         caption = {"lil_einstein-force-settings.consecutive_tech_cap"}
     })
-    cap_fl.add({
-        type = "sprite-button",
-        style = "lil_einstein_icon_button",
-        sprite = "lil_einstein_arrow_left_small",
-        hovered_sprite = "lil_einstein_arrow_left_small_black",
-        clicked_sprite = "lil_einstein_arrow_left_small_black",
+    local right = cap_fl.add({
+        type = "flow",
+        name = "consecutive_tech_cap_controls",
+        direction = "horizontal",
+        style = "lil_einstein_horizontal_flow_nospacing"
+    })
+    right.style.horizontally_stretchable = true
+    right.style.horizontal_align = "right"
+    right.style.left_margin = 11
+
+    local value_frame = right.add({
+        type = "frame",
+        name = "consecutive_tech_cap_value_frame",
+        style = "lil_einstein_number_input_frame",
+        direction = "horizontal"
+    })
+    local value_lbl = value_frame.add({
+        type = "label",
+        name = "consecutive_tech_cap_value",
+        caption = tostring(cap_val)
+    })
+    value_lbl.style.width = 43
+    value_lbl.style.horizontal_align = "center"
+    value_lbl.style.font_color = {0.92, 0.92, 0.92}
+
+    right.add({
+        type = "button",
+        style = "lil_einstein_settings_stepper_left",
         tags = {
             lil_einstein_on_click = true,
             handler = "consecutive_tech_cap_dec"
         },
         tooltip = "-1"
     })
-    cap_fl.add({
-        type = "label",
-        name = "consecutive_tech_cap_value",
-        caption = tostring(cap_val),
-        style = "lil_einstein_queue_index_label"
-    })
-    cap_fl.add({
-        type = "sprite-button",
-        style = "lil_einstein_icon_button",
-        sprite = "lil_einstein_arrow_right_small",
-        hovered_sprite = "lil_einstein_arrow_right_small_black",
-        clicked_sprite = "lil_einstein_arrow_right_small_black",
+    right.add({
+        type = "button",
+        style = "lil_einstein_settings_stepper_right",
         tags = {
             lil_einstein_on_click = true,
             handler = "consecutive_tech_cap_inc"
@@ -129,10 +248,11 @@ end
 local populate_science_filters = function(player_index, anchor)
     local scitbl = gutil.get_child(anchor, "allowed_science_table")
     if not scitbl then
-        game.print("[LilEinstein] ERROR: Did not find allowed science table, please open a bug report on the mod portal")
+        logger.error(nil, "Did not find allowed science table, please open a bug report on the mod portal")
         return
     end
     scitbl.clear()
+    scitbl.style.height = 64
 
     local sci = util.get_all_sciences()
 
@@ -152,10 +272,13 @@ local populate_science_filters = function(player_index, anchor)
         local count = science_counts[s] or 0
         local sprop = {
             type = "sprite-button",
+            name = "allowed_science_btn_" .. s,
             style = "lil_einstein_science_pack_button",
-            sprite = "lil_einstein_mockup_science_slot_bg",
+            sprite = "item/" .. s,
+            hovered_sprite = "item/" .. s,
+            clicked_sprite = "item/" .. s,
             toggled = state.get_player_setting(player_index, "allowed_" .. s, false),
-            tooltip = {"item-name." .. s},
+            tooltip = get_science_tooltip(player_index, force_index, s, count),
             tags = {
                 lil_einstein_on_click = true,
                 handler = "toggle_allowed_science",
@@ -165,18 +288,11 @@ local populate_science_filters = function(player_index, anchor)
         local btn = container.add(sprop)
         btn.style.width = 46
         btn.style.height = 55
-        local science_icon = container.add({
-            type = "sprite",
-            sprite = "item/" .. s,
-            tooltip = {"item-name." .. s},
-            ignored_by_interaction = true
-        })
-        science_icon.style.size = 28
-        science_icon.style.top_margin = -48
 
         if count > 0 then
             local count_label = container.add({
                 type = "label",
+                name = "allowed_science_count_" .. s,
                 caption = gutil.format_cost(count),
                 ignored_by_interaction = true
             })
@@ -188,14 +304,6 @@ local populate_science_filters = function(player_index, anchor)
         end
     end
 
-    -- Dynamically adjust height based on number of sciences
-    local sp = gutil.get_child(anchor, "sci_scroll")
-    sp.style.height = 55
-    if #sci > 14 and #sci <= 28 then
-        sp.style.height = 110
-    elseif #sci > 28 then
-        sp.style.height = 165
-    end
 end
 
 local populate_hide_categories = function(player_index, anchor)
@@ -231,12 +339,9 @@ local populate_show_categories = function(player_index, anchor)
         })
         row.style.height = 23
         local prop = {
-            type = "sprite-button",
+            type = "button",
             name = k,
-            style = "lil_einstein_radio_button",
-            sprite = k == selected and "lil_einstein_mockup_radio_on" or "lil_einstein_mockup_radio_off",
-            hovered_sprite = k == selected and "lil_einstein_mockup_radio_on" or "lil_einstein_mockup_radio_off",
-            clicked_sprite = k == selected and "lil_einstein_mockup_radio_on" or "lil_einstein_mockup_radio_off",
+            style = k == selected and "lil_einstein_radio_button_on" or "lil_einstein_radio_button_off",
             tags = {
                 lil_einstein_on_click = true,
                 handler = "toggle_radiobutton_player",
@@ -304,12 +409,16 @@ local set_master_enable = function(player_index, anchor)
     local lbl = gutil.get_child(anchor, "master_enable_label")
     if lbl then
         lbl.style = "bold_label"
+        lbl.style.left_margin = 9
+        lbl.style.top_margin = 1
         lbl.style.font_color = {0.945, 0.745, 0.392}
     end
     if st == "left" then
         enbl = false
         if lbl then
             lbl.style = "label"
+            lbl.style.left_margin = 9
+            lbl.style.top_margin = 1
         end
     end
 
@@ -331,7 +440,23 @@ local update_styles = function(player_index, anchor)
     if lbl then
         lbl.style.top_margin = 24
     end
-    -- lbl.style.bottom_margin = 10
+
+    lbl = gutil.get_child(anchor, "master_enable_label")
+    local row = gutil.get_child(anchor, "enable_row")
+    if row then
+        row.style.height = 24
+        row.style.top_margin = 1
+    end
+
+    row = gutil.get_child(anchor, "subsettings")
+    if row then
+        row.style.top_margin = 16
+    end
+
+    row = gutil.get_child(anchor, "force_settings_flow")
+    if row then
+        row.style.vertical_spacing = 0
+    end
 end
 
 content.repopulate_static = function(player_index, anchor)
@@ -363,6 +488,10 @@ end
 
 content.refresh_upcoming_times = function(player_index, anchor)
     gcupcoming.refresh_times(player_index, anchor)
+end
+
+content.refresh_science_counts = function(player_index, anchor)
+    refresh_science_counts(player_index, anchor)
 end
 
 return content

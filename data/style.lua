@@ -148,6 +148,16 @@ data.raw["gui-style"].default["lil_einstein_vertical_scroll_pane"] = {
     scrollbars_go_outside = true
 }
 
+data.raw["gui-style"].default["lil_einstein_upcoming_scroll_pane"] = {
+    type = "scroll_pane_style",
+    parent = "lil_einstein_vertical_scroll_pane",
+    width = 525,
+    height = 524,
+    horizontally_stretchable = "off",
+    vertically_stretchable = "off",
+    scrollbars_go_outside = true
+}
+
 ---------------------------------------------------------------------------------------------------
 --- Subheader
 ---------------------------------------------------------------------------------------------------
@@ -197,6 +207,16 @@ data.raw["gui-style"].default["lil_einstein_top_settings_frame"] = {
     graphical_set = {}
 }
 
+data.raw["gui-style"].default["lil_einstein_top_settings_flow"] = {
+    type = "vertical_flow_style",
+    parent = "lil_einstein_vertical_flow",
+    width = 320,
+    height = 143,
+    vertically_stretchable = "off",
+    padding = 12,
+    top_margin = 52
+}
+
 data.raw["gui-style"].default["lil_einstein_lab_frame"] = {
     type = "frame_style",
     width = 529,
@@ -243,7 +263,11 @@ data.raw["gui-style"].default["lil_einstein_close_button"] = {
     width = 39,
     height = 39,
     padding = 0,
-    top_margin = 31
+    top_margin = 31,
+    default_graphical_set = {},
+    hovered_graphical_set = {},
+    clicked_graphical_set = {},
+    disabled_graphical_set = {}
 }
 
 data.raw["gui-style"].default["lil_einstein_border_top"] = {
@@ -278,6 +302,14 @@ data.raw["gui-style"].default["lil_einstein_row_background"] = {
     stretch_image_to_widget_size = true
 }
 
+data.raw["gui-style"].default["lil_einstein_upcoming_separator"] = {
+    type = "image_style",
+    parent = "image",
+    width = 525,
+    height = 4,
+    stretch_image_to_widget_size = true
+}
+
 data.raw["gui-style"].default["lil_einstein_tech_row_background"] = {
     type = "image_style",
     parent = "image",
@@ -290,24 +322,50 @@ data.raw["gui-style"].default["lil_einstein_drag_handle"] = {
     type = "image_style",
     parent = "image",
     width = 32,
-    height = 52,
+    height = 60,
     stretch_image_to_widget_size = true
 }
 
 data.raw["gui-style"].default["lil_einstein_row_arrow_button"] = {
     type = "button_style",
     parent = "frame_button",
-    width = 30,
-    height = 28,
-    padding = 0
+    width = 35,
+    height = 26,
+    padding = 0,
+    default_graphical_set = {},
+    hovered_graphical_set = {},
+    clicked_graphical_set = {},
+    disabled_graphical_set = {}
 }
 
 data.raw["gui-style"].default["lil_einstein_radio_button"] = {
     type = "button_style",
     parent = "frame_button",
-    width = 14,
-    height = 14,
-    padding = 0
+    width = 18,
+    height = 18,
+    padding = 0,
+    default_graphical_set = {},
+    hovered_graphical_set = {},
+    clicked_graphical_set = {},
+    disabled_graphical_set = {}
+}
+
+data.raw["gui-style"].default["lil_einstein_radio_button_off"] = {
+    type = "button_style",
+    parent = "lil_einstein_radio_button",
+    default_graphical_set = slice_graphical_set("filter_radio_off", 18, 18),
+    hovered_graphical_set = slice_graphical_set("filter_radio_off", 18, 18),
+    clicked_graphical_set = slice_graphical_set("filter_radio_off", 18, 18),
+    disabled_graphical_set = slice_graphical_set("filter_radio_off", 18, 18)
+}
+
+data.raw["gui-style"].default["lil_einstein_radio_button_on"] = {
+    type = "button_style",
+    parent = "lil_einstein_radio_button",
+    default_graphical_set = slice_graphical_set("filter_radio_on", 18, 18),
+    hovered_graphical_set = slice_graphical_set("filter_radio_on", 18, 18),
+    clicked_graphical_set = slice_graphical_set("filter_radio_on", 18, 18),
+    disabled_graphical_set = slice_graphical_set("filter_radio_on", 18, 18)
 }
 
 data.raw["gui-style"].default["lil_einstein_science_pack_button"] = {
@@ -315,14 +373,21 @@ data.raw["gui-style"].default["lil_einstein_science_pack_button"] = {
     parent = "slot_button",
     width = 46,
     height = 55,
-    padding = 0
+    padding = 0,
+    default_graphical_set = {},
+    hovered_graphical_set = {},
+    clicked_graphical_set = {},
+    disabled_graphical_set = {},
+    selected_graphical_set = {},
+    selected_hovered_graphical_set = {},
+    selected_clicked_graphical_set = {}
 }
 
 data.raw["gui-style"].default["lil_einstein_row_flow"] = {
     type = "horizontal_flow_style",
     parent = "lil_einstein_horizontal_flow_nospacing",
     vertical_align = "center",
-    height = 52
+    height = 60
 }
 
 data.raw["gui-style"].default["lil_einstein_tech_row_flow"] = {
@@ -336,9 +401,9 @@ data.raw["gui-style"].default["lil_einstein_upcoming_row_frame"] = {
     type = "frame_style",
     horizontal_flow_style = data.raw["gui-style"].default["lil_einstein_row_flow"],
     width = 525,
-    height = 52,
+    height = 60,
     padding = 0,
-    graphical_set = slice_graphical_set("upcoming_row_bg", 525, 52)
+    graphical_set = {}
 }
 
 data.raw["gui-style"].default["lil_einstein_available_row_frame"] = {
@@ -347,7 +412,7 @@ data.raw["gui-style"].default["lil_einstein_available_row_frame"] = {
     width = 650,
     height = 74,
     padding = 0,
-    graphical_set = slice_graphical_set("tech_row_bg", 650, 74)
+    graphical_set = {}
 }
 
 ---------------------------------------------------------------------------------------------------
@@ -445,9 +510,9 @@ data.raw["gui-style"].default["lil_einstein_main_right_flow"] = {
 data.raw["gui-style"].default["lil_einstein_allowed_science_frame"] = {
     type = "frame_style",
     width = 891,
-    height = 74,
+    height = 78,
     vertically_stretchable = "off",
-    padding = 8,
+    padding = 6,
     graphical_set = {}
 }
 -- Bottom left frame
@@ -552,6 +617,19 @@ data.raw["gui-style"].default["lil_einstein_upcoming_header_frame"] = {
     graphical_set = {}
 }
 
+data.raw["gui-style"].default["lil_einstein_upcoming_header_flow"] = {
+    type = "horizontal_flow_style",
+    parent = "lil_einstein_horizontal_flow",
+    width = 525,
+    height = 36,
+    top_padding = 6,
+    right_padding = 6,
+    bottom_padding = 6,
+    left_padding = 36,
+    horizontal_align = "left",
+    vertical_align = "center"
+}
+
 data.raw["gui-style"].default["lil_einstein_filter_header_frame"] = {
     type = "frame_style",
     parent = "lil_einstein_subheader_frame",
@@ -583,9 +661,76 @@ data.raw["gui-style"].default["lil_einstein_icon_button"] = {
 data.raw["gui-style"].default["lil_einstein_enable_switch_button"] = {
     type = "button_style",
     parent = "lil_einstein_icon_button",
-    width = 35,
-    height = 19,
-    padding = 0
+    width = 39,
+    height = 24,
+    padding = 0,
+    default_graphical_set = {},
+    hovered_graphical_set = {},
+    clicked_graphical_set = {},
+    disabled_graphical_set = {},
+    selected_graphical_set = {},
+    selected_hovered_graphical_set = {},
+    selected_clicked_graphical_set = {}
+}
+
+data.raw["gui-style"].default["lil_einstein_settings_checkbox_off"] = {
+    type = "button_style",
+    parent = "frame_button",
+    width = 17,
+    height = 17,
+    padding = 0,
+    default_graphical_set = slice_graphical_set("filter_checkbox_off", 17, 17),
+    hovered_graphical_set = slice_graphical_set("filter_checkbox_off", 17, 17),
+    clicked_graphical_set = slice_graphical_set("filter_checkbox_off", 17, 17),
+    disabled_graphical_set = slice_graphical_set("filter_checkbox_off", 17, 17)
+}
+
+data.raw["gui-style"].default["lil_einstein_settings_checkbox_on"] = {
+    type = "button_style",
+    parent = "frame_button",
+    width = 17,
+    height = 17,
+    padding = 0,
+    default_graphical_set = slice_graphical_set("settings_checkbox_on_1", 17, 17),
+    hovered_graphical_set = slice_graphical_set("settings_checkbox_on_2", 17, 17),
+    clicked_graphical_set = slice_graphical_set("settings_checkbox_on_2", 17, 17),
+    disabled_graphical_set = slice_graphical_set("settings_checkbox_on_1", 17, 17)
+}
+
+data.raw["gui-style"].default["lil_einstein_number_input_frame"] = {
+    type = "frame_style",
+    width = 45,
+    height = 26,
+    padding = 0,
+    left_padding = 1,
+    right_padding = 1,
+    top_padding = 3,
+    graphical_set = slice_graphical_set("number_input_bg", 45, 26),
+    horizontal_flow_style = data.raw["gui-style"].default["lil_einstein_horizontal_flow_centered"]
+}
+
+data.raw["gui-style"].default["lil_einstein_settings_stepper_left"] = {
+    type = "button_style",
+    parent = "frame_button",
+    width = 23,
+    height = 26,
+    padding = 0,
+    default_graphical_set = slice_graphical_set("stepper_left", 23, 26),
+    hovered_graphical_set = slice_graphical_set("stepper_left", 23, 26),
+    clicked_graphical_set = slice_graphical_set("stepper_left", 23, 26),
+    disabled_graphical_set = slice_graphical_set("stepper_left", 23, 26)
+}
+
+data.raw["gui-style"].default["lil_einstein_settings_stepper_right"] = {
+    type = "button_style",
+    parent = "frame_button",
+    width = 23,
+    height = 26,
+    padding = 0,
+    default_graphical_set = slice_graphical_set("stepper_right", 23, 26),
+    hovered_graphical_set = slice_graphical_set("stepper_right", 23, 26),
+    clicked_graphical_set = slice_graphical_set("stepper_right", 23, 26),
+    disabled_graphical_set = slice_graphical_set("stepper_right", 23, 26)
 }
 
 data.raw["gui-style"].default["lil_einstein_header"] = {

@@ -157,4 +157,11 @@ gui.refresh_upcoming_times = function(player_index)
     end
 end
 
+gui.refresh_science_counts = function(player_index)
+    local anchor = gui.get(player_index)
+    if anchor then
+        components.refresh_science_counts(player_index, anchor)
+    end
+end
+
 return gui

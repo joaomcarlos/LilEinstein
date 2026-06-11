@@ -8,6 +8,8 @@ local ui_slice_aliases = {
     button_produced = "allowed_button_produced",
     checkbox_off = "filter_checkbox_off",
     checkbox_on = "filter_checkbox_on",
+    settings_checkbox_on_1 = "settings_checkbox_on_1",
+    settings_checkbox_on_2 = "settings_checkbox_on_2",
     drag_handle = "upcoming_drag_handle",
     enable_switch_off = "toggle_off",
     enable_switch_on = "toggle_on",
@@ -70,6 +72,8 @@ local ui_sprite_names = {
     "button_produced",
     "checkbox_off",
     "checkbox_on",
+    "settings_checkbox_on_1",
+    "settings_checkbox_on_2",
     "drag_handle",
     "enable_switch_off",
     "enable_switch_on",
@@ -85,6 +89,7 @@ local ui_sprite_names = {
     "stepper_right",
     "tech_row_bg",
     "tech_search_button",
+    "upcoming_row_separator",
     "tech_switch_on",
     "upcoming_row_bg"
 }

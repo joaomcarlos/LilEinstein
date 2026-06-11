@@ -159,6 +159,7 @@ script.on_nth_tick(60, function(e)
     for _, p in pairs(game.players) do
         if gui.is_open(p.index) then
             gui.refresh_upcoming_times(p.index)
+            gui.refresh_science_counts(p.index)
         end
     end
 end)
@@ -301,12 +302,12 @@ script.on_event(defines.events.on_gui_click, function(e)
         local before = queue.get_tech_ub(f.index, t.technology)
         queue.adjust_tech_ub(f.index, t.technology, 1)
         local after = queue.get_tech_ub(f.index, t.technology)
-        game.print("[LilEinstein DEBUG] move_tech_up: tech=" .. tostring(t.technology) .. " force=" .. tostring(f.index) .. " UB=" .. tostring(before) .. "->" .. tostring(after))
+        -- game.print("[LilEinstein DEBUG] move_tech_up: tech=" .. tostring(t.technology) .. " force=" .. tostring(f.index) .. " UB=" .. tostring(before) .. "->" .. tostring(after))
     elseif h == "move_tech_down" then
         local before = queue.get_tech_ub(f.index, t.technology)
         queue.adjust_tech_ub(f.index, t.technology, -1)
         local after = queue.get_tech_ub(f.index, t.technology)
-        game.print("[LilEinstein DEBUG] move_tech_down: tech=" .. tostring(t.technology) .. " force=" .. tostring(f.index) .. " UB=" .. tostring(before) .. "->" .. tostring(after))
+        -- game.print("[LilEinstein DEBUG] move_tech_down: tech=" .. tostring(t.technology) .. " force=" .. tostring(f.index) .. " UB=" .. tostring(before) .. "->" .. tostring(after))
     elseif h == "remove_from_queue" then
         queue.remove(f, t.technology)
     elseif h == "toggle_allowed_science" then
@@ -357,6 +358,12 @@ script.on_event(defines.events.on_gui_click, function(e)
         end
         state.set_force_setting(f.index, "master_enable", st)
         state.request_next_research(f)
+    elseif h == "toggle_checkbox_force_click" then
+        local cur = state.get_force_setting(f.index, t.setting_name, const.default_settings.force.settings[t.setting_name])
+        state.set_force_setting(f.index, t.setting_name, not cur)
+        if t.setting_name == "auto_research" then
+            state.request_next_research(f)
+        end
     elseif h == "toggle_tech_enabled" then
         local enabled = queue.get_tech_enabled(f.index, t.technology)
         queue.set_tech_enabled(f.index, t.technology, not enabled)

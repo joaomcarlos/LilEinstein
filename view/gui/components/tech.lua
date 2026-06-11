@@ -4,6 +4,7 @@ local state = require("model.state")
 local tech = require("model.tech")
 local queue = require("model.queue")
 local lab = require("model.lab")
+local logger = require("lib.log")
 local analyzer = require("view.gui.analyzer")
 
 local gutil = require("view.gui.gutil")
@@ -36,8 +37,8 @@ local get_tech_icon = function(techtbl, xcur, enbl, player_index)
 end
 
 local get_title = function(techtbl, xcur, enbl, player_index, force_index, score_comps)
-    local TECH_ICON_SIZE = 28
-    local ICON_SIZE = 18
+    local TECH_ICON_SIZE = 22
+    local ICON_SIZE = 14
 
     -- Make tooltip
     local tt = gutil.get_tooltip_text(xcur, player_index)
@@ -207,8 +208,8 @@ local get_title = function(techtbl, xcur, enbl, player_index, force_index, score
         })
         cu.style.size = ICON_SIZE
         cu.style.stretch_image_to_widget_size = true
-        cu.style.left_margin = -10
-        cu.style.top_margin = 12
+        cu.style.left_margin = -8
+        cu.style.top_margin = 9
     end
 
     -- Weight components display
@@ -219,7 +220,7 @@ local get_title = function(techtbl, xcur, enbl, player_index, force_index, score
             direction = "horizontal",
             enabled = enbl
         })
-        wf.style.top_margin = 2
+        wf.style.top_margin = 0
         wf.style.left_margin = 2
         wf.add({
             type = "label",
@@ -245,9 +246,12 @@ local get_buttons = function(techtbl, xcur, enbl)
     local f1 = fo.add({
         type = "flow",
         direction = "vertical",
+        style = "lil_einstein_vertical_flow_nospacing",
         enabled = enbl
     })
-    f1.add({
+    f1.style.width = 35
+    f1.style.height = 52
+    local up_btn = f1.add({
         type = "sprite-button",
         style = "lil_einstein_row_arrow_button",
         sprite = "lil_einstein_mockup_row_arrow_up",
@@ -260,7 +264,9 @@ local get_buttons = function(techtbl, xcur, enbl)
         },
         enabled = enbl
     })
-    f1.add({
+    up_btn.style.width = 35
+    up_btn.style.height = 26
+    local down_btn = f1.add({
         type = "sprite-button",
         style = "lil_einstein_row_arrow_button",
         sprite = "lil_einstein_mockup_row_arrow_down",
@@ -273,6 +279,8 @@ local get_buttons = function(techtbl, xcur, enbl)
         },
         enabled = enbl
     })
+    down_btn.style.width = 33
+    down_btn.style.height = 26
 
 end
 
@@ -317,7 +325,7 @@ gctech.populate = function(player_index, anchor)
         local xcur = tsx[tech_name]
         if xcur and not xcur.technology.researched and allowed[xcur.technology.name] then
             if xcur and xcur.technology.name ~= tech_name then
-                game.print("[LilEinstein DEBUG] key mismatch: order=" .. tostring(tech_name) .. " name=" .. tostring(xcur.technology.name))
+                logger.debug(nil, "key mismatch: order=" .. tostring(tech_name) .. " name=" .. tostring(xcur.technology.name))
             end
             local cost = xcur.technology.research_unit_count or 1
             total_cost_sum = total_cost_sum + cost
@@ -332,7 +340,7 @@ gctech.populate = function(player_index, anchor)
         local xcur = tsx[tech_name]
         if xcur and not xcur.technology.researched and allowed[xcur.technology.name] then
             if xcur.technology.name ~= tech_name then
-                game.print("[LilEinstein DEBUG] key mismatch: order=" .. tostring(tech_name) .. " name=" .. tostring(xcur.technology.name))
+                logger.debug(nil, "key mismatch: order=" .. tostring(tech_name) .. " name=" .. tostring(xcur.technology.name))
             end
             local ub = queue.get_tech_ub(f.index, xcur.technology.name)
             local sd = queue.score_tech_detailed(xcur, xcur.technology.level, ub, avg_cost)

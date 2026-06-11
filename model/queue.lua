@@ -5,6 +5,7 @@ local state = require("model.state")
 local tech = require("model.tech")
 local lab = require("model.lab")
 local env = require("model.env")
+local logger = require("lib.log")
 local rw = require("model.research_weights")
 
 local queue = {}
@@ -519,7 +520,7 @@ end
 queue.requeue_finished = function(f, t)
     local xcur = tech.get_single_tech_state_ext(f.index, t.name)
     if not xcur then
-        f.print("[LilEinstein] Error: Unexpected technology " .. (t.name or "(no technology passed)"))
+        logger.error(f, "Unexpected technology " .. (t.name or "(no technology passed)"))
         return
     end
 
@@ -651,12 +652,10 @@ queue.add = function(f, tech_name, pos, silent)
     -- Check if technology is valid or early exit
     local t = f.technologies[tech_name]
     if not t or not t.valid then
-        if t.name and (t.name ~= nil or t.name ~= "") then
-            f.print("[LilEinstein] ERROR: Trying to queue technology: '" .. t.name ..
-                        "' but it is not valid, please open a bug report on the mod portal")
+        if t and t.name and t.name ~= "" then
+            logger.error(f, "Trying to queue technology '" .. t.name .. "' but it is not valid, please open a bug report on the mod portal")
         else
-            f.print("[LilEinstein] ERROR: Trying to queue technology: '" .. serpent.line(t) ..
-                        "' but it is not valid, please open a bug report on the mod portal")
+            logger.error(f, "Trying to queue technology '" .. serpent.line(t) .. "' but it is not valid, please open a bug report on the mod portal")
         end
         return
     end
@@ -664,7 +663,7 @@ queue.add = function(f, tech_name, pos, silent)
     -- Check if this research is actually available or early exit
     if not t.enabled then
         if not silent then
-            f.print({"lil_einstein-msg.warn-queue-disabled", t.localised_name})
+            logger.warn(f, {"lil_einstein-msg.warn-queue-disabled", t.localised_name})
         end
         return
     end
@@ -677,7 +676,7 @@ queue.add = function(f, tech_name, pos, silent)
             -- TODO: If the user adds an infinite tech multiple times to the in-game queue we need to trigger the auto clean-up
             local t = f.technologies[q]
             if not silent then
-                f.print({"lil_einstein-msg.already-queued", t.localised_name})
+                logger.log(f, {"lil_einstein-msg.already-queued", t.localised_name})
             end
             return
         end
@@ -698,7 +697,7 @@ queue.add = function(f, tech_name, pos, silent)
         state.request_next_research(f)
 
         -- Announce
-        f.print({"lil_einstein-msg.added-to-queue", t.localised_name})
+        logger.log(f, {"lil_einstein-msg.added-to-queue", t.localised_name})
     end
 end
 
@@ -724,7 +723,7 @@ queue.remove = function(f, tech_name, silent)
 
                 -- Announce
                 local t = f.technologies[q]
-                f.print({"lil_einstein-msg.removed-from-queue", t.localised_name})
+                logger.log(f, {"lil_einstein-msg.removed-from-queue", t.localised_name})
             end
 
             -- Exit because there is nothing more to do
@@ -926,41 +925,65 @@ end
 
 -- Cooldown tracker for reorder_queue_by_score [force_index] = last_tick
 -- Two-tier cache per force:
---   labs_cache:  labs + best_network, refreshed every 10 min (36000 ticks)
+--   labs_cache: labs, refreshed every 10 min (36000 ticks)
 --   counts_cache: counts refreshed every tick
 local labs_cache = {}
 local counts_cache = {}
 
+local has_invalid_ref = function(refs)
+    for _, ref in pairs(refs or {}) do
+        if not ref or not ref.valid then
+            return true
+        end
+    end
+    return false
+end
+
+local get_lab_network = function(lab_entity)
+    if not lab_entity or not lab_entity.valid then
+        return nil
+    end
+
+    local force = lab_entity.force
+    local surface = lab_entity.surface
+    local position = lab_entity.position
+    if force and surface and position then
+        local network = force.find_logistic_network_by_position(position, surface)
+        if network and network.valid then
+            return network
+        end
+    end
+
+    return nil
+end
+
+local get_network_label = function(network, sample_lab)
+    local surface_name = "unknown"
+    if sample_lab and sample_lab.valid and sample_lab.surface and sample_lab.surface.valid then
+        surface_name = sample_lab.surface.name or "unknown"
+    end
+    local network_id = "?"
+    if network and network.valid and network.network_id then
+        network_id = tostring(network.network_id)
+    end
+    return "Network #" .. network_id .. " (" .. tostring(surface_name) .. ")"
+end
+
 local refresh_labs_cache = function(force_index)
     local all_labs = {}
-    local network_lab_counts = {}
 
     for _, surface in pairs(game.surfaces) do
         local surface_labs = surface.find_entities_filtered({type = "lab", force = force_index})
         for _, lab_entity in pairs(surface_labs) do
             if lab_entity.valid then
                 table.insert(all_labs, lab_entity)
-                local network = lab_entity.logistic_network
-                if network and network.valid then
-                    network_lab_counts[network] = (network_lab_counts[network] or 0) + 1
-                end
             end
-        end
-    end
-
-    local best_network = nil
-    local best_count = 0
-    for network, count in pairs(network_lab_counts) do
-        if count > best_count then
-            best_count = count
-            best_network = network
         end
     end
 
     labs_cache[force_index] = {
         tick = game.tick,
-        labs = all_labs,
-        network = best_network
+        labs = all_labs
     }
 end
 
@@ -970,8 +993,7 @@ get_science_counts = function(force_index)
     -- Refresh labs/network cache every 10 minutes, or immediately if refs went invalid (save/load)
     local lc = labs_cache[force_index]
     if not lc or (now - lc.tick) >= 36000
-        or (lc.network and not lc.network.valid)
-        or (#lc.labs > 0 and not lc.labs[1].valid) then
+        or has_invalid_ref(lc.labs) then
         refresh_labs_cache(force_index)
         lc = labs_cache[force_index]
     end
@@ -983,31 +1005,117 @@ get_science_counts = function(force_index)
     end
 
     local counts = {}
-
-    -- Packs on the chosen network
-    if lc.network and lc.network.valid then
-        for _, science in pairs(env.get_all_sciences()) do
-            counts[science] = (counts[science] or 0) + lc.network.get_item_count(science)
-        end
-    end
+    local detected_networks = {}
+    local breakdown = {}
 
     -- Packs in labs
     for _, lab_entity in pairs(lc.labs) do
         if lab_entity.valid then
             local inv = lab_entity.get_inventory(defines.inventory.lab_input)
+            local network = get_lab_network(lab_entity)
+            if network and network.valid then
+                local network_id = network.network_id
+                local cur = network_id and detected_networks[network_id] or nil
+                if not cur then
+                    cur = {
+                        network_id = network_id,
+                        network = network,
+                        lab_count = 0,
+                        sample_lab = lab_entity,
+                        sample_unit_number = lab_entity.unit_number or 0
+                    }
+                    if network_id then
+                        detected_networks[network_id] = cur
+                    end
+                end
+                if cur then
+                    cur.lab_count = cur.lab_count + 1
+                end
+            end
             if inv then
                 for _, item in pairs(inv.get_contents()) do
                     counts[item.name] = (counts[item.name] or 0) + (item.count or 0)
+                    if not breakdown[item.name] then
+                        breakdown[item.name] = {
+                            lab_count = 0,
+                            lab_entity_count = 0,
+                            network_total = 0,
+                            networks = {}
+                        }
+                    end
+                    breakdown[item.name].lab_count = breakdown[item.name].lab_count + (item.count or 0)
+                    breakdown[item.name].lab_entity_count = breakdown[item.name].lab_entity_count + 1
                 end
             end
         end
     end
 
-    counts_cache[force_index] = {tick = now, counts = counts}
+    -- Add robot network stock for every network attached to the detected labs
+    local sorted_networks = {}
+    for _, network_meta in pairs(detected_networks) do
+        table.insert(sorted_networks, network_meta)
+    end
+    table.sort(sorted_networks, function(a, b)
+        local a_surface = (a.sample_lab and a.sample_lab.valid and a.sample_lab.surface and a.sample_lab.surface.name) or ""
+        local b_surface = (b.sample_lab and b.sample_lab.valid and b.sample_lab.surface and b.sample_lab.surface.name) or ""
+        if a_surface == b_surface then
+            return (a.sample_unit_number or 0) < (b.sample_unit_number or 0)
+        end
+        return a_surface < b_surface
+    end)
+    for _, network_meta in pairs(sorted_networks) do
+        local network = network_meta.network
+        if network and network.valid then
+            local network_label = get_network_label(network, network_meta.sample_lab)
+            for _, science in pairs(env.get_all_sciences()) do
+                local network_count = network.get_item_count(science)
+                counts[science] = (counts[science] or 0) + network_count
+                if network_count > 0 then
+                    if not breakdown[science] then
+                        breakdown[science] = {
+                            lab_count = 0,
+                            lab_entity_count = 0,
+                            network_total = 0,
+                            networks = {}
+                        }
+                    end
+                    breakdown[science].network_total = breakdown[science].network_total + network_count
+                    table.insert(breakdown[science].networks, {
+                        label = network_label,
+                        count = network_count,
+                        lab_count = network_meta.lab_count
+                    })
+                end
+            end
+        end
+    end
+
+    counts_cache[force_index] = {tick = now, counts = counts, breakdown = breakdown}
     return counts
 end
 
 queue.get_science_counts = get_science_counts
+queue.get_science_count_breakdown = function(force_index, science)
+    local cc = counts_cache[force_index]
+    if not cc or cc.tick ~= game.tick then
+        get_science_counts(force_index)
+        cc = counts_cache[force_index]
+    end
+    if not cc or not cc.breakdown then
+        return {
+            lab_count = 0,
+            lab_entity_count = 0,
+            network_total = 0,
+            networks = {}
+        }
+    end
+    return cc.breakdown[science] or {
+        lab_count = 0,
+        lab_entity_count = 0,
+        network_total = 0,
+        networks = {}
+    }
+end
 
 local reorder_cooldown = {}
 
@@ -1131,7 +1239,7 @@ queue.reorder_queue_by_score = function(force_index)
                         pinned_note = " [PINNED]"
                     end
                     local avail_note = entry.is_available and "" or " [BLOCKED]"
-                    game.print("LilEinstein: " .. tech_name .. pinned_note .. avail_note .. " " .. reason ..
+                    logger.debug(nil, tech_name .. pinned_note .. avail_note .. " " .. reason ..
                         " | importance=" .. entry.importance ..
                         " level_boost=" .. entry.level_boost ..
                         " user_boost=" .. entry.user_boost ..

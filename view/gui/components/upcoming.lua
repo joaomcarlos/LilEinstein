@@ -9,6 +9,14 @@ local gcupcoming = {}
 
 -- Cache for lightweight per-second countdown refresh
 local upcoming_ui_cache = {}
+local upcoming_row_width = 525
+local upcoming_row_height = 60
+local upcoming_rank_width = 37
+local upcoming_icon_gap = 8
+local upcoming_icon_size = 60
+local upcoming_name_width = 300
+local upcoming_science_icon_size = 14
+local upcoming_time_width = 68
 
 local format_time = function(seconds)
     if not seconds then
@@ -35,8 +43,12 @@ local add_upcoming_row = function(parent, rank, entry, player_index)
         return
     end
 
-    local f = game.get_player(player_index).force
-    local is_pinned = queue.get_pinned_tech(f.index) == entry.tech_name
+    local player = game.get_player(player_index)
+    if not player then
+        return
+    end
+
+    local is_pinned = queue.get_pinned_tech(player.force.index) == entry.tech_name
 
     local row = parent.add({
         type = "frame",
@@ -45,26 +57,30 @@ local add_upcoming_row = function(parent, rank, entry, player_index)
     })
     row.style.vertically_stretchable = false
     row.style.horizontally_stretchable = true
-    row.style.width = 525
-    row.style.height = 52
-    -- Store original timing data for per-second refresh
+    row.style.width = upcoming_row_width
+    row.style.height = upcoming_row_height
     row.tags = {
         duration = entry.duration or 0,
         wait_time = entry.wait_time or 0,
         rank = rank
     }
 
-    -- Rank label (shows pin indicator when pinned)
     local rank_lbl = row.add({
         type = "label",
         style = "lil_einstein_queue_index_label",
-        caption = (is_pinned and "▸" or "") .. rank .. "."
+        caption = (is_pinned and ">" or "") .. rank .. "."
     })
-    rank_lbl.style.width = 34
+    rank_lbl.style.width = upcoming_rank_width
     rank_lbl.style.vertical_align = "center"
+    rank_lbl.style.horizontal_align = "right"
     rank_lbl.style.font = "heading-2"
 
-    -- Tech icon: click to pin/unpin
+    local icon_gap = row.add({
+        type = "empty-widget"
+    })
+    icon_gap.style.width = upcoming_icon_gap
+    icon_gap.style.height = upcoming_row_height
+
     local tech_btn = row.add({
         type = "sprite-button",
         name = entry.tech_name,
@@ -75,13 +91,11 @@ local add_upcoming_row = function(parent, rank, entry, player_index)
             handler = "pin_upcoming_tech",
             technology = entry.tech_name
         },
-        tooltip = (is_pinned and "Pinned — click to unpin" or "Click to pin to top priority")
+        tooltip = (is_pinned and "Pinned - click to unpin" or "Click to pin to top priority")
     })
+    tech_btn.style.width = upcoming_icon_size
+    tech_btn.style.height = upcoming_icon_size
 
-    tech_btn.style.width = 52
-    tech_btn.style.height = 52
-
-    -- Name + sciences column (use localised_name directly for proper translation)
     local level_suffix = entry.level > 1 and (" " .. entry.level) or ""
     local infinite_suffix = xcur.meta.is_infinite and " (infinite)" or ""
     local col = row.add({
@@ -89,12 +103,11 @@ local add_upcoming_row = function(parent, rank, entry, player_index)
         direction = "vertical",
         style = "lil_einstein_vertical_flow_nospacing"
     })
-    col.style.vertical_align = "center"
     col.style.left_margin = 4
     col.style.horizontally_stretchable = true
-    col.style.width = 326
+    col.style.width = upcoming_name_width
 
-    local nl = col.add({
+    local title_lbl = col.add({
         type = "label",
         caption = {"", xcur.technology.localised_name, level_suffix .. infinite_suffix},
         tooltip = gutil.get_tooltip_text(xcur, player_index, entry.level, entry.cost),
@@ -104,31 +117,38 @@ local add_upcoming_row = function(parent, rank, entry, player_index)
         },
         name = entry.tech_name
     })
-    nl.style.maximal_width = 318
+    title_lbl.style.maximal_width = upcoming_name_width - 8
+    title_lbl.style.top_margin = 3
 
     local sci_flow = col.add({
         type = "flow",
         style = "lil_einstein_horizontal_flow_nospacing",
         direction = "horizontal"
     })
+    sci_flow.style.height = upcoming_science_icon_size
+    local first = true
     for _, sci in pairs(xcur.meta.sciences or {}) do
-        sci_flow.add({
+        local sci_icon = sci_flow.add({
             type = "sprite",
             sprite = "item/" .. sci,
             tooltip = {"item-name." .. sci}
-        }).style.size = 16
+        })
+        sci_icon.style.size = upcoming_science_icon_size
+        if not first then
+            sci_icon.style.left_margin = -2
+        end
+        first = false
     end
 
-    -- Time estimates (right side)
     local time_col = row.add({
         type = "flow",
         name = "upcoming_time_col",
         direction = "vertical",
         style = "lil_einstein_vertical_flow_nospacing"
     })
-    time_col.style.vertical_align = "center"
     time_col.style.left_margin = 6
-    time_col.style.width = 68
+    time_col.style.width = upcoming_time_width
+    time_col.style.top_margin = 8
 
     time_col.add({
         type = "label",
@@ -143,7 +163,7 @@ local add_upcoming_row = function(parent, rank, entry, player_index)
         })
     end
 
-    row.add({
+    local drag_handle = row.add({
         type = "sprite",
         style = "lil_einstein_drag_handle",
         sprite = "lil_einstein_mockup_drag_handle",
@@ -151,12 +171,22 @@ local add_upcoming_row = function(parent, rank, entry, player_index)
     })
 end
 
+local add_separator = function(parent)
+    local separator = parent.add({
+        type = "sprite",
+        sprite = "lil_einstein_mockup_upcoming_row_separator",
+        ignored_by_interaction = true
+    })
+    separator.style.width = upcoming_row_width
+    separator.style.height = 4
+    separator.style.stretch_image_to_widget_size = true
+end
+
 gcupcoming.populate = function(player_index, anchor)
     local player = game.get_player(player_index)
     if not player then
         return
     end
-    local f = player.force
 
     local flow = gutil.get_child(anchor, "flow_upcoming")
     if not flow then
@@ -164,7 +194,7 @@ gcupcoming.populate = function(player_index, anchor)
     end
     flow.clear()
 
-    local upcoming = queue.get_upcoming_research(f.index, 15)
+    local upcoming = queue.get_upcoming_research(player.force.index, 15)
     if not upcoming or #upcoming == 0 then
         flow.add({
             type = "label",
@@ -178,8 +208,11 @@ gcupcoming.populate = function(player_index, anchor)
         data = upcoming
     }
 
-    for i, entry in pairs(upcoming) do
+    for i, entry in ipairs(upcoming) do
         add_upcoming_row(flow, i, entry, player_index)
+        if i < #upcoming then
+            add_separator(flow)
+        end
     end
 end
 
@@ -197,15 +230,11 @@ gcupcoming.refresh_times = function(player_index, anchor)
 
     local elapsed = (game.tick - cache.tick) / 60
 
-    for _, row in pairs(flow.children) do
+    for _, row in ipairs(flow.children) do
         if row.valid and row.tags and row.tags.rank then
             local dur = math.max(0, (row.tags.duration or 0) - elapsed)
             local wait = math.max(0, (row.tags.wait_time or 0) - elapsed)
-            -- For rows after rank 1, wait_time decreases but duration stays the same
-            -- since those researches haven't started yet
-            if row.tags.rank == 1 then
-                dur = math.max(0, (row.tags.duration or 0) - elapsed)
-            else
+            if row.tags.rank ~= 1 then
                 dur = row.tags.duration or 0
             end
 

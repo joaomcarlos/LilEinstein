@@ -23,6 +23,6 @@ data:extend({ -- keybindings
     action = "lua",
     icon = "__LilEinstein__/graphics/icons/shortcut-button.png",
     icon_size = 64,
-    small_icon = "__LilEinstein__/graphics/icons/shortcut-button.png",
-    small_icon_size = 64
+    small_icon = "__LilEinstein__/graphics/icons/shortcut-button-small.png",
+    small_icon_size = 32
 }})

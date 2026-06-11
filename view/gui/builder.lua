@@ -1,4 +1,5 @@
 local const = require('lib.const')
+local logger = require("lib.log")
 local util = require('lib.util')
 local builder = {}
 
@@ -28,9 +29,9 @@ local footer = {
 
 local master_enable = {
     -- Master toggle
-    type = "frame",
+    type = "flow",
     name = "enable_row",
-    style = "lil_einstein_subheader_frame",
+    style = "lil_einstein_horizontal_flow_centered",
     direction = "horizontal",
     children = {{
         type = "sprite-button",
@@ -87,31 +88,19 @@ local announcement_level = {
 
 -- Top left settings part
 local generic_settings = {
-    type = "frame",
+    type = "flow",
     name = "generic_settings_frame",
-    -- style = "lil_einstein_subheader_frame",
-    style = "lil_einstein_top_settings_frame",
+    style = "lil_einstein_top_settings_flow",
     direction = "vertical",
     children = {master_enable, {
-        type = "frame",
+        type = "flow",
         name = "subsettings",
-        style = "lil_einstein_transparent_frame",
         direction = "vertical",
         -- children = {announcement_level, {
         children = {{
             type = "flow",
             name = "force_settings_flow",
-            direction = "vertical",
-            children = {{
-                type = "checkbox",
-                name = "requeue_infinite_tech",
-                caption = "Requeue infinite tech",
-                state = const.default_settings.force.settings.requeue_infinite_tech,
-                tags = {
-                    lil_einstein_on_state_change = true,
-                    handler = "requeue_infinite_tech"
-                }
-            }}
+            direction = "vertical"
         }}
     }}
 }
@@ -161,7 +150,7 @@ local upcoming = {
         }}
     }, {
         type = "scroll-pane",
-        style = "lil_einstein_vertical_scroll_pane",
+        style = "lil_einstein_upcoming_scroll_pane",
         name = "pane_upcoming",
         direction = "vertical",
         children = {{
@@ -183,15 +172,9 @@ local allowed_science = {
     name = "allowed_sciences",
     direction = "vertical",
     children = {{
-        type = "scroll-pane",
-        name = "sci_scroll",
-        direction = "vertical",
-        style = "lil_einstein_vertical_scroll_pane",
-        children = {{
-            type = "table",
-            name = "allowed_science_table",
-            column_count = 14
-        }}
+        type = "table",
+        name = "allowed_science_table",
+        column_count = 14
     }}
 }
 
@@ -307,12 +290,9 @@ local structure = {
                 name = "top_right_upper",
                 direction = "horizontal",
                 children = {generic_settings, lab_panel, {
-                    type = "sprite-button",
+                    type = "button",
                     name = "close_button",
                     style = "lil_einstein_close_button",
-                    sprite = "utility/close",
-                    hovered_sprite = "utility/close",
-                    clicked_sprite = "utility/close",
                     tags = {
                         lil_einstein_on_click = true,
                         handler = "close"
@@ -353,7 +333,7 @@ local structure = {
 local build_recursive
 build_recursive = function(parent, structure)
     if not structure.type then
-        game.print("[LilEinstein] Error: Got empty structure, please open a bug report on the mod portal")
+        logger.error(nil, "Got empty structure, please open a bug report on the mod portal")
         return false
     end
 
@@ -371,8 +351,8 @@ build_recursive = function(parent, structure)
     -- Recursive add elements
     for _, child in pairs(structure.children or {}) do
         if not build_recursive(new, child) then
-            game.print("[LilEinstein] Error while generating children of " .. structure.name ..
-                           ", please open a bug report on the mod portal")
+            logger.error(nil, "Error while generating children of " .. tostring(structure.name) ..
+                ", please open a bug report on the mod portal")
         end
     end
 

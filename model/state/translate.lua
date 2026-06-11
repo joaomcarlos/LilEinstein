@@ -1,3 +1,5 @@
+local logger = require("lib.log")
+
 local translate = {}
 
 local get_global_player = function(player_index)
@@ -216,7 +218,7 @@ translate.get = function(player_index, type, name, field)
     end
     local gpt = gp.translations
     if not gpt then
-        game.print("[LilEinstein] ERROR: Unable to search locale, please wait until translations are complete and try again")
+        logger.error(nil, "Unable to search locale, please wait until translations are complete and try again")
         translate.request(player_index)
         return
     end
