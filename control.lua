@@ -160,6 +160,7 @@ script.on_nth_tick(60, function(e)
         if gui.is_open(p.index) then
             gui.refresh_upcoming_times(p.index)
             gui.refresh_science_counts(p.index)
+            gui.refresh_research_status(p.index)
         end
     end
 end)

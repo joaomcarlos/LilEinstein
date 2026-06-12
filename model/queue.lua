@@ -10,6 +10,9 @@ local rw = require("model.research_weights")
 
 local queue = {}
 
+local research_history_seconds = 10 * 60
+local research_speed_average_samples = 60
+
 -- Data model
 -- storage.forces[force_index].queue.queue = {"tech-1", ...}
 
@@ -860,8 +863,6 @@ queue.record_research_progress = function(force_index)
     -- Sample actual research progress every 60 ticks to measure real speed.
     local f = game.forces[force_index]
     if not f then return end
-    local current = f.current_research
-    if not current then return end
 
     local sf = storage.forces[force_index]
     if not sf.queue then sf.queue = {} end
@@ -871,19 +872,22 @@ queue.record_research_progress = function(force_index)
     local samples = sf.queue.speed_samples
 
     local now = game.tick
-    local progress = f.research_progress or 0
-    local tech_name = current.name
-    local unit_count = current.research_unit_count or 1
+    local current = f.current_research
+    local progress = current and (f.research_progress or 0) or 0
+    local tech_name = current and current.name or nil
+    local unit_count = current and (current.research_unit_count or 1) or 0
+    local speed = 0
 
     -- Compute speed if same research as previous sample
     if #samples > 0 then
         local last = samples[#samples]
-        if last.tech_name == tech_name and progress > last.progress then
+        if current and last.tech_name == tech_name and progress >= last.progress then
             local delta_progress = progress - last.progress
             local delta_ticks = now - last.tick
             -- units per second = (fraction_complete * total_units) / seconds
-            local ups = (delta_progress * unit_count * 60) / delta_ticks
-            last.speed = ups
+            if delta_ticks > 0 then
+                speed = (delta_progress * unit_count * 60) / delta_ticks
+            end
         end
     end
 
@@ -891,11 +895,12 @@ queue.record_research_progress = function(force_index)
         tick = now,
         progress = progress,
         tech_name = tech_name,
-        unit_count = unit_count
+        unit_count = unit_count,
+        speed = speed
     })
 
-    -- Keep only last 60 samples (1 minute at 1 sample/sec)
-    while #samples > 60 do
+    -- Keep only last 10 minutes at 1 sample/sec.
+    while #samples > research_history_seconds do
         table.remove(samples, 1)
     end
 end
@@ -910,7 +915,9 @@ queue.get_research_speed = function(force_index)
 
     local total = 0
     local count = 0
-    for _, s in ipairs(samples) do
+    local start_index = math.max(1, #samples - research_speed_average_samples + 1)
+    for i = start_index, #samples do
+        local s = samples[i]
         if s.speed and s.speed > 0 then
             total = total + s.speed
             count = count + 1
@@ -921,6 +928,89 @@ queue.get_research_speed = function(force_index)
         return total / count, true
     end
     return nil, false
+end
+
+queue.get_research_history = function(force_index, bucket_count)
+    local res = {}
+    bucket_count = bucket_count or 64
+    for i = 1, bucket_count do
+        res[i] = 0
+    end
+
+    local sf = storage.forces[force_index]
+    if not sf or not sf.queue or not sf.queue.speed_samples then
+        return res
+    end
+
+    local samples = sf.queue.speed_samples
+    if #samples == 0 then
+        return res
+    end
+
+    local now = game.tick
+    local history_ticks = research_history_seconds * 60
+    local bucket_ticks = history_ticks / bucket_count
+    local totals = {}
+    local counts = {}
+    for i = 1, bucket_count do
+        totals[i] = 0
+        counts[i] = 0
+    end
+
+    for _, item in ipairs(samples) do
+        if item.tick and item.tick >= now - history_ticks then
+            local offset = item.tick - (now - history_ticks)
+            local bucket = math.floor(offset / bucket_ticks) + 1
+            if bucket < 1 then
+                bucket = 1
+            elseif bucket > bucket_count then
+                bucket = bucket_count
+            end
+            totals[bucket] = totals[bucket] + ((item.speed or 0) * 60)
+            counts[bucket] = counts[bucket] + 1
+        end
+    end
+
+    for i = 1, bucket_count do
+        if counts[i] > 0 then
+            res[i] = totals[i] / counts[i]
+        end
+    end
+    return res
+end
+
+queue.get_research_summary = function(force_index)
+    local f = game.forces[force_index]
+    local speed = queue.get_research_speed(force_index)
+    local spm = speed and (speed * 60) or 0
+    local res = {
+        progress = 0,
+        done = 0,
+        total = 0,
+        spm = spm,
+        remaining_seconds = nil,
+        is_researching = false
+    }
+
+    if not f or not f.current_research then
+        return res
+    end
+
+    local current = f.current_research
+    local progress = f.research_progress or 0
+    local total = current.research_unit_count or 1
+    local done = math.floor((progress * total) + 0.5)
+    local remaining = math.max(0, total - (progress * total))
+
+    res.progress = progress
+    res.done = done
+    res.total = total
+    res.is_researching = true
+    if speed and speed > 0 then
+        res.remaining_seconds = math.ceil(remaining / speed)
+    end
+
+    return res
 end
 
 -- Cooldown tracker for reorder_queue_by_score [force_index] = last_tick

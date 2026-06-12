@@ -12,6 +12,9 @@ local gcupcoming = require("view.gui.components.upcoming")
 
 local content = {}
 local ordered_force_settings = {"requeue_infinite_tech", "auto_research"}
+local research_graph_column_count = 64
+local research_graph_plot_height = 90
+local research_bottle_steps = {0, 2, 5, 10, 15, 20, 30, 40, 50, 70, 80, 90, 95, 99}
 
 local get_science_tooltip = function(player_index, force_index, science, total_count)
     local item_name = state.get_translation(player_index, "item", science, "localised_name") or science
@@ -84,6 +87,156 @@ local refresh_science_counts = function(player_index, anchor)
             end
         elseif count_label then
             count_label.destroy()
+        end
+    end
+end
+
+local format_spaced_number = function(value)
+    local str = tostring(math.floor((value or 0) + 0.5))
+    local res = str:reverse():gsub("(%d%d%d)", "%1 "):reverse():gsub("^%s+", "")
+    return res
+end
+
+local format_time = function(seconds)
+    if not seconds then
+        return "--"
+    end
+    seconds = math.max(0, math.floor(seconds + 0.5))
+    local minutes = math.floor(seconds / 60)
+    local secs = seconds % 60
+    if minutes > 0 then
+        return tostring(minutes) .. "m" .. string.format("%02ds", secs)
+    end
+    return tostring(secs) .. "s"
+end
+
+local format_axis_value = function(value)
+    local label = gutil.format_cost(math.floor((value or 0) + 0.5))
+    return label:gsub("K", "k")
+end
+
+local get_axis_max = function(history, spm)
+    local max_value = spm or 0
+    for _, value in ipairs(history or {}) do
+        if value and value > max_value then
+            max_value = value
+        end
+    end
+    if max_value <= 0 then
+        return 1000
+    end
+    if max_value < 1000 then
+        return math.ceil(max_value)
+    end
+    return math.ceil(max_value / 1000) * 1000
+end
+
+local get_bottle_sprite = function(summary)
+    if not summary or not summary.is_researching then
+        return "lil_einstein_research_bottle_fill_00"
+    end
+
+    local pct = math.max(0, math.min(99, (summary.progress or 0) * 100))
+    local selected = 0
+    for _, step in ipairs(research_bottle_steps) do
+        if pct >= step then
+            selected = step
+        end
+    end
+    return "lil_einstein_research_bottle_fill_" .. string.format("%02d", selected)
+end
+
+local ensure_research_graph_columns = function(plot)
+    if not plot then
+        return
+    end
+    if #plot.children == research_graph_column_count then
+        return
+    end
+
+    plot.clear()
+    for i = 1, research_graph_column_count do
+        local col = plot.add({
+            type = "flow",
+            name = "research_graph_column_" .. i,
+            direction = "vertical",
+            style = "lil_einstein_research_graph_column"
+        })
+        col.add({
+            type = "empty-widget",
+            name = "research_graph_spacer_" .. i,
+            style = "lil_einstein_research_graph_point_spacer"
+        })
+        col.add({
+            type = "sprite",
+            name = "research_graph_point_" .. i,
+            style = "lil_einstein_research_graph_point",
+            sprite = "lil_einstein_research_graph_point",
+            ignored_by_interaction = true
+        })
+    end
+end
+
+local refresh_research_status = function(player_index, anchor)
+    local p = game.get_player(player_index)
+    if not p or not anchor then
+        return
+    end
+
+    local summary = queue.get_research_summary(p.force.index)
+    local bottle = gutil.get_child(anchor, "research_bottle_sprite")
+    if bottle and bottle.type == "sprite" then
+        bottle.sprite = get_bottle_sprite(summary)
+    end
+
+    local progress_value = gutil.get_child(anchor, "research_graph_progress_value")
+    if progress_value then
+        progress_value.caption = format_spaced_number(summary.done) .. " / " .. format_spaced_number(summary.total)
+    end
+
+    local spm_value = gutil.get_child(anchor, "research_graph_spm_value")
+    if spm_value then
+        spm_value.caption = format_spaced_number(summary.spm)
+    end
+
+    local remaining_value = gutil.get_child(anchor, "research_graph_remaining_value")
+    if remaining_value then
+        remaining_value.caption = format_time(summary.remaining_seconds)
+    end
+
+    local history = queue.get_research_history(p.force.index, research_graph_column_count)
+    local axis_max = get_axis_max(history, summary.spm)
+    for i = 1, 8 do
+        local label = gutil.get_child(anchor, "research_graph_axis_" .. i)
+        if label then
+            label.caption = format_axis_value(axis_max * (8 - i) / 7)
+        end
+    end
+
+    local plot = gutil.get_child(anchor, "research_graph_plot")
+    ensure_research_graph_columns(plot)
+    if not plot then
+        return
+    end
+
+    for i = 1, research_graph_column_count do
+        local col = plot["research_graph_column_" .. i]
+        local value = history[i] or 0
+        if col then
+            local spacer = col["research_graph_spacer_" .. i]
+            local point = col["research_graph_point_" .. i]
+            if spacer and point then
+                local ratio = value / axis_max
+                if ratio > 1 then
+                    ratio = 1
+                elseif ratio < 0 then
+                    ratio = 0
+                end
+                spacer.style.height = math.floor((1 - ratio) * (research_graph_plot_height - 2))
+                if point.type == "sprite" then
+                    point.visible = true
+                end
+            end
         end
     end
 end
@@ -470,6 +623,7 @@ end
 content.repopulate_dynamic = function(player_index, anchor)
     gctech.populate(player_index, anchor)
     gcupcoming.populate(player_index, anchor)
+    refresh_research_status(player_index, anchor)
     set_master_enable(player_index, anchor)
 end
 
@@ -492,6 +646,10 @@ end
 
 content.refresh_science_counts = function(player_index, anchor)
     refresh_science_counts(player_index, anchor)
+end
+
+content.refresh_research_status = function(player_index, anchor)
+    refresh_research_status(player_index, anchor)
 end
 
 return content

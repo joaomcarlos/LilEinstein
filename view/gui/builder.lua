@@ -3,21 +3,180 @@ local logger = require("lib.log")
 local util = require('lib.util')
 local builder = {}
 
+local fallback_add = function(parent, prop)
+    local ok, new = pcall(parent.add, prop)
+    if ok then
+        return new
+    end
+
+    local retry = {}
+    for k, v in pairs(prop) do
+        retry[k] = v
+    end
+
+    retry.style = nil
+    if retry.type == "sprite" then
+        retry.type = "empty-widget"
+        retry.sprite = nil
+    elseif retry.type == "sprite-button" then
+        retry.sprite = nil
+        retry.hovered_sprite = nil
+        retry.clicked_sprite = nil
+    end
+
+    ok, new = pcall(parent.add, retry)
+    if ok then
+        return new
+    end
+
+    logger.error(nil, "Could not add GUI element " .. tostring(prop.name) .. ": " .. tostring(new))
+    return nil
+end
+
+local research_graph_axis_labels = {}
+for i = 1, 8 do
+    table.insert(research_graph_axis_labels, {
+        type = "label",
+        name = "research_graph_axis_" .. i,
+        style = "lil_einstein_research_graph_axis_label",
+        caption = ""
+    })
+end
+
+local research_graph_x_labels = {}
+for _, item in ipairs({"10", "8", "6", "4", "2", "0"}) do
+    table.insert(research_graph_x_labels, {
+        type = "label",
+        style = "lil_einstein_research_graph_x_label",
+        caption = item
+    })
+end
+
+local research_graph_stat_row = function(name, label)
+    return {
+        type = "flow",
+        name = name .. "_row",
+        style = "lil_einstein_research_graph_stat_row",
+        direction = "horizontal",
+        children = {{
+            type = "label",
+            style = "lil_einstein_research_graph_stat_label",
+            caption = label
+        }, {
+            type = "label",
+            name = name,
+            style = "lil_einstein_research_graph_stat_value",
+            caption = ""
+        }}
+    }
+end
+
 ---------------------------------------------------------------------------------------------------
 --- Left pane content
 ---------------------------------------------------------------------------------------------------
+local brand_research_bottle = {
+    type = "flow",
+    name = "brand_research_bottle_overlay",
+    style = "lil_einstein_brand_overlay_flow",
+    direction = "vertical",
+    children = {{
+        type = "empty-widget",
+        style = "lil_einstein_brand_bottle_top_spacer"
+    }, {
+        type = "flow",
+        name = "brand_research_bottle_row",
+        style = "lil_einstein_horizontal_flow_nospacing",
+        direction = "horizontal",
+        children = {{
+            type = "empty-widget",
+            style = "lil_einstein_brand_bottle_left_spacer"
+        }, {
+            type = "sprite",
+            name = "research_bottle_sprite",
+            style = "lil_einstein_research_bottle_sprite",
+            sprite = "lil_einstein_research_bottle_fill_00",
+            ignored_by_interaction = true
+        }}
+    }}
+}
+
 local brand_header = {
     type = "frame",
     name = "brand_header",
     style = "lil_einstein_brand_frame",
-    direction = "horizontal"
+    direction = "horizontal",
+    children = {brand_research_bottle}
+}
+
+local research_graph_panel = {
+    type = "frame",
+    name = "research_graph_panel",
+    style = "lil_einstein_research_graph_panel",
+    direction = "vertical",
+    children = {{
+        type = "flow",
+        name = "research_graph_header",
+        style = "lil_einstein_research_graph_header",
+        direction = "horizontal",
+        children = {{
+            type = "label",
+            style = "lil_einstein_research_graph_title",
+            caption = "Science production information"
+        }}
+    }, {
+        type = "flow",
+        name = "research_graph_body",
+        style = "lil_einstein_research_graph_body",
+        direction = "horizontal",
+        children = {{
+            type = "flow",
+            name = "research_graph_axis_labels",
+            style = "lil_einstein_research_graph_axis_labels",
+            direction = "vertical",
+            children = research_graph_axis_labels
+        }, {
+            type = "flow",
+            name = "research_graph_plot_stack",
+            style = "lil_einstein_research_graph_plot_stack",
+            direction = "vertical",
+            children = {{
+                type = "frame",
+                name = "research_graph_plot_frame",
+                style = "lil_einstein_research_graph_plot_frame",
+                direction = "vertical",
+                children = {{
+                    type = "flow",
+                    name = "research_graph_plot",
+                    style = "lil_einstein_research_graph_plot",
+                    direction = "horizontal"
+                }, {
+                    type = "flow",
+                    name = "research_graph_stats",
+                    style = "lil_einstein_research_graph_stats",
+                    direction = "vertical",
+                    children = {
+                        research_graph_stat_row("research_graph_progress_value", "Progress:"),
+                        research_graph_stat_row("research_graph_spm_value", "Science per Minute:"),
+                        research_graph_stat_row("research_graph_remaining_value", "Remaining time estimate:")
+                    }
+                }}
+            }, {
+                type = "flow",
+                name = "research_graph_x_axis",
+                style = "lil_einstein_research_graph_x_axis",
+                direction = "horizontal",
+                children = research_graph_x_labels
+            }}
+        }}
+    }}
 }
 
 local lab_panel = {
     type = "frame",
     name = "lab_panel_frame",
     style = "lil_einstein_lab_frame",
-    direction = "horizontal"
+    direction = "horizontal",
+    children = {research_graph_panel}
 }
 
 local footer = {
@@ -346,7 +505,10 @@ build_recursive = function(parent, structure)
     end
 
     -- Add the element
-    local new = parent.add(prop)
+    local new = fallback_add(parent, prop)
+    if not new then
+        return false
+    end
 
     -- Recursive add elements
     for _, child in pairs(structure.children or {}) do

@@ -237,6 +237,209 @@ data.raw["gui-style"].default["lil_einstein_lab_panel"] = {
     stretch_image_to_widget_size = true
 }
 
+data.raw["gui-style"].default["lil_einstein_brand_overlay_flow"] = {
+    type = "vertical_flow_style",
+    width = 755,
+    height = 287,
+    vertical_spacing = 0
+}
+
+data.raw["gui-style"].default["lil_einstein_brand_bottle_top_spacer"] = {
+    type = "empty_widget_style",
+    width = 1,
+    height = 166
+}
+
+data.raw["gui-style"].default["lil_einstein_brand_bottle_left_spacer"] = {
+    type = "empty_widget_style",
+    width = 134,
+    height = 1
+}
+
+data.raw["gui-style"].default["lil_einstein_research_bottle_sprite"] = {
+    type = "image_style",
+    parent = "image",
+    width = 112,
+    height = 89,
+    horizontally_stretchable = "off",
+    vertically_stretchable = "off",
+    horizontally_squashable = "off",
+    vertically_squashable = "off",
+    stretch_image_to_widget_size = true
+}
+
+data.raw["gui-style"].default["lil_einstein_research_graph_panel"] = {
+    type = "frame_style",
+    parent = "inside_shallow_frame",
+    width = 520,
+    height = 146,
+    top_margin = 49,
+    padding = 0,
+    vertically_stretchable = "off"
+}
+
+data.raw["gui-style"].default["lil_einstein_research_graph_header"] = {
+    type = "horizontal_flow_style",
+    width = 520,
+    height = 28,
+    left_padding = 11,
+    top_padding = 5,
+    horizontal_spacing = 6,
+    vertical_align = "center"
+}
+
+data.raw["gui-style"].default["lil_einstein_research_graph_title"] = {
+    type = "label_style",
+    parent = "heading_2_label",
+    font = "default-bold",
+    font_color = {0.96, 0.93, 0.86},
+    width = 480,
+    padding = 0
+}
+
+data.raw["gui-style"].default["lil_einstein_research_graph_body"] = {
+    type = "horizontal_flow_style",
+    width = 520,
+    height = 118,
+    horizontal_spacing = 4,
+    left_padding = 8,
+    right_padding = 8,
+    bottom_padding = 3
+}
+
+data.raw["gui-style"].default["lil_einstein_research_graph_axis_labels"] = {
+    type = "vertical_flow_style",
+    width = 31,
+    height = 90,
+    vertical_spacing = 0,
+    top_margin = 0
+}
+
+data.raw["gui-style"].default["lil_einstein_research_graph_axis_label"] = {
+    type = "label_style",
+    parent = "label",
+    width = 31,
+    height = 11,
+    font = "default-small",
+    font_color = {0.45, 0.45, 0.45},
+    horizontal_align = "right",
+    padding = 0,
+    margin = 0
+}
+
+data.raw["gui-style"].default["lil_einstein_research_graph_plot_stack"] = {
+    type = "vertical_flow_style",
+    width = 456,
+    height = 109,
+    vertical_spacing = 0
+}
+
+data.raw["gui-style"].default["lil_einstein_research_graph_plot_frame"] = {
+    type = "frame_style",
+    width = 456,
+    height = 90,
+    padding = 0,
+    graphical_set = {
+        base = {
+            filename = "__LilEinstein__/graphics/ui/research-graph-grid.png",
+            width = 456,
+            height = 90
+        }
+    }
+}
+
+data.raw["gui-style"].default["lil_einstein_research_graph_plot"] = {
+    type = "horizontal_flow_style",
+    width = 448,
+    height = 90,
+    horizontal_spacing = 0,
+    left_padding = 4,
+    right_padding = 4,
+    vertical_align = "top"
+}
+
+data.raw["gui-style"].default["lil_einstein_research_graph_column"] = {
+    type = "vertical_flow_style",
+    width = 7,
+    height = 90,
+    vertical_spacing = 0,
+    horizontal_align = "center"
+}
+
+data.raw["gui-style"].default["lil_einstein_research_graph_point_spacer"] = {
+    type = "empty_widget_style",
+    width = 1,
+    height = 90
+}
+
+data.raw["gui-style"].default["lil_einstein_research_graph_point"] = {
+    type = "image_style",
+    parent = "image",
+    width = 4,
+    height = 2,
+    stretch_image_to_widget_size = true,
+    padding = 0,
+    margin = 0
+}
+
+data.raw["gui-style"].default["lil_einstein_research_graph_stats"] = {
+    type = "vertical_flow_style",
+    width = 220,
+    height = 51,
+    left_margin = 226,
+    top_margin = -62,
+    vertical_spacing = 2
+}
+
+data.raw["gui-style"].default["lil_einstein_research_graph_stat_row"] = {
+    type = "horizontal_flow_style",
+    width = 220,
+    height = 15,
+    horizontal_spacing = 0
+}
+
+data.raw["gui-style"].default["lil_einstein_research_graph_stat_label"] = {
+    type = "label_style",
+    parent = "label",
+    width = 126,
+    height = 15,
+    font = "default-small",
+    font_color = {0.84, 0.82, 0.75},
+    padding = 0,
+    margin = 0
+}
+
+data.raw["gui-style"].default["lil_einstein_research_graph_stat_value"] = {
+    type = "label_style",
+    parent = "label",
+    width = 94,
+    height = 15,
+    font = "default-bold",
+    font_color = {1.0, 0.80, 0.22},
+    horizontal_align = "right",
+    padding = 0,
+    margin = 0
+}
+
+data.raw["gui-style"].default["lil_einstein_research_graph_x_axis"] = {
+    type = "horizontal_flow_style",
+    width = 456,
+    height = 14,
+    horizontal_spacing = 0
+}
+
+data.raw["gui-style"].default["lil_einstein_research_graph_x_label"] = {
+    type = "label_style",
+    parent = "label",
+    width = 76,
+    height = 14,
+    font = "default-small",
+    font_color = {0.37, 0.37, 0.37},
+    horizontal_align = "center",
+    padding = 0,
+    margin = 0
+}
+
 data.raw["gui-style"].default["lil_einstein_footer_frame"] = {
     type = "frame_style",
     width = 1672,

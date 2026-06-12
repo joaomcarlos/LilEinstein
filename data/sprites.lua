@@ -1,5 +1,6 @@
 -- Small = 16px, medium = 32px, large = 64px
 local p = "__LilEinstein__/graphics/icons/"
+local ui = "__LilEinstein__/graphics/ui/"
 local ui_slices = require("lib.ui_slices")
 local ui_slice_aliases = {
     button_all = "allowed_button_all",
@@ -46,6 +47,18 @@ local get_ui_sprite = function(name, w, h)
         priority = "extra-high-no-scale",
         width = slice.image_w or w,
         height = slice.image_h or h
+    }
+    return prop
+end
+
+local get_research_sprite = function(name, w, h, filename)
+    local prop = {
+        type = "sprite",
+        name = "lil_einstein_" .. name,
+        filename = ui .. filename,
+        priority = "extra-high-no-scale",
+        width = w,
+        height = h
     }
     return prop
 end
@@ -102,3 +115,21 @@ for _, name in ipairs(ui_sprite_names) do
     end
 end
 data:extend(ui_sprites)
+
+data:extend({
+    get_research_sprite("research_bottle_fill_00", 179, 142, "research-bottle-fill-00.png"),
+    get_research_sprite("research_bottle_fill_02", 179, 142, "research-bottle-fill-02.png"),
+    get_research_sprite("research_bottle_fill_05", 179, 142, "research-bottle-fill-05.png"),
+    get_research_sprite("research_bottle_fill_10", 179, 142, "research-bottle-fill-10.png"),
+    get_research_sprite("research_bottle_fill_15", 179, 142, "research-bottle-fill-15.png"),
+    get_research_sprite("research_bottle_fill_20", 179, 142, "research-bottle-fill-20.png"),
+    get_research_sprite("research_bottle_fill_30", 179, 142, "research-bottle-fill-30.png"),
+    get_research_sprite("research_bottle_fill_40", 179, 142, "research-bottle-fill-40.png"),
+    get_research_sprite("research_bottle_fill_50", 179, 142, "research-bottle-fill-50.png"),
+    get_research_sprite("research_bottle_fill_70", 179, 142, "research-bottle-fill-70.png"),
+    get_research_sprite("research_bottle_fill_80", 179, 142, "research-bottle-fill-80.png"),
+    get_research_sprite("research_bottle_fill_90", 179, 142, "research-bottle-fill-90.png"),
+    get_research_sprite("research_bottle_fill_95", 179, 142, "research-bottle-fill-95.png"),
+    get_research_sprite("research_bottle_fill_99", 179, 142, "research-bottle-fill-99.png"),
+    get_research_sprite("research_graph_point", 4, 2, "research-graph-point.png")
+})
