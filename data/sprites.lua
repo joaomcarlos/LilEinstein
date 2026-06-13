@@ -130,6 +130,5 @@ data:extend({
     get_research_sprite("research_bottle_fill_80", 179, 142, "research-bottle-fill-80.png"),
     get_research_sprite("research_bottle_fill_90", 179, 142, "research-bottle-fill-90.png"),
     get_research_sprite("research_bottle_fill_95", 179, 142, "research-bottle-fill-95.png"),
-    get_research_sprite("research_bottle_fill_99", 179, 142, "research-bottle-fill-99.png"),
-    get_research_sprite("research_graph_point", 4, 2, "research-graph-point.png")
+    get_research_sprite("research_bottle_fill_99", 179, 142, "research-bottle-fill-99.png")
 })

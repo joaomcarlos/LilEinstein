@@ -52,7 +52,7 @@ for _, item in ipairs({"10", "8", "6", "4", "2", "0"}) do
     })
 end
 
-local research_graph_stat_row = function(name, label)
+local research_graph_stat_row = function(name, label, label_style, value_style)
     return {
         type = "flow",
         name = name .. "_row",
@@ -60,12 +60,12 @@ local research_graph_stat_row = function(name, label)
         direction = "horizontal",
         children = {{
             type = "label",
-            style = "lil_einstein_research_graph_stat_label",
+            style = label_style or "lil_einstein_research_graph_stat_label",
             caption = label
         }, {
             type = "label",
             name = name,
-            style = "lil_einstein_research_graph_stat_value",
+            style = value_style or "lil_einstein_research_graph_stat_value",
             caption = ""
         }}
     }
@@ -115,16 +115,6 @@ local research_graph_panel = {
     direction = "vertical",
     children = {{
         type = "flow",
-        name = "research_graph_header",
-        style = "lil_einstein_research_graph_header",
-        direction = "horizontal",
-        children = {{
-            type = "label",
-            style = "lil_einstein_research_graph_title",
-            caption = "Science production information"
-        }}
-    }, {
-        type = "flow",
         name = "research_graph_body",
         style = "lil_einstein_research_graph_body",
         direction = "horizontal",
@@ -155,7 +145,12 @@ local research_graph_panel = {
                     style = "lil_einstein_research_graph_stats",
                     direction = "vertical",
                     children = {
-                        research_graph_stat_row("research_graph_progress_value", "Progress:"),
+                        research_graph_stat_row(
+                            "research_graph_progress_value",
+                            "Progress:",
+                            "lil_einstein_research_graph_progress_stat_label",
+                            "lil_einstein_research_graph_progress_stat_value"
+                        ),
                         research_graph_stat_row("research_graph_spm_value", "Science per Minute:"),
                         research_graph_stat_row("research_graph_remaining_value", "Remaining time estimate:")
                     }

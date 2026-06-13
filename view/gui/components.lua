@@ -12,8 +12,9 @@ local gcupcoming = require("view.gui.components.upcoming")
 
 local content = {}
 local ordered_force_settings = {"requeue_infinite_tech", "auto_research"}
-local research_graph_column_count = 64
-local research_graph_plot_height = 90
+local research_graph_column_count = 152
+local research_graph_column_width = 3
+local research_graph_plot_height = 118
 local research_bottle_steps = {0, 2, 5, 10, 15, 20, 30, 40, 50, 70, 80, 90, 95, 99}
 
 local get_science_tooltip = function(player_index, force_index, science, total_count)
@@ -151,7 +152,11 @@ local ensure_research_graph_columns = function(plot)
         return
     end
     if #plot.children == research_graph_column_count then
-        return
+        local col = plot["research_graph_column_1"]
+        if col and col["research_graph_vertical_before_1"] and col["research_graph_horizontal_1"] and
+            col["research_graph_vertical_after_1"] then
+            return
+        end
     end
 
     plot.clear()
@@ -165,15 +170,35 @@ local ensure_research_graph_columns = function(plot)
         col.add({
             type = "empty-widget",
             name = "research_graph_spacer_" .. i,
-            style = "lil_einstein_research_graph_point_spacer"
+            style = "lil_einstein_research_graph_line_spacer"
         })
-        col.add({
-            type = "sprite",
-            name = "research_graph_point_" .. i,
-            style = "lil_einstein_research_graph_point",
-            sprite = "lil_einstein_research_graph_point",
+        local vertical_before = col.add({
+            type = "line",
+            name = "research_graph_vertical_before_" .. i,
+            direction = "vertical",
+            style = "lil_einstein_research_graph_data_line",
             ignored_by_interaction = true
         })
+        vertical_before.visible = false
+        vertical_before.style.width = 1
+        local horizontal = col.add({
+            type = "line",
+            name = "research_graph_horizontal_" .. i,
+            direction = "horizontal",
+            style = "lil_einstein_research_graph_data_line",
+            ignored_by_interaction = true
+        })
+        horizontal.style.width = research_graph_column_width
+        horizontal.style.height = 1
+        local vertical_after = col.add({
+            type = "line",
+            name = "research_graph_vertical_after_" .. i,
+            direction = "vertical",
+            style = "lil_einstein_research_graph_data_line",
+            ignored_by_interaction = true
+        })
+        vertical_after.visible = false
+        vertical_after.style.width = 1
     end
 end
 
@@ -224,17 +249,50 @@ local refresh_research_status = function(player_index, anchor)
         local value = history[i] or 0
         if col then
             local spacer = col["research_graph_spacer_" .. i]
-            local point = col["research_graph_point_" .. i]
-            if spacer and point then
+            local vertical_before = col["research_graph_vertical_before_" .. i]
+            local horizontal = col["research_graph_horizontal_" .. i]
+            local vertical_after = col["research_graph_vertical_after_" .. i]
+            if spacer and vertical_before and horizontal and vertical_after then
                 local ratio = value / axis_max
                 if ratio > 1 then
                     ratio = 1
                 elseif ratio < 0 then
                     ratio = 0
                 end
-                spacer.style.height = math.floor((1 - ratio) * (research_graph_plot_height - 2))
-                if point.type == "sprite" then
-                    point.visible = true
+                local previous_value = history[i - 1] or value
+                local previous_ratio = previous_value / axis_max
+                if previous_ratio > 1 then
+                    previous_ratio = 1
+                elseif previous_ratio < 0 then
+                    previous_ratio = 0
+                end
+
+                local y = math.floor((1 - ratio) * (research_graph_plot_height - 1))
+                local previous_y = math.floor((1 - previous_ratio) * (research_graph_plot_height - 1))
+                local vertical_before_height = 0
+                local vertical_after_height = 0
+                if previous_y < y then
+                    spacer.style.height = previous_y
+                    vertical_before_height = y - previous_y
+                else
+                    spacer.style.height = y
+                    vertical_after_height = previous_y - y
+                end
+
+                if vertical_before_height > 0 then
+                    vertical_before.style.height = vertical_before_height
+                    vertical_before.visible = true
+                else
+                    vertical_before.visible = false
+                end
+                horizontal.style.width = research_graph_column_width
+                horizontal.style.height = 1
+                horizontal.visible = true
+                if vertical_after_height > 0 then
+                    vertical_after.style.height = vertical_after_height
+                    vertical_after.visible = true
+                else
+                    vertical_after.visible = false
                 end
             end
         end
