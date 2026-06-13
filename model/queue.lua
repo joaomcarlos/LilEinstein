@@ -25,7 +25,9 @@ local keys = {
     misses_science = "misses_science",
     announced_blocked = "announced_blocked",
     is_stuck = "is_stuck",
-    pinned_tech = "pinned_tech"
+    pinned_tech = "pinned_tech",
+    internal_queue_update_until = "internal_queue_update_until",
+    internal_cancelled_techs = "internal_cancelled_techs"
 }
 
 ---------------------------------------------------------------------------
@@ -250,51 +252,106 @@ queue.science_is_available = function(xcur, lsci)
     return true
 end
 local science_is_available = queue.science_is_available
+
+local tech_can_be_runtime_candidate = function(force_index, xcur)
+    if not xcur or not xcur.technology or not xcur.meta then
+        return false
+    end
+    if xcur.technology.researched then
+        return false
+    end
+    if not xcur.technology.enabled or xcur.meta.hidden or xcur.meta.has_trigger then
+        return false
+    end
+    if not queue.get_tech_enabled(force_index, xcur.technology.name) then
+        return false
+    end
+    if xcur.meta.is_infinite then
+        local cap = rw.research_caps[xcur.technology.name]
+        if cap and xcur.technology.level >= cap then
+            return false
+        end
+    end
+    return true
+end
+
+local mark_missing_science = function(sfsci, tech_name)
+    if sfsci and tech_name then
+        sfsci[tech_name] = true
+    end
+end
+
+local find_runtime_candidate = function(force_index, tech_name, tsx, lsci, sfsci)
+    local xcur = tsx and tsx[tech_name]
+    if not tech_can_be_runtime_candidate(force_index, xcur) then
+        return nil, nil
+    end
+
+    if xcur.available then
+        if science_is_available(xcur, lsci) then
+            return tech_name, nil
+        end
+        mark_missing_science(sfsci, tech_name)
+        return nil, tech_name
+    end
+
+    local fallback
+    local misses_science = false
+    for pre_req_tech, _ in pairs(xcur.meta.all_prerequisites or {}) do
+        local xpre = tsx[pre_req_tech]
+        if tech_can_be_runtime_candidate(force_index, xpre) and xpre.available then
+            if science_is_available(xpre, lsci) then
+                return pre_req_tech, nil
+            end
+            misses_science = true
+            fallback = fallback or pre_req_tech
+        end
+    end
+    if misses_science then
+        mark_missing_science(sfsci, tech_name)
+    end
+    return nil, fallback
+end
+
 local get_first_next_tech = function(f)
-    -- This function returns the first next available technology as required to progress in the queue
+    -- This function returns the next runtime technology without changing the virtual queue order.
     local sfq = get(f.index, keys.queue)
+    local tsx = tech.get_all_tech_state_ext(f.index)
     local lsci = lab.get_labs_fill_rate(f.index)
 
     -- Reset current researching tech
     set(f.index, keys.current_tech, nil)
+    set(f.index, keys.current_tech_smart, nil)
 
     -- Reset & get missing science array
     set(f.index, keys.misses_science, {})
     local sfsci = get(f.index, keys.misses_science)
 
-    for _, q in ipairs(sfq or {}) do
-        local xcur = tech.get_single_tech_state_ext(f.index, q)
-        if not xcur then goto skip_next end
-        if xcur.technology.researched then goto skip_next end
-        if not xcur.technology.enabled or xcur.meta.hidden then goto skip_next end
-
-        if xcur.available then
-            if science_is_available(xcur, lsci) then
-                set(f.index, keys.current_tech, q)
-                set(f.index, keys.current_tech_smart, nil)
-                return q
-            else
-                sfsci[q] = true
-            end
-        else
-            local misses_science = false
-            for pre_req_tech, _ in pairs(xcur.meta.all_prerequisites or {}) do
-                local xpre = tech.get_single_tech_state_ext(f.index, pre_req_tech)
-                if xpre and not xpre.technology.researched and tech_is_available(xpre) then
-                    if science_is_available(xpre, lsci) then
-                        set(f.index, keys.current_tech, q)
-                        set(f.index, keys.current_tech_smart, nil)
-                        return pre_req_tech
-                    else
-                        misses_science = true
-                    end
-                end
-            end
-            if misses_science then
-                sfsci[q] = true
-            end
+    local fallback
+    local pinned = queue.get_pinned_tech(f.index)
+    if pinned then
+        local candidate, pinned_fallback = find_runtime_candidate(f.index, pinned, tsx, lsci, sfsci)
+        if candidate then
+            set(f.index, keys.current_tech, candidate)
+            return candidate
         end
-        ::skip_next::
+        fallback = fallback or pinned_fallback
+    end
+
+    for _, q in ipairs(sfq or {}) do
+        if q ~= pinned then
+            local candidate, queue_fallback = find_runtime_candidate(f.index, q, tsx, lsci, sfsci)
+            if candidate then
+                set(f.index, keys.current_tech, candidate)
+                return candidate
+            end
+            fallback = fallback or queue_fallback
+        end
+    end
+
+    if fallback then
+        set(f.index, keys.current_tech, fallback)
+        return fallback
     end
 end
 
@@ -438,6 +495,53 @@ queue.set_pinned_tech = function(force_index, tech_name)
     set(force_index, keys.pinned_tech, tech_name)
 end
 
+local mark_internal_research_queue_update = function(force_index, queue_names)
+    local sf = storage.forces[force_index]
+    if not sf or not sf.queue then
+        return
+    end
+
+    sf.queue[keys.internal_queue_update_until] = game.tick + 2
+    local cancelled = {}
+    local f = game.forces[force_index]
+    if f and f.current_research then
+        cancelled[f.current_research.name] = game.tick + 2
+    end
+    for _, tech_name in ipairs(queue_names or {}) do
+        cancelled[tech_name] = game.tick + 2
+    end
+    sf.queue[keys.internal_cancelled_techs] = cancelled
+end
+
+queue.is_internal_research_queue_update = function(f)
+    if not f or not storage.forces[f.index] or not storage.forces[f.index].queue then
+        return false
+    end
+
+    local sq = storage.forces[f.index].queue
+    local expires = sq[keys.internal_queue_update_until]
+    if expires and expires >= game.tick then
+        return true
+    end
+    sq[keys.internal_queue_update_until] = nil
+    return false
+end
+
+queue.consume_internal_research_cancel = function(f, tech_name)
+    if not f or not tech_name or not storage.forces[f.index] or not storage.forces[f.index].queue then
+        return false
+    end
+
+    local sq = storage.forces[f.index].queue
+    local cancelled = sq[keys.internal_cancelled_techs]
+    local expires = cancelled and cancelled[tech_name]
+    if expires and expires >= game.tick then
+        cancelled[tech_name] = nil
+        return true
+    end
+    return false
+end
+
 queue.research_is_stuck = function(f)
     -- Get some variables to work with
     local sfq = get(f.index, keys.queue)
@@ -529,6 +633,10 @@ queue.requeue_finished = function(f, t)
         return
     end
 
+    if queue.get_pinned_tech(f.index) == t.name then
+        queue.set_pinned_tech(f.index, nil)
+    end
+
     -- For finite tech levels that are not fully researched yet we only need to request the next stage
     if xcur.technology.level and not xcur.meta.is_infinite and not xcur.technology.researched then
         return
@@ -543,21 +651,6 @@ queue.requeue_finished = function(f, t)
             const.default_settings.force.settings.requeue_infinite_tech) then
         queue.add(f, t.name)
     end
-end
-
-local set_ingame_research = function(f, tech_name)
-    local target = f.technologies[tech_name]
-    if not target then return end
-    -- Already researching this tech
-    if f.current_research and f.current_research.name == tech_name then
-        return
-    end
-    -- If idle, start the tech
-    if not f.current_research then
-        f.add_research(target)
-        return
-    end
-    -- Already researching something else: do nothing, let reorder_queue_by_score handle queue ordering
 end
 
 queue.start_next_research = function(f)
@@ -591,53 +684,20 @@ queue.start_next_research = function(f)
         end
     end
 
-    if not f.current_research then
-        -- Idle: ensure sorted then pick best scored available tech and start it
+    queue.reorder_queue_by_score(f.index)
+    if get(f.index, keys.current_tech) then
+        return
+    end
+
+    if auto_research and not f.current_research then
+        queue.build_queue_from_available(f.index)
         queue.reorder_queue_by_score(f.index)
-        local next = get_first_next_tech(f)
-        if next then
-            set_ingame_research(f, next)
-            set(f.index, keys.current_tech_smart, nil)
+        if get(f.index, keys.current_tech) then
             return
         end
-        if auto_research then
-            queue.build_queue_from_available(f.index)
-            queue.reorder_queue_by_score(f.index)
-            next = get_first_next_tech(f)
-            if next then
-                set_ingame_research(f, next)
-                set(f.index, keys.current_tech_smart, nil)
-                return
-            end
-        end
-        f.research_queue = {}
-    else
-        -- Researching: keep display in sync and switch away if starved
-        set(f.index, keys.current_tech, f.current_research.name)
-        if auto_research then
-            -- Refresh queue with newly available techs so prerequisites that
-            -- just completed are picked up instead of letting the queue go stale
-            queue.build_queue_from_available(f.index)
-        end
-        queue.reorder_queue_by_score(f.index)
-        if queue.research_is_stuck(f) then
-            local sfq = get(f.index, keys.queue)
-            local tsx = tech.get_all_tech_state_ext(f.index)
-            local lsci = lab.get_labs_fill_rate(f.index)
-            -- Scan the whole queue for the first available tech and switch to it
-            for _, q in ipairs(sfq or {}) do
-                if q ~= f.current_research.name then
-                    local x = tsx and tsx[q]
-                    if x and x.available and science_is_available(x, lsci) then
-                        f.cancel_current_research()
-                        f.research_queue = sfq
-                        set(f.index, keys.current_tech, q)
-                        break
-                    end
-                end
-            end
-        end
     end
+
+    f.research_queue = {}
 end
 
 ---------------------------------------------------------------------------
@@ -1080,7 +1140,6 @@ queue.get_research_summary = function(force_index)
     return res
 end
 
--- Cooldown tracker for reorder_queue_by_score [force_index] = last_tick
 -- Two-tier cache per force:
 --   labs_cache: labs, refreshed every 10 min (36000 ticks)
 --   counts_cache: counts refreshed every tick
@@ -1274,149 +1333,226 @@ queue.get_science_count_breakdown = function(force_index, science)
     }
 end
 
-local reorder_cooldown = {}
+local get_research_unit_count = function(xcur)
+    local cost = xcur.technology.research_unit_count or 1
+    if xcur.meta.is_infinite and xcur.meta.prototype.research_unit_count_formula then
+        local est = eval_formula(xcur.meta.prototype.research_unit_count_formula, xcur.technology.level)
+        if est then
+            cost = est
+        end
+    end
+    return cost
+end
+
+local get_virtual_queue_source = function(force_index, tsx)
+    local sfq = get(force_index, keys.queue)
+    if sfq and #sfq > 0 then
+        return sfq
+    end
+
+    local scored = {}
+    local total_cost_sum = 0
+    local cost_count = 0
+    for tech_name, xcur in pairs(tsx or {}) do
+        if tech_can_be_runtime_candidate(force_index, xcur) then
+            total_cost_sum = total_cost_sum + get_research_unit_count(xcur)
+            cost_count = cost_count + 1
+        end
+    end
+    local avg_cost = cost_count > 0 and (total_cost_sum / cost_count) or nil
+
+    for tech_name, xcur in pairs(tsx or {}) do
+        if tech_can_be_runtime_candidate(force_index, xcur) then
+            local stored_ub = queue.get_tech_ub(force_index, tech_name)
+            local sd = queue.score_tech_detailed(xcur, xcur.technology.level, stored_ub, avg_cost, force_index)
+            table.insert(scored, {
+                tech_name = tech_name,
+                score = sd.total
+            })
+        end
+    end
+
+    table.sort(scored, function(a, b)
+        return a.score > b.score
+    end)
+
+    local res = {}
+    for _, entry in ipairs(scored) do
+        table.insert(res, entry.tech_name)
+    end
+    return res
+end
+
+local get_virtual_research_entries = function(force_index, count)
+    local f = game.forces[force_index]
+    if not f then
+        return {}
+    end
+
+    local tsx = tech.get_all_tech_state_ext(force_index)
+    if not tsx then
+        return {}
+    end
+
+    local sfq = get_virtual_queue_source(force_index, tsx)
+    if not sfq or #sfq == 0 then
+        return {}
+    end
+
+    local speed, _ = queue.get_research_speed(force_index)
+    if not speed or speed <= 0 then
+        speed = nil
+    end
+
+    local lsci = lab.get_labs_fill_rate(force_index)
+    local virtually_researched = {}
+    for name, xcur in pairs(tsx) do
+        if xcur.technology.researched then
+            virtually_researched[name] = true
+        end
+    end
+
+    local results = {}
+    local cumulative_time = 0
+    local max_results = count or math.huge
+    local max_iter = math.max(#sfq * 10, (count or #sfq) * 10, 10)
+
+    local add_entry = function(tech_name, xcur)
+        local cost = get_research_unit_count(xcur)
+        local duration
+        if speed then
+            duration = cost / speed
+        end
+        table.insert(results, {
+            tech_name = tech_name,
+            level = xcur.technology.level,
+            cost = cost,
+            duration = duration,
+            wait_time = cumulative_time,
+            xcur = xcur,
+            has_science = science_is_available(xcur, lsci)
+        })
+        virtually_researched[tech_name] = true
+        if duration then
+            cumulative_time = cumulative_time + duration
+        end
+    end
+
+    while #results < max_results and max_iter > 0 do
+        max_iter = max_iter - 1
+        local found = false
+
+        for _, q in ipairs(sfq) do
+            if not virtually_researched[q] then
+                local xcur = tsx[q]
+                if tech_can_be_runtime_candidate(force_index, xcur) then
+                    local all_pre_met = true
+                    for pre_req_tech, _ in pairs(xcur.meta.all_prerequisites or {}) do
+                        if not virtually_researched[pre_req_tech] then
+                            all_pre_met = false
+                            break
+                        end
+                    end
+
+                    if all_pre_met then
+                        add_entry(q, xcur)
+                        found = true
+                        break
+                    end
+
+                    for pre_req_tech, _ in pairs(xcur.meta.all_prerequisites or {}) do
+                        local xpre = tsx[pre_req_tech]
+                        if xpre and not virtually_researched[pre_req_tech] and
+                            tech_can_be_runtime_candidate(force_index, xpre) then
+                            local pre_all_met = true
+                            for pre_req_tech_2, _ in pairs(xpre.meta.all_prerequisites or {}) do
+                                if not virtually_researched[pre_req_tech_2] then
+                                    pre_all_met = false
+                                    break
+                                end
+                            end
+                            if pre_all_met then
+                                add_entry(pre_req_tech, xpre)
+                                found = true
+                                break
+                            end
+                        end
+                    end
+                    if found then break end
+                end
+            end
+        end
+
+        if not found then
+            break
+        end
+    end
+
+    return results
+end
+
+local build_runtime_queue_names = function(force_index, active_name)
+    local entries = get_virtual_research_entries(force_index)
+    local names = {}
+    local seen = {}
+
+    if active_name then
+        table.insert(names, active_name)
+        seen[active_name] = true
+    elseif entries[1] then
+        active_name = entries[1].tech_name
+        table.insert(names, active_name)
+        seen[active_name] = true
+    end
+
+    for _, entry in ipairs(entries) do
+        if not seen[entry.tech_name] then
+            table.insert(names, entry.tech_name)
+            seen[entry.tech_name] = true
+        end
+    end
+
+    return names, active_name
+end
+
+local research_queue_matches = function(f, names)
+    local current = f.research_queue
+    if not current or #current ~= #names then
+        return false
+    end
+    for i, tech_name in ipairs(names) do
+        local queued_tech = current[i]
+        local queued_name = queued_tech and queued_tech.name or queued_tech
+        if queued_name ~= tech_name then
+            return false
+        end
+    end
+    return true
+end
+
+local set_runtime_research_queue = function(f, names)
+    if research_queue_matches(f, names) then
+        return
+    end
+    mark_internal_research_queue_update(f.index, names)
+    f.research_queue = names
+end
 
 queue.reorder_queue_by_score = function(force_index)
     local f = game.forces[force_index]
     if not f then return end
-    local sfq = get(force_index, keys.queue)
-    if not sfq or #sfq == 0 then return end
 
-    -- Enforce 60-tick cooldown to avoid thrashing / constant research switching
-    local last = reorder_cooldown[force_index] or 0
-    if game.tick - last < 60 then
+    local active_name = get_first_next_tech(f)
+    local names, fallback_active = build_runtime_queue_names(force_index, active_name)
+    if fallback_active and not active_name then
+        set(force_index, keys.current_tech, fallback_active)
+    end
+
+    if #names == 0 then
         return
     end
-    reorder_cooldown[force_index] = game.tick
 
-    local tsx = tech.get_all_tech_state_ext(force_index)
-    if not tsx then return end
-
-    local lsci = lab.get_labs_fill_rate(force_index)
-
-    -- Compute avg_cost from ALL unresearched enabled techs (same as right panel)
-    local total_cost_sum = 0
-    local cost_count = 0
-    for tech_name, xcur in pairs(tsx) do
-        if xcur.technology.researched then goto skip_avg end
-        if not xcur.technology.enabled or xcur.meta.hidden then goto skip_avg end
-        if not queue.get_tech_enabled(force_index, tech_name) then goto skip_avg end
-        if xcur.meta.is_infinite then
-            local cap = rw.research_caps[tech_name]
-            if cap and xcur.technology.level >= cap then goto skip_avg end
-        end
-        local cost = xcur.technology.research_unit_count or 1
-        if xcur.meta.is_infinite and xcur.meta.prototype.research_unit_count_formula then
-            local est = eval_formula(xcur.meta.prototype.research_unit_count_formula, xcur.technology.level)
-            if est then cost = est end
-        end
-        total_cost_sum = total_cost_sum + cost
-        cost_count = cost_count + 1
-        ::skip_avg::
-    end
-    local avg_cost = cost_count > 0 and (total_cost_sum / cost_count) or nil
-
-    local available = {}
-    local blocked = {}
-    for orig_idx, tech_name in ipairs(sfq) do
-        local xcur = tsx[tech_name]
-        if xcur then
-            local include = true
-            if xcur.technology.researched then include = false end
-            if not xcur.technology.enabled or xcur.meta.hidden then include = false end
-            if not queue.get_tech_enabled(force_index, tech_name) then include = false end
-            if xcur.meta.is_infinite then
-                local cap = rw.research_caps[tech_name]
-                if cap and xcur.technology.level >= cap then include = false end
-            end
-
-            if include then
-                local stored_ub = queue.get_tech_ub(force_index, tech_name)
-                local sd = queue.score_tech_detailed(xcur, xcur.technology.level, stored_ub, avg_cost, force_index)
-                local entry = {
-                    tech_name = tech_name,
-                    score = sd.total,
-                    orig_idx = orig_idx,
-                    is_available = xcur.available and science_is_available(xcur, lsci),
-                    importance = sd.importance,
-                    level_boost = sd.level_boost,
-                    user_boost = sd.user_boost
-                }
-                if entry.is_available then
-                    table.insert(available, entry)
-                else
-                    table.insert(blocked, entry)
-                end
-            end
-        end
-    end
-
-    -- Sort available by score descending; blocked keep original order
-    table.sort(available, function(a, b)
-        return a.score > b.score
-    end)
-
-    -- Promote pinned tech to the absolute front of available entries
-    local pinned = queue.get_pinned_tech(force_index)
-    if pinned then
-        for i, entry in ipairs(available) do
-            if entry.tech_name == pinned then
-                table.remove(available, i)
-                table.insert(available, 1, entry)
-                break
-            end
-        end
-    end
-
-    -- Rebuild sfq and game queue: available techs sorted purely by score,
-    -- then blocked. This lets a previously-starved tech resume at the front
-    -- when its packs return and it has the highest score.
-    local sorted_names = {}
-    for _, entry in ipairs(available) do
-        table.insert(sorted_names, entry.tech_name)
-    end
-    for _, entry in ipairs(blocked) do
-        table.insert(sorted_names, entry.tech_name)
-    end
-
-    -- Print reason for each moved research
-    for new_idx, tech_name in ipairs(sorted_names) do
-        for _, entry in ipairs(available) do
-            if entry.tech_name == tech_name then
-                local delta = entry.orig_idx - new_idx
-                if delta ~= 0 then
-                    local reason
-                    if delta > 0 then
-                        reason = "moved UP " .. delta .. " spots"
-                    else
-                        reason = "moved DOWN " .. math.abs(delta) .. " spots"
-                    end
-                    local pinned_note = ""
-                    if tech_name == pinned then
-                        pinned_note = " [PINNED]"
-                    end
-                    local avail_note = entry.is_available and "" or " [BLOCKED]"
-                    logger.debug(nil, tech_name .. pinned_note .. avail_note .. " " .. reason ..
-                        " | importance=" .. entry.importance ..
-                        " level_boost=" .. entry.level_boost ..
-                        " user_boost=" .. entry.user_boost ..
-                        " total=" .. string.format("%.2f", entry.score))
-                end
-                break
-            end
-        end
-    end
-
-    -- Update sfq in place
-    for i, name in ipairs(sorted_names) do
-        sfq[i] = name
-    end
-    for i = #sfq, #sorted_names + 1, -1 do
-        sfq[i] = nil
-    end
-
-    -- Assign directly to game queue
-    f.research_queue = sorted_names
+    set_runtime_research_queue(f, names)
 end
 
 queue.build_queue_from_available = function(force_index)
@@ -1489,178 +1625,7 @@ queue.build_queue_from_available = function(force_index)
 end
 
 queue.get_upcoming_research = function(force_index, count)
-    -- Simulate upcoming research from the mod's master queue (sfq).
-    -- This is the mod's execution plan, NOT a read of f.research_queue.
-    local f = game.forces[force_index]
-    if not f then
-        return {}
-    end
-
-    local sfq = get(force_index, keys.queue)
-    if not sfq or #sfq == 0 then
-        sfq = {}
-        local tsx = tech.get_all_tech_state_ext(force_index)
-        if not tsx then
-            return {}
-        end
-
-        local scored = {}
-        local total_cost_sum = 0
-        local cost_count = 0
-        for tech_name, xcur in pairs(tsx) do
-            if xcur.technology.researched then goto skip_avg end
-            if not xcur.technology.enabled or xcur.meta.hidden then goto skip_avg end
-            if not queue.get_tech_enabled(force_index, tech_name) then goto skip_avg end
-            if xcur.meta.is_infinite then
-                local cap = rw.research_caps[tech_name]
-                if cap and xcur.technology.level >= cap then goto skip_avg end
-            end
-            total_cost_sum = total_cost_sum + (xcur.technology.research_unit_count or 1)
-            cost_count = cost_count + 1
-            ::skip_avg::
-        end
-        local avg_cost = cost_count > 0 and (total_cost_sum / cost_count) or nil
-
-        for tech_name, xcur in pairs(tsx) do
-            if xcur.technology.researched then goto skip_score end
-            if not xcur.technology.enabled or xcur.meta.hidden then goto skip_score end
-            if not queue.get_tech_enabled(force_index, tech_name) then goto skip_score end
-            if xcur.meta.is_infinite then
-                local cap = rw.research_caps[tech_name]
-                if cap and xcur.technology.level >= cap then goto skip_score end
-            end
-
-            local stored_ub = queue.get_tech_ub(force_index, tech_name)
-            local sd = queue.score_tech_detailed(xcur, xcur.technology.level, stored_ub, avg_cost, force_index)
-            table.insert(scored, {
-                tech_name = tech_name,
-                score = sd.total
-            })
-            ::skip_score::
-        end
-
-        table.sort(scored, function(a, b) return a.score > b.score end)
-        for _, entry in ipairs(scored) do
-            table.insert(sfq, entry.tech_name)
-        end
-        if #sfq == 0 then
-            return {}
-        end
-    end
-
-    local speed, _ = queue.get_research_speed(force_index)
-    if not speed or speed <= 0 then
-        speed = nil
-    end
-
-    local tsx = tech.get_all_tech_state_ext(force_index)
-    if not tsx then
-        return {}
-    end
-
-    local lsci = lab.get_labs_fill_rate(force_index)
-
-    -- Set of techs already researched or consumed in the simulation
-    local virtually_researched = {}
-    for name, xcur in pairs(tsx) do
-        if xcur.technology.researched then
-            virtually_researched[name] = true
-        end
-    end
-
-    local results = {}
-    local cumulative_time = 0
-    local max_iter = count * 5  -- safety guard
-
-    while #results < count and max_iter > 0 do
-        max_iter = max_iter - 1
-        local found = false
-
-        for _, q in ipairs(sfq) do
-            if virtually_researched[q] then goto skip end
-
-            local xcur = tsx[q]
-            if not xcur then goto skip end
-            if not xcur.technology.enabled or xcur.meta.hidden then goto skip end
-            if not queue.get_tech_enabled(force_index, q) then goto skip end
-
-            -- Check if all prerequisites are virtually researched
-            local all_pre_met = true
-            for pre_req_tech, _ in pairs(xcur.meta.all_prerequisites or {}) do
-                if not virtually_researched[pre_req_tech] then
-                    all_pre_met = false
-                    break
-                end
-            end
-
-            if all_pre_met then
-                -- Available: add to projected sequence
-                if science_is_available(xcur, lsci) then
-                    local cost = xcur.technology.research_unit_count or 1
-                    local duration
-                    if speed then
-                        duration = cost / speed
-                    end
-                    table.insert(results, {
-                        tech_name = q,
-                        level = xcur.technology.level,
-                        cost = cost,
-                        duration = duration,
-                        wait_time = cumulative_time,
-                        xcur = xcur
-                    })
-                    virtually_researched[q] = true
-                    if duration then
-                        cumulative_time = cumulative_time + duration
-                    end
-                    found = true
-                    break
-                end
-            else
-                -- Blocked: inject the first available prerequisite
-                for pre_req_tech, _ in pairs(xcur.meta.all_prerequisites or {}) do
-                    local xpre = tsx[pre_req_tech]
-                    if xpre and not virtually_researched[pre_req_tech] then
-                        local pre_all_met = true
-                        for pre_req_tech_2, _ in pairs(xpre.meta.all_prerequisites or {}) do
-                            if not virtually_researched[pre_req_tech_2] then
-                                pre_all_met = false
-                                break
-                            end
-                        end
-                        if pre_all_met and science_is_available(xpre, lsci) then
-                            local cost = xpre.technology.research_unit_count or 1
-                            local duration
-                            if speed then
-                                duration = cost / speed
-                            end
-                            table.insert(results, {
-                                tech_name = pre_req_tech,
-                                level = xpre.technology.level,
-                                cost = cost,
-                                duration = duration,
-                                wait_time = cumulative_time,
-                                xcur = xpre
-                            })
-                            virtually_researched[pre_req_tech] = true
-                            if duration then
-                                cumulative_time = cumulative_time + duration
-                            end
-                            found = true
-                            break
-                        end
-                    end
-                end
-                if found then break end
-            end
-
-            ::skip::
-        end
-
-        if not found then break end
-    end
-
-    return results
+    return get_virtual_research_entries(force_index, count)
 end
 
 ------------------------------------------------------------------------------

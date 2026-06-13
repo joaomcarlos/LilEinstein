@@ -11,14 +11,16 @@ local gcupcoming = {}
 local upcoming_ui_cache = {}
 local upcoming_row_width = 525
 local upcoming_row_height = 60
-local upcoming_rank_width = 37
+local upcoming_rank_width = 49
+local upcoming_rank_arrow_width = 9
+local upcoming_rank_number_width = 31
 local upcoming_icon_gap = 8
 local upcoming_icon_size = 60
 local upcoming_icon_progress_left_margin = 4
 local upcoming_icon_progress_top_margin = -16
 local upcoming_icon_progress_width = 52
 local upcoming_icon_progress_height = 14
-local upcoming_name_width = 300
+local upcoming_name_width = 288
 local upcoming_science_icon_size = 14
 local upcoming_time_width = 68
 
@@ -71,6 +73,22 @@ local set_icon_progress = function(progress_bar, progress)
     progress_bar.style.bar_width = upcoming_icon_progress_height
 end
 
+local set_rank_arrows = function(row, is_current, is_pinned)
+    if not row or not row.valid then
+        return
+    end
+
+    local current_arrow = gutil.get_child(row, "upcoming_current_arrow")
+    if current_arrow and current_arrow.valid then
+        current_arrow.caption = is_current and ">" or ""
+    end
+
+    local pinned_arrow = gutil.get_child(row, "upcoming_pinned_arrow")
+    if pinned_arrow and pinned_arrow.valid then
+        pinned_arrow.caption = is_pinned and ">" or ""
+    end
+end
+
 local add_upcoming_row = function(parent, rank, entry, player_index)
     local xcur = entry.xcur
     if not xcur then
@@ -83,6 +101,7 @@ local add_upcoming_row = function(parent, rank, entry, player_index)
     end
 
     local is_pinned = queue.get_pinned_tech(player.force.index) == entry.tech_name
+    local is_current = player.force.current_research and player.force.current_research.name == entry.tech_name
     local tech_tooltip = gutil.get_tooltip_text(xcur, player_index, entry.level, entry.cost)
 
     local row = parent.add({
@@ -101,12 +120,46 @@ local add_upcoming_row = function(parent, rank, entry, player_index)
         technology = entry.tech_name
     }
 
-    local rank_lbl = row.add({
+    local rank_flow = row.add({
+        type = "flow",
+        name = "upcoming_rank_flow",
+        direction = "horizontal",
+        style = "lil_einstein_horizontal_flow_nospacing"
+    })
+    rank_flow.style.width = upcoming_rank_width
+    rank_flow.style.height = upcoming_row_height
+    rank_flow.style.vertical_align = "center"
+
+    local current_arrow = rank_flow.add({
+        type = "label",
+        name = "upcoming_current_arrow",
+        caption = is_current and ">" or "",
+        tooltip = "Currently researching"
+    })
+    current_arrow.style.width = upcoming_rank_arrow_width
+    current_arrow.style.vertical_align = "center"
+    current_arrow.style.horizontal_align = "center"
+    current_arrow.style.font = "heading-2"
+    current_arrow.style.font_color = {r = 0.18, g = 1.0, b = 0.24}
+
+    local pinned_arrow = rank_flow.add({
+        type = "label",
+        name = "upcoming_pinned_arrow",
+        caption = is_pinned and ">" or "",
+        tooltip = "High priority"
+    })
+    pinned_arrow.style.width = upcoming_rank_arrow_width
+    pinned_arrow.style.vertical_align = "center"
+    pinned_arrow.style.horizontal_align = "center"
+    pinned_arrow.style.font = "heading-2"
+    pinned_arrow.style.font_color = {r = 1.0, g = 0.18, b = 0.12}
+
+    local rank_lbl = rank_flow.add({
         type = "label",
         style = "lil_einstein_queue_index_label",
-        caption = (is_pinned and ">" or "") .. rank .. "."
+        caption = rank .. "."
     })
-    rank_lbl.style.width = upcoming_rank_width
+    rank_lbl.style.width = upcoming_rank_number_width
     rank_lbl.style.vertical_align = "center"
     rank_lbl.style.horizontal_align = "right"
     rank_lbl.style.font = "heading-2"
@@ -136,7 +189,7 @@ local add_upcoming_row = function(parent, rank, entry, player_index)
             handler = "pin_upcoming_tech",
             technology = entry.tech_name
         },
-        tooltip = (is_pinned and "Pinned - click to unpin" or "Click to pin to top priority")
+        tooltip = (is_pinned and "High priority - click to clear" or "Click to mark high priority")
     })
     tech_btn.style.width = upcoming_icon_size
     tech_btn.style.height = upcoming_icon_size
@@ -251,8 +304,11 @@ gcupcoming.refresh_progress = function(player_index, anchor)
 
     for _, row in ipairs(flow.children) do
         if row.valid and row.tags and row.tags.technology then
+            local is_pinned = queue.get_pinned_tech(player.force.index) == row.tags.technology
+            local is_current = player.force.current_research and player.force.current_research.name == row.tags.technology
             local progress_bar = gutil.get_child(row, "upcoming_icon_progress")
             set_icon_progress(progress_bar, get_current_progress(player, row.tags.technology))
+            set_rank_arrows(row, is_current, is_pinned)
         end
     end
 end

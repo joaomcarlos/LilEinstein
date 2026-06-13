@@ -199,13 +199,21 @@ end)
 script.on_event({defines.events.on_research_queued, defines.events.on_research_moved}, function(e)
     -- When ingame research queue gets modified we need to sync that to our modqueue
     local f = e.force
+    if queue.is_internal_research_queue_update(f) then
+        return
+    end
     state.request_queue_sync(f)
     state.request_ingame_queue_cleanup(f)
 end)
 script.on_event(defines.events.on_research_cancelled, function(e)
     local f = e.force
-    for tn, _ in pairs(e.research) do
-        queue.remove(e.force, tn)
+    if queue.is_internal_research_queue_update(f) then
+        return
+    end
+    for tn, _ in pairs(e.research or {}) do
+        if not queue.consume_internal_research_cancel(f, tn) then
+            queue.remove(e.force, tn)
+        end
     end
     state.request_ingame_queue_cleanup(f)
 end)
