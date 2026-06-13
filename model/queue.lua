@@ -11,7 +11,9 @@ local rw = require("model.research_weights")
 local queue = {}
 
 local research_history_seconds = 10 * 60
-local research_speed_average_samples = 60
+local research_history_sample_seconds = 3
+local research_history_samples = math.floor(research_history_seconds / research_history_sample_seconds)
+local research_speed_average_samples = math.floor(60 / research_history_sample_seconds)
 
 -- Data model
 -- storage.forces[force_index].queue.queue = {"tech-1", ...}
@@ -859,13 +861,108 @@ queue.get_queue = function(force_index)
     return get(force_index, keys.queue)
 end
 
+local get_average_research_speed = function(samples, sample_count)
+    if not samples or #samples == 0 then
+        return nil, false
+    end
+
+    local total = 0
+    local count = 0
+    local start_index = math.max(1, #samples - (sample_count or research_speed_average_samples) + 1)
+    for i = start_index, #samples do
+        local s = samples[i]
+        if s and s.speed and s.speed > 0 then
+            total = total + s.speed
+            count = count + 1
+        end
+    end
+
+    if count > 0 then
+        return total / count, true
+    end
+    return nil, false
+end
+
+local new_research_spm_history = function()
+    local values = {}
+    for i = 1, research_history_samples do
+        values[i] = 0
+    end
+
+    return {
+        values = values,
+        head = 0,
+        count = 0,
+        size = research_history_samples,
+        last_tick = nil
+    }
+end
+
+local write_research_spm_history = function(history, spm, tick)
+    if not history then
+        return
+    end
+
+    history.head = ((history.head or 0) % research_history_samples) + 1
+    history.values[history.head] = spm or 0
+    history.count = math.min((history.count or 0) + 1, research_history_samples)
+    history.last_tick = tick
+end
+
+local ensure_research_spm_history = function(sq)
+    if not sq then
+        return nil
+    end
+
+    local history = sq.research_spm_history
+    if history and history.size == research_history_samples and type(history.values) == "table" then
+        for i = 1, research_history_samples do
+            history.values[i] = history.values[i] or 0
+        end
+
+        history.count = math.min(math.max(math.floor(history.count or 0), 0), research_history_samples)
+        if history.count > 0 then
+            history.head = ((math.floor(history.head or history.count) - 1) % research_history_samples) + 1
+        else
+            history.head = 0
+        end
+        return history
+    end
+
+    history = new_research_spm_history()
+
+    -- Backfill once from the old sampled deltas so existing saves do not lose all visible history.
+    local samples = sq.speed_samples
+    if samples and #samples > 0 then
+        local first_index = math.max(1, #samples - research_history_samples + 1)
+        local rolling_samples = {}
+        for i = first_index, #samples do
+            local item = samples[i]
+            if item then
+                table.insert(rolling_samples, item)
+                while #rolling_samples > research_speed_average_samples do
+                    table.remove(rolling_samples, 1)
+                end
+
+                local average_speed = get_average_research_speed(rolling_samples, research_speed_average_samples)
+                write_research_spm_history(history, average_speed and (average_speed * 60) or 0, item.tick)
+            end
+        end
+    end
+
+    sq.research_spm_history = history
+    return history
+end
+
 queue.record_research_progress = function(force_index)
-    -- Sample actual research progress every 60 ticks to measure real speed.
+    -- Sample actual research progress every 3 seconds to match the 10-minute graph window.
     local f = game.forces[force_index]
     if not f then return end
 
     local sf = storage.forces[force_index]
+    if not sf then return end
     if not sf.queue then sf.queue = {} end
+    local history = ensure_research_spm_history(sf.queue)
     if not sf.queue.speed_samples then
         sf.queue.speed_samples = {}
     end
@@ -899,10 +996,13 @@ queue.record_research_progress = function(force_index)
         speed = speed
     })
 
-    -- Keep only last 10 minutes at 1 sample/sec.
-    while #samples > research_history_seconds do
+    -- Keep only the last 10 minutes at one sample every 3 seconds.
+    while #samples > research_history_samples do
         table.remove(samples, 1)
     end
+
+    local average_speed = get_average_research_speed(samples, research_speed_average_samples)
+    write_research_spm_history(history, average_speed and (average_speed * 60) or 0, now)
 end
 
 queue.get_research_speed = function(force_index)
@@ -911,23 +1011,7 @@ queue.get_research_speed = function(force_index)
     if not sf or not sf.queue or not sf.queue.speed_samples then
         return nil, false
     end
-    local samples = sf.queue.speed_samples
-
-    local total = 0
-    local count = 0
-    local start_index = math.max(1, #samples - research_speed_average_samples + 1)
-    for i = start_index, #samples do
-        local s = samples[i]
-        if s.speed and s.speed > 0 then
-            total = total + s.speed
-            count = count + 1
-        end
-    end
-
-    if count > 0 then
-        return total / count, true
-    end
-    return nil, false
+    return get_average_research_speed(sf.queue.speed_samples, research_speed_average_samples)
 end
 
 queue.get_research_history = function(force_index, bucket_count)
@@ -938,45 +1022,28 @@ queue.get_research_history = function(force_index, bucket_count)
     end
 
     local sf = storage.forces[force_index]
-    if not sf or not sf.queue or not sf.queue.speed_samples then
-        return res
+    if not sf or not sf.queue then
+        return res, false
     end
 
-    local samples = sf.queue.speed_samples
-    if #samples == 0 then
-        return res
+    local history = ensure_research_spm_history(sf.queue)
+    if not history or not history.values then
+        return res, false
     end
 
-    local now = game.tick
-    local history_ticks = research_history_seconds * 60
-    local bucket_ticks = history_ticks / bucket_count
-    local totals = {}
-    local counts = {}
-    for i = 1, bucket_count do
-        totals[i] = 0
-        counts[i] = 0
+    local output_count = math.min(research_history_samples, bucket_count)
+    local output_start = bucket_count - output_count + 1
+    local head = history.head or 0
+    if head < 1 then
+        return res, true
     end
 
-    for _, item in ipairs(samples) do
-        if item.tick and item.tick >= now - history_ticks then
-            local offset = item.tick - (now - history_ticks)
-            local bucket = math.floor(offset / bucket_ticks) + 1
-            if bucket < 1 then
-                bucket = 1
-            elseif bucket > bucket_count then
-                bucket = bucket_count
-            end
-            totals[bucket] = totals[bucket] + ((item.speed or 0) * 60)
-            counts[bucket] = counts[bucket] + 1
-        end
+    for i = 1, output_count do
+        local offset = output_count - i
+        local slot = ((head - offset - 1) % research_history_samples) + 1
+        res[output_start + i - 1] = history.values[slot] or 0
     end
-
-    for i = 1, bucket_count do
-        if counts[i] > 0 then
-            res[i] = totals[i] / counts[i]
-        end
-    end
-    return res
+    return res, true
 end
 
 queue.get_research_summary = function(force_index)

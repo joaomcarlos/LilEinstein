@@ -14,6 +14,10 @@ local upcoming_row_height = 60
 local upcoming_rank_width = 37
 local upcoming_icon_gap = 8
 local upcoming_icon_size = 60
+local upcoming_icon_progress_left_margin = 4
+local upcoming_icon_progress_top_margin = -16
+local upcoming_icon_progress_width = 52
+local upcoming_icon_progress_height = 14
 local upcoming_name_width = 300
 local upcoming_science_icon_size = 14
 local upcoming_time_width = 68
@@ -37,6 +41,36 @@ local format_time = function(seconds)
     end
 end
 
+local get_current_progress = function(player, tech_name)
+    if not player or not player.force or not player.force.current_research then
+        return 0
+    end
+    if player.force.current_research.name ~= tech_name then
+        return 0
+    end
+    return math.max(0, math.min(1, player.force.research_progress or 0))
+end
+
+local set_icon_progress = function(progress_bar, progress)
+    if not progress_bar or not progress_bar.valid then
+        return
+    end
+
+    progress = math.max(0, math.min(1, progress or 0))
+    local width = math.floor((upcoming_icon_progress_width * progress) + 0.5)
+    if width <= 0 then
+        progress_bar.visible = false
+        progress_bar.style.width = 1
+        return
+    end
+
+    progress_bar.value = 1
+    progress_bar.visible = true
+    progress_bar.style.width = width
+    progress_bar.style.height = upcoming_icon_progress_height
+    progress_bar.style.bar_width = upcoming_icon_progress_height
+end
+
 local add_upcoming_row = function(parent, rank, entry, player_index)
     local xcur = entry.xcur
     if not xcur then
@@ -49,6 +83,7 @@ local add_upcoming_row = function(parent, rank, entry, player_index)
     end
 
     local is_pinned = queue.get_pinned_tech(player.force.index) == entry.tech_name
+    local tech_tooltip = gutil.get_tooltip_text(xcur, player_index, entry.level, entry.cost)
 
     local row = parent.add({
         type = "frame",
@@ -62,7 +97,8 @@ local add_upcoming_row = function(parent, rank, entry, player_index)
     row.tags = {
         duration = entry.duration or 0,
         wait_time = entry.wait_time or 0,
-        rank = rank
+        rank = rank,
+        technology = entry.tech_name
     }
 
     local rank_lbl = row.add({
@@ -81,7 +117,16 @@ local add_upcoming_row = function(parent, rank, entry, player_index)
     icon_gap.style.width = upcoming_icon_gap
     icon_gap.style.height = upcoming_row_height
 
-    local tech_btn = row.add({
+    local icon_stack = row.add({
+        type = "flow",
+        name = "upcoming_icon_stack",
+        direction = "vertical",
+        style = "lil_einstein_upcoming_icon_stack"
+    })
+    icon_stack.style.width = upcoming_icon_size
+    icon_stack.style.height = upcoming_icon_size
+
+    local tech_btn = icon_stack.add({
         type = "sprite-button",
         name = entry.tech_name,
         style = "lil_einstein_tech_btn_available",
@@ -95,6 +140,17 @@ local add_upcoming_row = function(parent, rank, entry, player_index)
     })
     tech_btn.style.width = upcoming_icon_size
     tech_btn.style.height = upcoming_icon_size
+
+    local progress_bar = icon_stack.add({
+        type = "progressbar",
+        name = "upcoming_icon_progress",
+        value = 1,
+        style = "lil_einstein_upcoming_icon_progress_bar",
+        ignored_by_interaction = true
+    })
+    progress_bar.style.left_margin = upcoming_icon_progress_left_margin
+    progress_bar.style.top_margin = upcoming_icon_progress_top_margin
+    set_icon_progress(progress_bar, get_current_progress(player, entry.tech_name))
 
     local level_suffix = entry.level > 1 and (" " .. entry.level) or ""
     local infinite_suffix = xcur.meta.is_infinite and " (infinite)" or ""
@@ -110,7 +166,7 @@ local add_upcoming_row = function(parent, rank, entry, player_index)
     local title_lbl = col.add({
         type = "label",
         caption = {"", xcur.technology.localised_name, level_suffix .. infinite_suffix},
-        tooltip = gutil.get_tooltip_text(xcur, player_index, entry.level, entry.cost),
+        tooltip = tech_tooltip,
         tags = {
             lil_einstein_on_click = true,
             handler = "show_technology_screen"
@@ -180,6 +236,25 @@ local add_separator = function(parent)
     separator.style.width = upcoming_row_width
     separator.style.height = 4
     separator.style.stretch_image_to_widget_size = true
+end
+
+gcupcoming.refresh_progress = function(player_index, anchor)
+    local player = game.get_player(player_index)
+    if not player then
+        return
+    end
+
+    local flow = gutil.get_child(anchor, "flow_upcoming")
+    if not flow then
+        return
+    end
+
+    for _, row in ipairs(flow.children) do
+        if row.valid and row.tags and row.tags.technology then
+            local progress_bar = gutil.get_child(row, "upcoming_icon_progress")
+            set_icon_progress(progress_bar, get_current_progress(player, row.tags.technology))
+        end
+    end
 end
 
 gcupcoming.populate = function(player_index, anchor)

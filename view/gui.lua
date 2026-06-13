@@ -31,6 +31,7 @@ local close = function(player_index, anchor)
 
     -- Clear the search text
     state.clear_player_setting(player_index, "search_text")
+    state.clear_player_setting(player_index, "research_graph_hover_column")
 end
 
 gui.init_player = function(player_index)
@@ -168,6 +169,41 @@ gui.refresh_research_status = function(player_index)
     local anchor = gui.get(player_index)
     if anchor then
         components.refresh_research_status(player_index, anchor)
+    end
+end
+
+gui.refresh_research_progress = function(player_index)
+    local anchor = gui.get(player_index)
+    if anchor then
+        components.refresh_research_progress(player_index, anchor)
+    end
+end
+
+gui.refresh_research_metrics = function(player_index)
+    local anchor = gui.get(player_index)
+    if anchor then
+        components.refresh_research_metrics(player_index, anchor)
+    end
+end
+
+gui.refresh_research_graph = function(player_index)
+    local anchor = gui.get(player_index)
+    if anchor then
+        components.refresh_research_graph(player_index, anchor)
+    end
+end
+
+gui.show_research_graph_hover = function(player_index, column_index)
+    local anchor = gui.get(player_index)
+    if anchor then
+        components.show_research_graph_hover(player_index, anchor, column_index)
+    end
+end
+
+gui.hide_research_graph_hover = function(player_index)
+    local anchor = gui.get(player_index)
+    if anchor then
+        components.hide_research_graph_hover(player_index, anchor)
     end
 end
 

@@ -112,6 +112,22 @@ end)
 -- TICK
 ----------------------------------------------------------------------------------------------------
 
+local refresh_open_research_progress = function()
+    for _, p in pairs(game.players) do
+        if gui.is_open(p.index) then
+            gui.refresh_research_progress(p.index)
+        end
+    end
+end
+
+local refresh_open_research_graph = function(force_index)
+    for _, p in pairs(game.players) do
+        if p.force.index == force_index and gui.is_open(p.index) then
+            gui.refresh_research_graph(p.index)
+        end
+    end
+end
+
 script.on_event(defines.events.on_tick, function(e)
     -- Do the translation request if any
     state.tick_request_translation()
@@ -142,11 +158,14 @@ script.on_event(defines.events.on_tick, function(e)
             gui.repopulate_open(f.index)
         end
 
-        -- Sample actual research speed every 60 ticks
-        if game.tick % 60 == 0 then
+        -- Sample actual research speed every 3 seconds for the 10-minute history graph.
+        if game.tick % 180 == 0 then
             queue.record_research_progress(f.index)
+            refresh_open_research_graph(f.index)
         end
     end
+
+    refresh_open_research_progress()
 end)
 
 script.on_nth_tick(42, function(e)
@@ -160,7 +179,7 @@ script.on_nth_tick(60, function(e)
         if gui.is_open(p.index) then
             gui.refresh_upcoming_times(p.index)
             gui.refresh_science_counts(p.index)
-            gui.refresh_research_status(p.index)
+            gui.refresh_research_metrics(p.index)
         end
     end
 end)
@@ -250,6 +269,28 @@ script.on_event(defines.events.on_gui_closed, function(e)
         else
             gui.toggle(e.player_index)
         end
+    end
+end)
+
+script.on_event(defines.events.on_gui_hover, function(e)
+    if not e.element or not e.element.valid or not e.element.tags or not e.element.tags["lil_einstein_on_hover"] then
+        return
+    end
+
+    local t = e.element.tags
+    if t.handler == "research_graph_hover" then
+        gui.show_research_graph_hover(e.player_index, t.column_index)
+    end
+end)
+
+script.on_event(defines.events.on_gui_leave, function(e)
+    if not e.element or not e.element.valid or not e.element.tags or not e.element.tags["lil_einstein_on_hover"] then
+        return
+    end
+
+    local t = e.element.tags
+    if t.handler == "research_graph_hover" then
+        gui.hide_research_graph_hover(e.player_index)
     end
 end)
 

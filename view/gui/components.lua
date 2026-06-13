@@ -12,10 +12,16 @@ local gcupcoming = require("view.gui.components.upcoming")
 
 local content = {}
 local ordered_force_settings = {"requeue_infinite_tech", "auto_research"}
-local research_graph_column_count = 152
-local research_graph_column_width = 3
+local research_graph_column_count = 200
+local research_graph_sample_seconds = 3
+local research_graph_plot_width = 456
 local research_graph_plot_height = 118
+local research_graph_hover_dot_height = 3
+local research_graph_hover_column_setting = "research_graph_hover_column"
 local research_bottle_steps = {0, 2, 5, 10, 15, 20, 30, 40, 50, 70, 80, 90, 95, 99}
+local research_drip_cycle_ticks = 180
+local research_drip_visible_ticks = 60
+local research_drip_frame_count = 5
 
 local get_science_tooltip = function(player_index, force_index, science, total_count)
     local item_name = state.get_translation(player_index, "item", science, "localised_name") or science
@@ -112,7 +118,17 @@ local format_time = function(seconds)
 end
 
 local format_axis_value = function(value)
-    local label = gutil.format_cost(math.floor((value or 0) + 0.5))
+    value = math.max(0, value or 0)
+    if value <= 0 then
+        return "0"
+    end
+    if value < 1000 then
+        return tostring(math.floor(value + 0.5))
+    end
+    if value < 1000000 then
+        return tostring(math.floor((value / 1000) + 0.5)) .. "k"
+    end
+    local label = gutil.format_cost(math.floor((value / 1000) + 0.5) * 1000)
     return label:gsub("K", "k")
 end
 
@@ -127,14 +143,38 @@ local get_axis_max = function(history, spm)
         return 1000
     end
     if max_value < 1000 then
-        return math.ceil(max_value)
+        return math.floor(max_value) + 1
     end
-    return math.ceil(max_value / 1000) * 1000
+    return (math.floor(max_value / 1000) + 1) * 1000
+end
+
+local get_research_graph_ratio = function(value, axis_max)
+    if not axis_max or axis_max <= 0 then
+        return 0
+    end
+
+    local ratio = (value or 0) / axis_max
+    if ratio > 1 then
+        return 1
+    elseif ratio < 0 then
+        return 0
+    end
+    return ratio
+end
+
+local get_research_graph_y = function(value, axis_max)
+    return math.ceil((1 - get_research_graph_ratio(value, axis_max)) * (research_graph_plot_height - 1))
+end
+
+local get_research_graph_hover_tooltip = function(value, column_index)
+    local seconds_ago = (research_graph_column_count - column_index) * research_graph_sample_seconds
+    return {"", "[font=default-bold]SPM:[/font] ", format_spaced_number(value), "\n",
+            "[font=default-bold]Time:[/font] ", format_time(seconds_ago), " ago"}
 end
 
 local get_bottle_sprite = function(summary)
     if not summary or not summary.is_researching then
-        return "lil_einstein_research_bottle_fill_00"
+        return "lil_einstein_research_bottle_icon_fill_00"
     end
 
     local pct = math.max(0, math.min(99, (summary.progress or 0) * 100))
@@ -144,7 +184,31 @@ local get_bottle_sprite = function(summary)
             selected = step
         end
     end
-    return "lil_einstein_research_bottle_fill_" .. string.format("%02d", selected)
+    return "lil_einstein_research_bottle_icon_fill_" .. string.format("%02d", selected)
+end
+
+local get_research_drip_sprite = function(summary)
+    if not summary or not summary.is_researching then
+        return nil
+    end
+
+    local phase = game.tick % research_drip_cycle_ticks
+    if phase >= research_drip_visible_ticks then
+        return nil
+    end
+
+    local frame_ticks = research_drip_visible_ticks / research_drip_frame_count
+    local frame = math.floor(phase / frame_ticks) + 1
+    if frame > research_drip_frame_count then
+        frame = research_drip_frame_count
+    end
+    return "lil_einstein_research_bottle_drip_" .. string.format("%02d", frame)
+end
+
+local get_research_graph_column_width = function(i)
+    local left = math.floor(((i - 1) * research_graph_plot_width) / research_graph_column_count)
+    local right = math.floor((i * research_graph_plot_width) / research_graph_column_count)
+    return math.max(1, right - left)
 end
 
 local ensure_research_graph_columns = function(plot)
@@ -154,47 +218,49 @@ local ensure_research_graph_columns = function(plot)
     if #plot.children == research_graph_column_count then
         local col = plot["research_graph_column_1"]
         if col and col["research_graph_vertical_before_1"] and col["research_graph_horizontal_1"] and
-            col["research_graph_vertical_after_1"] then
+            col["research_graph_vertical_after_1"] and col["research_graph_horizontal_1"].type == "progressbar" then
             return
         end
     end
 
     plot.clear()
     for i = 1, research_graph_column_count do
+        local column_width = get_research_graph_column_width(i)
         local col = plot.add({
             type = "flow",
             name = "research_graph_column_" .. i,
             direction = "vertical",
             style = "lil_einstein_research_graph_column"
         })
+        col.style.width = column_width
         col.add({
             type = "empty-widget",
             name = "research_graph_spacer_" .. i,
             style = "lil_einstein_research_graph_line_spacer"
         })
         local vertical_before = col.add({
-            type = "line",
+            type = "progressbar",
             name = "research_graph_vertical_before_" .. i,
-            direction = "vertical",
-            style = "lil_einstein_research_graph_data_line",
+            value = 1,
+            style = "lil_einstein_research_graph_data_segment",
             ignored_by_interaction = true
         })
         vertical_before.visible = false
         vertical_before.style.width = 1
         local horizontal = col.add({
-            type = "line",
+            type = "progressbar",
             name = "research_graph_horizontal_" .. i,
-            direction = "horizontal",
-            style = "lil_einstein_research_graph_data_line",
+            value = 1,
+            style = "lil_einstein_research_graph_data_segment",
             ignored_by_interaction = true
         })
-        horizontal.style.width = research_graph_column_width
+        horizontal.style.width = column_width
         horizontal.style.height = 1
         local vertical_after = col.add({
-            type = "line",
+            type = "progressbar",
             name = "research_graph_vertical_after_" .. i,
-            direction = "vertical",
-            style = "lil_einstein_research_graph_data_line",
+            value = 1,
+            style = "lil_einstein_research_graph_data_segment",
             ignored_by_interaction = true
         })
         vertical_after.visible = false
@@ -202,21 +268,190 @@ local ensure_research_graph_columns = function(plot)
     end
 end
 
-local refresh_research_status = function(player_index, anchor)
-    local p = game.get_player(player_index)
-    if not p or not anchor then
+local ensure_research_graph_hover_columns = function(overlay)
+    if not overlay then
+        return
+    end
+    if #overlay.children == research_graph_column_count then
+        local col = overlay["research_graph_hover_column_1"]
+        if col and col["research_graph_hover_line_before_1"] and col["research_graph_hover_dot_1"] and
+            col["research_graph_hover_line_after_1"] then
+            return
+        end
+    end
+
+    overlay.clear()
+    for i = 1, research_graph_column_count do
+        local column_width = get_research_graph_column_width(i)
+        local col = overlay.add({
+            type = "flow",
+            name = "research_graph_hover_column_" .. i,
+            direction = "vertical",
+            style = "lil_einstein_research_graph_hover_column",
+            tags = {
+                lil_einstein_on_hover = true,
+                handler = "research_graph_hover",
+                column_index = i
+            },
+            tooltip = get_research_graph_hover_tooltip(0, i),
+            raise_hover_events = true
+        })
+        col.style.width = column_width
+
+        local line_before = col.add({
+            type = "progressbar",
+            name = "research_graph_hover_line_before_" .. i,
+            value = 1,
+            style = "lil_einstein_research_graph_hover_line",
+            ignored_by_interaction = true
+        })
+        line_before.visible = false
+
+        local dot = col.add({
+            type = "progressbar",
+            name = "research_graph_hover_dot_" .. i,
+            value = 1,
+            style = "lil_einstein_research_graph_hover_dot",
+            ignored_by_interaction = true
+        })
+        dot.visible = false
+
+        local line_after = col.add({
+            type = "progressbar",
+            name = "research_graph_hover_line_after_" .. i,
+            value = 1,
+            style = "lil_einstein_research_graph_hover_line",
+            ignored_by_interaction = true
+        })
+        line_after.visible = false
+    end
+end
+
+local set_research_graph_spacer = function(spacer, height)
+    if not spacer then
+        return
+    end
+    height = math.max(0, math.floor(height or 0))
+    if height > 0 then
+        spacer.style.height = height
+        spacer.visible = true
+    else
+        spacer.visible = false
+    end
+end
+
+local set_research_graph_segment = function(segment, width, height)
+    if not segment then
+        return
+    end
+    width = math.max(1, math.floor(width or 1))
+    height = math.max(0, math.floor(height or 0))
+    if height > 0 then
+        segment.value = 1
+        segment.style.width = width
+        segment.style.height = height
+        segment.style.bar_width = height
+        segment.visible = true
+    else
+        segment.visible = false
+    end
+end
+
+local hide_research_graph_hover_column = function(col, i)
+    if not col then
         return
     end
 
+    local line_before = col["research_graph_hover_line_before_" .. i]
+    local dot = col["research_graph_hover_dot_" .. i]
+    local line_after = col["research_graph_hover_line_after_" .. i]
+    if line_before then
+        line_before.visible = false
+    end
+    if dot then
+        dot.visible = false
+    end
+    if line_after then
+        line_after.visible = false
+    end
+end
+
+local clear_research_graph_hover_columns = function(anchor)
+    local overlay = gutil.get_child(anchor, "research_graph_hover_overlay")
+    if not overlay then
+        return
+    end
+
+    for i = 1, research_graph_column_count do
+        hide_research_graph_hover_column(overlay["research_graph_hover_column_" .. i], i)
+    end
+end
+
+local set_research_graph_hover_marker = function(col, column_index, value, axis_max)
+    if not col then
+        return
+    end
+
+    local line_before = col["research_graph_hover_line_before_" .. column_index]
+    local dot = col["research_graph_hover_dot_" .. column_index]
+    local line_after = col["research_graph_hover_line_after_" .. column_index]
+    if not line_before or not dot or not line_after then
+        return
+    end
+
+    local y = get_research_graph_y(value, axis_max)
+    local dot_top = y - math.floor(research_graph_hover_dot_height / 2)
+    dot_top = math.max(0, math.min(research_graph_plot_height - research_graph_hover_dot_height, dot_top))
+
+    set_research_graph_segment(line_before, 1, dot_top)
+    set_research_graph_segment(dot, get_research_graph_column_width(column_index), research_graph_hover_dot_height)
+    set_research_graph_segment(line_after, 1, research_graph_plot_height - dot_top - research_graph_hover_dot_height)
+end
+
+local get_research_context = function(player_index, anchor)
+    local p = game.get_player(player_index)
+    if not p or not anchor then
+        return nil, nil
+    end
+
     local summary = queue.get_research_summary(p.force.index)
+    return p, summary
+end
+
+local refresh_research_progress = function(player_index, anchor)
+    local _, summary = get_research_context(player_index, anchor)
+    if not summary then
+        return
+    end
+
     local bottle = gutil.get_child(anchor, "research_bottle_sprite")
     if bottle and bottle.type == "sprite" then
         bottle.sprite = get_bottle_sprite(summary)
     end
 
+    local drip = gutil.get_child(anchor, "research_bottle_drip_sprite")
+    if drip and drip.type == "sprite" then
+        local drip_sprite = get_research_drip_sprite(summary)
+        if drip_sprite then
+            drip.sprite = drip_sprite
+            drip.visible = true
+        else
+            drip.visible = false
+        end
+    end
+
+    gcupcoming.refresh_progress(player_index, anchor)
+
     local progress_value = gutil.get_child(anchor, "research_graph_progress_value")
     if progress_value then
         progress_value.caption = format_spaced_number(summary.done) .. " / " .. format_spaced_number(summary.total)
+    end
+end
+
+local refresh_research_metrics = function(player_index, anchor)
+    local _, summary = get_research_context(player_index, anchor)
+    if not summary then
+        return
     end
 
     local spm_value = gutil.get_child(anchor, "research_graph_spm_value")
@@ -228,8 +463,63 @@ local refresh_research_status = function(player_index, anchor)
     if remaining_value then
         remaining_value.caption = format_time(summary.remaining_seconds)
     end
+end
 
-    local history = queue.get_research_history(p.force.index, research_graph_column_count)
+local refresh_research_graph_hover = function(player_index, anchor, history, axis_max)
+    clear_research_graph_hover_columns(anchor)
+
+    local column_index = state.get_player_setting(player_index, research_graph_hover_column_setting)
+    column_index = math.floor(tonumber(column_index) or 0)
+    if column_index < 1 or column_index > research_graph_column_count then
+        state.clear_player_setting(player_index, research_graph_hover_column_setting)
+        return
+    end
+
+    if not history or not axis_max then
+        local p, summary = get_research_context(player_index, anchor)
+        if not p or not summary then
+            return
+        end
+        history = queue.get_research_history(p.force.index, research_graph_column_count)
+        axis_max = get_axis_max(history, summary.spm)
+    end
+
+    local overlay = gutil.get_child(anchor, "research_graph_hover_overlay")
+    ensure_research_graph_hover_columns(overlay)
+    if not overlay then
+        return
+    end
+
+    local col = overlay["research_graph_hover_column_" .. column_index]
+    local value = history[column_index] or 0
+    if col then
+        col.tooltip = get_research_graph_hover_tooltip(value, column_index)
+        set_research_graph_hover_marker(col, column_index, value, axis_max)
+    end
+end
+
+local show_research_graph_hover = function(player_index, anchor, column_index)
+    column_index = math.floor(tonumber(column_index) or 0)
+    if column_index < 1 or column_index > research_graph_column_count then
+        return
+    end
+
+    state.set_player_setting(player_index, research_graph_hover_column_setting, column_index)
+    refresh_research_graph_hover(player_index, anchor)
+end
+
+local hide_research_graph_hover = function(player_index, anchor)
+    state.clear_player_setting(player_index, research_graph_hover_column_setting)
+    clear_research_graph_hover_columns(anchor)
+end
+
+local refresh_research_graph = function(player_index, anchor)
+    local p, summary = get_research_context(player_index, anchor)
+    if not p or not summary then
+        return
+    end
+
+    local history, has_history = queue.get_research_history(p.force.index, research_graph_column_count)
     local axis_max = get_axis_max(history, summary.spm)
     for i = 1, 8 do
         local label = gutil.get_child(anchor, "research_graph_axis_" .. i)
@@ -240,63 +530,60 @@ local refresh_research_status = function(player_index, anchor)
 
     local plot = gutil.get_child(anchor, "research_graph_plot")
     ensure_research_graph_columns(plot)
+    local overlay = gutil.get_child(anchor, "research_graph_hover_overlay")
+    ensure_research_graph_hover_columns(overlay)
     if not plot then
         return
     end
 
     for i = 1, research_graph_column_count do
         local col = plot["research_graph_column_" .. i]
+        local hover_col = overlay and overlay["research_graph_hover_column_" .. i]
         local value = history[i] or 0
+        if hover_col then
+            hover_col.tooltip = get_research_graph_hover_tooltip(value, i)
+        end
         if col then
             local spacer = col["research_graph_spacer_" .. i]
             local vertical_before = col["research_graph_vertical_before_" .. i]
             local horizontal = col["research_graph_horizontal_" .. i]
             local vertical_after = col["research_graph_vertical_after_" .. i]
             if spacer and vertical_before and horizontal and vertical_after then
-                local ratio = value / axis_max
-                if ratio > 1 then
-                    ratio = 1
-                elseif ratio < 0 then
-                    ratio = 0
-                end
+                local column_width = get_research_graph_column_width(i)
                 local previous_value = history[i - 1] or value
-                local previous_ratio = previous_value / axis_max
-                if previous_ratio > 1 then
-                    previous_ratio = 1
-                elseif previous_ratio < 0 then
-                    previous_ratio = 0
-                end
 
-                local y = math.floor((1 - ratio) * (research_graph_plot_height - 1))
-                local previous_y = math.floor((1 - previous_ratio) * (research_graph_plot_height - 1))
+                local y = get_research_graph_y(value, axis_max)
+                local previous_y = get_research_graph_y(previous_value, axis_max)
                 local vertical_before_height = 0
                 local vertical_after_height = 0
                 if previous_y < y then
-                    spacer.style.height = previous_y
+                    set_research_graph_spacer(spacer, previous_y)
                     vertical_before_height = y - previous_y
                 else
-                    spacer.style.height = y
+                    set_research_graph_spacer(spacer, y)
                     vertical_after_height = previous_y - y
                 end
 
-                if vertical_before_height > 0 then
-                    vertical_before.style.height = vertical_before_height
-                    vertical_before.visible = true
+                if has_history or value > 0 or previous_value > 0 then
+                    set_research_graph_segment(vertical_before, 1, vertical_before_height)
+                    set_research_graph_segment(horizontal, column_width, 1)
+                    set_research_graph_segment(vertical_after, 1, vertical_after_height)
                 else
                     vertical_before.visible = false
-                end
-                horizontal.style.width = research_graph_column_width
-                horizontal.style.height = 1
-                horizontal.visible = true
-                if vertical_after_height > 0 then
-                    vertical_after.style.height = vertical_after_height
-                    vertical_after.visible = true
-                else
+                    horizontal.visible = false
                     vertical_after.visible = false
                 end
             end
         end
     end
+
+    refresh_research_graph_hover(player_index, anchor, history, axis_max)
+end
+
+local refresh_research_status = function(player_index, anchor)
+    refresh_research_progress(player_index, anchor)
+    refresh_research_metrics(player_index, anchor)
+    refresh_research_graph(player_index, anchor)
 end
 
 local add_force_setting_row = function(flow, force_index, setting_name, top_margin)
@@ -708,6 +995,26 @@ end
 
 content.refresh_research_status = function(player_index, anchor)
     refresh_research_status(player_index, anchor)
+end
+
+content.refresh_research_progress = function(player_index, anchor)
+    refresh_research_progress(player_index, anchor)
+end
+
+content.refresh_research_metrics = function(player_index, anchor)
+    refresh_research_metrics(player_index, anchor)
+end
+
+content.refresh_research_graph = function(player_index, anchor)
+    refresh_research_graph(player_index, anchor)
+end
+
+content.show_research_graph_hover = function(player_index, anchor, column_index)
+    show_research_graph_hover(player_index, anchor, column_index)
+end
+
+content.hide_research_graph_hover = function(player_index, anchor)
+    hide_research_graph_hover(player_index, anchor)
 end
 
 return content

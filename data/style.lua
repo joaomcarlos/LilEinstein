@@ -247,20 +247,40 @@ data.raw["gui-style"].default["lil_einstein_brand_overlay_flow"] = {
 data.raw["gui-style"].default["lil_einstein_brand_bottle_top_spacer"] = {
     type = "empty_widget_style",
     width = 1,
-    height = 166
+    height = 154
 }
 
 data.raw["gui-style"].default["lil_einstein_brand_bottle_left_spacer"] = {
     type = "empty_widget_style",
-    width = 134,
+    width = 43,
     height = 1
+}
+
+data.raw["gui-style"].default["lil_einstein_research_bottle_stack"] = {
+    type = "vertical_flow_style",
+    width = 96,
+    height = 96,
+    vertical_spacing = 0
 }
 
 data.raw["gui-style"].default["lil_einstein_research_bottle_sprite"] = {
     type = "image_style",
     parent = "image",
-    width = 112,
-    height = 89,
+    width = 96,
+    height = 96,
+    horizontally_stretchable = "off",
+    vertically_stretchable = "off",
+    horizontally_squashable = "off",
+    vertically_squashable = "off",
+    stretch_image_to_widget_size = true
+}
+
+data.raw["gui-style"].default["lil_einstein_research_bottle_drip_sprite"] = {
+    type = "image_style",
+    parent = "image",
+    width = 96,
+    height = 96,
+    top_margin = -96,
     horizontally_stretchable = "off",
     vertically_stretchable = "off",
     horizontally_squashable = "off",
@@ -346,12 +366,31 @@ data.raw["gui-style"].default["lil_einstein_research_graph_plot"] = {
     vertical_align = "top"
 }
 
+data.raw["gui-style"].default["lil_einstein_research_graph_hover_overlay"] = {
+    type = "horizontal_flow_style",
+    width = 456,
+    height = 118,
+    top_margin = -118,
+    horizontal_spacing = 0,
+    left_padding = 0,
+    right_padding = 0,
+    vertical_align = "top"
+}
+
 data.raw["gui-style"].default["lil_einstein_research_graph_column"] = {
     type = "vertical_flow_style",
-    width = 3,
+    width = 2,
     height = 118,
     vertical_spacing = 0,
     horizontal_align = "left"
+}
+
+data.raw["gui-style"].default["lil_einstein_research_graph_hover_column"] = {
+    type = "vertical_flow_style",
+    width = 2,
+    height = 118,
+    vertical_spacing = 0,
+    horizontal_align = "center"
 }
 
 data.raw["gui-style"].default["lil_einstein_research_graph_line_spacer"] = {
@@ -360,25 +399,40 @@ data.raw["gui-style"].default["lil_einstein_research_graph_line_spacer"] = {
     height = 118
 }
 
-data.raw["gui-style"].default["lil_einstein_research_graph_data_line"] = {
-    type = "line_style",
+data.raw["gui-style"].default["lil_einstein_research_graph_data_segment"] = {
+    type = "progressbar_style",
+    parent = "progressbar",
     width = 1,
     height = 1,
+    bar_width = 1,
+    color = {r = 1.0, g = 0.75, b = 0.16},
     padding = 0,
     margin = 0,
-    border = {
-        border_width = 1,
-        horizontal_line = {
-            filename = "__LilEinstein__/graphics/ui/research-graph-line.png",
-            width = 1,
-            height = 1
-        },
-        vertical_line = {
-            filename = "__LilEinstein__/graphics/ui/research-graph-line.png",
-            width = 1,
-            height = 1
-        }
-    }
+    bar_background = {}
+}
+
+data.raw["gui-style"].default["lil_einstein_research_graph_hover_line"] = {
+    type = "progressbar_style",
+    parent = "progressbar",
+    width = 1,
+    height = 1,
+    bar_width = 1,
+    color = {r = 0.62, g = 0.62, b = 0.62, a = 0.85},
+    padding = 0,
+    margin = 0,
+    bar_background = {}
+}
+
+data.raw["gui-style"].default["lil_einstein_research_graph_hover_dot"] = {
+    type = "progressbar_style",
+    parent = "progressbar",
+    width = 2,
+    height = 3,
+    bar_width = 3,
+    color = {r = 1.0, g = 0.78, b = 0.18, a = 1.0},
+    padding = 0,
+    margin = 0,
+    bar_background = {}
 }
 
 data.raw["gui-style"].default["lil_einstein_research_graph_stats"] = {
@@ -618,6 +672,25 @@ data.raw["gui-style"].default["lil_einstein_upcoming_row_frame"] = {
     height = 60,
     padding = 0,
     graphical_set = {}
+}
+
+data.raw["gui-style"].default["lil_einstein_upcoming_icon_stack"] = {
+    type = "vertical_flow_style",
+    width = 60,
+    height = 60,
+    vertical_spacing = 0
+}
+
+data.raw["gui-style"].default["lil_einstein_upcoming_icon_progress_bar"] = {
+    type = "progressbar_style",
+    parent = "progressbar",
+    width = 52,
+    height = 14,
+    bar_width = 14,
+    color = {r = 0.22, g = 0.95, b = 0.18},
+    padding = 0,
+    margin = 0,
+    bar_background = {}
 }
 
 data.raw["gui-style"].default["lil_einstein_available_row_frame"] = {

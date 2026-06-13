@@ -132,3 +132,25 @@ data:extend({
     get_research_sprite("research_bottle_fill_95", 179, 142, "research-bottle-fill-95.png"),
     get_research_sprite("research_bottle_fill_99", 179, 142, "research-bottle-fill-99.png")
 })
+
+data:extend({
+    get_research_sprite("research_bottle_icon_fill_00", 96, 96, "research-bottle-icon-fill-00.png"),
+    get_research_sprite("research_bottle_icon_fill_02", 96, 96, "research-bottle-icon-fill-02.png"),
+    get_research_sprite("research_bottle_icon_fill_05", 96, 96, "research-bottle-icon-fill-05.png"),
+    get_research_sprite("research_bottle_icon_fill_10", 96, 96, "research-bottle-icon-fill-10.png"),
+    get_research_sprite("research_bottle_icon_fill_15", 96, 96, "research-bottle-icon-fill-15.png"),
+    get_research_sprite("research_bottle_icon_fill_20", 96, 96, "research-bottle-icon-fill-20.png"),
+    get_research_sprite("research_bottle_icon_fill_30", 96, 96, "research-bottle-icon-fill-30.png"),
+    get_research_sprite("research_bottle_icon_fill_40", 96, 96, "research-bottle-icon-fill-40.png"),
+    get_research_sprite("research_bottle_icon_fill_50", 96, 96, "research-bottle-icon-fill-50.png"),
+    get_research_sprite("research_bottle_icon_fill_70", 96, 96, "research-bottle-icon-fill-70.png"),
+    get_research_sprite("research_bottle_icon_fill_80", 96, 96, "research-bottle-icon-fill-80.png"),
+    get_research_sprite("research_bottle_icon_fill_90", 96, 96, "research-bottle-icon-fill-90.png"),
+    get_research_sprite("research_bottle_icon_fill_95", 96, 96, "research-bottle-icon-fill-95.png"),
+    get_research_sprite("research_bottle_icon_fill_99", 96, 96, "research-bottle-icon-fill-99.png"),
+    get_research_sprite("research_bottle_drip_01", 96, 96, "research-bottle-drip-01.png"),
+    get_research_sprite("research_bottle_drip_02", 96, 96, "research-bottle-drip-02.png"),
+    get_research_sprite("research_bottle_drip_03", 96, 96, "research-bottle-drip-03.png"),
+    get_research_sprite("research_bottle_drip_04", 96, 96, "research-bottle-drip-04.png"),
+    get_research_sprite("research_bottle_drip_05", 96, 96, "research-bottle-drip-05.png")
+})

@@ -58,15 +58,18 @@ local research_graph_stat_row = function(name, label, label_style, value_style)
         name = name .. "_row",
         style = "lil_einstein_research_graph_stat_row",
         direction = "horizontal",
+        ignored_by_interaction = true,
         children = {{
             type = "label",
             style = label_style or "lil_einstein_research_graph_stat_label",
-            caption = label
+            caption = label,
+            ignored_by_interaction = true
         }, {
             type = "label",
             name = name,
             style = value_style or "lil_einstein_research_graph_stat_value",
-            caption = ""
+            caption = "",
+            ignored_by_interaction = true
         }}
     }
 end
@@ -91,11 +94,24 @@ local brand_research_bottle = {
             type = "empty-widget",
             style = "lil_einstein_brand_bottle_left_spacer"
         }, {
-            type = "sprite",
-            name = "research_bottle_sprite",
-            style = "lil_einstein_research_bottle_sprite",
-            sprite = "lil_einstein_research_bottle_fill_00",
-            ignored_by_interaction = true
+            type = "flow",
+            name = "research_bottle_stack",
+            style = "lil_einstein_research_bottle_stack",
+            direction = "vertical",
+            children = {{
+                type = "sprite",
+                name = "research_bottle_sprite",
+                style = "lil_einstein_research_bottle_sprite",
+                sprite = "lil_einstein_research_bottle_icon_fill_00",
+                ignored_by_interaction = true
+            }, {
+                type = "sprite",
+                name = "research_bottle_drip_sprite",
+                style = "lil_einstein_research_bottle_drip_sprite",
+                sprite = "lil_einstein_research_bottle_drip_01",
+                visible = false,
+                ignored_by_interaction = true
+            }}
         }}
     }}
 }
@@ -141,9 +157,15 @@ local research_graph_panel = {
                     direction = "horizontal"
                 }, {
                     type = "flow",
+                    name = "research_graph_hover_overlay",
+                    style = "lil_einstein_research_graph_hover_overlay",
+                    direction = "horizontal"
+                }, {
+                    type = "flow",
                     name = "research_graph_stats",
                     style = "lil_einstein_research_graph_stats",
                     direction = "vertical",
+                    ignored_by_interaction = true,
                     children = {
                         research_graph_stat_row(
                             "research_graph_progress_value",
