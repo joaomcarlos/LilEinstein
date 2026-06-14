@@ -171,6 +171,7 @@ local score_tech_at_level = function(xcur, level)
 end
 
 local get_science_counts
+local get_virtual_queue_source
 
 -- Return detailed score components: {importance, level_boost, user_boost, total}
 -- importance = base AI weight from rw.research_weights + effect inference
@@ -314,9 +315,9 @@ local find_runtime_candidate = function(force_index, tech_name, tsx, lsci, sfsci
 end
 
 local get_first_next_tech = function(f)
-    -- This function returns the next runtime technology without changing the virtual queue order.
-    local sfq = get(f.index, keys.queue)
+    -- This function returns the next runtime technology from the scored virtual queue.
     local tsx = tech.get_all_tech_state_ext(f.index)
+    local sfq = get_virtual_queue_source(f.index, tsx)
     local lsci = lab.get_labs_fill_rate(f.index)
 
     -- Reset current researching tech
@@ -1344,35 +1345,66 @@ local get_research_unit_count = function(xcur)
     return cost
 end
 
-local get_virtual_queue_source = function(force_index, tsx)
-    local sfq = get(force_index, keys.queue)
-    if sfq and #sfq > 0 then
-        return sfq
-    end
-
-    local scored = {}
+local get_runtime_candidate_average_cost = function(force_index, tsx)
     local total_cost_sum = 0
     local cost_count = 0
-    for tech_name, xcur in pairs(tsx or {}) do
+    for _, xcur in pairs(tsx or {}) do
         if tech_can_be_runtime_candidate(force_index, xcur) then
             total_cost_sum = total_cost_sum + get_research_unit_count(xcur)
             cost_count = cost_count + 1
         end
     end
-    local avg_cost = cost_count > 0 and (total_cost_sum / cost_count) or nil
+    if cost_count == 0 then
+        return nil
+    end
+    return total_cost_sum / cost_count
+end
 
+local get_all_runtime_candidate_names = function(force_index, tsx)
+    local res = {}
     for tech_name, xcur in pairs(tsx or {}) do
         if tech_can_be_runtime_candidate(force_index, xcur) then
-            local stored_ub = queue.get_tech_ub(force_index, tech_name)
-            local sd = queue.score_tech_detailed(xcur, xcur.technology.level, stored_ub, avg_cost, force_index)
-            table.insert(scored, {
-                tech_name = tech_name,
-                score = sd.total
-            })
+            table.insert(res, tech_name)
+        end
+    end
+    table.sort(res)
+    return res
+end
+
+local get_scored_queue_source = function(force_index, tsx, source)
+    local scored = {}
+    local seen = {}
+    local avg_cost = get_runtime_candidate_average_cost(force_index, tsx)
+    local pinned = queue.get_pinned_tech(force_index)
+
+    for i, tech_name in ipairs(source or {}) do
+        if not seen[tech_name] then
+            seen[tech_name] = true
+
+            local xcur = tsx and tsx[tech_name]
+            if tech_can_be_runtime_candidate(force_index, xcur) then
+                local stored_ub = queue.get_tech_ub(force_index, tech_name)
+                local sd = queue.score_tech_detailed(xcur, xcur.technology.level, stored_ub, avg_cost, force_index)
+                table.insert(scored, {
+                    tech_name = tech_name,
+                    score = sd.total,
+                    source_index = i,
+                    pinned = pinned == tech_name
+                })
+            end
         end
     end
 
     table.sort(scored, function(a, b)
+        if a.pinned ~= b.pinned then
+            return a.pinned
+        end
+        if a.score == b.score then
+            if a.source_index == b.source_index then
+                return a.tech_name < b.tech_name
+            end
+            return a.source_index < b.source_index
+        end
         return a.score > b.score
     end)
 
@@ -1381,6 +1413,15 @@ local get_virtual_queue_source = function(force_index, tsx)
         table.insert(res, entry.tech_name)
     end
     return res
+end
+
+get_virtual_queue_source = function(force_index, tsx)
+    local sfq = get(force_index, keys.queue)
+    if sfq and #sfq > 0 then
+        return get_scored_queue_source(force_index, tsx, sfq)
+    end
+
+    return get_scored_queue_source(force_index, tsx, get_all_runtime_candidate_names(force_index, tsx))
 end
 
 local get_virtual_research_entries = function(force_index, count)
