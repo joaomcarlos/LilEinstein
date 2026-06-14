@@ -15,6 +15,11 @@ local research_history_sample_seconds = 3
 local research_history_samples = math.floor(research_history_seconds / research_history_sample_seconds)
 local research_speed_average_samples = math.floor(60 / research_history_sample_seconds)
 
+-- seconds to stay on temp tech before checking to switch back
+local temp_tech_timeout_seconds = 5 
+-- seconds to extend temp tech timeout when target still lacks packs
+local temp_tech_timeout_extend_seconds = 5  
+
 -- Data model
 -- storage.forces[force_index].queue.queue = {"tech-1", ...}
 
@@ -688,7 +693,7 @@ queue.check_and_switch_temp_research = function(f)
             return
         end
         -- Target still doesn't have packs; extend timeout so temp gets more air time
-        sq[keys.temp_tech_timeout] = game.tick + 1800
+        sq[keys.temp_tech_timeout] = game.tick + (60 * temp_tech_timeout_extend_seconds)
         if not f.current_research or f.current_research.name ~= temp then
             state.request_next_research(f)
         end
@@ -748,7 +753,7 @@ queue.check_and_switch_temp_research = function(f)
         if candidate and candidate ~= cur_name then
             sq[keys.target_tech] = cur_name
             sq[keys.temp_tech] = candidate
-            sq[keys.temp_tech_timeout] = game.tick + 1800
+            sq[keys.temp_tech_timeout] = game.tick + (60 * temp_tech_timeout_seconds)
             state.request_next_research(f)
             return
         end
@@ -761,7 +766,7 @@ queue.check_and_switch_temp_research = function(f)
             if candidate and candidate ~= cur_name then
                 sq[keys.target_tech] = cur_name
                 sq[keys.temp_tech] = candidate
-                sq[keys.temp_tech_timeout] = game.tick + 1800
+                sq[keys.temp_tech_timeout] = game.tick + (60 * temp_tech_timeout_seconds)
                 state.request_next_research(f)
                 return
             end
