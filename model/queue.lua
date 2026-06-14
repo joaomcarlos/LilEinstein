@@ -27,7 +27,10 @@ local keys = {
     is_stuck = "is_stuck",
     pinned_tech = "pinned_tech",
     internal_queue_update_until = "internal_queue_update_until",
-    internal_cancelled_techs = "internal_cancelled_techs"
+    internal_cancelled_techs = "internal_cancelled_techs",
+    target_tech = "target_tech",
+    temp_tech = "temp_tech",
+    temp_tech_timeout = "temp_tech_timeout"
 }
 
 ---------------------------------------------------------------------------
@@ -254,6 +257,7 @@ queue.science_is_available = function(xcur, lsci)
 end
 local science_is_available = queue.science_is_available
 
+
 local tech_can_be_runtime_candidate = function(force_index, xcur)
     if not xcur or not xcur.technology or not xcur.meta then
         return false
@@ -274,6 +278,21 @@ local tech_can_be_runtime_candidate = function(force_index, xcur)
         end
     end
     return true
+end
+
+local clear_temp_research_state = function(force_index)
+    set(force_index, keys.target_tech, nil)
+    set(force_index, keys.temp_tech, nil)
+    set(force_index, keys.temp_tech_timeout, nil)
+end
+
+local tech_is_queue_relevant = function(xcur)
+    return xcur and (xcur.queued or next(xcur.inherited_by or {}) ~= nil)
+end
+
+local tech_can_be_restored = function(force_index, xcur)
+    return tech_is_queue_relevant(xcur) and xcur.available and tech_can_be_runtime_candidate(force_index, xcur) and
+               queue.science_is_sufficient(xcur, force_index)
 end
 
 local mark_missing_science = function(sfsci, tech_name)
@@ -327,6 +346,31 @@ local get_first_next_tech = function(f)
     -- Reset & get missing science array
     set(f.index, keys.misses_science, {})
     local sfsci = get(f.index, keys.misses_science)
+
+    -- If a temp tech is designated and still valid, honor it
+    local temp = get(f.index, keys.temp_tech)
+    if temp then
+        local xtemp = tsx[temp]
+        if xtemp and xtemp.available and tech_can_be_runtime_candidate(f.index, xtemp) and science_is_available(xtemp, lsci) then
+            set(f.index, keys.current_tech, temp)
+            return temp
+        end
+        -- Temp tech no longer valid, clear it
+        set(f.index, keys.temp_tech, nil)
+        set(f.index, keys.temp_tech_timeout, nil)
+    end
+
+    local target = get(f.index, keys.target_tech)
+    if target then
+        local xtarget = tsx[target]
+        if tech_can_be_restored(f.index, xtarget) then
+            set(f.index, keys.current_tech, target)
+            return target
+        end
+        if not tech_can_be_runtime_candidate(f.index, xtarget) then
+            clear_temp_research_state(f.index)
+        end
+    end
 
     local fallback
     local pinned = queue.get_pinned_tech(f.index)
@@ -586,6 +630,144 @@ queue.research_is_stuck = function(f)
     end
     return is_stuck
 end
+
+queue.check_and_switch_temp_research = function(f)
+    if not f then
+        return
+    end
+    local st = state.get_force_setting(f.index, "master_enable")
+    if st == "left" then
+        return
+    end
+    local sf = storage.forces[f.index]
+    if not sf or not sf.queue then
+        return
+    end
+    local sq = sf.queue
+
+    -- If temp tech is active and timeout hasn't expired, don't disturb it
+    local temp = sq[keys.temp_tech]
+    local timeout = sq[keys.temp_tech_timeout]
+    if temp and timeout and game.tick < timeout then
+        return
+    end
+
+    local tsx = tech.get_all_tech_state_ext(f.index)
+    if not tsx then
+        return
+    end
+
+    -- If timeout expired, check if target tech now has enough packs
+    if temp and timeout and game.tick >= timeout then
+        local target = sq[keys.target_tech]
+        if target then
+            local xtarget = tsx[target]
+            if tech_can_be_restored(f.index, xtarget) then
+                -- Switch back to target
+                sq[keys.temp_tech] = nil
+                sq[keys.temp_tech_timeout] = nil
+                state.request_next_research(f)
+                return
+            end
+            if not tech_can_be_runtime_candidate(f.index, xtarget) then
+                clear_temp_research_state(f.index)
+                state.request_next_research(f)
+                return
+            end
+        else
+            clear_temp_research_state(f.index)
+            state.request_next_research(f)
+            return
+        end
+
+        local xtemp = tsx[temp]
+        if not xtemp or not xtemp.available or not tech_can_be_runtime_candidate(f.index, xtemp) then
+            sq[keys.temp_tech] = nil
+            sq[keys.temp_tech_timeout] = nil
+            state.request_next_research(f)
+            return
+        end
+        -- Target still doesn't have packs; extend timeout so temp gets more air time
+        sq[keys.temp_tech_timeout] = game.tick + 1800
+        if not f.current_research or f.current_research.name ~= temp then
+            state.request_next_research(f)
+        end
+        return
+    end
+
+    -- Normal check: is current tech low on packs?
+    local cur_name = f.current_research and f.current_research.name
+    if not cur_name then
+        return
+    end
+
+    local xcur = tsx[cur_name]
+    if not xcur then
+        return
+    end
+
+    local target = sq[keys.target_tech]
+    if target then
+        local xtarget = tsx[target]
+        if not tech_can_be_runtime_candidate(f.index, xtarget) then
+            clear_temp_research_state(f.index)
+            target = nil
+        elseif not temp and cur_name ~= target and tech_can_be_restored(f.index, xtarget) then
+            state.request_next_research(f)
+            return
+        end
+    end
+
+    -- If current tech has sufficient packs, nothing to do
+    if queue.science_is_sufficient(xcur, f.index) then
+        local temp_name = sq[keys.temp_tech]
+        -- Temp finished and we're back on target; clean up
+        if target and not temp_name and cur_name == target then
+            sq[keys.target_tech] = nil
+            sq[keys.temp_tech_timeout] = nil
+            return
+        end
+        -- Current research changed to something unexpected; clear stale temp state
+        if target and cur_name ~= target and cur_name ~= temp_name then
+            sq[keys.target_tech] = nil
+            sq[keys.temp_tech] = nil
+            sq[keys.temp_tech_timeout] = nil
+        end
+        return
+    end
+
+    -- Current tech is low on packs. Find next suitable tech in order.
+    local lsci = lab.get_labs_fill_rate(f.index)
+    local sfq = get_virtual_queue_source(f.index, tsx)
+    local sfsci = {}
+
+    -- Try pinned first
+    local pinned = queue.get_pinned_tech(f.index)
+    if pinned and pinned ~= cur_name then
+        local candidate, _ = find_runtime_candidate(f.index, pinned, tsx, lsci, sfsci)
+        if candidate and candidate ~= cur_name then
+            sq[keys.target_tech] = cur_name
+            sq[keys.temp_tech] = candidate
+            sq[keys.temp_tech_timeout] = game.tick + 1800
+            state.request_next_research(f)
+            return
+        end
+    end
+
+    -- Try queue order
+    for _, q in ipairs(sfq or {}) do
+        if q ~= cur_name and q ~= pinned then
+            local candidate, _ = find_runtime_candidate(f.index, q, tsx, lsci, sfsci)
+            if candidate and candidate ~= cur_name then
+                sq[keys.target_tech] = cur_name
+                sq[keys.temp_tech] = candidate
+                sq[keys.temp_tech_timeout] = game.tick + 1800
+                state.request_next_research(f)
+                return
+            end
+        end
+    end
+end
 ---------------------------------------------------------------------------
 -- Ingame queue interactions
 ---------------------------------------------------------------------------
@@ -636,6 +818,13 @@ queue.requeue_finished = function(f, t)
 
     if queue.get_pinned_tech(f.index) == t.name then
         queue.set_pinned_tech(f.index, nil)
+    end
+
+    -- If the finished tech was a temporary switch, clear the temp state
+    if get(f.index, keys.temp_tech) == t.name then
+        set(f.index, keys.temp_tech, nil)
+        set(f.index, keys.temp_tech_timeout, nil)
+        -- Keep target_tech so we can try to return to it
     end
 
     -- For finite tech levels that are not fully researched yet we only need to request the next stage
@@ -775,7 +964,7 @@ queue.remove = function(f, tech_name, silent)
 
     -- Go through our queue and drop the target tech
     local sfq = get(f.index, keys.queue)
-    for i, q in pairs(sfq or {}) do
+    for i, q in ipairs(sfq or {}) do
         if q == tech_name then
             -- We found our target tech, remove it from our queue
             table.remove(sfq, i)
@@ -795,7 +984,6 @@ queue.remove = function(f, tech_name, silent)
             -- Exit because there is nothing more to do
             return
         end
-        i = i + 1
     end
 
 end
@@ -829,10 +1017,11 @@ queue.promote = function(f, tech_name, steps)
     if not t or not t.valid then
         return
     end
+    steps = steps or 1
 
     -- Get the current position or early exit if already first
     local i = get_queue_position(f, tech_name)
-    if i == 1 then
+    if not i or i == 1 then
         return
     end
 
@@ -853,9 +1042,13 @@ queue.demote = function(f, tech_name, steps)
     if not t or not t.valid then
         return
     end
+    steps = steps or 1
 
     -- Get the current index and length or early exit if already last
     local i = get_queue_position(f, tech_name)
+    if not i then
+        return
+    end
     local l = get_queue_length(f)
     if i == l then
         return
@@ -1334,6 +1527,41 @@ queue.get_science_count_breakdown = function(force_index, science)
     }
 end
 
+queue.science_is_sufficient = function(xcur, force_index)
+    if not xcur or not xcur.meta or not force_index then
+        return false
+    end
+    local sciences = xcur.meta.sciences or {}
+    if not next(sciences) then
+        return true
+    end
+
+    -- Ensure caches are populated for this tick
+    local counts = get_science_counts(force_index)
+    local lc = labs_cache[force_index]
+    if not lc or not lc.labs then
+        return false
+    end
+
+    local valid_lab_count = 0
+    for _, lab_entity in pairs(lc.labs) do
+        if lab_entity.valid then
+            valid_lab_count = valid_lab_count + 1
+        end
+    end
+    if valid_lab_count == 0 then
+        return false
+    end
+
+    local required_count = valid_lab_count * 6
+    for _, s in pairs(sciences) do
+        if (counts[s] or 0) < required_count then
+            return false
+        end
+    end
+    return true
+end
+
 local get_research_unit_count = function(xcur)
     local cost = xcur.technology.research_unit_count or 1
     if xcur.meta.is_infinite and xcur.meta.prototype.research_unit_count_formula then
@@ -1749,38 +1977,6 @@ queue.move_tech_down = function(force_index, tech_name)
     end
 end
 
-queue.promote = function(f, tech_name, steps)
-    local sfq = get(f.index, keys.queue)
-    if not sfq then
-        return
-    end
-    steps = steps or 1
-    for i = 2, #sfq do
-        if sfq[i] == tech_name then
-            local new_pos = math.max(1, i - steps)
-            table.remove(sfq, i)
-            table.insert(sfq, new_pos, tech_name)
-            break
-        end
-    end
-end
-
-queue.demote = function(f, tech_name, steps)
-    local sfq = get(f.index, keys.queue)
-    if not sfq then
-        return
-    end
-    steps = steps or 1
-    for i = 1, #sfq - 1 do
-        if sfq[i] == tech_name then
-            local new_pos = math.min(#sfq, i + steps)
-            table.remove(sfq, i)
-            table.insert(sfq, new_pos, tech_name)
-            break
-        end
-    end
-end
-
 queue.build_tech_order = function(force_index)
     -- Build order from ALL unresearched enabled techs so up/down buttons work for everything
     local tsx = tech.get_all_tech_state_ext(force_index)
@@ -1821,6 +2017,15 @@ queue.init_force = function(force_index)
     end
     if not sq.tech_ub then
         sq.tech_ub = {}
+    end
+    if not sq[keys.target_tech] then
+        sq[keys.target_tech] = nil
+    end
+    if not sq[keys.temp_tech] then
+        sq[keys.temp_tech] = nil
+    end
+    if not sq[keys.temp_tech_timeout] then
+        sq[keys.temp_tech_timeout] = nil
     end
 
     -- Register each queued tech

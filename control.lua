@@ -154,6 +154,11 @@ script.on_event(defines.events.on_tick, function(e)
             queue.start_next_research(f)
         end
 
+        -- Every 5 seconds, check if current tech is low on packs and temporarily switch
+        if game.tick % 300 == 0 then
+            queue.check_and_switch_temp_research(f)
+        end
+
         if state.gui_needs_update(f) or refresh_gui then
             gui.repopulate_open(f.index)
         end
