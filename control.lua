@@ -75,13 +75,25 @@ local load = function()
     cmd.register_commands()
 end
 
+local refetch_settings = function()
+    if storage.settings == nil then
+        storage.settings = {}
+    end
+    local g = settings.global
+    storage.settings.showWarnings = g["lil_einstein-show-warnings"].value
+    storage.settings.notifySwitches = g["lil_einstein-notify-switches"].value
+    storage.settings.warnEveryNTicks = 60 * g["lil_einstein-warn-every-n-seconds"].value
+end
+
 script.on_configuration_changed(function()
     init()
+    refetch_settings()
 end)
 
 script.on_init(function()
     init()
     load()
+    refetch_settings()
 
     -- Sync each force's in-game queue
     for _, f in pairs(game.forces) do
@@ -91,6 +103,12 @@ end)
 
 script.on_load(function()
     load()
+end)
+
+script.on_event(defines.events.on_runtime_mod_setting_changed, function(e)
+    if e.mod_name == "LilEinstein" then
+        refetch_settings()
+    end
 end)
 
 script.on_event({defines.events.on_player_created, defines.events.on_player_joined_game}, function(e)

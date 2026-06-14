@@ -67,21 +67,50 @@ local make_science_icon_string = function(sciences)
 end
 
 local can_warn_now = function(force_index)
+    if not storage.settings or not storage.settings.showWarnings then return false end
     local last = get(force_index, keys.last_warn_tick)
-    return (last == nil) or (last + 3600 < game.tick)
+    local interval = storage.settings.warnEveryNTicks or 3600
+    return (last == nil) or (last + interval < game.tick)
 end
 
 local update_warn_time = function(force_index)
     set(force_index, keys.last_warn_tick, game.tick)
 end
 
+local alert_icon = {type = "virtual", name = "lil_einstein-science-alert"}
+
+local get_any_lab = function(force_index)
+    local sfl = storage.forces[force_index] and storage.forces[force_index].lab
+    if not sfl then return nil end
+    local all_labs = sfl.all_labs
+    if not all_labs then return nil end
+    for _, unit_number in ipairs(all_labs) do
+        local content = sfl.lab_content and sfl.lab_content[unit_number]
+        if content and content.lab and content.lab.valid then
+            return content.lab
+        end
+    end
+    return nil
+end
+
+local alert_force = function(force, message)
+    local lab_entity = get_any_lab(force.index)
+    if not lab_entity then return end
+    for _, player in pairs(force.connected_players) do
+        if player and player.valid then
+            player.add_custom_alert(lab_entity, alert_icon, message, false)
+        end
+    end
+end
+
 local warn_force = function(force, message)
     if not can_warn_now(force.index) then return end
     update_warn_time(force.index)
-    logger.warn(force, message)
+    alert_force(force, message)
 end
 
 local notify_switch = function(force, cur_tech, candidate, tsx, lsci)
+    if not storage.settings or not storage.settings.notifySwitches then return end
     local xcur = tsx[cur_tech]
     local xcan = tsx[candidate]
     if not xcur or not xcan then return end
@@ -113,7 +142,8 @@ local notify_switch = function(force, cur_tech, candidate, tsx, lsci)
         new_tech_name = xcan.technology.localised_name
     end
 
-    logger.log(force, {"lil_einstein-warn.switched-to-tech", new_tech_name, switch_reason})
+    local msg = {"lil_einstein-warn.switched-to-tech", new_tech_name, switch_reason}
+    alert_force(force, msg)
 end
 
 ---------------------------------------------------------------------------
@@ -243,6 +273,7 @@ local score_tech_at_level = function(xcur, level)
 end
 
 local get_science_counts
+local get_lab_science_counts
 local get_virtual_queue_source
 
 -- Return detailed score components: {importance, level_boost, user_boost, total}
@@ -261,11 +292,11 @@ queue.score_tech_detailed = function(xcur, level, user_boost, avg_cost, force_in
     end
 
     if xcur.technology.name == "research-productivity" and force_index then
-        local logistic_counts = get_science_counts(force_index)
+        local lab_counts = get_lab_science_counts(force_index)
         local required = (xcur.technology.research_unit_count or 1) * 0.2
         local has_all = true
         for _, s in pairs(xcur.meta.sciences or {}) do
-            if (logistic_counts[s] or 0) < required then
+            if (lab_counts[s] or 0) < required then
                 has_all = false
                 break
             end
@@ -1605,6 +1636,45 @@ queue.get_science_count_breakdown = function(force_index, science)
     }
 end
 
+get_lab_science_counts = function(force_index)
+    local counts = {}
+    local valid_lab_count = 0
+    local sfl = storage.forces[force_index] and storage.forces[force_index].lab
+
+    if sfl and sfl.all_labs and sfl.lab_content then
+        for _, unit_number in ipairs(sfl.all_labs) do
+            local lcur = sfl.lab_content[unit_number]
+            local lab_entity = lcur and lcur.lab
+            if lab_entity and lab_entity.valid then
+                valid_lab_count = valid_lab_count + 1
+                local inv = lab_entity.get_inventory(defines.inventory.lab_input)
+                if inv then
+                    for _, item in pairs(inv.get_contents()) do
+                        counts[item.name] = (counts[item.name] or 0) + (item.count or 0)
+                    end
+                end
+            end
+        end
+        return counts, valid_lab_count
+    end
+
+    refresh_labs_cache(force_index)
+    local lc = labs_cache[force_index]
+    for _, lab_entity in pairs((lc and lc.labs) or {}) do
+        if lab_entity.valid then
+            valid_lab_count = valid_lab_count + 1
+            local inv = lab_entity.get_inventory(defines.inventory.lab_input)
+            if inv then
+                for _, item in pairs(inv.get_contents()) do
+                    counts[item.name] = (counts[item.name] or 0) + (item.count or 0)
+                end
+            end
+        end
+    end
+
+    return counts, valid_lab_count
+end
+
 queue.science_is_sufficient = function(xcur, force_index)
     if not xcur or not xcur.meta or not force_index then
         return false
@@ -1614,19 +1684,7 @@ queue.science_is_sufficient = function(xcur, force_index)
         return true
     end
 
-    -- Ensure caches are populated for this tick
-    local counts = get_science_counts(force_index)
-    local lc = labs_cache[force_index]
-    if not lc or not lc.labs then
-        return false
-    end
-
-    local valid_lab_count = 0
-    for _, lab_entity in pairs(lc.labs) do
-        if lab_entity.valid then
-            valid_lab_count = valid_lab_count + 1
-        end
-    end
+    local counts, valid_lab_count = get_lab_science_counts(force_index)
     if valid_lab_count == 0 then
         return false
     end
