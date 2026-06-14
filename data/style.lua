@@ -681,18 +681,6 @@ data.raw["gui-style"].default["lil_einstein_upcoming_icon_stack"] = {
     vertical_spacing = 0
 }
 
-data.raw["gui-style"].default["lil_einstein_upcoming_icon_progress_bar"] = {
-    type = "progressbar_style",
-    parent = "progressbar",
-    width = 52,
-    height = 14,
-    bar_width = 14,
-    color = {r = 0.22, g = 0.95, b = 0.18},
-    padding = 0,
-    margin = 0,
-    bar_background = {}
-}
-
 data.raw["gui-style"].default["lil_einstein_available_row_frame"] = {
     type = "frame_style",
     horizontal_flow_style = data.raw["gui-style"].default["lil_einstein_tech_row_flow"],
@@ -1101,6 +1089,43 @@ local highlighted_available = {
         corner_size = 8
     },
     shadow = default_shadow
+}
+local upcoming_progress_fill = {
+    base = {
+        filename = "__LilEinstein__/graphics/ui/upcoming-tech-progress-fill.png",
+        width = 60,
+        height = 60
+    }
+}
+local transparent_graphical_set = {}
+
+data.raw["gui-style"].default["lil_einstein_upcoming_icon_progress_bar"] = {
+    type = "progressbar_style",
+    parent = "progressbar",
+    width = 60,
+    height = 60,
+    bar_width = 60,
+    bar = upcoming_progress_fill,
+    bar_background = default_available,
+    color = {r = 0.22, g = 0.95, b = 0.18},
+    padding = 0,
+    margin = 0
+}
+
+data.raw["gui-style"].default["lil_einstein_upcoming_tech_icon_button"] = {
+    type = "button_style",
+    parent = "lil_einstein_tech_btn",
+    width = 60,
+    height = 60,
+    padding = 0,
+    clicked_vertical_offset = 0,
+    default_graphical_set = transparent_graphical_set,
+    hovered_graphical_set = transparent_graphical_set,
+    clicked_graphical_set = transparent_graphical_set,
+    disabled_graphical_set = transparent_graphical_set,
+    selected_graphical_set = transparent_graphical_set,
+    selected_hovered_graphical_set = transparent_graphical_set,
+    selected_clicked_graphical_set = transparent_graphical_set
 }
 
 data.raw["gui-style"].default["lil_einstein_tech_btn_available"] = {

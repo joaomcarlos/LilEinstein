@@ -16,10 +16,6 @@ local upcoming_rank_arrow_width = 9
 local upcoming_rank_number_width = 31
 local upcoming_icon_gap = 8
 local upcoming_icon_size = 60
-local upcoming_icon_progress_left_margin = 4
-local upcoming_icon_progress_top_margin = -16
-local upcoming_icon_progress_width = 52
-local upcoming_icon_progress_height = 14
 local upcoming_name_width = 288
 local upcoming_science_icon_size = 14
 local upcoming_time_width = 68
@@ -59,18 +55,11 @@ local set_icon_progress = function(progress_bar, progress)
     end
 
     progress = math.max(0, math.min(1, progress or 0))
-    local width = math.floor((upcoming_icon_progress_width * progress) + 0.5)
-    if width <= 0 then
-        progress_bar.visible = false
-        progress_bar.style.width = 1
-        return
-    end
-
-    progress_bar.value = 1
     progress_bar.visible = true
-    progress_bar.style.width = width
-    progress_bar.style.height = upcoming_icon_progress_height
-    progress_bar.style.bar_width = upcoming_icon_progress_height
+    progress_bar.value = progress
+    progress_bar.style.width = upcoming_icon_size
+    progress_bar.style.height = upcoming_icon_size
+    progress_bar.style.bar_width = upcoming_icon_size
 end
 
 local set_rank_arrows = function(row, is_current, is_pinned)
@@ -179,10 +168,19 @@ local add_upcoming_row = function(parent, rank, entry, player_index)
     icon_stack.style.width = upcoming_icon_size
     icon_stack.style.height = upcoming_icon_size
 
+    local progress_bar = icon_stack.add({
+        type = "progressbar",
+        name = "upcoming_icon_progress",
+        value = 0,
+        style = "lil_einstein_upcoming_icon_progress_bar",
+        ignored_by_interaction = true
+    })
+    set_icon_progress(progress_bar, get_current_progress(player, entry.tech_name))
+
     local tech_btn = icon_stack.add({
         type = "sprite-button",
         name = entry.tech_name,
-        style = "lil_einstein_tech_btn_available",
+        style = "lil_einstein_upcoming_tech_icon_button",
         sprite = "technology/" .. entry.tech_name,
         tags = {
             lil_einstein_on_click = true,
@@ -193,17 +191,7 @@ local add_upcoming_row = function(parent, rank, entry, player_index)
     })
     tech_btn.style.width = upcoming_icon_size
     tech_btn.style.height = upcoming_icon_size
-
-    local progress_bar = icon_stack.add({
-        type = "progressbar",
-        name = "upcoming_icon_progress",
-        value = 1,
-        style = "lil_einstein_upcoming_icon_progress_bar",
-        ignored_by_interaction = true
-    })
-    progress_bar.style.left_margin = upcoming_icon_progress_left_margin
-    progress_bar.style.top_margin = upcoming_icon_progress_top_margin
-    set_icon_progress(progress_bar, get_current_progress(player, entry.tech_name))
+    tech_btn.style.top_margin = -upcoming_icon_size
 
     local level_suffix = entry.level > 1 and (" " .. entry.level) or ""
     local infinite_suffix = xcur.meta.is_infinite and " (infinite)" or ""
@@ -369,7 +357,7 @@ gcupcoming.refresh_times = function(player_index, anchor)
                 dur = row.tags.duration or 0
             end
 
-            local time_col = row["upcoming_time_col"] or row.children[#row.children - 1]
+            local time_col = gutil.get_child(row, "upcoming_time_col")
             if time_col and time_col.valid then
                 local dur_lbl = time_col.children[1]
                 local wait_lbl = time_col.children[2]
