@@ -35,7 +35,8 @@ local keys = {
     internal_cancelled_techs = "internal_cancelled_techs",
     target_tech = "target_tech",
     temp_tech = "temp_tech",
-    temp_tech_timeout = "temp_tech_timeout"
+    temp_tech_timeout = "temp_tech_timeout",
+    last_warn_tick = "last_warn_tick"
 }
 
 ---------------------------------------------------------------------------
@@ -50,6 +51,69 @@ local set = function(force_index, key, val)
 end
 local get = function(force_index, key)
     return storage.forces[force_index].queue[key]
+end
+
+---------------------------------------------------------------------------
+-- Warning helpers (ported from AutoSwitchTechs)
+---------------------------------------------------------------------------
+
+local make_science_icon_string = function(sciences)
+    if not sciences or next(sciences) == nil then return "(none)" end
+    local r = ""
+    for sci_pack, _ in pairs(sciences) do
+        r = r .. "[img=item/" .. sci_pack .. "] "
+    end
+    return r
+end
+
+local can_warn_now = function(force_index)
+    local last = get(force_index, keys.last_warn_tick)
+    return (last == nil) or (last + 3600 < game.tick)
+end
+
+local update_warn_time = function(force_index)
+    set(force_index, keys.last_warn_tick, game.tick)
+end
+
+local warn_force = function(force, message)
+    if not can_warn_now(force.index) then return end
+    update_warn_time(force.index)
+    logger.warn(force, message)
+end
+
+local notify_switch = function(force, cur_tech, candidate, tsx, lsci)
+    local xcur = tsx[cur_tech]
+    local xcan = tsx[candidate]
+    if not xcur or not xcan then return end
+
+    local switch_reason
+    if xcan.meta.has_spoilable_science then
+        local spoilable = {}
+        for _, s in pairs(xcan.meta.sciences or {}) do
+            local item = prototypes.item[s]
+            if item and item.get_spoil_ticks() > 0 then
+                spoilable[s] = true
+            end
+        end
+        switch_reason = {"lil_einstein-warn.switched-bc-prioritized", make_science_icon_string(spoilable)}
+    else
+        local missing = {}
+        for _, s in pairs(xcur.meta.sciences or {}) do
+            if not lsci or not lsci[s] then
+                missing[s] = true
+            end
+        end
+        switch_reason = {"lil_einstein-warn.switched-bc-first-tech-missing-science", make_science_icon_string(missing)}
+    end
+
+    local new_tech_name
+    if xcan.meta.is_infinite and xcan.technology.level then
+        new_tech_name = {"", xcan.technology.localised_name, " ", xcan.technology.level}
+    else
+        new_tech_name = xcan.technology.localised_name
+    end
+
+    logger.log(force, {"lil_einstein-warn.switched-to-tech", new_tech_name, switch_reason})
 end
 
 ---------------------------------------------------------------------------
@@ -254,7 +318,7 @@ local tech_is_available = function(xcur)
 end
 queue.science_is_available = function(xcur, lsci)
     for _, s in pairs(xcur.meta.sciences or {}) do
-        if not lsci or not lsci[s] or lsci[s] <= 0 then
+        if not lsci or not lsci[s] then
             return false
         end
     end
@@ -342,7 +406,7 @@ local get_first_next_tech = function(f)
     -- This function returns the next runtime technology from the scored virtual queue.
     local tsx = tech.get_all_tech_state_ext(f.index)
     local sfq = get_virtual_queue_source(f.index, tsx)
-    local lsci = lab.get_labs_fill_rate(f.index)
+    local lsci = queue.get_science_availability(f.index)
 
     -- Reset current researching tech
     set(f.index, keys.current_tech, nil)
@@ -439,7 +503,7 @@ end
 local get_first_next_tech_smart = function(f)
     -- AI weighted scoring + custom order bonus. Skips disabled techs.
     local tsx = tech.get_all_tech_state_ext(f.index)
-    local lsci = lab.get_labs_fill_rate(f.index)
+    local lsci = queue.get_science_availability(f.index)
 
     local all_candidates = {}
     for tech_name, xcur in pairs(tsx) do
@@ -596,7 +660,7 @@ queue.research_is_stuck = function(f)
     -- Get some variables to work with
     local sfq = get(f.index, keys.queue)
     local tsx = tech.get_all_tech_state_ext(f.index)
-    local lsci = lab.get_labs_fill_rate(f.index)
+    local lsci = queue.get_science_availability(f.index)
     local cur_tech = f.current_research and f.current_research.name or get(f.index, keys.current_tech)
     local auto_research = state.get_force_setting(f.index, "auto_research",
         const.default_settings.force.settings.auto_research)
@@ -742,7 +806,7 @@ queue.check_and_switch_temp_research = function(f)
     end
 
     -- Current tech is low on packs. Find next suitable tech in order.
-    local lsci = lab.get_labs_fill_rate(f.index)
+    local lsci = queue.get_science_availability(f.index)
     local sfq = get_virtual_queue_source(f.index, tsx)
     local sfsci = {}
 
@@ -754,6 +818,7 @@ queue.check_and_switch_temp_research = function(f)
             sq[keys.target_tech] = cur_name
             sq[keys.temp_tech] = candidate
             sq[keys.temp_tech_timeout] = game.tick + (60 * temp_tech_timeout_seconds)
+            notify_switch(f, cur_name, candidate, tsx, lsci)
             state.request_next_research(f)
             return
         end
@@ -767,6 +832,7 @@ queue.check_and_switch_temp_research = function(f)
                 sq[keys.target_tech] = cur_name
                 sq[keys.temp_tech] = candidate
                 sq[keys.temp_tech_timeout] = game.tick + (60 * temp_tech_timeout_seconds)
+                notify_switch(f, cur_name, candidate, tsx, lsci)
                 state.request_next_research(f)
                 return
             end
@@ -869,12 +935,14 @@ queue.start_next_research = function(f)
     if not sfq or #sfq == 0 then
         if not auto_research then
             f.research_queue = {}
+            warn_force(f, {"lil_einstein-warn.empty-research-queue"})
             return
         end
         queue.build_queue_from_available(f.index)
         sfq = get(f.index, keys.queue)
         if not sfq or #sfq == 0 then
             f.research_queue = {}
+            warn_force(f, {"lil_einstein-warn.empty-research-queue"})
             return
         end
     end
@@ -892,6 +960,11 @@ queue.start_next_research = function(f)
         end
     end
 
+    -- Nothing in the queue can be started (all blocked or missing science)
+    if sfq and #sfq > 0 then
+        local missing = get(f.index, keys.misses_science)
+        warn_force(f, {"lil_einstein-warn.no-techs-available", make_science_icon_string(missing)})
+    end
     f.research_queue = {}
 end
 
@@ -1567,6 +1640,36 @@ queue.science_is_sufficient = function(xcur, force_index)
     return true
 end
 
+queue.get_science_availability = function(force_index)
+    local raw = lab.get_science_availability(force_index)
+    local f = game.forces[force_index]
+
+    -- Determine "common" sciences: packs required by every tech in the in-game queue
+    local common = {}
+    if f and f.research_queue and #f.research_queue > 1 then
+        for _, t in pairs(f.research_queue) do
+            for _, ingredient in pairs(t.research_unit_ingredients or {}) do
+                common[ingredient.name] = (common[ingredient.name] or 0) + 1
+            end
+        end
+        local queue_size = #f.research_queue
+        for pack_name, count in pairs(common) do
+            common[pack_name] = (count == queue_size)
+        end
+    end
+
+    local res = {}
+    for pack_name, data in pairs(raw or {}) do
+        if data.allowing > 0 then
+            local threshold = (common[pack_name] == true) and 0.1 or 0.8
+            res[pack_name] = data.frac > threshold
+        else
+            res[pack_name] = false
+        end
+    end
+    return res
+end
+
 local get_research_unit_count = function(xcur)
     local cost = xcur.technology.research_unit_count or 1
     if xcur.meta.is_infinite and xcur.meta.prototype.research_unit_count_formula then
@@ -1678,7 +1781,7 @@ local get_virtual_research_entries = function(force_index, count)
         speed = nil
     end
 
-    local lsci = lab.get_labs_fill_rate(force_index)
+    local lsci = queue.get_science_availability(force_index)
     local virtually_researched = {}
     for name, xcur in pairs(tsx) do
         if xcur.technology.researched then
@@ -1836,7 +1939,7 @@ queue.build_queue_from_available = function(force_index)
     local tsx = tech.get_all_tech_state_ext(force_index)
     if not tsx then return end
 
-    local lsci = lab.get_labs_fill_rate(force_index)
+    local lsci = queue.get_science_availability(force_index)
 
     -- Compute avg_cost from all unresearched enabled techs
     local total_cost_sum = 0
@@ -2031,6 +2134,9 @@ queue.init_force = function(force_index)
     end
     if not sq[keys.temp_tech_timeout] then
         sq[keys.temp_tech_timeout] = nil
+    end
+    if not sq[keys.last_warn_tick] then
+        sq[keys.last_warn_tick] = nil
     end
 
     -- Register each queued tech

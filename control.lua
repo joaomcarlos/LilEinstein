@@ -376,9 +376,11 @@ script.on_event(defines.events.on_gui_click, function(e)
         for _, s in pairs(sci) do
             state.set_player_setting(p.index, "allowed_" .. s, false)
         end
-        local prod = lab.get_labs_fill_rate(f.index)
-        for s, _ in pairs(prod) do
-            state.set_player_setting(p.index, "allowed_" .. s, true)
+        local prod = queue.get_science_availability(f.index)
+        for s, available in pairs(prod) do
+            if available then
+                state.set_player_setting(p.index, "allowed_" .. s, true)
+            end
         end
     elseif h == "all_science" then
         local sci = util.get_all_sciences()

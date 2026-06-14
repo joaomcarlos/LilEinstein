@@ -124,7 +124,7 @@ analyzer.get_queue_meta = function(force_index) -- This function recalculates th
     end
 
     local qms = queue.get_tech_missing_science(f.index)
-    local lsci = lab.get_labs_fill_rate(f.index)
+    local lsci = queue.get_science_availability(f.index)
     local researching = queue.get_current_researching(f.index)
     local smart_researching = queue.get_current_smart_researching(f.index)
 
