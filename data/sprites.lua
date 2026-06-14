@@ -1,6 +1,5 @@
 -- Small = 16px, medium = 32px, large = 64px
 local p = "__LilEinstein__/graphics/icons/"
-local ui = "__LilEinstein__/graphics/ui/"
 local ui_slices = require("lib.ui_slices")
 local ui_slice_aliases = {
     button_all = "allowed_button_all",
@@ -8,7 +7,6 @@ local ui_slice_aliases = {
     button_none = "allowed_button_none",
     button_produced = "allowed_button_produced",
     checkbox_off = "filter_checkbox_off",
-    checkbox_on = "filter_checkbox_on",
     settings_checkbox_on_1 = "settings_checkbox_on_1",
     settings_checkbox_on_2 = "settings_checkbox_on_2",
     drag_handle = "upcoming_drag_handle",
@@ -17,9 +15,7 @@ local ui_slice_aliases = {
     radio_off = "filter_radio_off",
     radio_on = "filter_radio_on",
     row_arrow_down = "tech_row_down_button",
-    row_arrow_up = "tech_row_up_button",
-    row_scrollbar_thumb = "tech_scrollbar_thumb",
-    tech_switch_on = "tech_enable_switch"
+    row_arrow_up = "tech_row_up_button"
 }
 
 local get_sprite = function(name, w, h, filename)
@@ -51,18 +47,6 @@ local get_ui_sprite = function(name, w, h)
     return prop
 end
 
-local get_research_sprite = function(name, w, h, filename)
-    local prop = {
-        type = "sprite",
-        name = "lil_einstein_" .. name,
-        filename = ui .. filename,
-        priority = "extra-high-no-scale",
-        width = w,
-        height = h
-    }
-    return prop
-end
-
 -- Small sprites
 data:extend({get_sprite("bin_small", 16, 16), get_sprite("arrow_down_small", 14, 10),
              get_sprite("arrow_down_small_black", 14, 10), get_sprite("arrow_up_small", 14, 10),
@@ -84,27 +68,19 @@ local ui_sprite_names = {
     "button_none",
     "button_produced",
     "checkbox_off",
-    "checkbox_on",
     "settings_checkbox_on_1",
     "settings_checkbox_on_2",
     "drag_handle",
     "enable_switch_off",
     "enable_switch_on",
-    "filter_search_button",
     "number_input_bg",
     "radio_off",
     "radio_on",
     "row_arrow_down",
     "row_arrow_up",
-    "row_scrollbar_thumb",
-    "science_slot_bg",
     "stepper_left",
     "stepper_right",
-    "tech_row_bg",
-    "tech_search_button",
-    "upcoming_row_separator",
-    "tech_switch_on",
-    "upcoming_row_bg"
+    "upcoming_row_separator"
 }
 
 local ui_sprites = {}
@@ -115,42 +91,3 @@ for _, name in ipairs(ui_sprite_names) do
     end
 end
 data:extend(ui_sprites)
-
-data:extend({
-    get_research_sprite("research_bottle_fill_00", 179, 142, "research-bottle-fill-00.png"),
-    get_research_sprite("research_bottle_fill_02", 179, 142, "research-bottle-fill-02.png"),
-    get_research_sprite("research_bottle_fill_05", 179, 142, "research-bottle-fill-05.png"),
-    get_research_sprite("research_bottle_fill_10", 179, 142, "research-bottle-fill-10.png"),
-    get_research_sprite("research_bottle_fill_15", 179, 142, "research-bottle-fill-15.png"),
-    get_research_sprite("research_bottle_fill_20", 179, 142, "research-bottle-fill-20.png"),
-    get_research_sprite("research_bottle_fill_30", 179, 142, "research-bottle-fill-30.png"),
-    get_research_sprite("research_bottle_fill_40", 179, 142, "research-bottle-fill-40.png"),
-    get_research_sprite("research_bottle_fill_50", 179, 142, "research-bottle-fill-50.png"),
-    get_research_sprite("research_bottle_fill_70", 179, 142, "research-bottle-fill-70.png"),
-    get_research_sprite("research_bottle_fill_80", 179, 142, "research-bottle-fill-80.png"),
-    get_research_sprite("research_bottle_fill_90", 179, 142, "research-bottle-fill-90.png"),
-    get_research_sprite("research_bottle_fill_95", 179, 142, "research-bottle-fill-95.png"),
-    get_research_sprite("research_bottle_fill_99", 179, 142, "research-bottle-fill-99.png")
-})
-
-data:extend({
-    get_research_sprite("research_bottle_icon_fill_00", 96, 96, "research-bottle-icon-fill-00.png"),
-    get_research_sprite("research_bottle_icon_fill_02", 96, 96, "research-bottle-icon-fill-02.png"),
-    get_research_sprite("research_bottle_icon_fill_05", 96, 96, "research-bottle-icon-fill-05.png"),
-    get_research_sprite("research_bottle_icon_fill_10", 96, 96, "research-bottle-icon-fill-10.png"),
-    get_research_sprite("research_bottle_icon_fill_15", 96, 96, "research-bottle-icon-fill-15.png"),
-    get_research_sprite("research_bottle_icon_fill_20", 96, 96, "research-bottle-icon-fill-20.png"),
-    get_research_sprite("research_bottle_icon_fill_30", 96, 96, "research-bottle-icon-fill-30.png"),
-    get_research_sprite("research_bottle_icon_fill_40", 96, 96, "research-bottle-icon-fill-40.png"),
-    get_research_sprite("research_bottle_icon_fill_50", 96, 96, "research-bottle-icon-fill-50.png"),
-    get_research_sprite("research_bottle_icon_fill_70", 96, 96, "research-bottle-icon-fill-70.png"),
-    get_research_sprite("research_bottle_icon_fill_80", 96, 96, "research-bottle-icon-fill-80.png"),
-    get_research_sprite("research_bottle_icon_fill_90", 96, 96, "research-bottle-icon-fill-90.png"),
-    get_research_sprite("research_bottle_icon_fill_95", 96, 96, "research-bottle-icon-fill-95.png"),
-    get_research_sprite("research_bottle_icon_fill_99", 96, 96, "research-bottle-icon-fill-99.png"),
-    get_research_sprite("research_bottle_drip_01", 96, 96, "research-bottle-drip-01.png"),
-    get_research_sprite("research_bottle_drip_02", 96, 96, "research-bottle-drip-02.png"),
-    get_research_sprite("research_bottle_drip_03", 96, 96, "research-bottle-drip-03.png"),
-    get_research_sprite("research_bottle_drip_04", 96, 96, "research-bottle-drip-04.png"),
-    get_research_sprite("research_bottle_drip_05", 96, 96, "research-bottle-drip-05.png")
-})

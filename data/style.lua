@@ -237,57 +237,6 @@ data.raw["gui-style"].default["lil_einstein_lab_panel"] = {
     stretch_image_to_widget_size = true
 }
 
-data.raw["gui-style"].default["lil_einstein_brand_overlay_flow"] = {
-    type = "vertical_flow_style",
-    width = 755,
-    height = 287,
-    vertical_spacing = 0
-}
-
-data.raw["gui-style"].default["lil_einstein_brand_bottle_top_spacer"] = {
-    type = "empty_widget_style",
-    width = 1,
-    height = 154
-}
-
-data.raw["gui-style"].default["lil_einstein_brand_bottle_left_spacer"] = {
-    type = "empty_widget_style",
-    width = 43,
-    height = 1
-}
-
-data.raw["gui-style"].default["lil_einstein_research_bottle_stack"] = {
-    type = "vertical_flow_style",
-    width = 96,
-    height = 96,
-    vertical_spacing = 0
-}
-
-data.raw["gui-style"].default["lil_einstein_research_bottle_sprite"] = {
-    type = "image_style",
-    parent = "image",
-    width = 96,
-    height = 96,
-    horizontally_stretchable = "off",
-    vertically_stretchable = "off",
-    horizontally_squashable = "off",
-    vertically_squashable = "off",
-    stretch_image_to_widget_size = true
-}
-
-data.raw["gui-style"].default["lil_einstein_research_bottle_drip_sprite"] = {
-    type = "image_style",
-    parent = "image",
-    width = 96,
-    height = 96,
-    top_margin = -96,
-    horizontally_stretchable = "off",
-    vertically_stretchable = "off",
-    horizontally_squashable = "off",
-    vertically_squashable = "off",
-    stretch_image_to_widget_size = true
-}
-
 data.raw["gui-style"].default["lil_einstein_research_graph_panel"] = {
     type = "frame_style",
     parent = "inside_shallow_frame",

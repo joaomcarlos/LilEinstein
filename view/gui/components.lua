@@ -18,10 +18,6 @@ local research_graph_plot_width = 456
 local research_graph_plot_height = 118
 local research_graph_hover_dot_height = 3
 local research_graph_hover_column_setting = "research_graph_hover_column"
-local research_bottle_steps = {0, 2, 5, 10, 15, 20, 30, 40, 50, 70, 80, 90, 95, 99}
-local research_drip_cycle_ticks = 180
-local research_drip_visible_ticks = 60
-local research_drip_frame_count = 5
 
 local get_science_tooltip = function(player_index, force_index, science, total_count)
     local item_name = state.get_translation(player_index, "item", science, "localised_name") or science
@@ -170,39 +166,6 @@ local get_research_graph_hover_tooltip = function(value, column_index)
     local seconds_ago = (research_graph_column_count - column_index) * research_graph_sample_seconds
     return {"", "[font=default-bold]SPM:[/font] ", format_spaced_number(value), "\n",
             "[font=default-bold]Time:[/font] ", format_time(seconds_ago), " ago"}
-end
-
-local get_bottle_sprite = function(summary)
-    if not summary or not summary.is_researching then
-        return "lil_einstein_research_bottle_icon_fill_00"
-    end
-
-    local pct = math.max(0, math.min(99, (summary.progress or 0) * 100))
-    local selected = 0
-    for _, step in ipairs(research_bottle_steps) do
-        if pct >= step then
-            selected = step
-        end
-    end
-    return "lil_einstein_research_bottle_icon_fill_" .. string.format("%02d", selected)
-end
-
-local get_research_drip_sprite = function(summary)
-    if not summary or not summary.is_researching then
-        return nil
-    end
-
-    local phase = game.tick % research_drip_cycle_ticks
-    if phase >= research_drip_visible_ticks then
-        return nil
-    end
-
-    local frame_ticks = research_drip_visible_ticks / research_drip_frame_count
-    local frame = math.floor(phase / frame_ticks) + 1
-    if frame > research_drip_frame_count then
-        frame = research_drip_frame_count
-    end
-    return "lil_einstein_research_bottle_drip_" .. string.format("%02d", frame)
 end
 
 local get_research_graph_column_width = function(i)
@@ -422,22 +385,6 @@ local refresh_research_progress = function(player_index, anchor)
     local _, summary = get_research_context(player_index, anchor)
     if not summary then
         return
-    end
-
-    local bottle = gutil.get_child(anchor, "research_bottle_sprite")
-    if bottle and bottle.type == "sprite" then
-        bottle.sprite = get_bottle_sprite(summary)
-    end
-
-    local drip = gutil.get_child(anchor, "research_bottle_drip_sprite")
-    if drip and drip.type == "sprite" then
-        local drip_sprite = get_research_drip_sprite(summary)
-        if drip_sprite then
-            drip.sprite = drip_sprite
-            drip.visible = true
-        else
-            drip.visible = false
-        end
     end
 
     gcupcoming.refresh_progress(player_index, anchor)

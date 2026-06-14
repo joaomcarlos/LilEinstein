@@ -77,51 +77,11 @@ end
 ---------------------------------------------------------------------------------------------------
 --- Left pane content
 ---------------------------------------------------------------------------------------------------
-local brand_research_bottle = {
-    type = "flow",
-    name = "brand_research_bottle_overlay",
-    style = "lil_einstein_brand_overlay_flow",
-    direction = "vertical",
-    children = {{
-        type = "empty-widget",
-        style = "lil_einstein_brand_bottle_top_spacer"
-    }, {
-        type = "flow",
-        name = "brand_research_bottle_row",
-        style = "lil_einstein_horizontal_flow_nospacing",
-        direction = "horizontal",
-        children = {{
-            type = "empty-widget",
-            style = "lil_einstein_brand_bottle_left_spacer"
-        }, {
-            type = "flow",
-            name = "research_bottle_stack",
-            style = "lil_einstein_research_bottle_stack",
-            direction = "vertical",
-            children = {{
-                type = "sprite",
-                name = "research_bottle_sprite",
-                style = "lil_einstein_research_bottle_sprite",
-                sprite = "lil_einstein_research_bottle_icon_fill_00",
-                ignored_by_interaction = true
-            }, {
-                type = "sprite",
-                name = "research_bottle_drip_sprite",
-                style = "lil_einstein_research_bottle_drip_sprite",
-                sprite = "lil_einstein_research_bottle_drip_01",
-                visible = false,
-                ignored_by_interaction = true
-            }}
-        }}
-    }}
-}
-
 local brand_header = {
     type = "frame",
     name = "brand_header",
     style = "lil_einstein_brand_frame",
-    direction = "horizontal",
-    children = {brand_research_bottle}
+    direction = "horizontal"
 }
 
 local research_graph_panel = {
