@@ -80,14 +80,30 @@ end
 local alert_icon = {type = "virtual", name = "lil_einstein-science-alert"}
 
 local get_any_lab = function(force_index)
-    local sfl = storage.forces[force_index] and storage.forces[force_index].lab
-    if not sfl then return nil end
-    local all_labs = sfl.all_labs
-    if not all_labs then return nil end
-    for _, unit_number in ipairs(all_labs) do
-        local content = sfl.lab_content and sfl.lab_content[unit_number]
-        if content and content.lab and content.lab.valid then
-            return content.lab
+    if not force_index then
+        return nil
+    end
+    local sf = storage.forces and storage.forces[force_index]
+    local sfl = sf and sf.lab
+    local all_labs = sfl and sfl.all_labs
+    if all_labs and sfl.lab_content then
+        for _, unit_number in ipairs(all_labs) do
+            local content = sfl.lab_content[unit_number]
+            if content and content.lab and content.lab.valid then
+                return content.lab
+            end
+        end
+    end
+
+    for _, surface in pairs(game.surfaces) do
+        local surface_labs = surface.find_entities_filtered({type = "lab", force = force_index})
+        for _, lab_entity in pairs(surface_labs) do
+            if lab_entity.valid then
+                if sfl and sfl.all_labs and sfl.lab_content then
+                    lab.register(lab_entity)
+                end
+                return lab_entity
+            end
         end
     end
     return nil

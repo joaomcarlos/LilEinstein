@@ -1,0 +1,23 @@
+{
+  "diagnostics.globals": [
+    "commands",
+    "data",
+    "defines",
+    "game",
+    "helpers",
+    "localised_print",
+    "log",
+    "mods",
+    "prototypes",
+    "rcon",
+    "remote",
+    "rendering",
+    "script",
+    "serpent",
+    "settings",
+    "storage",
+    "table_size"
+  ],
+  "runtime.version": "Lua 5.2",
+  "workspace.checkThirdParty": false
+}

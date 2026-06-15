@@ -103,6 +103,7 @@ end)
 
 script.on_load(function()
     load()
+    refetch_settings()
 end)
 
 script.on_event(defines.events.on_runtime_mod_setting_changed, function(e)
