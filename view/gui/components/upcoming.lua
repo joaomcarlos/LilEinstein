@@ -16,9 +16,11 @@ local upcoming_rank_arrow_width = 9
 local upcoming_rank_number_width = 31
 local upcoming_icon_gap = 8
 local upcoming_icon_size = 60
+local upcoming_icon_progress_height = 4
 local upcoming_name_width = 288
 local upcoming_science_icon_size = 14
 local upcoming_time_width = 68
+local upcoming_content_bottom_margin = 8
 
 local format_time = function(seconds)
     if not seconds then
@@ -39,14 +41,21 @@ local format_time = function(seconds)
     end
 end
 
-local get_current_progress = function(player, tech_name)
-    if not player or not player.force or not player.force.current_research then
+local get_research_progress = function(player, tech_name)
+    if not player or not player.valid or not player.force then
         return 0
     end
-    if player.force.current_research.name ~= tech_name then
+
+    local f = player.force
+    if f.current_research and f.current_research.name == tech_name then
+        return math.max(0, math.min(1, f.research_progress or 0))
+    end
+
+    local t = f.technologies[tech_name]
+    if not t or not t.valid then
         return 0
     end
-    return math.max(0, math.min(1, player.force.research_progress or 0))
+    return math.max(0, math.min(1, t.saved_progress or 0))
 end
 
 local set_icon_progress = function(progress_bar, progress)
@@ -58,8 +67,18 @@ local set_icon_progress = function(progress_bar, progress)
     progress_bar.visible = true
     progress_bar.value = progress
     progress_bar.style.width = upcoming_icon_size
-    progress_bar.style.height = upcoming_icon_size
-    progress_bar.style.bar_width = upcoming_icon_size
+    progress_bar.style.height = upcoming_icon_progress_height
+    progress_bar.style.bar_width = upcoming_icon_progress_height
+end
+
+local set_progress_text = function(progress_label, progress, is_current)
+    if not progress_label or not progress_label.valid then
+        return
+    end
+
+    progress = math.max(0, math.min(1, progress or 0))
+    progress_label.visible = is_current or progress > 0
+    progress_label.caption = string.format("%.2f%%", progress * 100)
 end
 
 local set_rank_arrows = function(row, is_current, is_pinned)
@@ -105,6 +124,8 @@ local add_upcoming_row = function(parent, rank, entry, player_index)
     row.tags = {
         duration = entry.duration or 0,
         wait_time = entry.wait_time or 0,
+        duration_known = entry.duration ~= nil,
+        wait_time_known = entry.wait_time ~= nil,
         rank = rank,
         technology = entry.tech_name
     }
@@ -168,15 +189,6 @@ local add_upcoming_row = function(parent, rank, entry, player_index)
     icon_stack.style.width = upcoming_icon_size
     icon_stack.style.height = upcoming_icon_size
 
-    local progress_bar = icon_stack.add({
-        type = "progressbar",
-        name = "upcoming_icon_progress",
-        value = 0,
-        style = "lil_einstein_upcoming_icon_progress_bar",
-        ignored_by_interaction = true
-    })
-    set_icon_progress(progress_bar, get_current_progress(player, entry.tech_name))
-
     local tech_btn = icon_stack.add({
         type = "sprite-button",
         name = entry.tech_name,
@@ -191,7 +203,19 @@ local add_upcoming_row = function(parent, rank, entry, player_index)
     })
     tech_btn.style.width = upcoming_icon_size
     tech_btn.style.height = upcoming_icon_size
-    tech_btn.style.top_margin = -upcoming_icon_size
+
+    -- Draw the progress last so its highlighted strip sits over the icon's bottom border.
+    local progress_bar = icon_stack.add({
+        type = "progressbar",
+        name = "upcoming_icon_progress",
+        value = 0,
+        style = "lil_einstein_upcoming_icon_progress_bar",
+        ignored_by_interaction = true
+    })
+    progress_bar.style.top_margin = -upcoming_icon_progress_height
+
+    local progress = get_research_progress(player, entry.tech_name)
+    set_icon_progress(progress_bar, progress)
 
     local level_suffix = entry.level > 1 and (" " .. entry.level) or ""
     local infinite_suffix = xcur.meta.is_infinite and " (infinite)" or ""
@@ -201,6 +225,7 @@ local add_upcoming_row = function(parent, rank, entry, player_index)
         style = "lil_einstein_vertical_flow_nospacing"
     })
     col.style.left_margin = 4
+    col.style.bottom_margin = upcoming_content_bottom_margin
     col.style.horizontally_stretchable = true
     col.style.width = upcoming_name_width
 
@@ -244,17 +269,27 @@ local add_upcoming_row = function(parent, rank, entry, player_index)
         style = "lil_einstein_vertical_flow_nospacing"
     })
     time_col.style.left_margin = 6
+    time_col.style.bottom_margin = upcoming_content_bottom_margin
     time_col.style.width = upcoming_time_width
     time_col.style.top_margin = 8
 
+    local progress_label = time_col.add({
+        type = "label",
+        name = "upcoming_progress_label",
+        style = "lil_einstein_queue_subinfo"
+    })
+    set_progress_text(progress_label, progress, is_current)
+
     time_col.add({
         type = "label",
+        name = "upcoming_duration_label",
         style = "lil_einstein_queue_subinfo",
         caption = format_time(entry.duration)
     })
     if rank > 1 then
         time_col.add({
             type = "label",
+            name = "upcoming_wait_label",
             style = "lil_einstein_queue_subinfo",
             caption = "in " .. format_time(entry.wait_time)
         })
@@ -294,8 +329,11 @@ gcupcoming.refresh_progress = function(player_index, anchor)
         if row.valid and row.tags and row.tags.technology then
             local is_pinned = queue.get_pinned_tech(player.force.index) == row.tags.technology
             local is_current = player.force.current_research and player.force.current_research.name == row.tags.technology
+            local progress = get_research_progress(player, row.tags.technology)
             local progress_bar = gutil.get_child(row, "upcoming_icon_progress")
-            set_icon_progress(progress_bar, get_current_progress(player, row.tags.technology))
+            local progress_label = gutil.get_child(row, "upcoming_progress_label")
+            set_icon_progress(progress_bar, progress)
+            set_progress_text(progress_label, progress, is_current)
             set_rank_arrows(row, is_current, is_pinned)
         end
     end
@@ -351,16 +389,22 @@ gcupcoming.refresh_times = function(player_index, anchor)
 
     for _, row in ipairs(flow.children) do
         if row.valid and row.tags and row.tags.rank then
-            local dur = math.max(0, (row.tags.duration or 0) - elapsed)
-            local wait = math.max(0, (row.tags.wait_time or 0) - elapsed)
-            if row.tags.rank ~= 1 then
-                dur = row.tags.duration or 0
+            local dur
+            local wait
+            if row.tags.duration_known then
+                dur = math.max(0, (row.tags.duration or 0) - elapsed)
+                if row.tags.rank ~= 1 then
+                    dur = row.tags.duration or 0
+                end
+            end
+            if row.tags.wait_time_known then
+                wait = math.max(0, (row.tags.wait_time or 0) - elapsed)
             end
 
             local time_col = gutil.get_child(row, "upcoming_time_col")
             if time_col and time_col.valid then
-                local dur_lbl = time_col.children[1]
-                local wait_lbl = time_col.children[2]
+                local dur_lbl = time_col["upcoming_duration_label"]
+                local wait_lbl = time_col["upcoming_wait_label"]
                 if dur_lbl and dur_lbl.valid then
                     dur_lbl.caption = format_time(dur)
                 end

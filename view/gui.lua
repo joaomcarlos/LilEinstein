@@ -23,6 +23,9 @@ local open = function(player_index, anchor)
 
     -- Repopulate the content
     components.repopulate_all(player_index, anchor)
+    if state.get_player_setting(player_index, "policy_panel_open", false) then
+        gui.toggle_policy_panel(player_index)
+    end
 end
 
 local close = function(player_index, anchor)
@@ -65,6 +68,27 @@ gui.toggle = function(player_index)
         close(player_index, gui.get(player_index))
     else
         open(player_index, player.gui[target])
+    end
+end
+
+gui.toggle_policy_panel = function(player_index)
+    local anchor = gui.get(player_index)
+    if not anchor then
+        return
+    end
+    local content_flow = gutil.get_child(anchor, "content_flow")
+    local policy_panel = gutil.get_child(anchor, "policy_panel")
+    if not content_flow or not policy_panel then
+        return
+    end
+    local show_policy = not policy_panel.visible
+    policy_panel.visible = show_policy
+    content_flow.visible = not show_policy
+    state.set_player_setting(player_index, "policy_panel_open", show_policy)
+    if show_policy then
+        components.repopulate_policy(player_index, anchor)
+    else
+        components.repopulate_all(player_index, anchor)
     end
 end
 

@@ -12,4 +12,12 @@ data:extend({
         subgroup = subgroup,
         order = "z",
     },
+    {
+        type = "virtual-signal",
+        name = "lil_einstein-tech-switch-alert",
+        icon = "__LilEinstein__/graphics/icons/progress_smart_medium.png",
+        icon_size = 32,
+        subgroup = subgroup,
+        order = "z-a",
+    },
 })
