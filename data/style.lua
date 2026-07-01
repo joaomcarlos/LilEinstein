@@ -739,6 +739,40 @@ data.raw["gui-style"].default["lil_einstein_allowed_science_frame"] = {
     padding = 6,
     graphical_set = {}
 }
+data.raw["gui-style"].default["lil_einstein_research_health_panel"] = {
+    type = "vertical_flow_style",
+    width = 220,
+    height = 64,
+    left_margin = 7,
+    top_margin = 1,
+    vertical_spacing = 2
+}
+data.raw["gui-style"].default["lil_einstein_allowed_science_table"] = {
+    type = "table_style",
+    width = 644,
+    horizontal_spacing = 0,
+    vertical_spacing = 0
+}
+data.raw["gui-style"].default["lil_einstein_research_health_state"] = {
+    type = "label_style",
+    parent = "label",
+    width = 220,
+    height = 20,
+    font = "default-bold",
+    font_color = {0.84, 0.82, 0.75},
+    padding = 0,
+    margin = 0
+}
+data.raw["gui-style"].default["lil_einstein_research_health_reason"] = {
+    type = "label_style",
+    parent = "label",
+    width = 220,
+    height = 32,
+    font = "default-small",
+    font_color = {0.70, 0.69, 0.64},
+    padding = 0,
+    margin = 0
+}
 -- Bottom left frame
 data.raw["gui-style"].default["lil_einstein_filter_frame"] = {
     type = "frame_style",
@@ -1039,23 +1073,22 @@ local highlighted_available = {
     },
     shadow = default_shadow
 }
+local transparent_graphical_set = {}
 local upcoming_progress_fill = {
     base = {
-        filename = "__LilEinstein__/graphics/ui/upcoming-tech-progress-fill.png",
-        width = 60,
-        height = 60
+        position = {305, 39},
+        corner_size = 4
     }
 }
-local transparent_graphical_set = {}
 
 data.raw["gui-style"].default["lil_einstein_upcoming_icon_progress_bar"] = {
     type = "progressbar_style",
     parent = "progressbar",
     width = 60,
-    height = 60,
+    height = 4,
     bar_width = 60,
     bar = upcoming_progress_fill,
-    bar_background = default_available,
+    bar_background = transparent_graphical_set,
     color = {r = 0.22, g = 0.95, b = 0.18},
     padding = 0,
     margin = 0

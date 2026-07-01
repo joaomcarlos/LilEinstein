@@ -14,6 +14,7 @@ local research_history_seconds = 10 * 60
 local research_history_sample_seconds = 3
 local research_history_samples = math.floor(research_history_seconds / research_history_sample_seconds)
 local research_speed_average_samples = math.floor(60 / research_history_sample_seconds)
+local science_reserve_per_lab = 6
 
 -- seconds to stay on temp tech before checking to switch back
 local temp_tech_timeout_seconds = 5 
@@ -77,7 +78,8 @@ local update_warn_time = function(force_index)
     set(force_index, keys.last_warn_tick, game.tick)
 end
 
-local alert_icon = {type = "virtual", name = "lil_einstein-science-alert"}
+local warning_alert_icon = {type = "virtual", name = "lil_einstein-science-alert"}
+local switch_alert_icon = {type = "virtual", name = "lil_einstein-tech-switch-alert"}
 
 local get_any_lab = function(force_index)
     if not force_index then
@@ -109,12 +111,12 @@ local get_any_lab = function(force_index)
     return nil
 end
 
-local alert_force = function(force, message)
+local alert_force = function(force, icon, message, show_on_map)
     local lab_entity = get_any_lab(force.index)
     if not lab_entity then return end
     for _, player in pairs(force.connected_players) do
         if player and player.valid then
-            player.add_custom_alert(lab_entity, alert_icon, message, false)
+            player.add_custom_alert(lab_entity, icon, message, show_on_map)
         end
     end
 end
@@ -122,7 +124,7 @@ end
 local warn_force = function(force, message)
     if not can_warn_now(force.index) then return end
     update_warn_time(force.index)
-    alert_force(force, message)
+    alert_force(force, warning_alert_icon, message, false)
 end
 
 local notify_switch = function(force, cur_tech, candidate, tsx, lsci)
@@ -148,7 +150,11 @@ local notify_switch = function(force, cur_tech, candidate, tsx, lsci)
                 missing[s] = true
             end
         end
-        switch_reason = {"lil_einstein-warn.switched-bc-first-tech-missing-science", make_science_icon_string(missing)}
+        if next(missing) ~= nil then
+            switch_reason = {"lil_einstein-warn.switched-bc-first-tech-missing-science", make_science_icon_string(missing)}
+        else
+            switch_reason = {"lil_einstein-warn.switched-bc-keep-research-running"}
+        end
     end
 
     local new_tech_name
@@ -159,7 +165,7 @@ local notify_switch = function(force, cur_tech, candidate, tsx, lsci)
     end
 
     local msg = {"lil_einstein-warn.switched-to-tech", new_tech_name, switch_reason}
-    alert_force(force, msg)
+    alert_force(force, switch_alert_icon, msg, true)
 end
 
 ---------------------------------------------------------------------------
@@ -292,6 +298,31 @@ local get_science_counts
 local get_lab_science_counts
 local get_virtual_queue_source
 
+local science_supply_is_sufficient = function(xcur, force_index)
+    if not xcur or not xcur.meta or not force_index then
+        return false
+    end
+
+    local sciences = xcur.meta.sciences or {}
+    if not next(sciences) then
+        return true
+    end
+
+    local _, valid_lab_count = get_lab_science_counts(force_index)
+    if valid_lab_count == 0 then
+        return false
+    end
+
+    local counts = get_science_counts(force_index)
+    local required_count = valid_lab_count * science_reserve_per_lab
+    for _, science in pairs(sciences) do
+        if (counts[science] or 0) < required_count then
+            return false
+        end
+    end
+    return true
+end
+
 -- Return detailed score components: {importance, level_boost, user_boost, total}
 -- importance = base AI weight from rw.research_weights + effect inference
 -- level_boost = bonus for cheap techs relative to current candidate pool average
@@ -308,16 +339,7 @@ queue.score_tech_detailed = function(xcur, level, user_boost, avg_cost, force_in
     end
 
     if xcur.technology.name == "research-productivity" and force_index then
-        local lab_counts = get_lab_science_counts(force_index)
-        local required = (xcur.technology.research_unit_count or 1) * 0.2
-        local has_all = true
-        for _, s in pairs(xcur.meta.sciences or {}) do
-            if (lab_counts[s] or 0) < required then
-                has_all = false
-                break
-            end
-        end
-        if has_all then
+        if science_supply_is_sufficient(xcur, force_index) then
             return {importance = 999999, level_boost = 0, user_boost = user_boost, total = 999999}
         end
     end
@@ -970,7 +992,6 @@ queue.start_next_research = function(f)
     -- Early exit if LilEinstein is disabled
     local st = state.get_force_setting(f.index, "master_enable")
     if st == "left" then
-        f.research_queue = {}
         return
     end
 
@@ -1240,6 +1261,11 @@ queue.get_queue = function(force_index)
     return get(force_index, keys.queue)
 end
 
+local research_sample_is_valid = function(sample)
+    return sample and (sample.valid_speed == true or
+               (sample.valid_speed == nil and sample.speed and sample.speed > 0))
+end
+
 local get_average_research_speed = function(samples, sample_count)
     if not samples or #samples == 0 then
         return nil, false
@@ -1250,8 +1276,8 @@ local get_average_research_speed = function(samples, sample_count)
     local start_index = math.max(1, #samples - (sample_count or research_speed_average_samples) + 1)
     for i = start_index, #samples do
         local s = samples[i]
-        if s and s.speed and s.speed > 0 then
-            total = total + s.speed
+        if research_sample_is_valid(s) then
+            total = total + (s.speed or 0)
             count = count + 1
         end
     end
@@ -1260,6 +1286,29 @@ local get_average_research_speed = function(samples, sample_count)
         return total / count, true
     end
     return nil, false
+end
+
+
+local get_research_speed_window = function(samples, start_offset, sample_count, tech_name)
+    if not samples or #samples == 0 or sample_count <= 0 then
+        return nil, 0
+    end
+
+    local end_index = #samples - (start_offset or 0)
+    local start_index = math.max(1, end_index - sample_count + 1)
+    local total = 0
+    local count = 0
+    for i = start_index, end_index do
+        local sample = samples[i]
+        if research_sample_is_valid(sample) and (not tech_name or sample.tech_name == tech_name) then
+            total = total + (sample.speed or 0)
+            count = count + 1
+        end
+    end
+    if count == 0 then
+        return nil, 0
+    end
+    return total / count, count
 end
 
 local new_research_spm_history = function()
@@ -1353,6 +1402,7 @@ queue.record_research_progress = function(force_index)
     local tech_name = current and current.name or nil
     local unit_count = current and (current.research_unit_count or 1) or 0
     local speed = 0
+    local valid_speed = false
 
     -- Compute speed if same research as previous sample
     if #samples > 0 then
@@ -1363,6 +1413,7 @@ queue.record_research_progress = function(force_index)
             -- units per second = (fraction_complete * total_units) / seconds
             if delta_ticks > 0 then
                 speed = (delta_progress * unit_count * 60) / delta_ticks
+                valid_speed = true
             end
         end
     end
@@ -1372,7 +1423,8 @@ queue.record_research_progress = function(force_index)
         progress = progress,
         tech_name = tech_name,
         unit_count = unit_count,
-        speed = speed
+        speed = speed,
+        valid_speed = valid_speed
     })
 
     -- Keep only the last 10 minutes at one sample every 3 seconds.
@@ -1464,6 +1516,7 @@ end
 --   counts_cache: counts refreshed every tick
 local labs_cache = {}
 local counts_cache = {}
+local diagnostic_cache = {}
 
 local has_invalid_ref = function(refs)
     for _, ref in pairs(refs or {}) do
@@ -1522,16 +1575,21 @@ local refresh_labs_cache = function(force_index)
     }
 end
 
+local get_cached_labs = function(force_index)
+    local now = game.tick
+    local lc = labs_cache[force_index]
+    if not lc or (now - lc.tick) >= 36000 or has_invalid_ref(lc.labs) then
+        refresh_labs_cache(force_index)
+        lc = labs_cache[force_index]
+    end
+    return (lc and lc.labs) or {}
+end
+
 get_science_counts = function(force_index)
     local now = game.tick
 
     -- Refresh labs/network cache every 10 minutes, or immediately if refs went invalid (save/load)
-    local lc = labs_cache[force_index]
-    if not lc or (now - lc.tick) >= 36000
-        or has_invalid_ref(lc.labs) then
-        refresh_labs_cache(force_index)
-        lc = labs_cache[force_index]
-    end
+    local all_labs = get_cached_labs(force_index)
 
     -- Count cache is per-tick
     local cc = counts_cache[force_index]
@@ -1542,9 +1600,18 @@ get_science_counts = function(force_index)
     local counts = {}
     local detected_networks = {}
     local breakdown = {}
+    local all_sciences = env.get_all_sciences()
+    for _, science in pairs(all_sciences) do
+        breakdown[science] = {
+            lab_count = 0,
+            lab_entity_count = 0,
+            network_total = 0,
+            networks = {}
+        }
+    end
 
     -- Packs in labs
-    for _, lab_entity in pairs(lc.labs) do
+    for _, lab_entity in pairs(all_labs) do
         if lab_entity.valid then
             local inv = lab_entity.get_inventory(defines.inventory.lab_input)
             local network = get_lab_network(lab_entity)
@@ -1570,16 +1637,11 @@ get_science_counts = function(force_index)
             if inv then
                 for _, item in pairs(inv.get_contents()) do
                     counts[item.name] = (counts[item.name] or 0) + (item.count or 0)
-                    if not breakdown[item.name] then
-                        breakdown[item.name] = {
-                            lab_count = 0,
-                            lab_entity_count = 0,
-                            network_total = 0,
-                            networks = {}
-                        }
+                    local item_breakdown = breakdown[item.name]
+                    if item_breakdown then
+                        item_breakdown.lab_count = item_breakdown.lab_count + (item.count or 0)
+                        item_breakdown.lab_entity_count = item_breakdown.lab_entity_count + 1
                     end
-                    breakdown[item.name].lab_count = breakdown[item.name].lab_count + (item.count or 0)
-                    breakdown[item.name].lab_entity_count = breakdown[item.name].lab_entity_count + 1
                 end
             end
         end
@@ -1602,25 +1664,16 @@ get_science_counts = function(force_index)
         local network = network_meta.network
         if network and network.valid then
             local network_label = get_network_label(network, network_meta.sample_lab)
-            for _, science in pairs(env.get_all_sciences()) do
+            for _, science in pairs(all_sciences) do
                 local network_count = network.get_item_count(science)
                 counts[science] = (counts[science] or 0) + network_count
-                if network_count > 0 then
-                    if not breakdown[science] then
-                        breakdown[science] = {
-                            lab_count = 0,
-                            lab_entity_count = 0,
-                            network_total = 0,
-                            networks = {}
-                        }
-                    end
-                    breakdown[science].network_total = breakdown[science].network_total + network_count
-                    table.insert(breakdown[science].networks, {
-                        label = network_label,
-                        count = network_count,
-                        lab_count = network_meta.lab_count
-                    })
-                end
+                local science_breakdown = breakdown[science]
+                science_breakdown.network_total = science_breakdown.network_total + network_count
+                table.insert(science_breakdown.networks, {
+                    label = network_label,
+                    count = network_count,
+                    lab_count = network_meta.lab_count
+                })
             end
         end
     end
@@ -1630,6 +1683,12 @@ get_science_counts = function(force_index)
 end
 
 queue.get_science_counts = get_science_counts
+queue.invalidate_science_cache = function(force_index)
+    labs_cache[force_index] = nil
+    counts_cache[force_index] = nil
+    diagnostic_cache[force_index] = nil
+end
+
 queue.get_science_count_breakdown = function(force_index, science)
     local cc = counts_cache[force_index]
     if not cc or cc.tick ~= game.tick then
@@ -1691,55 +1750,212 @@ get_lab_science_counts = function(force_index)
     return counts, valid_lab_count
 end
 
-queue.science_is_sufficient = function(xcur, force_index)
-    if not xcur or not xcur.meta or not force_index then
-        return false
+local lab_accepts_research = function(lab_entity, current)
+    local accepted = {}
+    for _, science in pairs(lab_entity.prototype.lab_inputs or {}) do
+        accepted[science] = true
     end
-    local sciences = xcur.meta.sciences or {}
-    if not next(sciences) then
-        return true
-    end
-
-    local counts, valid_lab_count = get_lab_science_counts(force_index)
-    if valid_lab_count == 0 then
-        return false
-    end
-
-    local required_count = valid_lab_count * 6
-    for _, s in pairs(sciences) do
-        if (counts[s] or 0) < required_count then
+    for _, ingredient in pairs(current.research_unit_ingredients or {}) do
+        if not accepted[ingredient.name] then
             return false
         end
     end
     return true
 end
 
-queue.get_science_availability = function(force_index)
-    local raw = lab.get_science_availability(force_index)
-    local f = game.forces[force_index]
+local get_lab_capacity_spm = function(lab_entity, current)
+    local research_energy = current.research_unit_energy or 0
+    if research_energy <= 0 then
+        return 0
+    end
 
-    -- Determine "common" sciences: packs required by every tech in the in-game queue
-    local common = {}
-    if f and f.research_queue and #f.research_queue > 1 then
-        for _, t in pairs(f.research_queue) do
-            for _, ingredient in pairs(t.research_unit_ingredients or {}) do
-                common[ingredient.name] = (common[ingredient.name] or 0) + 1
-            end
-        end
-        local queue_size = #f.research_queue
-        for pack_name, count in pairs(common) do
-            common[pack_name] = (count == queue_size)
+    local base_speed = lab_entity.prototype.get_researching_speed(lab_entity.quality) or 0
+    local speed_multiplier = math.max(0, 1 + (lab_entity.speed_bonus or 0))
+    local productivity_multiplier = math.max(0, 1 + (lab_entity.productivity_bonus or 0))
+
+    -- Runtime research energy is measured in ticks; 3600 converts units/tick to units/minute.
+    return base_speed * speed_multiplier * productivity_multiplier * 3600 / research_energy
+end
+
+local get_missing_lab_sciences = function(lab_entity, current)
+    local present = {}
+    local inv = lab_entity.get_inventory(defines.inventory.lab_input)
+    if inv then
+        for _, item in pairs(inv.get_contents()) do
+            present[item.name] = (present[item.name] or 0) + (item.count or 0)
         end
     end
 
     local res = {}
-    for pack_name, data in pairs(raw or {}) do
-        if data.allowing > 0 then
-            local threshold = (common[pack_name] == true) and 0.1 or 0.8
-            res[pack_name] = data.frac > threshold
-        else
-            res[pack_name] = false
+    for _, ingredient in pairs(current.research_unit_ingredients or {}) do
+        if (present[ingredient.name] or 0) < (ingredient.amount or 1) then
+            table.insert(res, ingredient.name)
         end
+    end
+    return res
+end
+
+queue.get_research_diagnostic = function(force_index)
+    local cached = diagnostic_cache[force_index]
+    if cached and cached.tick == game.tick then
+        return cached.value
+    end
+
+    local f = game.forces[force_index]
+    local current = f and f.current_research
+    local speed = queue.get_research_speed(force_index)
+    local res = {
+        available = current ~= nil,
+        actual_spm = speed and (speed * 60) or 0,
+        recent_spm = nil,
+        previous_spm = nil,
+        trend_percent = nil,
+        expected_spm = 0,
+        working_spm = 0,
+        utilization = 0,
+        measured_capacity_ratio = nil,
+        total_labs = 0,
+        compatible_labs = 0,
+        working_labs = 0,
+        incompatible_labs = 0,
+        causes = {},
+        missing_sciences = {}
+    }
+
+    if not current then
+        diagnostic_cache[force_index] = {tick = game.tick, value = res}
+        return res
+    end
+
+    local sf = storage.forces[force_index]
+    local samples = sf and sf.queue and sf.queue.speed_samples
+    local recent_speed, recent_count = get_research_speed_window(samples, 0, 5, current.name)
+    local previous_speed, previous_count = get_research_speed_window(samples, 5, 15, current.name)
+    if recent_count >= 2 then
+        res.recent_spm = recent_speed * 60
+    end
+    if previous_count >= 2 then
+        res.previous_spm = previous_speed * 60
+    end
+    if res.recent_spm and res.previous_spm and res.previous_spm > 0 then
+        res.trend_percent = ((res.recent_spm - res.previous_spm) * 100) / res.previous_spm
+    end
+
+    local cause_data = {
+        missing_science = {kind = "missing_science", labs = 0, lost_spm = 0},
+        power = {kind = "power", labs = 0, lost_spm = 0},
+        disabled = {kind = "disabled", labs = 0, lost_spm = 0},
+        frozen = {kind = "frozen", labs = 0, lost_spm = 0},
+        no_research = {kind = "no_research", labs = 0, lost_spm = 0},
+        other = {kind = "other", labs = 0, lost_spm = 0}
+    }
+    local missing_sciences = {}
+
+    for _, lab_entity in pairs(get_cached_labs(force_index)) do
+        if lab_entity and lab_entity.valid then
+            res.total_labs = res.total_labs + 1
+            if not lab_accepts_research(lab_entity, current) then
+                res.incompatible_labs = res.incompatible_labs + 1
+                goto continue
+            end
+
+            res.compatible_labs = res.compatible_labs + 1
+            local capacity_spm = get_lab_capacity_spm(lab_entity, current)
+            res.expected_spm = res.expected_spm + capacity_spm
+            local status = lab_entity.status
+
+            if status == defines.entity_status.working then
+                res.working_labs = res.working_labs + 1
+                res.working_spm = res.working_spm + capacity_spm
+            elseif status == defines.entity_status.missing_science_packs then
+                local cause = cause_data.missing_science
+                cause.labs = cause.labs + 1
+                cause.lost_spm = cause.lost_spm + capacity_spm
+                local missing = get_missing_lab_sciences(lab_entity, current)
+                for _, science in pairs(missing) do
+                    local item = missing_sciences[science]
+                    if not item then
+                        item = {science = science, labs = 0, lost_spm = 0}
+                        missing_sciences[science] = item
+                    end
+                    item.labs = item.labs + 1
+                    item.lost_spm = item.lost_spm + capacity_spm
+                end
+            elseif status == defines.entity_status.no_power or status == defines.entity_status.low_power or
+                   status == defines.entity_status.no_fuel or
+                   status == defines.entity_status.not_plugged_in_electric_network then
+                local cause = cause_data.power
+                cause.labs = cause.labs + 1
+                cause.lost_spm = cause.lost_spm + capacity_spm
+            elseif status == defines.entity_status.disabled_by_control_behavior or
+                   status == defines.entity_status.disabled_by_script or status == defines.entity_status.disabled or
+                   status == defines.entity_status.closed_by_circuit_network or
+                   status == defines.entity_status.marked_for_deconstruction then
+                local cause = cause_data.disabled
+                cause.labs = cause.labs + 1
+                cause.lost_spm = cause.lost_spm + capacity_spm
+            elseif status == defines.entity_status.frozen or lab_entity.frozen then
+                local cause = cause_data.frozen
+                cause.labs = cause.labs + 1
+                cause.lost_spm = cause.lost_spm + capacity_spm
+            elseif status == defines.entity_status.no_research_in_progress then
+                local cause = cause_data.no_research
+                cause.labs = cause.labs + 1
+                cause.lost_spm = cause.lost_spm + capacity_spm
+            else
+                local cause = cause_data.other
+                cause.labs = cause.labs + 1
+                cause.lost_spm = cause.lost_spm + capacity_spm
+            end
+        end
+        ::continue::
+    end
+
+    if res.expected_spm > 0 then
+        -- Health is a current snapshot: weight each working lab by its share of total
+        -- compatible capacity. The measured SPM is a rolling value and must not be
+        -- used here because it can describe conditions that no longer exist.
+        res.utilization = math.max(0, math.min(1, res.working_spm / res.expected_spm))
+        res.measured_capacity_ratio = math.max(0, res.actual_spm / res.expected_spm)
+    end
+
+    for _, cause in pairs(cause_data) do
+        if cause.labs > 0 then
+            table.insert(res.causes, cause)
+        end
+    end
+    table.sort(res.causes, function(a, b)
+        if a.lost_spm == b.lost_spm then
+            return a.kind < b.kind
+        end
+        return a.lost_spm > b.lost_spm
+    end)
+
+    for _, item in pairs(missing_sciences) do
+        table.insert(res.missing_sciences, item)
+    end
+    table.sort(res.missing_sciences, function(a, b)
+        if a.lost_spm == b.lost_spm then
+            return a.science < b.science
+        end
+        return a.lost_spm > b.lost_spm
+    end)
+
+    diagnostic_cache[force_index] = {tick = game.tick, value = res}
+    return res
+end
+
+queue.science_is_sufficient = function(xcur, force_index)
+    return science_supply_is_sufficient(xcur, force_index)
+end
+
+queue.get_science_availability = function(force_index)
+    local counts = get_science_counts(force_index)
+    local _, valid_lab_count = get_lab_science_counts(force_index)
+    local required_count = valid_lab_count * science_reserve_per_lab
+    local res = {}
+    for _, science in pairs(env.get_all_sciences()) do
+        res[science] = valid_lab_count > 0 and (counts[science] or 0) >= required_count
     end
     return res
 end

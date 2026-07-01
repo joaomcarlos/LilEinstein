@@ -395,15 +395,188 @@ local refresh_research_progress = function(player_index, anchor)
     end
 end
 
+local diagnostic_cause_labels = {
+    missing_science = "Missing required science packs",
+    power = "No or insufficient power",
+    disabled = "Disabled by circuit or script",
+    frozen = "Frozen",
+    no_research = "No research assigned",
+    other = "Other idle status"
+}
+
+local format_research_diagnostic = function(diagnostic)
+    if not diagnostic or not diagnostic.available then
+        return "[font=heading-2]Research throughput diagnostic[/font]\nNo research is currently active."
+    end
+
+    local utilization_percent = math.floor(((diagnostic.utilization or 0) * 1000) + 0.5) / 10
+    local has_capacity_loss = diagnostic.causes and #diagnostic.causes > 0
+    local utilization_color = "1,0.2,0.2"
+    if utilization_percent >= 99 and not has_capacity_loss then
+        utilization_color = "0.2,1,0.2"
+    elseif utilization_percent >= 60 then
+        utilization_color = "1,0.8,0.2"
+    end
+
+    local tt = "[font=heading-2]Research throughput diagnostic[/font]\n" ..
+                   "Measured: " .. format_spaced_number(diagnostic.actual_spm) .. " SPM (60-second average)\n" ..
+                   "Calculated maximum: " .. format_spaced_number(diagnostic.expected_spm) .. " SPM\n" ..
+                   "Current working capacity: [color=" .. utilization_color .. "]" ..
+                   tostring(utilization_percent) .. "%[/color]\n" ..
+                   "Labs working: " .. tostring(diagnostic.working_labs or 0) .. " / " ..
+                   tostring(diagnostic.compatible_labs or 0)
+
+    if diagnostic.measured_capacity_ratio then
+        local measured_percent = math.floor((diagnostic.measured_capacity_ratio * 1000) + 0.5) / 10
+        tt = tt .. "\nMeasured / calculated: " .. tostring(measured_percent) .. "%"
+    end
+
+    if diagnostic.recent_spm then
+        tt = tt .. "\nRecent 15-second rate: " .. format_spaced_number(diagnostic.recent_spm) .. " SPM"
+    end
+
+    if diagnostic.trend_percent then
+        local trend = math.floor((diagnostic.trend_percent * 10) + 0.5) / 10
+        local prefix = trend > 0 and "+" or ""
+        local trend_color = "0.84,0.82,0.75"
+        if trend <= -10 then
+            trend_color = "1,0.2,0.2"
+        elseif trend >= 10 then
+            trend_color = "0.2,1,0.2"
+        end
+        tt = tt .. "\nRecent trend: [color=" .. trend_color .. "]" .. prefix .. tostring(trend) ..
+                 "%[/color] (last 15s vs prior 45s)"
+    end
+
+    if (diagnostic.incompatible_labs or 0) > 0 then
+        tt = tt .. "\nIncompatible labs excluded: " .. tostring(diagnostic.incompatible_labs)
+    end
+
+    if diagnostic.causes and #diagnostic.causes > 0 then
+        tt = tt .. "\n\n[font=default-bold]Current capacity losses[/font]"
+        for _, cause in ipairs(diagnostic.causes) do
+            local label = diagnostic_cause_labels[cause.kind] or cause.kind
+            tt = tt .. "\n- " .. label .. ": " .. tostring(cause.labs or 0) .. " labs (~" ..
+                     format_spaced_number(cause.lost_spm) .. " SPM)"
+        end
+    end
+
+    if diagnostic.missing_sciences and #diagnostic.missing_sciences > 0 then
+        tt = tt .. "\n\n[font=default-bold]Missing-pack detail[/font]"
+        local max_sciences = math.min(8, #diagnostic.missing_sciences)
+        for i = 1, max_sciences do
+            local item = diagnostic.missing_sciences[i]
+            tt = tt .. "\n[img=item/" .. item.science .. "] " .. tostring(item.labs or 0) .. " labs (~" ..
+                     format_spaced_number(item.lost_spm) .. " SPM)"
+        end
+        if #diagnostic.missing_sciences > max_sciences then
+            tt = tt .. "\n+" .. tostring(#diagnostic.missing_sciences - max_sciences) .. " more science packs"
+        end
+    end
+
+    local working_gap = math.max(0, (diagnostic.working_spm or 0) - (diagnostic.actual_spm or 0))
+    if working_gap > math.max(1, (diagnostic.expected_spm or 0) * 0.05) then
+        tt = tt .. "\n\nWorking labs account for " .. format_spaced_number(diagnostic.working_spm) ..
+                 " SPM of capacity, leaving a " .. format_spaced_number(working_gap) ..
+                 " SPM gap. This can reflect the 60-second averaging window, a recent research switch, or transient power/pack starvation."
+    end
+
+    if diagnostic.measured_capacity_ratio and diagnostic.measured_capacity_ratio > 1.1 then
+        tt = tt .. "\n\nThe rolling measured rate is above the calculated estimate. " ..
+                 "Health therefore uses current lab statuses and working capacity, not that historical comparison."
+    end
+
+    return tt .. "\n\nCalculated from each compatible lab's base speed, quality, module/beacon/force speed, and productivity bonuses."
+end
+
+local get_research_health_summary = function(diagnostic)
+    if not diagnostic or not diagnostic.available then
+        return "IDLE", "No research is currently active", {0.70, 0.69, 0.64}
+    end
+
+    local utilization_percent = math.floor(((diagnostic.utilization or 0) * 100) + 0.5)
+    local trend = diagnostic.trend_percent
+    local cause = diagnostic.causes and diagnostic.causes[1]
+    if utilization_percent >= 99 and not cause and (not trend or trend > -10) then
+        return "HEALTHY  -  " .. tostring(utilization_percent) .. "%", "All compatible labs are working",
+            {0.20, 1.00, 0.20}
+    end
+
+    local state_caption
+    local color
+    if utilization_percent < 60 then
+        state_caption = "BOTTLENECKED  -  " .. tostring(utilization_percent) .. "%"
+        color = {1.00, 0.20, 0.20}
+    elseif cause then
+        state_caption = "DEGRADED  -  " .. tostring(utilization_percent) .. "%"
+        color = {1.00, 0.80, 0.20}
+    elseif trend and trend <= -10 then
+        state_caption = "SLOWING  -  " .. tostring(utilization_percent) .. "%"
+        color = {1.00, 0.65, 0.15}
+    else
+        state_caption = "DEGRADED  -  " .. tostring(utilization_percent) .. "%"
+        color = {1.00, 0.80, 0.20}
+    end
+
+    if not cause then
+        if (diagnostic.compatible_labs or 0) == 0 then
+            return state_caption, "No compatible labs detected", color
+        end
+        if trend and trend <= -10 then
+            local decline = math.floor(math.abs(trend) + 0.5)
+            return state_caption, "Throughput fell " .. tostring(decline) .. "% recently", color
+        end
+        return state_caption, "Working output is below calculated capacity", color
+    end
+
+    local labs = tostring(cause.labs or 0)
+    if cause.kind == "missing_science" then
+        local science = diagnostic.missing_sciences and diagnostic.missing_sciences[1]
+        if science then
+            return state_caption, "[img=item/" .. science.science .. "] Missing in " ..
+                tostring(science.labs or 0) .. " labs", color
+        end
+        return state_caption, labs .. " labs are missing science packs", color
+    elseif cause.kind == "power" then
+        return state_caption, labs .. " labs lack sufficient power", color
+    elseif cause.kind == "disabled" then
+        return state_caption, labs .. " labs are disabled", color
+    elseif cause.kind == "frozen" then
+        return state_caption, labs .. " labs are frozen", color
+    elseif cause.kind == "no_research" then
+        return state_caption, labs .. " labs have no research assigned", color
+    end
+    return state_caption, labs .. " labs have another idle status", color
+end
+
 local refresh_research_metrics = function(player_index, anchor)
-    local _, summary = get_research_context(player_index, anchor)
-    if not summary then
+    local p, summary = get_research_context(player_index, anchor)
+    if not p or not summary then
         return
     end
 
+    local diagnostic = queue.get_research_diagnostic(p.force.index)
+    local diagnostic_tooltip = format_research_diagnostic(diagnostic)
     local spm_value = gutil.get_child(anchor, "research_graph_spm_value")
     if spm_value then
         spm_value.caption = format_spaced_number(summary.spm)
+    end
+
+    local health_panel = gutil.get_child(anchor, "research_health_panel")
+    local health_state = gutil.get_child(anchor, "research_health_state")
+    local health_reason = gutil.get_child(anchor, "research_health_reason")
+    local state_caption, reason_caption, state_color = get_research_health_summary(diagnostic)
+    if health_panel then
+        health_panel.tooltip = diagnostic_tooltip
+    end
+    if health_state then
+        health_state.caption = state_caption
+        health_state.tooltip = diagnostic_tooltip
+        health_state.style.font_color = state_color
+    end
+    if health_reason then
+        health_reason.caption = reason_caption
+        health_reason.tooltip = diagnostic_tooltip
     end
 
     local remaining_value = gutil.get_child(anchor, "research_graph_remaining_value")

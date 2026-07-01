@@ -258,14 +258,21 @@ local labfilter = {{
     filter = "type",
     type = "lab"
 }}
+local register_lab = function(entity)
+    if not entity then
+        return
+    end
+    lab.register(entity)
+    queue.invalidate_science_cache(entity.force.index)
+end
 script.on_event(defines.events.on_built_entity, function(e)
-    lab.register(e.entity)
+    register_lab(e.entity)
 end, labfilter)
 script.on_event(defines.events.on_robot_built_entity, function(e)
-    lab.register(e.entity)
+    register_lab(e.entity)
 end, labfilter)
 script.on_event(defines.events.script_raised_built, function(e)
-    lab.register(e.entity)
+    register_lab(e.entity)
 end, labfilter)
 
 ----------------------------------------------------------------------------------------------------

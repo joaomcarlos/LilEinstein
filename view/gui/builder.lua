@@ -306,11 +306,28 @@ local allowed_science = {
     type = "frame",
     style = "lil_einstein_allowed_science_frame",
     name = "allowed_sciences",
-    direction = "vertical",
+    direction = "horizontal",
     children = {{
         type = "table",
         name = "allowed_science_table",
+        style = "lil_einstein_allowed_science_table",
         column_count = 14
+    }, {
+        type = "flow",
+        name = "research_health_panel",
+        style = "lil_einstein_research_health_panel",
+        direction = "vertical",
+        children = {{
+            type = "label",
+            name = "research_health_state",
+            style = "lil_einstein_research_health_state",
+            caption = "RESEARCH HEALTH"
+        }, {
+            type = "label",
+            name = "research_health_reason",
+            style = "lil_einstein_research_health_reason",
+            caption = "Calculating..."
+        }}
     }}
 }
 
