@@ -237,6 +237,7 @@ local get_title = function(techtbl, xcur, enbl, player_index, force_index, score
             local rule = policy.get_repeat_rule(force_index, xcur.technology.name)
             local repeat_button = wf.add({
                 type = "button",
+                style = "lil_einstein_repeat_button",
                 caption = {"lil_einstein-repeat." .. rule.mode, rule.max_level or ""},
                 tags = {
                     lil_einstein_on_click = true,
@@ -250,6 +251,7 @@ local get_title = function(techtbl, xcur, enbl, player_index, force_index, score
             if rule.mode == "to_level" then
                 wf.add({
                     type = "button",
+                    style = "lil_einstein_repeat_button",
                     caption = "-",
                     tags = {
                         lil_einstein_on_click = true,
@@ -261,6 +263,7 @@ local get_title = function(techtbl, xcur, enbl, player_index, force_index, score
                 })
                 wf.add({
                     type = "button",
+                    style = "lil_einstein_repeat_button",
                     caption = "+",
                     tags = {
                         lil_einstein_on_click = true,

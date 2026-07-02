@@ -1049,13 +1049,6 @@ local update_styles = function(player_index, anchor)
         lbl.style.bottom_margin = 4
     end
 
-    lbl = gutil.get_child(anchor, "master_enable_flow")
-    if lbl then
-        lbl.style.top_margin = 0
-        lbl.style.vertical_align = "center"
-    end
-
-    lbl = gutil.get_child(anchor, "master_enable_label")
     local row = gutil.get_child(anchor, "enable_row")
     if row then
         row.style.height = 24

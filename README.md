@@ -16,7 +16,9 @@ The research control center adds:
 - Native time-sliced parallel progress. When the dedicated Parallel Research mod is installed, Little Einstein instead supplies and orders its queue while that mod owns lab distribution.
 - A performance mode for large overhaul technology trees. This package targets Factorio 2.0.77 and later 2.0 releases; a Factorio 2.1 release requires a separately validated package whose manifest targets 2.1.
 
-Cluster mode can inspect packs already in a lab and packs in a logistic network covering that lab. Factorio does not expose belt or chest connectivity as a lab supply network, so direct-fed labs are evaluated individually until packs enter their input inventories. Production and consumption statistics are surface-wide; projected-starvation switching therefore only uses those rates when cluster enforcement is disabled.
+Detailed implementation notes for the current research-autopilot branch live in [RESEARCH_AUTOPILOT_IMPLEMENTATION.md](./RESEARCH_AUTOPILOT_IMPLEMENTATION.md). That file is for maintainers and testers, not for in-game use.
+
+Cluster mode can inspect packs already in a lab and packs in a logistic network covering that lab. Factorio does not expose belt or chest connectivity as a lab supply network, so direct-fed labs are evaluated individually until packs enter their input inventories. Production and consumption statistics are aggregated across all loaded force surfaces, so science made on other planets and shipped back in is included. Projected-starvation switching therefore only uses those rates when cluster enforcement is disabled.
 
 Right-click a science icon in the main window to cycle its automation priority. Infinite technologies expose their repeat policy alongside the score breakdown.
 

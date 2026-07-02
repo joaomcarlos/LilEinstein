@@ -269,9 +269,9 @@ local add_upcoming_row = function(parent, rank, entry, player_index)
         style = "lil_einstein_vertical_flow_nospacing"
     })
     time_col.style.left_margin = 6
-    time_col.style.bottom_margin = upcoming_content_bottom_margin
     time_col.style.width = upcoming_time_width
-    time_col.style.top_margin = 8
+    time_col.style.height = upcoming_row_height
+    time_col.style.top_padding = rank > 1 and 3 or 12
 
     local progress_label = time_col.add({
         type = "label",

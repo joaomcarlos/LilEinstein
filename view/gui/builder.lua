@@ -188,20 +188,6 @@ local master_enable = {
             lil_einstein_on_click = true,
             handler = "master_enable"
         }
-    }, {
-        type = "flow",
-        style = "lil_einstein_horizontal_flow_right",
-        name = "master_enable_flow",
-        children = {{
-            type = "button",
-            name = "policy_panel_button",
-            caption = {"lil_einstein-policy.open-control-center"},
-            tags = {
-                lil_einstein_on_click = true,
-                handler = "toggle_policy_panel",
-                ignore_force_enable = true
-            }
-        }}
     }}
 }
 
@@ -290,6 +276,17 @@ local upcoming = {
         style = "lil_einstein_upcoming_header_frame",
         direction = "horizontal",
         children = {{
+            type = "button",
+            name = "policy_panel_button",
+            style = "lil_einstein_button",
+            caption = {"lil_einstein-policy.open-control-center"},
+            tooltip = {"lil_einstein-policy.control-center"},
+            tags = {
+                lil_einstein_on_click = true,
+                handler = "toggle_policy_panel",
+                ignore_force_enable = true
+            }
+        }, {
             type = "label",
             style = "heading_2_label",
             caption = "Upcoming"

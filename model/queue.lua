@@ -332,8 +332,9 @@ local science_supply_is_sufficient = function(xcur, force_index)
     end
     for _, science in pairs(sciences) do
         local science_forecast = forecast[science]
-        -- Production statistics are surface-wide. They cannot be safely attributed to one
-        -- logistic cluster, so only use depletion forecasts when cluster enforcement is disabled.
+        -- Production statistics are force-wide across all loaded surfaces. They cannot be
+        -- safely attributed to one logistic cluster, so only use depletion forecasts when
+        -- cluster enforcement is disabled.
         if not availability.__cluster_mode and forecast_seconds > 0 and science_forecast and science_forecast.depletion_seconds and
             science_forecast.depletion_seconds < forecast_seconds then
             return false
@@ -2174,10 +2175,6 @@ queue.get_science_forecast = function(force_index)
     end
 
     local counts = get_science_counts(force_index)
-    local active_surfaces = {}
-    for _, cluster in pairs(queue.get_science_clusters(force_index)) do
-        active_surfaces[cluster.surface_index] = true
-    end
     local res = {}
     local precision = defines.flow_precision_index.one_minute
 
@@ -2185,9 +2182,6 @@ queue.get_science_forecast = function(force_index)
         local production = 0
         local consumption = 0
         for _, surface in pairs(game.surfaces) do
-            if not active_surfaces[surface.index] then
-                goto continue_surface
-            end
             local ok_stats, stats = pcall(function()
                 return f.get_item_production_statistics(surface)
             end)
@@ -2213,7 +2207,6 @@ queue.get_science_forecast = function(force_index)
                     consumption = consumption + math.max(0, output or 0)
                 end
             end
-            ::continue_surface::
         end
 
         local science_policy = policy.get_science_policy(force_index, science)

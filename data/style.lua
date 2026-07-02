@@ -1012,6 +1012,18 @@ data.raw["gui-style"].default["lil_einstein_queue_subinfo"] = {
     left_margin = 5
 }
 
+data.raw["gui-style"].default["lil_einstein_repeat_button"] = {
+    type = "button_style",
+    parent = "button",
+    font = "default-small",
+    height = 18,
+    minimal_width = 18,
+    top_padding = 0,
+    bottom_padding = 0,
+    left_padding = 4,
+    right_padding = 4
+}
+
 ---------------------------------------------------------------------------------------------------
 --- Technology elements
 ---------------------------------------------------------------------------------------------------
