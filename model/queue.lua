@@ -16,6 +16,10 @@ local research_history_sample_seconds = 3
 local research_history_samples = math.floor(research_history_seconds / research_history_sample_seconds)
 local research_speed_average_samples = math.floor(60 / research_history_sample_seconds)
 local science_reserve_per_lab = 6
+-- score factor applied to techs only reachable through prerequisites
+local unavailable_score_factor = 0.5
+-- a candidate must out-score the current research by this factor to interrupt it
+local score_interrupt_margin = 1.5
 local max_plan_exchange_length = 250000
 local max_plan_json_length = 2000000
 
@@ -252,56 +256,11 @@ local get_tech_weight_at_level = function(xcur, level)
     return 2
 end
 
-local score_tech_custom = function(xcur, weight, cost, num_ingredients)
-    if weight <= -100 then
-        return weight
-    end
-    if num_ingredients == 0 then
-        num_ingredients = 1
-    end
-    local total_cost = cost * num_ingredients
-    local score = weight / (total_cost ^ 0.15)
-    if xcur.available then
-        score = score * 1.5
-    end
-    if xcur.meta.has_spoilable_science then
-        score = score * 1.2
-    end
-    return score
-end
-
-local score_tech = function(xcur)
-    local weight = get_tech_weight_at_level(xcur, xcur.technology.level)
-    local cost = xcur.technology.research_unit_count or 1
-    local num_ingredients = 0
-    for _ in pairs(xcur.technology.research_unit_ingredients or {}) do
-        num_ingredients = num_ingredients + 1
-    end
-    return score_tech_custom(xcur, weight, cost, num_ingredients)
-end
-
-local score_tech_at_level = function(xcur, level)
-    local weight = get_tech_weight_at_level(xcur, level)
-    local cost = xcur.technology.research_unit_count or 1
-    if xcur.meta.is_infinite and xcur.meta.prototype.research_unit_count_formula then
-        local est = eval_formula(xcur.meta.prototype.research_unit_count_formula, level)
-        if est then
-            cost = est
-        elseif xcur.technology.level > 0 then
-            cost = cost * (level / xcur.technology.level)
-        end
-    end
-    local num_ingredients = 0
-    for _ in pairs(xcur.technology.research_unit_ingredients or {}) do
-        num_ingredients = num_ingredients + 1
-    end
-    return score_tech_custom(xcur, weight, cost, num_ingredients)
-end
-
 local get_science_counts
 local get_lab_science_counts
 local get_virtual_queue_source
 local set_runtime_research_queue
+local get_runtime_candidate_average_cost
 
 queue.apply_planning_pause = function(f)
     if not f then
@@ -312,6 +271,41 @@ queue.apply_planning_pause = function(f)
         table.insert(paused_queue, f.current_research.name)
     end
     set_runtime_research_queue(f, paused_queue)
+end
+
+local science_depletion_is_attributable = function(availability, science)
+    if not availability.__cluster_mode then
+        return true
+    end
+    -- Production statistics are force-wide across all loaded surfaces. In cluster mode
+    -- they can only be attributed safely when exactly one cluster consumes this science.
+    local consuming_clusters = 0
+    for _, cluster in pairs(availability.__clusters or {}) do
+        if ((cluster.lab_input_counts and cluster.lab_input_counts[science]) or 0) > 0 then
+            consuming_clusters = consuming_clusters + 1
+        end
+    end
+    return consuming_clusters == 1
+end
+
+local get_depletion_horizon_seconds = function(xcur, force_index, forecast_seconds)
+    -- Cap the depletion horizon at the estimated time to finish this tech: if the
+    -- research completes before packs run out, the supply is sufficient.
+    local horizon = forecast_seconds
+    local f = game.forces[force_index]
+    local speed = queue.get_research_speed(force_index)
+    if f and xcur.technology and speed and speed > 0 then
+        local unit_count = xcur.technology.research_unit_count or 1
+        local remaining_units = unit_count
+        if f.current_research and f.current_research.name == xcur.technology.name then
+            remaining_units = math.max(0, unit_count * (1 - (f.research_progress or 0)))
+        end
+        local remaining_seconds = remaining_units / speed
+        if remaining_seconds < horizon then
+            horizon = remaining_seconds
+        end
+    end
+    return horizon
 end
 
 local science_supply_is_sufficient = function(xcur, force_index)
@@ -330,13 +324,15 @@ local science_supply_is_sufficient = function(xcur, force_index)
     if not queue.science_is_available(xcur, availability) then
         return false
     end
+    if forecast_seconds <= 0 then
+        return true
+    end
+    local horizon = get_depletion_horizon_seconds(xcur, force_index, forecast_seconds)
     for _, science in pairs(sciences) do
         local science_forecast = forecast[science]
-        -- Production statistics are force-wide across all loaded surfaces. They cannot be
-        -- safely attributed to one logistic cluster, so only use depletion forecasts when
-        -- cluster enforcement is disabled.
-        if not availability.__cluster_mode and forecast_seconds > 0 and science_forecast and science_forecast.depletion_seconds and
-            science_forecast.depletion_seconds < forecast_seconds then
+        if science_forecast and science_forecast.depletion_seconds and
+            science_forecast.depletion_seconds < horizon and
+            science_depletion_is_attributable(availability, science) then
             return false
         end
     end
@@ -354,9 +350,10 @@ queue.score_tech_detailed = function(xcur, level, user_boost, avg_cost, force_in
         return {importance = importance, level_boost = 0, user_boost = user_boost, total = importance}
     end
 
-    if not xcur.available then
-        return {importance = -10000, level_boost = 0, user_boost = user_boost, total = -10000}
-    end
+    -- Techs not yet available (prerequisites pending) are still scored so the
+    -- virtual queue keeps them in sensible order. Their base score is discounted
+    -- because the player cannot start them immediately.
+    local available_factor = xcur.available and 1 or unavailable_score_factor
 
     local cost = xcur.technology.research_unit_count or 1
     if xcur.meta.is_infinite and xcur.meta.prototype.research_unit_count_formula then
@@ -398,7 +395,7 @@ queue.score_tech_detailed = function(xcur, level, user_boost, avg_cost, force_in
 
     local strategy_boost = force_index and policy.get_strategy_adjustment(force_index, xcur, cost) or 0
     local base = (importance + level_boost) / (total_cost ^ 0.15)
-    local total = base + user_boost + science_priority + strategy_boost
+    local total = base * available_factor + user_boost + science_priority + strategy_boost
 
     return {
         importance = importance,
@@ -600,37 +597,6 @@ local get_first_next_tech = function(f)
     end
 end
 
-local get_single_next_science = function(candidates, lsci, tsx)
-    local best_score = -math.huge
-    local best_tech = nil
-
-    for tech_name, xcur in pairs(candidates) do
-        local candidate = nil
-        if xcur.available then
-            if science_is_available(xcur, lsci) then
-                candidate = xcur
-            end
-        else
-            for pre_req_tech, _ in pairs(xcur.meta.all_prerequisites or {}) do
-                local xpre = tsx[pre_req_tech]
-                if xpre and xpre.available and science_is_available(xpre, lsci) then
-                    candidate = xpre
-                    break
-                end
-            end
-        end
-
-        if candidate then
-            local score = score_tech(candidate)
-            if score > best_score then
-                best_score = score
-                best_tech = candidate.technology.name
-            end
-        end
-    end
-
-    return best_tech
-end
 local get_first_next_tech_smart = function(f)
     -- AI weighted scoring + custom order bonus. Skips disabled techs.
     local tsx = tech.get_all_tech_state_ext(f.index)
@@ -831,6 +797,35 @@ queue.research_is_stuck = function(f)
     return is_stuck
 end
 
+-- Decide whether an active temporary research should continue instead of restoring
+-- the target. Pins always win. Otherwise prefer higher science priority, then a
+-- large enough score margin over the target.
+local temp_should_persist = function(force_index, xtemp, xtarget, avg_cost)
+    if not xtemp or not xtarget then
+        return false
+    end
+    local pinned = queue.get_pinned_tech(force_index)
+    if xtarget.technology.name == pinned then
+        return false
+    end
+    if not queue.science_is_sufficient(xtemp, force_index) then
+        return false
+    end
+    local temp_priority = policy.get_tech_science_priority(force_index, xtemp)
+    local target_priority = policy.get_tech_science_priority(force_index, xtarget)
+    if temp_priority > target_priority then
+        return true
+    end
+    if temp_priority < target_priority then
+        return false
+    end
+    local temp_ub = queue.get_tech_ub(force_index, xtemp.technology.name)
+    local target_ub = queue.get_tech_ub(force_index, xtarget.technology.name)
+    local temp_sd = queue.score_tech_detailed(xtemp, xtemp.technology.level, temp_ub, avg_cost, force_index)
+    local target_sd = queue.score_tech_detailed(xtarget, xtarget.technology.level, target_ub, avg_cost, force_index)
+    return temp_sd.total > target_sd.total * score_interrupt_margin
+end
+
 queue.check_and_switch_temp_research = function(f)
     if not f then
         return
@@ -875,6 +870,16 @@ queue.check_and_switch_temp_research = function(f)
         if target then
             local xtarget = tsx[target]
             if tech_can_be_restored(f.index, xtarget) then
+                local xtemp = tsx[temp]
+                local avg_cost = get_runtime_candidate_average_cost(f.index, tsx)
+                if xtemp and temp_should_persist(f.index, xtemp, xtarget, avg_cost) then
+                    -- Temp is still higher priority / much better scored; keep it.
+                    sq[keys.temp_tech_timeout] = game.tick + (60 * temp_tech_timeout_extend_seconds)
+                    if not f.current_research or f.current_research.name ~= temp then
+                        state.request_next_research(f)
+                    end
+                    return
+                end
                 -- Switch back to target
                 sq[keys.temp_tech] = nil
                 sq[keys.temp_tech_timeout] = nil
@@ -919,11 +924,7 @@ queue.check_and_switch_temp_research = function(f)
         return
     end
 
-    local finish_threshold = policy.get_setting(f.index, "finish_current_threshold") or 0.90
-    if (f.research_progress or 0) >= finish_threshold then
-        return
-    end
-
+    -- Validate stored target/temp state against the live research.
     local target = sq[keys.target_tech]
     if target then
         local xtarget = tsx[target]
@@ -937,7 +938,15 @@ queue.check_and_switch_temp_research = function(f)
     end
 
     local current_is_sufficient = queue.science_is_sufficient(xcur, f.index)
-    -- If current tech has sufficient packs, only interrupt it for a higher-priority science policy.
+
+    -- Avoid switching away from a tech that is almost finished and still has packs.
+    local finish_threshold = policy.get_setting(f.index, "finish_current_threshold") or 0.90
+    if current_is_sufficient and (f.research_progress or 0) >= finish_threshold then
+        return
+    end
+
+    -- If current tech has sufficient packs, only interrupt it for a higher-priority
+    -- science policy, or for a same-priority candidate with a much better score.
     if current_is_sufficient then
         local temp_name = sq[keys.temp_tech]
         -- Temp finished and we're back on target; clean up
@@ -953,14 +962,30 @@ queue.check_and_switch_temp_research = function(f)
             sq[keys.temp_tech_timeout] = nil
         end
         local current_priority = policy.get_tech_science_priority(f.index, xcur)
+        local avg_cost = get_runtime_candidate_average_cost(f.index, tsx)
+        local current_ub = queue.get_tech_ub(f.index, cur_name)
+        local current_sd = queue.score_tech_detailed(xcur, xcur.technology.level, current_ub, avg_cost, f.index)
         local lsci = queue.get_science_availability(f.index)
         local sfq = get_virtual_queue_source(f.index, tsx)
         for _, q in ipairs(sfq or {}) do
             if q ~= cur_name then
                 local candidate, _ = find_runtime_candidate(f.index, q, tsx, lsci, {})
                 local xcandidate = candidate and tsx[candidate] or nil
+                if not xcandidate then
+                    goto continue_sufficient
+                end
                 local candidate_priority = policy.get_tech_science_priority(f.index, xcandidate)
-                if candidate and candidate_priority > 0 and candidate_priority > current_priority then
+                local switch_reason
+                if candidate_priority > current_priority then
+                    switch_reason = "priority"
+                elseif candidate_priority == current_priority then
+                    local candidate_ub = queue.get_tech_ub(f.index, candidate)
+                    local candidate_sd = queue.score_tech_detailed(xcandidate, xcandidate.technology.level, candidate_ub, avg_cost, f.index)
+                    if candidate_sd.total > current_sd.total * score_interrupt_margin then
+                        switch_reason = "score"
+                    end
+                end
+                if switch_reason then
                     sq[keys.target_tech] = cur_name
                     sq[keys.temp_tech] = candidate
                     sq[keys.temp_tech_timeout] = game.tick + minimum_switch_ticks
@@ -969,6 +994,7 @@ queue.check_and_switch_temp_research = function(f)
                     state.request_next_research(f)
                     return
                 end
+                ::continue_sufficient::
             end
         end
         return
