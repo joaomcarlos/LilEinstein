@@ -1,16 +1,16 @@
 {
   "name": "LilEinstein",
-  "version": "1.0.0",
+  "version": "1.4.0",
   "title": "LilEinstein",
   "author": "SilentW",
   "factorio_version": "2.0",
   "dependencies": [
-    "base >= 2.0",
+    "base >= 2.0.77",
     "! some-autoresearch",
     "! UltimateResearchQueue2",
-    "! simultaneous-research",
+    "(?) simultaneous-research >= 0.7.5",
     "! paralell-lab",
     "(?) Ultracube"
   ],
-  "description": "Never think about your research queue ever again. Automatically research towards queued technology, the next science pack or the next infinite tech level. NEW: Weighted cost-efficiency scoring prioritizes cheap, high-ROI techs. Keywords: Auto queue, auto research, requeue infinite tech, research efficiency"
+  "description": "A science-aware research autopilot with strategy profiles, supply forecasting, lab-cluster scheduling, queue budgets, repeat policies, plan presets, multiplayer controls, and optional Parallel Research integration."
 }

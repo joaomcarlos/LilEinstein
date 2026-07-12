@@ -188,10 +188,6 @@ local master_enable = {
             lil_einstein_on_click = true,
             handler = "master_enable"
         }
-    }, {
-        type = "flow",
-        style = "lil_einstein_horizontal_flow_right",
-        name = "master_enable_flow"
     }}
 }
 
@@ -280,6 +276,17 @@ local upcoming = {
         style = "lil_einstein_upcoming_header_frame",
         direction = "horizontal",
         children = {{
+            type = "button",
+            name = "policy_panel_button",
+            style = "lil_einstein_button",
+            caption = {"lil_einstein-policy.open-control-center"},
+            tooltip = {"lil_einstein-policy.control-center"},
+            tags = {
+                lil_einstein_on_click = true,
+                handler = "toggle_policy_panel",
+                ignore_force_enable = true
+            }
+        }, {
             type = "label",
             style = "heading_2_label",
             caption = "Upcoming"
@@ -418,6 +425,70 @@ local science_pane = {
     }}
 }
 
+local policy_section = function(name, caption)
+    return {
+        type = "frame",
+        style = "inside_shallow_frame",
+        direction = "vertical",
+        children = {{
+            type = "label",
+            style = "heading_2_label",
+            caption = caption
+        }, {
+            type = "flow",
+            name = name,
+            direction = "vertical"
+        }}
+    }
+end
+
+local policy_panel = {
+    type = "frame",
+    name = "policy_panel",
+    style = "inside_shallow_frame",
+    direction = "vertical",
+    visible = false,
+    tags = {ignore_force_enable = true},
+    children = {{
+        type = "flow",
+        direction = "horizontal",
+        children = {{
+            type = "label",
+            style = "heading_1_label",
+            caption = {"lil_einstein-policy.control-center"}
+        }, {
+            type = "flow",
+            style = "lil_einstein_horizontal_flow_right",
+            children = {{
+                type = "button",
+                caption = {"lil_einstein-policy.back-to-research"},
+                tags = {
+                    lil_einstein_on_click = true,
+                    handler = "toggle_policy_panel",
+                    ignore_force_enable = true
+                }
+            }}
+        }}
+    }, {
+        type = "scroll-pane",
+        name = "policy_scroll_pane",
+        direction = "vertical",
+        children = {{
+            type = "table",
+            name = "policy_sections_table",
+            column_count = 2,
+            children = {
+                policy_section("policy_general_flow", {"lil_einstein-policy.automation"}),
+                policy_section("policy_budget_flow", {"lil_einstein-policy.plan-budget"}),
+                policy_section("policy_science_flow", {"lil_einstein-policy.science-policies"}),
+                policy_section("policy_trigger_flow", {"lil_einstein-policy.manual-objectives"}),
+                policy_section("policy_preset_flow", {"lil_einstein-policy.plan-presets"}),
+                policy_section("policy_history_flow", {"lil_einstein-policy.multiplayer-history"})
+            }
+        }}
+    }}
+}
+
 ---------------------------------------------------------------------------------------------------
 --- Master structure
 ---------------------------------------------------------------------------------------------------
@@ -479,7 +550,7 @@ local structure = {
                 children = {science_filter, science_pane}
             }}
         }}
-    }, footer}
+    }, policy_panel, footer}
 }
 
 -- Builder

@@ -63,6 +63,6 @@ storage.players[player_index].<module>.<key> = {...}
   -- env, state
   --- tech
   ---- queue
-  ----- analyzer, cmd (lab?)
+  ----- cmd (lab?)
 * view
-  ---- gui
+  ---- gui (analyzer, builder, components, ...)

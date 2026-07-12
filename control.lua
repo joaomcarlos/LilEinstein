@@ -4,7 +4,9 @@ local state = require("model.state")
 local queue = require("model.queue")
 local cmd = require("model.cmd")
 local lab = require("model.lab")
+local policy = require("model.research_policy")
 local gui = require("view.gui")
+local gutil = require("view.gui.gutil")
 local const = require("lib.const")
 local util = require("lib.util")
 
@@ -40,6 +42,7 @@ local init_force = function(force_index)
     -- Init each module
     state.init_force(force_index)
     tech.init_force(force_index)
+    policy.init_force(force_index)
     queue.init_force(force_index)
     lab.init_force(force_index)
 end
@@ -103,7 +106,6 @@ end)
 
 script.on_load(function()
     load()
-    refetch_settings()
 end)
 
 script.on_event(defines.events.on_runtime_mod_setting_changed, function(e)
@@ -174,8 +176,10 @@ script.on_event(defines.events.on_tick, function(e)
         end
 
         -- Every 5 seconds, check if current tech is low on packs and temporarily switch
-        if game.tick % 300 == 0 then
+        local switch_interval = policy.get_setting(f.index, "performance_mode") and 600 or 300
+        if game.tick % switch_interval == 0 then
             queue.check_and_switch_temp_research(f)
+            queue.rotate_parallel_research(f)
         end
 
         if state.gui_needs_update(f) or refresh_gui then
@@ -217,8 +221,21 @@ script.on_event(defines.events.on_research_finished, function(e)
     local f = e.research.force
     tech.update_researched(f.index, e.research.name)
     queue.requeue_finished(f, e.research)
+    policy.record_action(f.index, nil, "research_finished", e.research.name)
     state.request_next_research(f)
 end)
+
+local reject_locked_research_change = function(e)
+    local p = e.player_index and game.get_player(e.player_index) or nil
+    if not p or policy.can_edit(p) then
+        return false
+    end
+    p.print({"lil_einstein-msg.multiplayer-locked"})
+    queue.reorder_queue_by_score(e.force.index)
+    state.request_next_research(e.force)
+    state.request_ingame_queue_cleanup(e.force)
+    return true
+end
 
 script.on_event({defines.events.on_research_queued, defines.events.on_research_moved}, function(e)
     -- When ingame research queue gets modified we need to sync that to our modqueue
@@ -226,12 +243,19 @@ script.on_event({defines.events.on_research_queued, defines.events.on_research_m
     if queue.is_internal_research_queue_update(f) then
         return
     end
+    if reject_locked_research_change(e) then
+        return
+    end
     state.request_queue_sync(f)
     state.request_ingame_queue_cleanup(f)
+    policy.record_action(f.index, e.player_index, "vanilla_queue_changed", "")
 end)
 script.on_event(defines.events.on_research_cancelled, function(e)
     local f = e.force
     if queue.is_internal_research_queue_update(f) then
+        return
+    end
+    if reject_locked_research_change(e) then
         return
     end
     for tn, _ in pairs(e.research or {}) do
@@ -333,6 +357,34 @@ script.on_event(defines.events.on_gui_leave, function(e)
     end
 end)
 
+local mutable_gui_handlers = {
+    pin_upcoming_tech = true,
+    add_queue_top = true,
+    add_queue_bottom = true,
+    hide = true,
+    show = true,
+    move_tech_up = true,
+    move_tech_down = true,
+    remove_from_queue = true,
+    promote_research = true,
+    demote_research = true,
+    master_enable = true,
+    toggle_checkbox_force_click = true,
+    toggle_tech_enabled = true,
+    consecutive_tech_cap_dec = true,
+    consecutive_tech_cap_inc = true,
+    toggle_policy_setting = true,
+    adjust_policy_setting = true,
+    cycle_science_priority = true,
+    adjust_science_threshold = true,
+    cycle_repeat_rule = true,
+    adjust_repeat_level = true,
+    save_plan_preset = true,
+    load_plan_preset = true,
+    delete_plan_preset = true,
+    import_plan = true
+}
+
 script.on_event(defines.events.on_gui_click, function(e)
     -- Early exit if the gui element doesnt have our on_click tag
     if not e.element.tags or not e.element.tags["lil_einstein_on_click"] then
@@ -342,7 +394,19 @@ script.on_event(defines.events.on_gui_click, function(e)
     local t = e.element.tags
     local h = t.handler
     local p = game.get_player(e.player_index)
+    if not p then
+        return
+    end
     local f = p.force
+
+    if mutable_gui_handlers[h] and not policy.can_edit(p) then
+        p.print({"lil_einstein-msg.multiplayer-locked"})
+        return
+    end
+    if h == "toggle_allowed_science" and e.button == defines.mouse_button_type.right and not policy.can_edit(p) then
+        p.print({"lil_einstein-msg.multiplayer-locked"})
+        return
+    end
 
     -- The steps to move the tech in the queue
     local steps = 1
@@ -392,7 +456,13 @@ script.on_event(defines.events.on_gui_click, function(e)
     elseif h == "remove_from_queue" then
         queue.remove(f, t.technology)
     elseif h == "toggle_allowed_science" then
-        state.toggle_player_setting(p.index, "allowed_" .. t.science)
+        if e.button == defines.mouse_button_type.right then
+            local priority = policy.cycle_science_priority(f.index, t.science)
+            policy.record_action(f.index, p.index, "science_priority", t.science .. "=" .. priority)
+            state.request_next_research(f)
+        else
+            state.toggle_player_setting(p.index, "allowed_" .. t.science)
+        end
     elseif h == "promote_research" then
         queue.promote(f, t.tech_name, steps)
     elseif h == "demote_research" then
@@ -432,6 +502,12 @@ script.on_event(defines.events.on_gui_click, function(e)
     elseif h == "close" then
         gui.toggle(p.index)
         repopulate = false
+    elseif h == "toggle_policy_panel" then
+        gui.toggle_policy_panel(p.index)
+        repopulate = false
+    elseif h == "show_trigger_technology" then
+        p.open_technology_gui(t.technology)
+        repopulate = false
     elseif h == "master_enable" then
         local st = state.get_force_setting(f.index, "master_enable", const.default_settings.force.master_enable)
         if st == "left" then
@@ -460,6 +536,72 @@ script.on_event(defines.events.on_gui_click, function(e)
         local val = state.get_force_setting(f.index, "consecutive_tech_cap", const.default_settings.force.settings.consecutive_tech_cap)
         val = val + 1
         state.set_force_setting(f.index, "consecutive_tech_cap", val)
+    elseif h == "toggle_policy_setting" then
+        local current = policy.get_setting(f.index, t.setting_name)
+        if t.setting_name == "multiplayer_lock" and not p.admin then
+            p.print({"lil_einstein-msg.admin-required"})
+        else
+            local new_value = not current
+            policy.set_setting(f.index, t.setting_name, new_value)
+            if t.setting_name == "planning_paused" and new_value then
+                queue.apply_planning_pause(f)
+            end
+            state.request_next_research(f)
+        end
+    elseif h == "adjust_policy_setting" then
+        local current = policy.get_setting(f.index, t.setting_name) or 0
+        policy.set_setting(f.index, t.setting_name, current + (t.delta or 0))
+        state.request_next_research(f)
+    elseif h == "cycle_science_priority" then
+        policy.cycle_science_priority(f.index, t.science)
+        state.request_next_research(f)
+    elseif h == "adjust_science_threshold" then
+        policy.adjust_science_threshold(f.index, t.science, t.threshold_name, t.delta or 0)
+        queue.invalidate_science_cache(f.index)
+        state.request_next_research(f)
+    elseif h == "cycle_repeat_rule" then
+        local technology = f.technologies[t.technology]
+        policy.cycle_repeat_rule(f.index, t.technology, technology and technology.level or 1)
+    elseif h == "adjust_repeat_level" then
+        local technology = f.technologies[t.technology]
+        policy.adjust_repeat_max_level(f.index, t.technology, t.delta or 0, technology and technology.level or 1)
+    elseif h == "save_plan_preset" then
+        local anchor = gui.get(p.index)
+        local field = gutil.get_child(anchor, "policy_preset_name")
+        local name = field and field.text or ""
+        if queue.save_preset(f.index, name) then
+            state.set_player_setting(p.index, "selected_plan_preset", name)
+            p.print({"lil_einstein-msg.preset-saved", name})
+        else
+            p.print({"lil_einstein-msg.preset-name-invalid"})
+        end
+    elseif h == "load_plan_preset" then
+        local name = state.get_player_setting(p.index, "selected_plan_preset")
+        if name and queue.load_preset(f.index, name) then
+            p.print({"lil_einstein-msg.preset-loaded", name})
+        end
+    elseif h == "delete_plan_preset" then
+        local name = state.get_player_setting(p.index, "selected_plan_preset")
+        if name then
+            queue.delete_preset(f.index, name)
+            state.set_player_setting(p.index, "selected_plan_preset", nil)
+        end
+    elseif h == "export_plan" then
+        local exchange = queue.export_plan(f.index)
+        state.set_player_setting(p.index, "plan_exchange_string", exchange or "")
+    elseif h == "import_plan" then
+        local anchor = gui.get(p.index)
+        local field = gutil.get_child(anchor, "policy_exchange_string")
+        local ok = field and queue.import_plan(f.index, field.text)
+        if ok then
+            p.print({"lil_einstein-msg.plan-imported"})
+        else
+            p.print({"lil_einstein-msg.plan-import-failed"})
+        end
+    end
+
+    if mutable_gui_handlers[h] then
+        policy.record_action(f.index, p.index, h, t.technology or t.science or t.setting_name or "")
     end
 
     -- Refresh all open GUIs to reflect the changes
@@ -477,7 +619,15 @@ script.on_event(defines.events.on_gui_checked_state_changed, function(e)
     local t = e.element.tags
     local h = t.handler
     local p = game.get_player(e.player_index)
+    if not p then
+        return
+    end
     local f = p.force
+
+    if h == "toggle_checkbox_force" and not policy.can_edit(p) then
+        p.print({"lil_einstein-msg.multiplayer-locked"})
+        return
+    end
 
     -- Repopulate flag, to be set false for specific actions
     local repopulate = true
@@ -509,10 +659,32 @@ script.on_event(defines.events.on_gui_selection_state_changed, function(e)
     local t = e.element.tags
     local h = t.handler
     local p = game.get_player(e.player_index)
+    if not p then
+        return
+    end
     local f = p.force
 
     if h == "announcement_level" then
+        if not policy.can_edit(p) then
+            p.print({"lil_einstein-msg.multiplayer-locked"})
+            return
+        end
         state.set_force_setting(f.index, t.setting_name, e.element.selected_index)
+    elseif h == "policy_strategy" then
+        if not policy.can_edit(p) then
+            p.print({"lil_einstein-msg.multiplayer-locked"})
+            return
+        end
+        local strategy = policy.strategy_order[e.element.selected_index]
+        if strategy then
+            policy.set_setting(f.index, "strategy", strategy)
+            policy.record_action(f.index, p.index, "strategy", strategy)
+            state.request_next_research(f)
+            gui.repopulate_open(f.index)
+        end
+    elseif h == "policy_preset_selection" then
+        local names = queue.get_preset_names(f.index)
+        state.set_player_setting(p.index, "selected_plan_preset", names[e.element.selected_index])
     end
 end)
 
@@ -525,7 +697,15 @@ script.on_event(defines.events.on_gui_switch_state_changed, function(e)
     local t = e.element.tags
     local h = t.handler
     local p = game.get_player(e.player_index)
+    if not p then
+        return
+    end
     local f = p.force
+
+    if (h == "master_enable" or h == "toggle_tech_enabled") and not policy.can_edit(p) then
+        p.print({"lil_einstein-msg.multiplayer-locked"})
+        return
+    end
 
     -- Repopulate flag, to be set false for specific actions
     local repopulate = true
@@ -554,10 +734,17 @@ script.on_event(defines.events.on_gui_text_changed, function(e)
     local t = e.element.tags
     local h = t.handler
     local p = game.get_player(e.player_index)
+    if not p then
+        return
+    end
     local f = p.force
 
     -- Handle action
     if h == "search_textfield" then
         gui.update_search_field(e.player_index)
+    elseif h == "policy_preset_name" then
+        state.set_player_setting(e.player_index, "plan_preset_name", e.element.text)
+    elseif h == "policy_exchange_string" then
+        state.set_player_setting(e.player_index, "plan_exchange_string", e.element.text)
     end
 end)

@@ -3,6 +3,7 @@ local util = require("lib.util")
 local state = require("model.state")
 local tech = require("model.tech")
 local queue = require("model.queue")
+local policy = require("model.research_policy")
 local lab = require("model.lab")
 local logger = require("lib.log")
 local analyzer = require("view.gui.analyzer")
@@ -153,8 +154,8 @@ local get_title = function(techtbl, xcur, enbl, player_index, force_index, score
         elseif rt.type == "craft-fluid" and rt.fluid then
             local rtname = (rt.fluid.name or rt.fluid)
             local lname = prototypes.fluid[rtname].localised_name
-            local itm = {"", "[entity=" .. rtname .. "]", {"gui-text-tags.following-text-fluid", lname}}
-            pr.tooltip = {"technology-trigger.craft-fluid", itm}
+            local itm = {"", "[fluid=" .. rtname .. "]", {"gui-text-tags.following-text-fluid", lname}}
+            pr.tooltip = {"lil_einstein-trigger-action.craft-fluid", rt.amount or 0, itm}
             pr.sprite = "fluid/" .. rtname
         elseif rt.type == "capture-spawner" then
             if rt.entity then
@@ -224,11 +225,56 @@ local get_title = function(techtbl, xcur, enbl, player_index, force_index, score
         wf.style.left_margin = 2
         wf.add({
             type = "label",
-            caption = string.format("IW:%d LB:%d UB:%d = %.1f", score_comps.importance, score_comps.level_boost, score_comps.user_boost, score_comps.total),
+            caption = string.format("IW:%d LB:%d UB:%d SP:%d ST:%d = %.1f", score_comps.importance,
+                score_comps.level_boost, score_comps.user_boost, score_comps.science_priority or 0,
+                score_comps.strategy_boost or 0, score_comps.total),
             style = "lil_einstein_queue_subinfo",
             enabled = enbl,
-            tooltip = "Importance Weight, Level Boost, User Boost"
+            tooltip = {"lil_einstein-policy.score-breakdown"}
         })
+
+        if xcur.meta.is_infinite then
+            local rule = policy.get_repeat_rule(force_index, xcur.technology.name)
+            local repeat_button = wf.add({
+                type = "button",
+                style = "lil_einstein_repeat_button",
+                caption = {"lil_einstein-repeat." .. rule.mode, rule.max_level or ""},
+                tags = {
+                    lil_einstein_on_click = true,
+                    handler = "cycle_repeat_rule",
+                    technology = xcur.technology.name
+                },
+                tooltip = {"lil_einstein-policy.repeat-cycle"},
+                enabled = enbl
+            })
+            repeat_button.style.left_margin = 8
+            if rule.mode == "to_level" then
+                wf.add({
+                    type = "button",
+                    style = "lil_einstein_repeat_button",
+                    caption = "-",
+                    tags = {
+                        lil_einstein_on_click = true,
+                        handler = "adjust_repeat_level",
+                        technology = xcur.technology.name,
+                        delta = -1
+                    },
+                    enabled = enbl
+                })
+                wf.add({
+                    type = "button",
+                    style = "lil_einstein_repeat_button",
+                    caption = "+",
+                    tags = {
+                        lil_einstein_on_click = true,
+                        handler = "adjust_repeat_level",
+                        technology = xcur.technology.name,
+                        delta = 1
+                    },
+                    enabled = enbl
+                })
+            end
+        end
     end
 
 end
@@ -343,7 +389,7 @@ gctech.populate = function(player_index, anchor)
                 logger.debug(nil, "key mismatch: order=" .. tostring(tech_name) .. " name=" .. tostring(xcur.technology.name))
             end
             local ub = queue.get_tech_ub(f.index, xcur.technology.name)
-            local sd = queue.score_tech_detailed(xcur, xcur.technology.level, ub, avg_cost)
+            local sd = queue.score_tech_detailed(xcur, xcur.technology.level, ub, avg_cost, f.index)
             table.insert(scored_techs, {
                 tech_name = tech_name,
                 xcur = xcur,

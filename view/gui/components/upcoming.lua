@@ -124,6 +124,8 @@ local add_upcoming_row = function(parent, rank, entry, player_index)
     row.tags = {
         duration = entry.duration or 0,
         wait_time = entry.wait_time or 0,
+        duration_known = entry.duration ~= nil,
+        wait_time_known = entry.wait_time ~= nil,
         rank = rank,
         technology = entry.tech_name
     }
@@ -267,9 +269,9 @@ local add_upcoming_row = function(parent, rank, entry, player_index)
         style = "lil_einstein_vertical_flow_nospacing"
     })
     time_col.style.left_margin = 6
-    time_col.style.bottom_margin = upcoming_content_bottom_margin
     time_col.style.width = upcoming_time_width
-    time_col.style.top_margin = 8
+    time_col.style.height = upcoming_row_height
+    time_col.style.top_padding = rank > 1 and 3 or 12
 
     local progress_label = time_col.add({
         type = "label",
@@ -387,10 +389,16 @@ gcupcoming.refresh_times = function(player_index, anchor)
 
     for _, row in ipairs(flow.children) do
         if row.valid and row.tags and row.tags.rank then
-            local dur = math.max(0, (row.tags.duration or 0) - elapsed)
-            local wait = math.max(0, (row.tags.wait_time or 0) - elapsed)
-            if row.tags.rank ~= 1 then
-                dur = row.tags.duration or 0
+            local dur
+            local wait
+            if row.tags.duration_known then
+                dur = math.max(0, (row.tags.duration or 0) - elapsed)
+                if row.tags.rank ~= 1 then
+                    dur = row.tags.duration or 0
+                end
+            end
+            if row.tags.wait_time_known then
+                wait = math.max(0, (row.tags.wait_time or 0) - elapsed)
             end
 
             local time_col = gutil.get_child(row, "upcoming_time_col")
