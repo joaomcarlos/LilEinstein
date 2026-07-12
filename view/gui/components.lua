@@ -921,6 +921,10 @@ end
 
 local populate_hide_categories = function(player_index, anchor)
     local flow = gutil.get_child(anchor, "hide_tech_flow")
+    if not flow then
+        logger.error(nil, "Did not find hide tech flow, skipping hide categories")
+        return
+    end
     flow.clear()
     for k, v in pairs(const.default_settings.player.hide_tech) do
         local state = state.get_player_setting(player_index, k, v)
@@ -941,6 +945,10 @@ end
 
 local populate_show_categories = function(player_index, anchor)
     local flow = gutil.get_child(anchor, "show_tech_flow")
+    if not flow then
+        logger.error(nil, "Did not find show tech flow, skipping show categories")
+        return
+    end
     flow.clear()
     local setting = "show_tech_filter_category"
     local selected = state.get_player_setting(player_index, setting, const.default_settings.player.show_tech.selected)

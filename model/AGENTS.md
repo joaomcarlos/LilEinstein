@@ -9,7 +9,7 @@ Runtime data model and research-autopilot logic for the LilEinstein Factorio mod
 - `env.lua` — cached environment: `all_sciences`, `tech_meta` prototype metadata
 - `state.lua` — player/force settings backing the GUI; `state/translate.lua` handles localized-string translation caching per player
 - `tech.lua` — extended technology state (`state_ext`) layered over `LuaTechnology`
-- `queue.lua` — core queue engine: force queue, current tech selection, science budgets/deficits, research-rate history, temp-tech switching, plan import/export. Largest and most sensitive module
+- `queue.lua` — core queue engine: force queue, current tech selection, science budgets/deficits, research-rate history, temp-tech switching with pinned/score/priority rules, discounted scoring for unavailable techs, depletion-horizon supply checks, and plan import/export. Largest and most sensitive module
 - `queue/modqueue.lua` — documented data-model stub for the per-force queue entries; `queue/parser.lua` is a placeholder
 - `lab.lua` — lab discovery, supply clusters, logistic-network awareness, per-prototype accepted packs
 - `research_policy.lua` — strategy profiles (`policy.strategy_order`), infinite-research repeat policies
@@ -20,6 +20,9 @@ Runtime data model and research-autopilot logic for the LilEinstein Factorio mod
 
 - Data model follows `standard.md`: `storage.<module>.<key>`, `storage.forces[force_index].<module>.<key>`, `storage.players[player_index].<module>.<key>`
 - Module dependency order (must not be violated by new requires): env, state → tech → queue → cmd/lab; `cmd.lua` is the only model file allowed to require `view.gui`
+- Temp-tech switching respects pinned techs, science priority, and a symmetric score margin; unavailable techs are scored with a discount and never act as runtime candidates
+- Runtime candidates exclude hidden, disabled, triggered, avoided, and finite/infinite capped technologies
+- Science-supply sufficiency caps depletion forecasts at the remaining research time of the current technology
 - `<module>.init` does not trigger `<module>.init_force`/`init_player`; `control.lua` calls those directly
 - Everything in `storage` must be save/load-safe (no LuaObject references persisted across saves except valid entity refs handled defensively)
 

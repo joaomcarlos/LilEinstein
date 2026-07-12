@@ -18,8 +18,14 @@ local research_speed_average_samples = math.floor(60 / research_history_sample_s
 local science_reserve_per_lab = 6
 -- score factor applied to techs only reachable through prerequisites
 local unavailable_score_factor = 0.5
--- a candidate must out-score the current research by this factor to interrupt it
+-- a candidate must out-score the current research by this relative margin to interrupt it
 local score_interrupt_margin = 1.5
+
+-- interrupt comparison: margin scales with |current| so negative scores don't get an easier threshold
+local score_would_interrupt = function(candidate_total, current_total)
+    local margin = math.abs(current_total) * (score_interrupt_margin - 1)
+    return candidate_total > current_total + margin
+end
 local max_plan_exchange_length = 250000
 local max_plan_json_length = 2000000
 
@@ -343,11 +349,12 @@ end
 -- importance = base AI weight from rw.research_weights + effect inference
 -- level_boost = bonus for cheap techs relative to current candidate pool average
 -- user_boost = direct user override (can be negative)
--- total = (importance + level_boost) / (total_cost ^ 0.15) + user_boost
+-- total = ((importance + level_boost) / (total_cost ^ 0.15)) * available_factor + user_boost + science_priority + strategy_boost
 queue.score_tech_detailed = function(xcur, level, user_boost, avg_cost, force_index)
     local importance = get_tech_weight_at_level(xcur, level)
     if importance <= -100 then
-        return {importance = importance, level_boost = 0, user_boost = user_boost, total = importance}
+        local total = xcur.available and importance or -10000
+        return {importance = importance, level_boost = 0, user_boost = user_boost, total = total}
     end
 
     -- Techs not yet available (prerequisites pending) are still scored so the
@@ -468,11 +475,9 @@ local tech_can_be_runtime_candidate = function(force_index, xcur)
     if policy.get_tech_science_priority(force_index, xcur) <= -1000 then
         return false
     end
-    if xcur.meta.is_infinite then
-        local cap = rw.research_caps[xcur.technology.name]
-        if cap and xcur.technology.level >= cap then
-            return false
-        end
+    local cap = rw.research_caps[xcur.technology.name]
+    if cap and xcur.technology.level >= cap then
+        return false
     end
     return true
 end
@@ -808,6 +813,9 @@ local temp_should_persist = function(force_index, xtemp, xtarget, avg_cost)
     if xtarget.technology.name == pinned then
         return false
     end
+    if xtemp.technology.name == pinned then
+        return true
+    end
     if not queue.science_is_sufficient(xtemp, force_index) then
         return false
     end
@@ -823,7 +831,7 @@ local temp_should_persist = function(force_index, xtemp, xtarget, avg_cost)
     local target_ub = queue.get_tech_ub(force_index, xtarget.technology.name)
     local temp_sd = queue.score_tech_detailed(xtemp, xtemp.technology.level, temp_ub, avg_cost, force_index)
     local target_sd = queue.score_tech_detailed(xtarget, xtarget.technology.level, target_ub, avg_cost, force_index)
-    return temp_sd.total > target_sd.total * score_interrupt_margin
+    return score_would_interrupt(temp_sd.total, target_sd.total)
 end
 
 queue.check_and_switch_temp_research = function(f)
@@ -981,7 +989,7 @@ queue.check_and_switch_temp_research = function(f)
                 elseif candidate_priority == current_priority then
                     local candidate_ub = queue.get_tech_ub(f.index, candidate)
                     local candidate_sd = queue.score_tech_detailed(xcandidate, xcandidate.technology.level, candidate_ub, avg_cost, f.index)
-                    if candidate_sd.total > current_sd.total * score_interrupt_margin then
+                    if score_would_interrupt(candidate_sd.total, current_sd.total) then
                         switch_reason = "score"
                     end
                 end
@@ -2281,7 +2289,12 @@ local get_research_unit_count = function(xcur)
     return get_research_unit_count_at_level(xcur, xcur.technology.level)
 end
 
-local get_runtime_candidate_average_cost = function(force_index, tsx)
+local runtime_avg_cost_cache = {}
+get_runtime_candidate_average_cost = function(force_index, tsx)
+    local cached = runtime_avg_cost_cache[force_index]
+    if cached and cached.tick == game.tick then
+        return cached.value
+    end
     local total_cost_sum = 0
     local cost_count = 0
     for _, xcur in pairs(tsx or {}) do
@@ -2290,10 +2303,12 @@ local get_runtime_candidate_average_cost = function(force_index, tsx)
             cost_count = cost_count + 1
         end
     end
-    if cost_count == 0 then
-        return nil
+    local value = nil
+    if cost_count > 0 then
+        value = total_cost_sum / cost_count
     end
-    return total_cost_sum / cost_count
+    runtime_avg_cost_cache[force_index] = {tick = game.tick, value = value}
+    return value
 end
 
 local get_all_runtime_candidate_names = function(force_index, tsx)

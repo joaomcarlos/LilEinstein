@@ -99,7 +99,9 @@ Root-owned (no child doc):
 - `standard.md` — coding standard: naming, data model, module order; binding for all Lua edits
 - `RESEARCH_AUTOPILOT_IMPLEMENTATION.md` — maintainer/tester notes for the research-autopilot branch
 - `audit/` — GUI mockup reference assets; `scripts/import_ui_slices.ps1` regenerates `lib/ui_slices.lua` from them
-- `graphics/`, `output/` — currently empty asset/output folders
+- `graphics/` — mod icons and UI sprite assets
+- `output/` — generated output folder (currently `output/imagegen/`)
+- `website/` — mod landing-page assets (`index.html`, `styles.css`, `script.js`, `assets/`)
 
 ## Child DOX Index
 
