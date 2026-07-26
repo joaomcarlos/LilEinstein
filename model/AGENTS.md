@@ -22,7 +22,8 @@ Runtime data model and research-autopilot logic for the LilEinstein Factorio mod
 - Module dependency order (must not be violated by new requires): env, state → tech → queue → cmd/lab; `cmd.lua` is the only model file allowed to require `view.gui`
 - Temp-tech switching respects pinned techs, science priority, and a symmetric score margin; unavailable techs are scored with a discount and never act as runtime candidates
 - Runtime candidates exclude hidden, disabled, triggered, avoided, and finite/infinite capped technologies
-- Science-supply sufficiency caps depletion forecasts at the remaining research time of the current technology
+- Science-supply sufficiency caps depletion forecasts at the remaining research time and treats dominant live missing-pack lab starvation as unavailable
+- Upcoming research plans put the active technology first and prefer science-supplied candidates before science-blocked fallbacks
 - `<module>.init` does not trigger `<module>.init_force`/`init_player`; `control.lua` calls those directly
 - Everything in `storage` must be save/load-safe (no LuaObject references persisted across saves except valid entity refs handled defensively)
 

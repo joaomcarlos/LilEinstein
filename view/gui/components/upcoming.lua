@@ -22,23 +22,71 @@ local upcoming_science_icon_size = 14
 local upcoming_time_width = 68
 local upcoming_content_bottom_margin = 8
 
+local localize_with_fallback = function(key, fallback, ...)
+    return {"?", {key, ...}, fallback}
+end
+
 local format_time = function(seconds)
     if not seconds then
-        return "calculating..."
+        return localize_with_fallback("lil_einstein-upcoming.calculating", "calculating...")
     end
     if seconds <= 0 then
-        return "0s"
+        return localize_with_fallback("lil_einstein-upcoming.seconds", "0s", 0)
     end
     local hours = math.floor(seconds / 3600)
     local mins = math.floor((seconds % 3600) / 60)
     local secs = math.floor(seconds % 60)
     if hours > 0 then
-        return string.format("%dh %02dm", hours, mins)
+        return localize_with_fallback(
+            "lil_einstein-upcoming.hours-minutes",
+            string.format("%dh %02dm", hours, mins),
+            hours,
+            string.format("%02d", mins)
+        )
     elseif mins > 0 then
-        return string.format("%dm %02ds", mins, secs)
+        return localize_with_fallback(
+            "lil_einstein-upcoming.minutes-seconds",
+            string.format("%dm %02ds", mins, secs),
+            mins,
+            string.format("%02d", secs)
+        )
     else
-        return string.format("%ds", secs)
+        return localize_with_fallback(
+            "lil_einstein-upcoming.seconds",
+            string.format("%ds", secs),
+            secs
+        )
     end
+end
+
+local format_wait_time = function(seconds)
+    local time = format_time(seconds)
+    return localize_with_fallback(
+        "lil_einstein-upcoming.in-time",
+        {"", "in ", time},
+        time
+    )
+end
+
+local get_availability_tooltip = function(entry)
+    if entry.availability_reason == "science_not_together" then
+        return localize_with_fallback(
+            "lil_einstein-upcoming.science-not-together-tooltip",
+            "Not selected: the required science packs are not available together to one compatible lab cluster."
+        )
+    end
+    if entry.availability_reason ~= "missing_science" then
+        return nil
+    end
+
+    local tooltip = {"", localize_with_fallback(
+        "lil_einstein-upcoming.missing-science-tooltip",
+        "Not selected: required science packs are unavailable:"
+    )}
+    for _, science in ipairs(entry.missing_sciences or {}) do
+        table.insert(tooltip, " [item=" .. science .. "]")
+    end
+    return tooltip
 end
 
 local get_research_progress = function(player, tech_name)
@@ -144,7 +192,10 @@ local add_upcoming_row = function(parent, rank, entry, player_index)
         type = "label",
         name = "upcoming_current_arrow",
         caption = is_current and ">" or "",
-        tooltip = "Currently researching"
+        tooltip = localize_with_fallback(
+            "lil_einstein-upcoming.currently-researching",
+            "Currently researching"
+        )
     })
     current_arrow.style.width = upcoming_rank_arrow_width
     current_arrow.style.vertical_align = "center"
@@ -156,7 +207,7 @@ local add_upcoming_row = function(parent, rank, entry, player_index)
         type = "label",
         name = "upcoming_pinned_arrow",
         caption = is_pinned and ">" or "",
-        tooltip = "High priority"
+        tooltip = localize_with_fallback("lil_einstein-upcoming.high-priority", "High priority")
     })
     pinned_arrow.style.width = upcoming_rank_arrow_width
     pinned_arrow.style.vertical_align = "center"
@@ -199,7 +250,13 @@ local add_upcoming_row = function(parent, rank, entry, player_index)
             handler = "pin_upcoming_tech",
             technology = entry.tech_name
         },
-        tooltip = (is_pinned and "High priority - click to clear" or "Click to mark high priority")
+        tooltip = is_pinned and localize_with_fallback(
+            "lil_einstein-upcoming.clear-high-priority",
+            "High priority - click to clear"
+        ) or localize_with_fallback(
+            "lil_einstein-upcoming.mark-high-priority",
+            "Click to mark high priority"
+        )
     })
     tech_btn.style.width = upcoming_icon_size
     tech_btn.style.height = upcoming_icon_size
@@ -261,6 +318,21 @@ local add_upcoming_row = function(parent, rank, entry, player_index)
         end
         first = false
     end
+    if entry.availability_reason then
+        local status_key = entry.availability_reason == "science_not_together" and
+            "science-not-together" or "missing-science"
+        local status_label = sci_flow.add({
+            type = "label",
+            style = "lil_einstein_queue_subinfo",
+            caption = localize_with_fallback(
+                "lil_einstein-upcoming." .. status_key,
+                status_key == "science-not-together" and "Packs not together" or "Missing packs"
+            ),
+            tooltip = get_availability_tooltip(entry)
+        })
+        status_label.style.left_margin = 5
+        status_label.style.font_color = {r = 1.0, g = 0.64, b = 0.2}
+    end
 
     local time_col = row.add({
         type = "flow",
@@ -291,7 +363,7 @@ local add_upcoming_row = function(parent, rank, entry, player_index)
             type = "label",
             name = "upcoming_wait_label",
             style = "lil_einstein_queue_subinfo",
-            caption = "in " .. format_time(entry.wait_time)
+            caption = format_wait_time(entry.wait_time)
         })
     end
 
@@ -355,7 +427,10 @@ gcupcoming.populate = function(player_index, anchor)
     if not upcoming or #upcoming == 0 then
         flow.add({
             type = "label",
-            caption = "No upcoming research available"
+            caption = localize_with_fallback(
+                "lil_einstein-upcoming.none-available",
+                "No upcoming research available"
+            )
         })
         return
     end
@@ -409,7 +484,7 @@ gcupcoming.refresh_times = function(player_index, anchor)
                     dur_lbl.caption = format_time(dur)
                 end
                 if wait_lbl and wait_lbl.valid then
-                    wait_lbl.caption = "in " .. format_time(wait)
+                    wait_lbl.caption = format_wait_time(wait)
                 end
             end
         end

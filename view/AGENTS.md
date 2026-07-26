@@ -18,6 +18,8 @@ GUI layer for the LilEinstein mod: window lifecycle, layout construction, and pr
 - View sits at the bottom of the module order (`standard.md`): may require `lib` and `model`, must not be required by model modules (exception: `model/cmd.lua`)
 - GUI style prototypes live in `data/style.lua`, not here; reference styles by name
 - Player GUI state persists under `storage.players[player_index]` via `state`/`gui.init_player`
+- Upcoming rows mirror effective research order and state the science-supply reason when an entry is not selectable
+- New Upcoming LocalisedStrings include literal fallbacks so control-stage reloads cannot render `Unknown key` text
 
 ## Work Guidance
 

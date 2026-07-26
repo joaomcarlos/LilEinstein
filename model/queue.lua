@@ -330,17 +330,24 @@ local science_supply_is_sufficient = function(xcur, force_index)
     if not queue.science_is_available(xcur, availability) then
         return false
     end
-    if forecast_seconds <= 0 then
-        return true
-    end
-    local horizon = get_depletion_horizon_seconds(xcur, force_index, forecast_seconds)
-    for _, science in pairs(sciences) do
-        local science_forecast = forecast[science]
-        if science_forecast and science_forecast.depletion_seconds and
-            science_forecast.depletion_seconds < horizon and
-            science_depletion_is_attributable(availability, science) then
-            return false
+    if forecast_seconds > 0 then
+        local horizon = get_depletion_horizon_seconds(xcur, force_index, forecast_seconds)
+        for _, science in pairs(sciences) do
+            local science_forecast = forecast[science]
+            if science_forecast and science_forecast.depletion_seconds and
+                science_forecast.depletion_seconds < horizon and
+                science_depletion_is_attributable(availability, science) then
+                return false
+            end
         end
+    end
+
+    -- Only pay for the live lab diagnostic when the cheaper aggregate and
+    -- depletion checks both claim the active technology is supplied.
+    local live_bottleneck = queue.get_active_missing_science_bottleneck and
+        queue.get_active_missing_science_bottleneck(force_index, xcur)
+    if live_bottleneck and next(live_bottleneck) then
+        return false
     end
     return true
 end
@@ -457,6 +464,28 @@ queue.science_is_available = function(xcur, lsci)
     return true
 end
 local science_is_available = queue.science_is_available
+
+local get_science_block_details = function(xcur, lsci)
+    if science_is_available(xcur, lsci) then
+        return nil, {}
+    end
+
+    local missing_sciences = {}
+    for _, science in pairs((xcur and xcur.meta and xcur.meta.sciences) or {}) do
+        if not lsci or not lsci[science] then
+            table.insert(missing_sciences, science)
+        end
+    end
+    table.sort(missing_sciences)
+
+    if #missing_sciences > 0 then
+        return "missing_science", missing_sciences
+    end
+    if lsci and lsci.__cluster_mode then
+        return "science_not_together", {}
+    end
+    return "missing_science", {}
+end
 
 
 local tech_can_be_runtime_candidate = function(force_index, xcur)
@@ -1010,6 +1039,17 @@ queue.check_and_switch_temp_research = function(f)
 
     -- Current tech is low on packs. Find next suitable tech in order.
     local lsci = queue.get_science_availability(f.index)
+    local live_bottleneck = queue.get_active_missing_science_bottleneck(f.index, xcur)
+    if next(live_bottleneck) then
+        local effective_availability = {}
+        for science, available in pairs(lsci or {}) do
+            effective_availability[science] = available
+        end
+        for science, _ in pairs(live_bottleneck) do
+            effective_availability[science] = false
+        end
+        lsci = effective_availability
+    end
     local sfq = get_virtual_queue_source(f.index, tsx)
     local sfsci = {}
 
@@ -2143,6 +2183,44 @@ queue.get_research_diagnostic = function(force_index)
     return res
 end
 
+-- The throughput panel observes live lab starvation, while aggregate availability
+-- includes packs elsewhere in the supply network. Treat a dominant live missing-pack
+-- loss as a real bottleneck for the active technology so the switcher uses the same
+-- player-visible truth as the diagnostic.
+queue.get_active_missing_science_bottleneck = function(force_index, xcur)
+    local f = game.forces[force_index]
+    if not f or not f.current_research or not xcur or not xcur.technology or
+        f.current_research.name ~= xcur.technology.name then
+        return {}
+    end
+
+    local diagnostic = queue.get_research_diagnostic(force_index)
+    local expected_spm = diagnostic and diagnostic.expected_spm or 0
+    if not diagnostic or not diagnostic.available or expected_spm <= 0 or
+        (diagnostic.utilization or 0) >= 0.60 then
+        return {}
+    end
+
+    local missing_cause
+    for _, cause in ipairs(diagnostic.causes or {}) do
+        if cause.kind == "missing_science" then
+            missing_cause = cause
+            break
+        end
+    end
+    if not missing_cause or (missing_cause.lost_spm or 0) < expected_spm * 0.40 then
+        return {}
+    end
+
+    local res = {}
+    for _, item in ipairs(diagnostic.missing_sciences or {}) do
+        if item.science and (item.labs or 0) > 0 then
+            res[item.science] = true
+        end
+    end
+    return res
+end
+
 queue.science_is_sufficient = function(xcur, force_index)
     return science_supply_is_sufficient(xcur, force_index)
 end
@@ -2395,8 +2473,9 @@ local get_virtual_research_entries = function(force_index, count)
         return {}
     end
 
-    local sfq = get_virtual_queue_source(force_index, tsx)
-    if not sfq or #sfq == 0 then
+    local sfq = get_virtual_queue_source(force_index, tsx) or {}
+    local current_name = f.current_research and f.current_research.name
+    if #sfq == 0 and not current_name then
         return {}
     end
 
@@ -2423,7 +2502,11 @@ local get_virtual_research_entries = function(force_index, count)
         local duration
         if speed then
             duration = cost / speed
+            if f.current_research and f.current_research.name == tech_name then
+                duration = duration * math.max(0, 1 - (f.research_progress or 0))
+            end
         end
+        local availability_reason, missing_sciences = get_science_block_details(xcur, lsci)
         table.insert(results, {
             tech_name = tech_name,
             level = xcur.technology.level,
@@ -2431,7 +2514,9 @@ local get_virtual_research_entries = function(force_index, count)
             duration = duration,
             wait_time = speed and cumulative_time or nil,
             xcur = xcur,
-            has_science = science_is_available(xcur, lsci)
+            has_science = availability_reason == nil,
+            availability_reason = availability_reason,
+            missing_sciences = missing_sciences
         })
         virtually_researched[tech_name] = true
         if duration then
@@ -2439,54 +2524,82 @@ local get_virtual_research_entries = function(force_index, count)
         end
     end
 
-    while #results < max_results and max_iter > 0 do
-        max_iter = max_iter - 1
-        local found = false
+    -- The preview is an execution plan, so the technology Factorio is actually
+    -- researching must be first even when higher-scored entries are waiting for science.
+    local current_xcur = current_name and tsx[current_name]
+    if current_xcur and current_xcur.technology and current_xcur.meta then
+        add_entry(current_name, current_xcur)
+    end
 
-        for _, q in ipairs(sfq) do
-            if not virtually_researched[q] then
-                local xcur = tsx[q]
-                if tech_can_be_runtime_candidate(force_index, xcur) then
-                    local all_pre_met = true
-                    for pre_req_tech, _ in pairs(xcur.meta.all_prerequisites or {}) do
-                        if not virtually_researched[pre_req_tech] then
-                            all_pre_met = false
-                            break
-                        end
-                    end
+    local get_ready_candidate = function(requested_name)
+        if virtually_researched[requested_name] then
+            return nil, nil
+        end
 
-                    if all_pre_met then
-                        add_entry(q, xcur)
-                        found = true
+        local xcur = tsx[requested_name]
+        if not tech_can_be_runtime_candidate(force_index, xcur) then
+            return nil, nil
+        end
+
+        local all_pre_met = true
+        local prerequisite_names = {}
+        for pre_req_tech, _ in pairs(xcur.meta.all_prerequisites or {}) do
+            table.insert(prerequisite_names, pre_req_tech)
+            if not virtually_researched[pre_req_tech] then
+                all_pre_met = false
+            end
+        end
+        if all_pre_met then
+            return requested_name, xcur
+        end
+
+        table.sort(prerequisite_names)
+        for _, pre_req_tech in ipairs(prerequisite_names) do
+            local xpre = tsx[pre_req_tech]
+            if xpre and not virtually_researched[pre_req_tech] and
+                tech_can_be_runtime_candidate(force_index, xpre) then
+                local pre_all_met = true
+                for pre_req_tech_2, _ in pairs(xpre.meta.all_prerequisites or {}) do
+                    if not virtually_researched[pre_req_tech_2] then
+                        pre_all_met = false
                         break
                     end
+                end
+                if pre_all_met then
+                    return pre_req_tech, xpre
+                end
+            end
+        end
+        return nil, nil
+    end
 
-                    for pre_req_tech, _ in pairs(xcur.meta.all_prerequisites or {}) do
-                        local xpre = tsx[pre_req_tech]
-                        if xpre and not virtually_researched[pre_req_tech] and
-                            tech_can_be_runtime_candidate(force_index, xpre) then
-                            local pre_all_met = true
-                            for pre_req_tech_2, _ in pairs(xpre.meta.all_prerequisites or {}) do
-                                if not virtually_researched[pre_req_tech_2] then
-                                    pre_all_met = false
-                                    break
-                                end
-                            end
-                            if pre_all_met then
-                                add_entry(pre_req_tech, xpre)
-                                found = true
-                                break
-                            end
-                        end
-                    end
-                    if found then break end
+    while #results < max_results and max_iter > 0 do
+        max_iter = max_iter - 1
+        local selected_name
+        local selected_xcur
+        local blocked_name
+        local blocked_xcur
+
+        for _, q in ipairs(sfq) do
+            local candidate_name, candidate_xcur = get_ready_candidate(q)
+            if candidate_name then
+                if science_is_available(candidate_xcur, lsci) then
+                    selected_name = candidate_name
+                    selected_xcur = candidate_xcur
+                    break
+                elseif not blocked_name then
+                    blocked_name = candidate_name
+                    blocked_xcur = candidate_xcur
                 end
             end
         end
 
-        if not found then
+        selected_name = selected_name or blocked_name
+        selected_xcur = selected_xcur or blocked_xcur
+        if not selected_name then
             break
         end
+        add_entry(selected_name, selected_xcur)
     end
 
     return results
