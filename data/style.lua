@@ -741,6 +741,7 @@ data.raw["gui-style"].default["lil_einstein_allowed_science_frame"] = {
 }
 data.raw["gui-style"].default["lil_einstein_research_health_panel"] = {
     type = "vertical_flow_style",
+    parent = "vertical_flow",
     width = 220,
     height = 64,
     left_margin = 7,
@@ -766,12 +767,22 @@ data.raw["gui-style"].default["lil_einstein_research_health_state"] = {
 data.raw["gui-style"].default["lil_einstein_research_health_reason"] = {
     type = "label_style",
     parent = "label",
-    width = 220,
-    height = 32,
+    width = 152,
+    height = 40,
     font = "default-small",
     font_color = {0.70, 0.69, 0.64},
+    single_line = false,
     padding = 0,
     margin = 0
+}
+data.raw["gui-style"].default["lil_einstein_research_health_details_button"] = {
+    type = "button_style",
+    parent = "button",
+    width = 64,
+    height = 24,
+    left_margin = 4,
+    padding = 0,
+    font = "default-small"
 }
 -- Bottom left frame
 data.raw["gui-style"].default["lil_einstein_filter_frame"] = {

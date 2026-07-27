@@ -505,6 +505,9 @@ script.on_event(defines.events.on_gui_click, function(e)
     elseif h == "toggle_policy_panel" then
         gui.toggle_policy_panel(p.index)
         repopulate = false
+    elseif h == "toggle_research_details" then
+        gui.toggle_research_details(p.index)
+        repopulate = false
     elseif h == "show_trigger_technology" then
         p.open_technology_gui(t.technology)
         repopulate = false

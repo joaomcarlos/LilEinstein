@@ -15,6 +15,10 @@ local research_history_seconds = 10 * 60
 local research_history_sample_seconds = 3
 local research_history_samples = math.floor(research_history_seconds / research_history_sample_seconds)
 local research_speed_average_samples = math.floor(60 / research_history_sample_seconds)
+local diagnostic_healthy_utilization = 0.90
+local diagnostic_meaningful_gap_fraction = 0.05
+local diagnostic_minimum_lost_spm = 1
+local diagnostic_minimum_samples = 2
 local science_reserve_per_lab = 6
 -- score factor applied to techs only reachable through prerequisites
 local unavailable_score_factor = 0.5
@@ -1480,8 +1484,26 @@ local get_research_speed_window = function(samples, start_offset, sample_count, 
         return nil, 0
     end
 
+    local contiguous_start = 1
+    if tech_name then
+        contiguous_start = #samples + 1
+        for i = #samples, 1, -1 do
+            local sample = samples[i]
+            if not sample or sample.tech_name ~= tech_name then
+                break
+            end
+            contiguous_start = i
+        end
+        if contiguous_start > #samples then
+            return nil, 0
+        end
+    end
+
     local end_index = #samples - (start_offset or 0)
-    local start_index = math.max(1, end_index - sample_count + 1)
+    if end_index < contiguous_start then
+        return nil, 0
+    end
+    local start_index = math.max(contiguous_start, end_index - sample_count + 1)
     local total = 0
     local count = 0
     for i = start_index, end_index do
@@ -2038,6 +2060,182 @@ local get_missing_lab_sciences = function(lab_entity, current)
     return res
 end
 
+local get_lab_loss_kind = function(lab_entity, status)
+    if status == defines.entity_status.missing_science_packs then
+        return "missing_science"
+    elseif status == defines.entity_status.no_power or status == defines.entity_status.low_power or
+           status == defines.entity_status.no_fuel or
+           status == defines.entity_status.not_plugged_in_electric_network then
+        return "power"
+    elseif status == defines.entity_status.frozen or lab_entity.frozen then
+        return "frozen"
+    elseif status == defines.entity_status.disabled_by_control_behavior or
+           status == defines.entity_status.disabled_by_script or status == defines.entity_status.disabled or
+           status == defines.entity_status.closed_by_circuit_network or
+           status == defines.entity_status.marked_for_deconstruction then
+        return "disabled"
+    elseif status == defines.entity_status.no_research_in_progress then
+        return "no_research"
+    end
+    return "other"
+end
+
+local add_loss_cause = function(cause_data, kind, capacity_spm)
+    local cause = cause_data[kind]
+    if not cause then
+        cause = {kind = kind, labs = 0, lost_spm = 0}
+        cause_data[kind] = cause
+    end
+    cause.labs = cause.labs + 1
+    cause.lost_spm = cause.lost_spm + capacity_spm
+end
+
+local add_missing_science_evidence = function(missing_sciences, science, capacity_spm)
+    local item = missing_sciences[science]
+    if not item then
+        item = {science = science, labs = 0, lost_spm = 0}
+        missing_sciences[science] = item
+    end
+    item.labs = item.labs + 1
+    item.lost_spm = item.lost_spm + capacity_spm
+end
+
+local sort_loss_evidence = function(items, identity_key)
+    table.sort(items, function(a, b)
+        if a.lost_spm == b.lost_spm then
+            return tostring(a[identity_key] or "") < tostring(b[identity_key] or "")
+        end
+        return a.lost_spm > b.lost_spm
+    end)
+end
+
+local map_values = function(source)
+    local res = {}
+    for _, item in pairs(source or {}) do
+        table.insert(res, item)
+    end
+    return res
+end
+
+local new_diagnostic_cluster = function(key, scope, surface_index, surface_name, network_id, lab_entity)
+    local position
+    if lab_entity and lab_entity.valid and lab_entity.position then
+        position = {x = lab_entity.position.x, y = lab_entity.position.y}
+    end
+    return {
+        key = key,
+        scope = scope,
+        surface_index = surface_index,
+        surface_name = surface_name,
+        network_id = network_id,
+        representative_position = position,
+        representative_unit_number = lab_entity and lab_entity.valid and lab_entity.unit_number or nil,
+        total_labs = 0,
+        compatible_labs = 0,
+        working_labs = 0,
+        incompatible_labs = 0,
+        expected_spm = 0,
+        working_spm = 0,
+        lost_spm = 0,
+        unavailable_spm = 0,
+        causes = {},
+        missing_sciences = {},
+        local_stock = {},
+        _cause_data = {},
+        _missing_sciences = {},
+        _lab_stock = {},
+        _network = nil
+    }
+end
+
+local get_diagnostic_cluster = function(clusters, lab_entity, network)
+    local surface = lab_entity.surface
+    local surface_index = surface and surface.index or 0
+    local surface_name = surface and surface.name or "unknown"
+    local network_id
+    local key
+    local scope
+    if network and network.valid then
+        network_id = network.network_id
+        key = tostring(surface_index) .. ":network:" .. tostring(network_id or "unknown")
+        scope = "network"
+    else
+        key = tostring(surface_index) .. ":direct"
+        scope = "direct"
+    end
+
+    local cluster = clusters[key]
+    if not cluster then
+        cluster = new_diagnostic_cluster(key, scope, surface_index, surface_name, network_id, lab_entity)
+        clusters[key] = cluster
+    end
+    if network and network.valid then
+        cluster._network = network
+    end
+    return cluster
+end
+
+local add_lab_stock = function(cluster, lab_entity)
+    local inv = lab_entity.get_inventory(defines.inventory.lab_input)
+    if not inv then
+        return
+    end
+    for _, item in pairs(inv.get_contents()) do
+        cluster._lab_stock[item.name] = (cluster._lab_stock[item.name] or 0) + (item.count or 0)
+    end
+end
+
+local finalize_diagnostic_cluster = function(cluster, required_sciences)
+    cluster.causes = map_values(cluster._cause_data)
+    sort_loss_evidence(cluster.causes, "kind")
+    cluster.missing_sciences = map_values(cluster._missing_sciences)
+    sort_loss_evidence(cluster.missing_sciences, "science")
+    cluster.lost_spm = math.max(0, cluster.expected_spm - cluster.working_spm)
+    cluster.unavailable_spm = cluster.lost_spm
+
+    local network = cluster._network
+    for _, science in ipairs(required_sciences) do
+        local stock = cluster._lab_stock[science] or 0
+        if network and network.valid then
+            stock = stock + network.get_item_count(science)
+        end
+        cluster.local_stock[science] = stock
+    end
+    for _, item in ipairs(cluster.missing_sciences) do
+        item.local_stock = cluster.local_stock[item.science] or 0
+    end
+
+    cluster.dominant_cause = cluster.causes[1]
+    cluster.dominant_missing_science = cluster.missing_sciences[1]
+    cluster._cause_data = nil
+    cluster._missing_sciences = nil
+    cluster._lab_stock = nil
+    cluster._network = nil
+end
+
+local get_dominant_cluster = function(clusters, cause_kind, science)
+    local best
+    local best_lost_spm = -1
+    for _, cluster in ipairs(clusters or {}) do
+        local lost_spm = 0
+        local evidence = science and cluster.missing_sciences or cluster.causes
+        local identity_key = science and "science" or "kind"
+        local identity = science or cause_kind
+        for _, item in ipairs(evidence or {}) do
+            if item[identity_key] == identity then
+                lost_spm = item.lost_spm or 0
+                break
+            end
+        end
+        if lost_spm > best_lost_spm or
+           (lost_spm == best_lost_spm and best and cluster.key < best.key) then
+            best = cluster
+            best_lost_spm = lost_spm
+        end
+    end
+    return best
+end
+
 queue.get_research_diagnostic = function(force_index)
     local cached = diagnostic_cache[force_index]
     if cached and cached.tick == game.tick then
@@ -2046,13 +2244,16 @@ queue.get_research_diagnostic = function(force_index)
 
     local f = game.forces[force_index]
     local current = f and f.current_research
-    local speed = queue.get_research_speed(force_index)
     local res = {
         available = current ~= nil,
-        actual_spm = speed and (speed * 60) or 0,
+        state = current and "measuring" or "idle",
+        current_technology = current and current.name or nil,
+        actual_spm = 0,
         recent_spm = nil,
         previous_spm = nil,
         trend_percent = nil,
+        sample_count = 0,
+        sampling_ready = false,
         expected_spm = 0,
         working_spm = 0,
         utilization = 0,
@@ -2061,7 +2262,13 @@ queue.get_research_diagnostic = function(force_index)
         working_labs = 0,
         incompatible_labs = 0,
         causes = {},
-        missing_sciences = {}
+        missing_sciences = {},
+        clusters = {},
+        material_loss_spm = 0,
+        material_threshold_spm = diagnostic_minimum_lost_spm,
+        dominant_cause = nil,
+        dominant_missing_science = nil,
+        dominant_cluster_key = nil
     }
 
     if not current then
@@ -2071,6 +2278,12 @@ queue.get_research_diagnostic = function(force_index)
 
     local sf = storage.forces[force_index]
     local samples = sf and sf.queue and sf.queue.speed_samples
+    local measured_speed, measured_count =
+        get_research_speed_window(samples, 0, research_speed_average_samples, current.name)
+    res.actual_spm = measured_speed and (measured_speed * 60) or 0
+    res.sample_count = measured_count
+    res.sampling_ready = measured_count >= diagnostic_minimum_samples
+
     local recent_speed, recent_count = get_research_speed_window(samples, 0, 5, current.name)
     local previous_speed, previous_count = get_research_speed_window(samples, 5, 15, current.name)
     if recent_count >= 2 then
@@ -2083,71 +2296,52 @@ queue.get_research_diagnostic = function(force_index)
         res.trend_percent = ((res.recent_spm - res.previous_spm) * 100) / res.previous_spm
     end
 
-    local cause_data = {
-        missing_science = {kind = "missing_science", labs = 0, lost_spm = 0},
-        power = {kind = "power", labs = 0, lost_spm = 0},
-        disabled = {kind = "disabled", labs = 0, lost_spm = 0},
-        frozen = {kind = "frozen", labs = 0, lost_spm = 0},
-        no_research = {kind = "no_research", labs = 0, lost_spm = 0},
-        other = {kind = "other", labs = 0, lost_spm = 0}
-    }
+    local cause_data = {}
     local missing_sciences = {}
+    local clusters = {}
+    local required_sciences = {}
+    for _, ingredient in pairs(current.research_unit_ingredients or {}) do
+        table.insert(required_sciences, ingredient.name)
+    end
+    table.sort(required_sciences)
 
     for _, lab_entity in pairs(get_cached_labs(force_index)) do
         if lab_entity and lab_entity.valid then
+            local network = get_lab_network(lab_entity)
+            local cluster = get_diagnostic_cluster(clusters, lab_entity, network)
             res.total_labs = res.total_labs + 1
+            cluster.total_labs = cluster.total_labs + 1
+            add_lab_stock(cluster, lab_entity)
             if not lab_accepts_research(lab_entity, current) then
                 res.incompatible_labs = res.incompatible_labs + 1
+                cluster.incompatible_labs = cluster.incompatible_labs + 1
                 goto continue
             end
 
             res.compatible_labs = res.compatible_labs + 1
+            cluster.compatible_labs = cluster.compatible_labs + 1
             local capacity_spm = get_lab_capacity_spm(lab_entity, current)
             res.expected_spm = res.expected_spm + capacity_spm
+            cluster.expected_spm = cluster.expected_spm + capacity_spm
             local status = lab_entity.status
 
             if status == defines.entity_status.working then
                 res.working_labs = res.working_labs + 1
                 res.working_spm = res.working_spm + capacity_spm
-            elseif status == defines.entity_status.missing_science_packs then
-                local cause = cause_data.missing_science
-                cause.labs = cause.labs + 1
-                cause.lost_spm = cause.lost_spm + capacity_spm
+                cluster.working_labs = cluster.working_labs + 1
+                cluster.working_spm = cluster.working_spm + capacity_spm
+            else
+                local cause_kind = get_lab_loss_kind(lab_entity, status)
+                add_loss_cause(cause_data, cause_kind, capacity_spm)
+                add_loss_cause(cluster._cause_data, cause_kind, capacity_spm)
+            end
+
+            if status == defines.entity_status.missing_science_packs then
                 local missing = get_missing_lab_sciences(lab_entity, current)
                 for _, science in pairs(missing) do
-                    local item = missing_sciences[science]
-                    if not item then
-                        item = {science = science, labs = 0, lost_spm = 0}
-                        missing_sciences[science] = item
-                    end
-                    item.labs = item.labs + 1
-                    item.lost_spm = item.lost_spm + capacity_spm
+                    add_missing_science_evidence(missing_sciences, science, capacity_spm)
+                    add_missing_science_evidence(cluster._missing_sciences, science, capacity_spm)
                 end
-            elseif status == defines.entity_status.no_power or status == defines.entity_status.low_power or
-                   status == defines.entity_status.no_fuel or
-                   status == defines.entity_status.not_plugged_in_electric_network then
-                local cause = cause_data.power
-                cause.labs = cause.labs + 1
-                cause.lost_spm = cause.lost_spm + capacity_spm
-            elseif status == defines.entity_status.disabled_by_control_behavior or
-                   status == defines.entity_status.disabled_by_script or status == defines.entity_status.disabled or
-                   status == defines.entity_status.closed_by_circuit_network or
-                   status == defines.entity_status.marked_for_deconstruction then
-                local cause = cause_data.disabled
-                cause.labs = cause.labs + 1
-                cause.lost_spm = cause.lost_spm + capacity_spm
-            elseif status == defines.entity_status.frozen or lab_entity.frozen then
-                local cause = cause_data.frozen
-                cause.labs = cause.labs + 1
-                cause.lost_spm = cause.lost_spm + capacity_spm
-            elseif status == defines.entity_status.no_research_in_progress then
-                local cause = cause_data.no_research
-                cause.labs = cause.labs + 1
-                cause.lost_spm = cause.lost_spm + capacity_spm
-            else
-                local cause = cause_data.other
-                cause.labs = cause.labs + 1
-                cause.lost_spm = cause.lost_spm + capacity_spm
             end
         end
         ::continue::
@@ -2157,27 +2351,78 @@ queue.get_research_diagnostic = function(force_index)
         res.utilization = math.max(0, math.min(1, res.actual_spm / res.expected_spm))
     end
 
-    for _, cause in pairs(cause_data) do
-        if cause.labs > 0 then
-            table.insert(res.causes, cause)
-        end
+    res.causes = map_values(cause_data)
+    res.missing_sciences = map_values(missing_sciences)
+    sort_loss_evidence(res.causes, "kind")
+    sort_loss_evidence(res.missing_sciences, "science")
+    res.material_threshold_spm =
+        math.max(diagnostic_minimum_lost_spm, res.expected_spm * diagnostic_meaningful_gap_fraction)
+
+    res.clusters = map_values(clusters)
+    for _, cluster in ipairs(res.clusters) do
+        finalize_diagnostic_cluster(cluster, required_sciences)
     end
-    table.sort(res.causes, function(a, b)
+    table.sort(res.clusters, function(a, b)
         if a.lost_spm == b.lost_spm then
-            return a.kind < b.kind
+            if a.surface_name == b.surface_name then
+                return a.key < b.key
+            end
+            return a.surface_name < b.surface_name
         end
         return a.lost_spm > b.lost_spm
     end)
 
-    for _, item in pairs(missing_sciences) do
-        table.insert(res.missing_sciences, item)
-    end
-    table.sort(res.missing_sciences, function(a, b)
-        if a.lost_spm == b.lost_spm then
-            return a.science < b.science
+    if res.total_labs == 0 then
+        local cause = {kind = "no_labs", labs = 0, lost_spm = 0, material = true}
+        table.insert(res.causes, 1, cause)
+        res.state = "operational_fault"
+        res.dominant_cause = cause
+    elseif res.compatible_labs == 0 then
+        local cause = {kind = "no_compatible_labs", labs = res.total_labs, lost_spm = 0, material = true}
+        table.insert(res.causes, 1, cause)
+        res.state = "operational_fault"
+        res.dominant_cause = cause
+    elseif res.expected_spm <= 0 then
+        local cause = {kind = "no_capacity", labs = res.compatible_labs, lost_spm = 0, material = true}
+        table.insert(res.causes, 1, cause)
+        res.state = "operational_fault"
+        res.dominant_cause = cause
+    else
+        for _, cause in ipairs(res.causes) do
+            cause.material = cause.lost_spm >= res.material_threshold_spm
+            if cause.material and not res.dominant_cause then
+                res.dominant_cause = cause
+                res.material_loss_spm = cause.lost_spm
+            end
         end
-        return a.lost_spm > b.lost_spm
-    end)
+
+        if res.dominant_cause then
+            if res.dominant_cause.kind == "missing_science" then
+                res.state = "pack_bound"
+                res.dominant_missing_science = res.missing_sciences[1]
+            else
+                res.state = "operational_fault"
+            end
+        elseif not res.sampling_ready then
+            res.state = "measuring"
+        elseif res.utilization >= diagnostic_healthy_utilization then
+            res.state = "at_capacity"
+        else
+            res.state = "degraded_unexplained"
+        end
+    end
+
+    if res.dominant_cause then
+        local dominant_science = res.dominant_missing_science and res.dominant_missing_science.science or nil
+        local dominant_cluster = get_dominant_cluster(
+            res.clusters,
+            res.dominant_cause.kind,
+            dominant_science
+        )
+        if dominant_cluster then
+            res.dominant_cluster_key = dominant_cluster.key
+        end
+    end
 
     diagnostic_cache[force_index] = {tick = game.tick, value = res}
     return res

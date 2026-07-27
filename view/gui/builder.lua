@@ -328,12 +328,27 @@ local allowed_science = {
             type = "label",
             name = "research_health_state",
             style = "lil_einstein_research_health_state",
-            caption = "RESEARCH HEALTH"
+            caption = {"lil_einstein-throughput.state-measuring"}
         }, {
-            type = "label",
-            name = "research_health_reason",
-            style = "lil_einstein_research_health_reason",
-            caption = "Calculating..."
+            type = "flow",
+            style = "lil_einstein_horizontal_flow_nospacing",
+            direction = "horizontal",
+            children = {{
+                type = "label",
+                name = "research_health_reason",
+                style = "lil_einstein_research_health_reason",
+                caption = {"lil_einstein-throughput.measuring-evidence"}
+            }, {
+                type = "button",
+                name = "research_health_details_button",
+                style = "lil_einstein_research_health_details_button",
+                caption = {"lil_einstein-throughput.details"},
+                tags = {
+                    lil_einstein_on_click = true,
+                    handler = "toggle_research_details",
+                    ignore_force_enable = true
+                }
+            }}
         }}
     }}
 }
@@ -489,6 +504,108 @@ local policy_panel = {
     }}
 }
 
+local research_details_panel = {
+    type = "frame",
+    name = "research_details_panel",
+    style = "inside_shallow_frame",
+    direction = "vertical",
+    visible = false,
+    tags = {ignore_force_enable = true},
+    children = {{
+        type = "flow",
+        direction = "horizontal",
+        children = {{
+            type = "label",
+            style = "heading_1_label",
+            caption = {"lil_einstein-throughput.details-title"}
+        }, {
+            type = "flow",
+            style = "lil_einstein_horizontal_flow_right",
+            children = {{
+                type = "button",
+                caption = {"lil_einstein-throughput.back"},
+                tags = {
+                    lil_einstein_on_click = true,
+                    handler = "toggle_research_details",
+                    ignore_force_enable = true
+                }
+            }}
+        }}
+    }, {
+        type = "label",
+        name = "research_details_headline",
+        style = "heading_2_label",
+        caption = {"lil_einstein-throughput.state-measuring"}
+    }, {
+        type = "label",
+        name = "research_details_evidence",
+        caption = {"lil_einstein-throughput.measuring-evidence"}
+    }, {
+        type = "label",
+        name = "research_details_scope_note",
+        caption = {"lil_einstein-throughput.scope-note"}
+    }, {
+        type = "label",
+        name = "research_details_overlap_note",
+        caption = {"lil_einstein-throughput.overlap-note"}
+    }, {
+        type = "label",
+        name = "research_details_ceiling_hint",
+        caption = {"lil_einstein-throughput.raise-ceiling"},
+        visible = false
+    }, {
+        type = "table",
+        name = "research_details_header",
+        column_count = 7,
+        children = {{
+            type = "label",
+            name = "research_details_header_location",
+            style = "bold_label",
+            caption = {"lil_einstein-throughput.column-location"}
+        }, {
+            type = "label",
+            name = "research_details_header_labs",
+            style = "bold_label",
+            caption = {"lil_einstein-throughput.column-labs"}
+        }, {
+            type = "label",
+            name = "research_details_header_capacity",
+            style = "bold_label",
+            caption = {"lil_einstein-throughput.column-capacity"}
+        }, {
+            type = "label",
+            name = "research_details_header_lost",
+            style = "bold_label",
+            caption = {"lil_einstein-throughput.column-lost"}
+        }, {
+            type = "label",
+            name = "research_details_header_cause",
+            style = "bold_label",
+            caption = {"lil_einstein-throughput.column-cause"}
+        }, {
+            type = "label",
+            name = "research_details_header_pack",
+            style = "bold_label",
+            caption = {"lil_einstein-throughput.column-pack"}
+        }, {
+            type = "label",
+            name = "research_details_header_action",
+            style = "bold_label",
+            caption = {"lil_einstein-throughput.column-action"}
+        }}
+    }, {
+        type = "scroll-pane",
+        name = "research_details_scroll_pane",
+        style = "lil_einstein_vertical_scroll_pane",
+        direction = "vertical",
+        children = {{
+            type = "flow",
+            name = "research_details_rows",
+            direction = "vertical"
+        }}
+    }}
+}
+
 ---------------------------------------------------------------------------------------------------
 --- Master structure
 ---------------------------------------------------------------------------------------------------
@@ -550,7 +667,7 @@ local structure = {
                 children = {science_filter, science_pane}
             }}
         }}
-    }, policy_panel, footer}
+    }, research_details_panel, policy_panel, footer}
 }
 
 -- Builder

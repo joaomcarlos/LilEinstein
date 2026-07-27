@@ -10,7 +10,7 @@ GUI layer for the LilEinstein mod: window lifecycle, layout construction, and pr
 - `gui/builder.lua` — declarative GUI element builder with `fallback_add` pcall protection for cross-version element properties
 - `gui/analyzer.lua` — turns model data (state, tech, queue, lab) into presentable data consumed directly by the GUI
 - `gui/gutil.lua` — GUI helpers/utilities
-- `gui/components.lua` — shared component library (largest view file)
+- `gui/components.lua` — shared component library, including the decision-first Research Health card and its focused science-throughput drilldown (largest view file)
 - `gui/components/queue.lua`, `gui/components/tech.lua`, `gui/components/upcoming.lua` — per-panel components
 
 ## Local Contracts
@@ -18,6 +18,8 @@ GUI layer for the LilEinstein mod: window lifecycle, layout construction, and pr
 - View sits at the bottom of the module order (`standard.md`): may require `lib` and `model`, must not be required by model modules (exception: `model/cmd.lua`)
 - GUI style prototypes live in `data/style.lua`, not here; reference styles by name
 - Player GUI state persists under `storage.players[player_index]` via `state`/`gui.init_player`
+- The science-throughput drilldown preserves the root window, keeps headers outside its single vertical scroll pane, and refreshes stable rows in place while cluster membership/order is unchanged
+- Throughput cluster rows present working/maximum capacity and local stock evidence only; force-wide measured SPM is never labeled as cluster output and overlapping missing-pack impacts are not summed
 - Upcoming rows mirror effective research order and state the science-supply reason when an entry is not selectable
 - New Upcoming LocalisedStrings include literal fallbacks so control-stage reloads cannot render `Unknown key` text
 

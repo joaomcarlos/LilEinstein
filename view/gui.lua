@@ -25,6 +25,8 @@ local open = function(player_index, anchor)
     components.repopulate_all(player_index, anchor)
     if state.get_player_setting(player_index, "policy_panel_open", false) then
         gui.toggle_policy_panel(player_index)
+    elseif state.get_player_setting(player_index, "research_details_open", false) then
+        gui.toggle_research_details(player_index)
     end
 end
 
@@ -84,9 +86,39 @@ gui.toggle_policy_panel = function(player_index)
     local show_policy = not policy_panel.visible
     policy_panel.visible = show_policy
     content_flow.visible = not show_policy
+    local research_details_panel = gutil.get_child(anchor, "research_details_panel")
+    if research_details_panel then
+        research_details_panel.visible = false
+    end
+    state.set_player_setting(player_index, "research_details_open", false)
     state.set_player_setting(player_index, "policy_panel_open", show_policy)
     if show_policy then
         components.repopulate_policy(player_index, anchor)
+    else
+        components.repopulate_all(player_index, anchor)
+    end
+end
+
+gui.toggle_research_details = function(player_index)
+    local anchor = gui.get(player_index)
+    if not anchor then
+        return
+    end
+    local content_flow = gutil.get_child(anchor, "content_flow")
+    local policy_panel = gutil.get_child(anchor, "policy_panel")
+    local details_panel = gutil.get_child(anchor, "research_details_panel")
+    if not content_flow or not policy_panel or not details_panel then
+        return
+    end
+
+    local show_details = not details_panel.visible
+    details_panel.visible = show_details
+    content_flow.visible = not show_details
+    policy_panel.visible = false
+    state.set_player_setting(player_index, "research_details_open", show_details)
+    state.set_player_setting(player_index, "policy_panel_open", false)
+    if show_details then
+        components.refresh_research_details(player_index, anchor)
     else
         components.repopulate_all(player_index, anchor)
     end

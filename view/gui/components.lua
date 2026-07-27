@@ -408,140 +408,357 @@ local refresh_research_progress = function(player_index, anchor)
     end
 end
 
-local diagnostic_cause_labels = {
-    missing_science = "Missing required science packs",
-    power = "No or insufficient power",
-    disabled = "Disabled by circuit or script",
-    frozen = "Frozen",
-    no_research = "No research assigned",
-    other = "Other idle status"
+local throughput_prefix = "lil_einstein-throughput."
+local research_details_columns = {
+    location = 220,
+    labs = 140,
+    capacity = 160,
+    lost = 120,
+    cause = 230,
+    pack = 260,
+    action = 250
+}
+local research_details_column_order = {"location", "labs", "capacity", "lost", "cause", "pack", "action"}
+local diagnostic_state_colors = {
+    idle = {0.70, 0.69, 0.64},
+    measuring = {0.48, 0.78, 1.00},
+    pack_bound = {1.00, 0.35, 0.20},
+    operational_fault = {1.00, 0.45, 0.20},
+    at_capacity = {0.20, 1.00, 0.20},
+    degraded_unexplained = {1.00, 0.80, 0.20}
 }
 
-local format_research_diagnostic = function(diagnostic)
-    if not diagnostic or not diagnostic.available then
-        return "[font=heading-2]Research throughput diagnostic[/font]\nNo research is currently active."
+local item_caption = function(science)
+    if not science then
+        return {"lil_einstein-throughput.no-pack"}
     end
+    return {"", "[item=", science, "] ", {"item-name." .. science}}
+end
 
-    local utilization_percent = math.floor(((diagnostic.utilization or 0) * 1000) + 0.5) / 10
-    local utilization_color = "1,0.2,0.2"
-    if utilization_percent >= 90 then
-        utilization_color = "0.2,1,0.2"
-    elseif utilization_percent >= 60 then
-        utilization_color = "1,0.8,0.2"
+local cause_caption = function(kind)
+    return {throughput_prefix .. "cause-" .. tostring(kind or "other"):gsub("_", "-")}
+end
+
+local cluster_location_caption = function(cluster)
+    if not cluster then
+        return {"lil_einstein-throughput.all-locations"}
+    elseif cluster.scope == "network" and cluster.network_id then
+        return {"lil_einstein-throughput.location-network", cluster.surface_name, cluster.network_id}
     end
+    return {"lil_einstein-throughput.location-direct", cluster.surface_name}
+end
 
-    local tt = "[font=heading-2]Research throughput diagnostic[/font]\n" ..
-                   "Measured: " .. format_spaced_number(diagnostic.actual_spm) .. " SPM (60-second average)\n" ..
-                   "Calculated maximum: " .. format_spaced_number(diagnostic.expected_spm) .. " SPM\n" ..
-                   "Utilization: [color=" .. utilization_color .. "]" .. tostring(utilization_percent) .. "%[/color]\n" ..
-                   "Labs working: " .. tostring(diagnostic.working_labs or 0) .. " / " ..
-                   tostring(diagnostic.compatible_labs or 0)
-
-    if diagnostic.recent_spm then
-        tt = tt .. "\nRecent 15-second rate: " .. format_spaced_number(diagnostic.recent_spm) .. " SPM"
-    end
-
-    if diagnostic.trend_percent then
-        local trend = math.floor((diagnostic.trend_percent * 10) + 0.5) / 10
-        local prefix = trend > 0 and "+" or ""
-        local trend_color = "0.84,0.82,0.75"
-        if trend <= -10 then
-            trend_color = "1,0.2,0.2"
-        elseif trend >= 10 then
-            trend_color = "0.2,1,0.2"
+local find_diagnostic_cluster = function(diagnostic, key)
+    for _, cluster in ipairs((diagnostic and diagnostic.clusters) or {}) do
+        if cluster.key == key then
+            return cluster
         end
-        tt = tt .. "\nRecent trend: [color=" .. trend_color .. "]" .. prefix .. tostring(trend) ..
-                 "%[/color] (last 15s vs prior 45s)"
+    end
+    return nil
+end
+
+local get_diagnostic_action = function(diagnostic, cluster)
+    local cause = cluster and cluster.dominant_cause or diagnostic and diagnostic.dominant_cause
+    if cause then
+        if cause.kind == "missing_science" then
+            return {"lil_einstein-throughput.action-restock"}
+        elseif cause.kind == "power" then
+            return {"lil_einstein-throughput.action-power"}
+        elseif cause.kind == "disabled" then
+            return {"lil_einstein-throughput.action-enable"}
+        elseif cause.kind == "frozen" then
+            return {"lil_einstein-throughput.action-frozen"}
+        elseif cause.kind == "no_labs" then
+            return {"lil_einstein-throughput.action-build-labs"}
+        elseif cause.kind == "no_compatible_labs" then
+            return {"lil_einstein-throughput.action-build-compatible"}
+        elseif cause.kind == "no_capacity" then
+            return {"lil_einstein-throughput.action-capacity"}
+        end
+        return {"lil_einstein-throughput.action-inspect-status"}
+    elseif cluster and (cluster.incompatible_labs or 0) > 0 and (cluster.compatible_labs or 0) == 0 then
+        return {"lil_einstein-throughput.action-build-compatible"}
+    elseif diagnostic and diagnostic.state == "at_capacity" then
+        return {"lil_einstein-throughput.raise-ceiling"}
+    end
+    return {"lil_einstein-throughput.action-watch"}
+end
+
+local get_research_health_summary = function(diagnostic)
+    local state_name = diagnostic and diagnostic.state or "idle"
+    local state_label = {throughput_prefix .. "state-" .. state_name:gsub("_", "-")}
+    local color = diagnostic_state_colors[state_name] or diagnostic_state_colors.idle
+    local headline = state_label
+    local evidence = {"lil_einstein-throughput.idle-evidence"}
+    local action = {"lil_einstein-throughput.idle-action"}
+
+    if state_name == "measuring" then
+        headline = {"lil_einstein-throughput.headline-ceiling", state_label,
+                    format_spaced_number(diagnostic.expected_spm)}
+        evidence = {"lil_einstein-throughput.measuring-evidence"}
+        action = {"lil_einstein-throughput.measuring-action"}
+    elseif state_name == "at_capacity" then
+        headline = {"lil_einstein-throughput.headline-output", state_label,
+                    format_spaced_number(diagnostic.actual_spm), format_spaced_number(diagnostic.expected_spm)}
+        evidence = {"lil_einstein-throughput.at-capacity-evidence", diagnostic.working_labs or 0,
+                    diagnostic.compatible_labs or 0}
+        action = {"lil_einstein-throughput.raise-ceiling"}
+    elseif state_name == "pack_bound" then
+        local missing = diagnostic.dominant_missing_science
+        headline = {"lil_einstein-throughput.headline-lost", state_label,
+                    format_spaced_number(diagnostic.material_loss_spm)}
+        evidence = {"lil_einstein-throughput.pack-bound-evidence", item_caption(missing and missing.science),
+                    missing and missing.labs or 0}
+        action = {"lil_einstein-throughput.inspect-location",
+                  cluster_location_caption(find_diagnostic_cluster(diagnostic, diagnostic.dominant_cluster_key))}
+    elseif state_name == "operational_fault" then
+        local cause = diagnostic.dominant_cause
+        if cause and (cause.kind == "no_labs" or cause.kind == "no_compatible_labs" or
+                      cause.kind == "no_capacity") then
+            headline = state_label
+        else
+            headline = {"lil_einstein-throughput.headline-lost", state_label,
+                        format_spaced_number(diagnostic.material_loss_spm)}
+        end
+        evidence = {"lil_einstein-throughput.fault-evidence", cause_caption(cause and cause.kind),
+                    cause and cause.labs or 0}
+        local cluster = find_diagnostic_cluster(diagnostic, diagnostic.dominant_cluster_key)
+        action = cluster and {"lil_einstein-throughput.inspect-location", cluster_location_caption(cluster)} or
+                     get_diagnostic_action(diagnostic)
+    elseif state_name == "degraded_unexplained" then
+        headline = {"lil_einstein-throughput.headline-output", state_label,
+                    format_spaced_number(diagnostic.actual_spm), format_spaced_number(diagnostic.expected_spm)}
+        evidence = {"lil_einstein-throughput.degraded-evidence"}
+        action = {"lil_einstein-throughput.action-watch"}
     end
 
-    if (diagnostic.incompatible_labs or 0) > 0 then
-        tt = tt .. "\nIncompatible labs excluded: " .. tostring(diagnostic.incompatible_labs)
+    return headline, {"", evidence, "\n", action}, color
+end
+
+local format_research_diagnostic = function(diagnostic)
+    local headline, evidence = get_research_health_summary(diagnostic)
+    local tt = {"", "[font=heading-2]", {"lil_einstein-throughput.tooltip-title"}, "[/font]\n",
+                headline, "\n", evidence}
+    if not diagnostic or not diagnostic.available then
+        return tt
     end
+
+    table.insert(tt, "\n\n")
+    table.insert(tt, {"lil_einstein-throughput.tooltip-measured", format_spaced_number(diagnostic.actual_spm),
+                      diagnostic.sample_count or 0})
+    table.insert(tt, "\n")
+    table.insert(tt, {"lil_einstein-throughput.tooltip-capacity", format_spaced_number(diagnostic.expected_spm),
+                      format_spaced_number(diagnostic.working_spm)})
+    table.insert(tt, "\n")
+    table.insert(tt, {"lil_einstein-throughput.tooltip-labs", diagnostic.working_labs or 0,
+                      diagnostic.compatible_labs or 0, diagnostic.incompatible_labs or 0})
 
     if diagnostic.causes and #diagnostic.causes > 0 then
-        tt = tt .. "\n\n[font=default-bold]Current capacity losses[/font]"
+        table.insert(tt, "\n\n[font=default-bold]")
+        table.insert(tt, {"lil_einstein-throughput.current-losses"})
+        table.insert(tt, "[/font]")
         for _, cause in ipairs(diagnostic.causes) do
-            local label = diagnostic_cause_labels[cause.kind] or cause.kind
-            tt = tt .. "\n- " .. label .. ": " .. tostring(cause.labs or 0) .. " labs (~" ..
-                     format_spaced_number(cause.lost_spm) .. " SPM)"
+            table.insert(tt, "\n")
+            table.insert(tt, {"lil_einstein-throughput.cause-evidence", cause_caption(cause.kind),
+                              cause.labs or 0, format_spaced_number(cause.lost_spm)})
         end
     end
 
     if diagnostic.missing_sciences and #diagnostic.missing_sciences > 0 then
-        tt = tt .. "\n\n[font=default-bold]Missing-pack detail[/font]"
+        table.insert(tt, "\n\n[font=default-bold]")
+        table.insert(tt, {"lil_einstein-throughput.missing-pack-detail"})
+        table.insert(tt, "[/font]")
         local max_sciences = math.min(8, #diagnostic.missing_sciences)
         for i = 1, max_sciences do
             local item = diagnostic.missing_sciences[i]
-            tt = tt .. "\n[img=item/" .. item.science .. "] " .. tostring(item.labs or 0) .. " labs (~" ..
-                     format_spaced_number(item.lost_spm) .. " SPM)"
-        end
-        if #diagnostic.missing_sciences > max_sciences then
-            tt = tt .. "\n+" .. tostring(#diagnostic.missing_sciences - max_sciences) .. " more science packs"
+            table.insert(tt, "\n")
+            table.insert(tt, {"lil_einstein-throughput.pack-evidence", item_caption(item.science),
+                              item.labs or 0, format_spaced_number(item.lost_spm)})
         end
     end
 
-    local working_gap = math.max(0, (diagnostic.working_spm or 0) - (diagnostic.actual_spm or 0))
-    if working_gap > math.max(1, (diagnostic.expected_spm or 0) * 0.05) then
-        tt = tt .. "\n\nWorking labs account for " .. format_spaced_number(diagnostic.working_spm) ..
-                 " SPM of capacity, leaving a " .. format_spaced_number(working_gap) ..
-                 " SPM gap. This can reflect the 60-second averaging window, a recent research switch, or transient power/pack starvation."
-    end
-
-    return tt .. "\n\nCalculated from each compatible lab's base speed, quality, module/beacon/force speed, and productivity bonuses."
+    table.insert(tt, "\n\n")
+    table.insert(tt, {"lil_einstein-throughput.capacity-method"})
+    return tt
 end
 
-local get_research_health_summary = function(diagnostic)
-    if not diagnostic or not diagnostic.available then
-        return "IDLE", "No research is currently active", {0.70, 0.69, 0.64}
-    end
-
-    local utilization_percent = math.floor(((diagnostic.utilization or 0) * 100) + 0.5)
-    local trend = diagnostic.trend_percent
-    if utilization_percent >= 90 and (not trend or trend > -10) then
-        return "HEALTHY  -  " .. tostring(utilization_percent) .. "%", "Running near calculated full speed",
-            {0.20, 1.00, 0.20}
-    end
-
-    local state_caption
-    local color
-    if trend and trend <= -10 then
-        state_caption = "SLOWING  -  " .. tostring(utilization_percent) .. "%"
-        color = {1.00, 0.65, 0.15}
-    elseif utilization_percent >= 60 then
-        state_caption = "DEGRADED  -  " .. tostring(utilization_percent) .. "%"
-        color = {1.00, 0.80, 0.20}
-    else
-        state_caption = "BOTTLENECKED  -  " .. tostring(utilization_percent) .. "%"
-        color = {1.00, 0.20, 0.20}
-    end
-
-    local cause = diagnostic.causes and diagnostic.causes[1]
-    if not cause then
-        if trend and trend <= -10 then
-            local decline = math.floor(math.abs(trend) + 0.5)
-            return state_caption, "Throughput fell " .. tostring(decline) .. "% recently", color
+local get_cluster_causes_caption = function(cluster)
+    if not cluster.causes or #cluster.causes == 0 then
+        if (cluster.incompatible_labs or 0) > 0 and (cluster.compatible_labs or 0) == 0 then
+            return cause_caption("no_compatible_labs")
         end
-        return state_caption, "Working output is below calculated capacity", color
+        return {"lil_einstein-throughput.no-live-loss"}
     end
 
-    local labs = tostring(cause.labs or 0)
-    if cause.kind == "missing_science" then
-        local science = diagnostic.missing_sciences and diagnostic.missing_sciences[1]
-        if science then
-            return state_caption, "[img=item/" .. science.science .. "] Missing in " ..
-                tostring(science.labs or 0) .. " labs", color
+    local res = {""}
+    for index, cause in ipairs(cluster.causes) do
+        if index > 1 then
+            table.insert(res, "\n")
         end
-        return state_caption, labs .. " labs are missing science packs", color
-    elseif cause.kind == "power" then
-        return state_caption, labs .. " labs lack sufficient power", color
-    elseif cause.kind == "disabled" then
-        return state_caption, labs .. " labs are disabled", color
-    elseif cause.kind == "frozen" then
-        return state_caption, labs .. " labs are frozen", color
-    elseif cause.kind == "no_research" then
-        return state_caption, labs .. " labs have no research assigned", color
+        table.insert(res, {"lil_einstein-throughput.cause-evidence", cause_caption(cause.kind),
+                           cause.labs or 0, format_spaced_number(cause.lost_spm)})
     end
-    return state_caption, labs .. " labs have another idle status", color
+    return res
+end
+
+local get_cluster_pack_caption = function(cluster)
+    local item = cluster.dominant_missing_science
+    if not item then
+        return {"lil_einstein-throughput.no-pack-loss"}
+    end
+    return {"lil_einstein-throughput.cluster-pack-evidence", item_caption(item.science), item.labs or 0,
+            format_spaced_number(item.lost_spm), format_spaced_number(item.local_stock)}
+end
+
+local set_details_cell_width = function(element, width)
+    if not element then
+        return
+    end
+    element.style.width = width
+    element.style.single_line = false
+end
+
+local create_research_details_row = function(rows, index, cluster)
+    local row = rows.add({
+        type = "frame",
+        name = "research_details_row_" .. index,
+        style = "inside_shallow_frame",
+        direction = "vertical",
+        tags = {cluster_key = cluster.key}
+    })
+    row.style.horizontally_stretchable = true
+    local cells = row.add({
+        type = "table",
+        name = "research_details_cells_" .. index,
+        column_count = #research_details_column_order
+    })
+    for _, column in ipairs(research_details_column_order) do
+        local label = cells.add({
+            type = "label",
+            name = "research_details_" .. column .. "_" .. index,
+            caption = ""
+        })
+        set_details_cell_width(label, research_details_columns[column])
+    end
+    return row
+end
+
+local research_details_rows_match = function(rows, clusters)
+    if #rows.children ~= #clusters then
+        return false
+    end
+    for index, cluster in ipairs(clusters) do
+        local row = rows.children[index]
+        if not row or not row.valid or not row.tags or row.tags.cluster_key ~= cluster.key then
+            return false
+        end
+    end
+    return true
+end
+
+local refresh_research_details = function(player_index, anchor, diagnostic)
+    local panel = gutil.get_child(anchor, "research_details_panel")
+    if not panel or not panel.visible then
+        return
+    end
+
+    local p = game.get_player(player_index)
+    if not p then
+        return
+    end
+    diagnostic = diagnostic or queue.get_research_diagnostic(p.force.index)
+    local headline_caption, evidence_caption, state_color = get_research_health_summary(diagnostic)
+    local headline = gutil.get_child(panel, "research_details_headline")
+    local evidence = gutil.get_child(panel, "research_details_evidence")
+    local ceiling_hint = gutil.get_child(panel, "research_details_ceiling_hint")
+    if headline then
+        headline.caption = headline_caption
+        headline.style.font_color = state_color
+    end
+    if evidence then
+        evidence.caption = evidence_caption
+    end
+    if ceiling_hint then
+        ceiling_hint.visible = diagnostic and diagnostic.state == "at_capacity"
+    end
+
+    local header = gutil.get_child(panel, "research_details_header")
+    if header then
+        for _, column in ipairs(research_details_column_order) do
+            set_details_cell_width(gutil.get_child(header, "research_details_header_" .. column),
+                                   research_details_columns[column])
+        end
+    end
+    local pane = gutil.get_child(panel, "research_details_scroll_pane")
+    if pane then
+        pane.style.width = 1510
+        pane.style.height = 545
+        pane.horizontal_scroll_policy = "never"
+        pane.vertical_scroll_policy = "auto"
+    end
+
+    local rows = gutil.get_child(panel, "research_details_rows")
+    if not rows then
+        return
+    end
+    local clusters = (diagnostic and diagnostic.clusters) or {}
+    if #clusters == 0 then
+        if #rows.children ~= 1 or rows.children[1].name ~= "research_details_empty" then
+            rows.clear()
+            rows.add({
+                type = "label",
+                name = "research_details_empty",
+                caption = {"lil_einstein-throughput.no-clusters"}
+            })
+        end
+        return
+    elseif not research_details_rows_match(rows, clusters) then
+        rows.clear()
+        for index, cluster in ipairs(clusters) do
+            create_research_details_row(rows, index, cluster)
+        end
+    end
+
+    for index, cluster in ipairs(clusters) do
+        local row = rows.children[index]
+        local location = gutil.get_child(row, "research_details_location_" .. index)
+        local labs = gutil.get_child(row, "research_details_labs_" .. index)
+        local capacity = gutil.get_child(row, "research_details_capacity_" .. index)
+        local lost = gutil.get_child(row, "research_details_lost_" .. index)
+        local cause = gutil.get_child(row, "research_details_cause_" .. index)
+        local pack = gutil.get_child(row, "research_details_pack_" .. index)
+        local action = gutil.get_child(row, "research_details_action_" .. index)
+        if location then
+            location.caption = cluster_location_caption(cluster)
+            if cluster.representative_position then
+                location.tooltip = {"lil_einstein-throughput.position-tooltip",
+                                    math.floor(cluster.representative_position.x + 0.5),
+                                    math.floor(cluster.representative_position.y + 0.5)}
+            else
+                location.tooltip = nil
+            end
+        end
+        if labs then
+            labs.caption = {"lil_einstein-throughput.labs-cell", cluster.working_labs or 0,
+                            cluster.compatible_labs or 0, cluster.incompatible_labs or 0}
+        end
+        if capacity then
+            capacity.caption = {"lil_einstein-throughput.capacity-cell",
+                                format_spaced_number(cluster.working_spm), format_spaced_number(cluster.expected_spm)}
+        end
+        if lost then
+            lost.caption = {"lil_einstein-throughput.lost-cell", format_spaced_number(cluster.lost_spm)}
+        end
+        if cause then
+            cause.caption = get_cluster_causes_caption(cluster)
+        end
+        if pack then
+            pack.caption = get_cluster_pack_caption(cluster)
+        end
+        if action then
+            action.caption = get_diagnostic_action(diagnostic, cluster)
+        end
+    end
 end
 
 local refresh_research_metrics = function(player_index, anchor)
@@ -573,6 +790,7 @@ local refresh_research_metrics = function(player_index, anchor)
         health_reason.caption = reason_caption
         health_reason.tooltip = diagnostic_tooltip
     end
+    refresh_research_details(player_index, anchor, diagnostic)
 
     local remaining_value = gutil.get_child(anchor, "research_graph_remaining_value")
     if remaining_value then
@@ -1526,9 +1744,17 @@ local policy_panel_is_visible = function(anchor)
     return panel and panel.visible == true
 end
 
+local research_details_panel_is_visible = function(anchor)
+    local panel = gutil.get_child(anchor, "research_details_panel")
+    return panel and panel.visible == true
+end
+
 content.repopulate_static = function(player_index, anchor)
     if policy_panel_is_visible(anchor) then
         populate_policy_panel(player_index, anchor)
+        return
+    elseif research_details_panel_is_visible(anchor) then
+        refresh_research_details(player_index, anchor)
         return
     end
     populate_force_settings(player_index, anchor)
@@ -1540,6 +1766,9 @@ end
 
 content.repopulate_dynamic = function(player_index, anchor)
     if policy_panel_is_visible(anchor) then
+        return
+    elseif research_details_panel_is_visible(anchor) then
+        refresh_research_details(player_index, anchor)
         return
     end
     gctech.populate(player_index, anchor)
@@ -1600,6 +1829,10 @@ content.refresh_research_metrics = function(player_index, anchor)
         return
     end
     refresh_research_metrics(player_index, anchor)
+end
+
+content.refresh_research_details = function(player_index, anchor)
+    refresh_research_details(player_index, anchor)
 end
 
 content.refresh_research_graph = function(player_index, anchor)

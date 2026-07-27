@@ -23,6 +23,8 @@ Runtime data model and research-autopilot logic for the LilEinstein Factorio mod
 - Temp-tech switching respects pinned techs, science priority, and a symmetric score margin; unavailable techs are scored with a discount and never act as runtime candidates
 - Runtime candidates exclude hidden, disabled, triggered, avoided, and finite/infinite capped technologies
 - Science-supply sufficiency caps depletion forecasts at the remaining research time and treats dominant live missing-pack lab starvation as unavailable
+- The per-force research diagnostic is a same-tick shared cache: it measures only samples for the current technology, classifies decision states from named material-loss thresholds, and emits deterministic semantic display clusters without persisting logistic networks
+- Research diagnostic display clusters group logistic labs by surface/network and direct-fed labs by surface; cluster values are capacity and local-stock evidence, never inferred actual cluster throughput
 - Upcoming research plans put the active technology first and prefer science-supplied candidates before science-blocked fallbacks
 - `<module>.init` does not trigger `<module>.init_force`/`init_player`; `control.lua` calls those directly
 - Everything in `storage` must be save/load-safe (no LuaObject references persisted across saves except valid entity refs handled defensively)
