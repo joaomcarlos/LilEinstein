@@ -409,6 +409,7 @@ local refresh_research_progress = function(player_index, anchor)
 end
 
 local throughput_prefix = "lil_einstein-throughput."
+local research_details_content_width = 1510
 local research_details_columns = {
     location = 220,
     labs = 140,
@@ -537,48 +538,67 @@ end
 
 local format_research_diagnostic = function(diagnostic)
     local headline, evidence = get_research_health_summary(diagnostic)
-    local tt = {"", "[font=heading-2]", {"lil_einstein-throughput.tooltip-title"}, "[/font]\n",
-                headline, "\n", evidence}
+    local tt = {
+        "",
+        {"", "[font=heading-2]", {"lil_einstein-throughput.tooltip-title"}, "[/font]\n"},
+        {"", headline, "\n", evidence}
+    }
     if not diagnostic or not diagnostic.available then
         return tt
     end
 
-    table.insert(tt, "\n\n")
-    table.insert(tt, {"lil_einstein-throughput.tooltip-measured", format_spaced_number(diagnostic.actual_spm),
-                      diagnostic.sample_count or 0})
-    table.insert(tt, "\n")
-    table.insert(tt, {"lil_einstein-throughput.tooltip-capacity", format_spaced_number(diagnostic.expected_spm),
-                      format_spaced_number(diagnostic.working_spm)})
-    table.insert(tt, "\n")
-    table.insert(tt, {"lil_einstein-throughput.tooltip-labs", diagnostic.working_labs or 0,
-                      diagnostic.compatible_labs or 0, diagnostic.incompatible_labs or 0})
+    table.insert(tt, {
+        "",
+        "\n\n",
+        {"lil_einstein-throughput.tooltip-measured", format_spaced_number(diagnostic.actual_spm),
+         diagnostic.sample_count or 0},
+        "\n",
+        {"lil_einstein-throughput.tooltip-capacity", format_spaced_number(diagnostic.expected_spm),
+         format_spaced_number(diagnostic.working_spm)},
+        "\n",
+        {"lil_einstein-throughput.tooltip-labs", diagnostic.working_labs or 0,
+         diagnostic.compatible_labs or 0, diagnostic.incompatible_labs or 0}
+    })
 
     if diagnostic.causes and #diagnostic.causes > 0 then
-        table.insert(tt, "\n\n[font=default-bold]")
-        table.insert(tt, {"lil_einstein-throughput.current-losses"})
-        table.insert(tt, "[/font]")
+        local causes = {
+            "",
+            "\n\n[font=default-bold]",
+            {"lil_einstein-throughput.current-losses"},
+            "[/font]"
+        }
         for _, cause in ipairs(diagnostic.causes) do
-            table.insert(tt, "\n")
-            table.insert(tt, {"lil_einstein-throughput.cause-evidence", cause_caption(cause.kind),
-                              cause.labs or 0, format_spaced_number(cause.lost_spm)})
+            table.insert(causes, {
+                "",
+                "\n",
+                {"lil_einstein-throughput.cause-evidence", cause_caption(cause.kind),
+                 cause.labs or 0, format_spaced_number(cause.lost_spm)}
+            })
         end
+        table.insert(tt, causes)
     end
 
     if diagnostic.missing_sciences and #diagnostic.missing_sciences > 0 then
-        table.insert(tt, "\n\n[font=default-bold]")
-        table.insert(tt, {"lil_einstein-throughput.missing-pack-detail"})
-        table.insert(tt, "[/font]")
+        local packs = {
+            "",
+            "\n\n[font=default-bold]",
+            {"lil_einstein-throughput.missing-pack-detail"},
+            "[/font]"
+        }
         local max_sciences = math.min(8, #diagnostic.missing_sciences)
         for i = 1, max_sciences do
             local item = diagnostic.missing_sciences[i]
-            table.insert(tt, "\n")
-            table.insert(tt, {"lil_einstein-throughput.pack-evidence", item_caption(item.science),
-                              item.labs or 0, format_spaced_number(item.lost_spm)})
+            table.insert(packs, {
+                "",
+                "\n",
+                {"lil_einstein-throughput.pack-evidence", item_caption(item.science),
+                 item.labs or 0, format_spaced_number(item.lost_spm)}
+            })
         end
+        table.insert(tt, packs)
     end
 
-    table.insert(tt, "\n\n")
-    table.insert(tt, {"lil_einstein-throughput.capacity-method"})
+    table.insert(tt, {"", "\n\n", {"lil_einstein-throughput.capacity-method"}})
     return tt
 end
 
@@ -681,6 +701,18 @@ local refresh_research_details = function(player_index, anchor, diagnostic)
     if ceiling_hint then
         ceiling_hint.visible = diagnostic and diagnostic.state == "at_capacity"
     end
+    for _, name in ipairs({
+        "research_details_evidence",
+        "research_details_scope_note",
+        "research_details_overlap_note",
+        "research_details_ceiling_hint"
+    }) do
+        local label = gutil.get_child(panel, name)
+        if label then
+            label.style.width = research_details_content_width
+            label.style.single_line = false
+        end
+    end
 
     local header = gutil.get_child(panel, "research_details_header")
     if header then
@@ -691,7 +723,7 @@ local refresh_research_details = function(player_index, anchor, diagnostic)
     end
     local pane = gutil.get_child(panel, "research_details_scroll_pane")
     if pane then
-        pane.style.width = 1510
+        pane.style.width = research_details_content_width
         pane.style.height = 545
         pane.horizontal_scroll_policy = "never"
         pane.vertical_scroll_policy = "auto"
