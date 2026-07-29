@@ -328,6 +328,14 @@ local science_supply_is_sufficient = function(xcur, force_index)
         return true
     end
 
+    local f = game.forces[force_index]
+    if f and f.current_research and xcur.technology and
+        f.current_research.name == xcur.technology.name then
+        local live_bottleneck = queue.get_active_missing_science_bottleneck and
+            queue.get_active_missing_science_bottleneck(force_index, xcur)
+        return not live_bottleneck or not next(live_bottleneck)
+    end
+
     local availability = queue.get_science_availability(force_index)
     local forecast = queue.get_science_forecast and queue.get_science_forecast(force_index) or {}
     local forecast_seconds = policy.get_setting(force_index, "forecast_seconds") or 0
@@ -346,13 +354,6 @@ local science_supply_is_sufficient = function(xcur, force_index)
         end
     end
 
-    -- Only pay for the live lab diagnostic when the cheaper aggregate and
-    -- depletion checks both claim the active technology is supplied.
-    local live_bottleneck = queue.get_active_missing_science_bottleneck and
-        queue.get_active_missing_science_bottleneck(force_index, xcur)
-    if live_bottleneck and next(live_bottleneck) then
-        return false
-    end
     return true
 end
 
@@ -1180,6 +1181,12 @@ queue.start_next_research = function(f)
         queue.apply_planning_pause(f)
         return
     end
+    -- While research is active, event-driven queue updates already keep the
+    -- runtime queue current. Do not rescore the entire technology graph on the
+    -- 30-second maintenance call.
+    if get(f.index, keys.current_tech) then
+        return
+    end
 
     local sfq = get(f.index, keys.queue)
     local auto_research = state.get_force_setting(f.index, "auto_research",
@@ -1206,10 +1213,6 @@ queue.start_next_research = function(f)
     end
 
     queue.reorder_queue_by_score(f.index)
-    if get(f.index, keys.current_tech) then
-        return
-    end
-
     if auto_research and not f.current_research then
         queue.build_queue_from_available(f.index)
         queue.reorder_queue_by_score(f.index)
@@ -1726,6 +1729,10 @@ local labs_cache = {}
 local counts_cache = {}
 local diagnostic_cache = {}
 local forecast_cache = {}
+local lab_observation_cache = {}
+local lab_network_cache = {}
+local lab_input_cache = {}
+local active_bottleneck_cache = {}
 
 local has_invalid_ref = function(refs)
     for _, ref in pairs(refs or {}) do
@@ -1736,22 +1743,47 @@ local has_invalid_ref = function(refs)
     return false
 end
 
-local get_lab_network = function(lab_entity)
+local get_lab_network = function(force_index, lab_entity)
     if not lab_entity or not lab_entity.valid then
         return nil
+    end
+
+    local now = game.tick
+    local force_cache = lab_network_cache[force_index]
+    if not force_cache then
+        force_cache = {}
+        lab_network_cache[force_index] = force_cache
+    end
+    local unit_number = lab_entity.unit_number or 0
+    local cached = force_cache[unit_number]
+    if cached and now < cached.refresh_tick then
+        if cached.network == false then
+            return nil
+        end
+        if cached.network and cached.network.valid then
+            return cached.network
+        end
     end
 
     local force = lab_entity.force
     local surface = lab_entity.surface
     local position = lab_entity.position
+    local network
     if force and surface and position then
-        local network = force.find_logistic_network_by_position(position, surface)
-        if network and network.valid then
-            return network
-        end
+        network = force.find_logistic_network_by_position(position, surface)
     end
 
-    return nil
+    if not network or not network.valid then
+        network = false
+    end
+    -- Spread refreshes by unit number so hundreds of associations never all
+    -- expire on the same tick. Uncovered labs refresh sooner than covered labs.
+    local base_refresh = network == false and 600 or 3600
+    force_cache[unit_number] = {
+        network = network,
+        refresh_tick = now + base_refresh + (unit_number % base_refresh)
+    }
+    return network ~= false and network or nil
 end
 
 local get_network_label = function(network, sample_lab)
@@ -1794,11 +1826,59 @@ local get_cached_labs = function(force_index)
     return (lc and lc.labs) or {}
 end
 
+local get_lab_input_set = function(lab_entity)
+    local prototype = lab_entity and lab_entity.valid and lab_entity.prototype
+    local prototype_name = prototype and prototype.name
+    if not prototype_name then
+        return {}
+    end
+    local cached = lab_input_cache[prototype_name]
+    if cached then
+        return cached
+    end
+    cached = {}
+    for _, science in pairs(prototype.lab_inputs or {}) do
+        cached[science] = true
+    end
+    lab_input_cache[prototype_name] = cached
+    return cached
+end
+
+local get_lab_observations = function(force_index)
+    local now = game.tick
+    local cached = lab_observation_cache[force_index]
+    if cached and cached.tick == now then
+        return cached.values
+    end
+
+    local runtime_content = lab.get_runtime_lab_content(force_index)
+    local observations = {}
+    for _, lab_entity in pairs(get_cached_labs(force_index)) do
+        if lab_entity and lab_entity.valid then
+            local contents
+            local lcur = runtime_content[lab_entity.unit_number or 0]
+            if lcur and lcur.latest_contents and lcur.latest_tick and
+                now - lcur.latest_tick <= 900 then
+                contents = lcur.latest_contents
+            else
+                local inv = lab_entity.get_inventory(defines.inventory.lab_input)
+                contents = inv and inv.get_contents() or {}
+            end
+            table.insert(observations, {
+                entity = lab_entity,
+                contents = contents,
+                network = get_lab_network(force_index, lab_entity),
+                lab_inputs = get_lab_input_set(lab_entity),
+                sampled_status = lcur and lcur.latest_status or nil
+            })
+        end
+    end
+    lab_observation_cache[force_index] = {tick = now, values = observations}
+    return observations
+end
+
 get_science_counts = function(force_index)
     local now = game.tick
-
-    -- Refresh labs/network cache every 10 minutes, or immediately if refs went invalid (save/load)
-    local all_labs = get_cached_labs(force_index)
 
     -- Count cache is per-tick
     local cc = counts_cache[force_index]
@@ -1821,10 +1901,10 @@ get_science_counts = function(force_index)
     end
 
     -- Packs in labs
-    for _, lab_entity in pairs(all_labs) do
+    for _, observation in pairs(get_lab_observations(force_index)) do
+        local lab_entity = observation.entity
         if lab_entity.valid then
-            local inv = lab_entity.get_inventory(defines.inventory.lab_input)
-            local network = get_lab_network(lab_entity)
+            local network = observation.network
             local surface_index = lab_entity.surface and lab_entity.surface.index or 0
             local cluster_key
             local cluster
@@ -1879,21 +1959,18 @@ get_science_counts = function(force_index)
                 end
             end
             cluster.lab_count = cluster.lab_count + 1
-            local lab_inputs = {}
-            for _, science in pairs((lab_entity.prototype and lab_entity.prototype.lab_inputs) or {}) do
-                lab_inputs[science] = true
+            local lab_inputs = observation.lab_inputs
+            for science in pairs(lab_inputs) do
                 cluster.lab_input_counts[science] = (cluster.lab_input_counts[science] or 0) + 1
             end
             table.insert(cluster.lab_input_sets, lab_inputs)
-            if inv then
-                for _, item in pairs(inv.get_contents()) do
-                    counts[item.name] = (counts[item.name] or 0) + (item.count or 0)
-                    cluster.counts[item.name] = (cluster.counts[item.name] or 0) + (item.count or 0)
-                    local item_breakdown = breakdown[item.name]
-                    if item_breakdown then
-                        item_breakdown.lab_count = item_breakdown.lab_count + (item.count or 0)
-                        item_breakdown.lab_entity_count = item_breakdown.lab_entity_count + 1
-                    end
+            for _, item in pairs(observation.contents or {}) do
+                counts[item.name] = (counts[item.name] or 0) + (item.count or 0)
+                cluster.counts[item.name] = (cluster.counts[item.name] or 0) + (item.count or 0)
+                local item_breakdown = breakdown[item.name]
+                if item_breakdown then
+                    item_breakdown.lab_count = item_breakdown.lab_count + (item.count or 0)
+                    item_breakdown.lab_entity_count = item_breakdown.lab_entity_count + 1
                 end
             end
         end
@@ -1952,6 +2029,9 @@ queue.invalidate_science_cache = function(force_index)
     counts_cache[force_index] = nil
     diagnostic_cache[force_index] = nil
     forecast_cache[force_index] = nil
+    lab_observation_cache[force_index] = nil
+    lab_network_cache[force_index] = nil
+    active_bottleneck_cache[force_index] = nil
 end
 
 queue.get_science_count_breakdown = function(force_index, science)
@@ -2015,11 +2095,8 @@ get_lab_science_counts = function(force_index)
     return counts, valid_lab_count
 end
 
-local lab_accepts_research = function(lab_entity, current)
-    local accepted = {}
-    for _, science in pairs(lab_entity.prototype.lab_inputs or {}) do
-        accepted[science] = true
-    end
+local lab_accepts_research = function(lab_entity, current, accepted)
+    accepted = accepted or get_lab_input_set(lab_entity)
     for _, ingredient in pairs(current.research_unit_ingredients or {}) do
         if not accepted[ingredient.name] then
             return false
@@ -2042,13 +2119,10 @@ local get_lab_capacity_spm = function(lab_entity, current)
     return base_speed * speed_multiplier * productivity_multiplier * 3600 / research_energy
 end
 
-local get_missing_lab_sciences = function(lab_entity, current)
+local get_missing_lab_sciences = function(current, contents)
     local present = {}
-    local inv = lab_entity.get_inventory(defines.inventory.lab_input)
-    if inv then
-        for _, item in pairs(inv.get_contents()) do
-            present[item.name] = (present[item.name] or 0) + (item.count or 0)
-        end
+    for _, item in pairs(contents or {}) do
+        present[item.name] = (present[item.name] or 0) + (item.count or 0)
     end
 
     local res = {}
@@ -2175,12 +2249,8 @@ local get_diagnostic_cluster = function(clusters, lab_entity, network)
     return cluster
 end
 
-local add_lab_stock = function(cluster, lab_entity)
-    local inv = lab_entity.get_inventory(defines.inventory.lab_input)
-    if not inv then
-        return
-    end
-    for _, item in pairs(inv.get_contents()) do
+local add_lab_stock = function(cluster, contents)
+    for _, item in pairs(contents or {}) do
         cluster._lab_stock[item.name] = (cluster._lab_stock[item.name] or 0) + (item.count or 0)
     end
 end
@@ -2305,14 +2375,15 @@ queue.get_research_diagnostic = function(force_index)
     end
     table.sort(required_sciences)
 
-    for _, lab_entity in pairs(get_cached_labs(force_index)) do
+    for _, observation in pairs(get_lab_observations(force_index)) do
+        local lab_entity = observation.entity
         if lab_entity and lab_entity.valid then
-            local network = get_lab_network(lab_entity)
+            local network = observation.network
             local cluster = get_diagnostic_cluster(clusters, lab_entity, network)
             res.total_labs = res.total_labs + 1
             cluster.total_labs = cluster.total_labs + 1
-            add_lab_stock(cluster, lab_entity)
-            if not lab_accepts_research(lab_entity, current) then
+            add_lab_stock(cluster, observation.contents)
+            if not lab_accepts_research(lab_entity, current, observation.lab_inputs) then
                 res.incompatible_labs = res.incompatible_labs + 1
                 cluster.incompatible_labs = cluster.incompatible_labs + 1
                 goto continue
@@ -2323,7 +2394,7 @@ queue.get_research_diagnostic = function(force_index)
             local capacity_spm = get_lab_capacity_spm(lab_entity, current)
             res.expected_spm = res.expected_spm + capacity_spm
             cluster.expected_spm = cluster.expected_spm + capacity_spm
-            local status = lab_entity.status
+            local status = observation.sampled_status or lab_entity.status
 
             if status == defines.entity_status.working then
                 res.working_labs = res.working_labs + 1
@@ -2337,7 +2408,7 @@ queue.get_research_diagnostic = function(force_index)
             end
 
             if status == defines.entity_status.missing_science_packs then
-                local missing = get_missing_lab_sciences(lab_entity, current)
+                local missing = get_missing_lab_sciences(current, observation.contents)
                 for _, science in pairs(missing) do
                     add_missing_science_evidence(missing_sciences, science, capacity_spm)
                     add_missing_science_evidence(cluster._missing_sciences, science, capacity_spm)
@@ -2428,10 +2499,9 @@ queue.get_research_diagnostic = function(force_index)
     return res
 end
 
--- The throughput panel observes live lab starvation, while aggregate availability
--- includes packs elsewhere in the supply network. Treat a dominant live missing-pack
--- loss as a real bottleneck for the active technology so the switcher uses the same
--- player-visible truth as the diagnostic.
+-- Use the staggered lab snapshots for the background switcher. This preserves
+-- the diagnostic's missing-pack thresholds without rebuilding its full cluster
+-- model in one scheduler tick.
 queue.get_active_missing_science_bottleneck = function(force_index, xcur)
     local f = game.forces[force_index]
     if not f or not f.current_research or not xcur or not xcur.technology or
@@ -2439,31 +2509,51 @@ queue.get_active_missing_science_bottleneck = function(force_index, xcur)
         return {}
     end
 
-    local diagnostic = queue.get_research_diagnostic(force_index)
-    local expected_spm = diagnostic and diagnostic.expected_spm or 0
-    if not diagnostic or not diagnostic.available or expected_spm <= 0 or
-        (diagnostic.utilization or 0) >= 0.60 then
-        return {}
+    local current = f.current_research
+    local cached = active_bottleneck_cache[force_index]
+    if cached and cached.tick == game.tick and cached.technology_name == current.name then
+        return cached.value
+    end
+    local cache_result = function(value)
+        active_bottleneck_cache[force_index] = {
+            tick = game.tick,
+            technology_name = current.name,
+            value = value
+        }
+        return value
     end
 
-    local missing_cause
-    for _, cause in ipairs(diagnostic.causes or {}) do
-        if cause.kind == "missing_science" then
-            missing_cause = cause
-            break
-        end
-    end
-    if not missing_cause or (missing_cause.lost_spm or 0) < expected_spm * 0.40 then
-        return {}
-    end
-
+    local expected_spm = 0
+    local sampled_spm = 0
+    local missing_spm = 0
     local res = {}
-    for _, item in ipairs(diagnostic.missing_sciences or {}) do
-        if item.science and (item.labs or 0) > 0 then
-            res[item.science] = true
+    local now = game.tick
+    for _, lcur in pairs(lab.get_runtime_lab_content(force_index)) do
+        local lab_entity = lcur and lcur.lab
+        if lab_entity and lab_entity.valid and lab_accepts_research(lab_entity, current) then
+            local capacity_spm = get_lab_capacity_spm(lab_entity, current)
+            expected_spm = expected_spm + capacity_spm
+            if lcur.latest_tick and now - lcur.latest_tick <= 900 then
+                sampled_spm = sampled_spm + capacity_spm
+                if lcur.latest_status == defines.entity_status.missing_science_packs then
+                    missing_spm = missing_spm + capacity_spm
+                    for _, science in pairs(get_missing_lab_sciences(current, lcur.latest_contents)) do
+                        res[science] = true
+                    end
+                end
+            end
         end
     end
-    return res
+
+    -- Wait for one near-complete staggered pass after load or large lab changes.
+    if expected_spm <= 0 or sampled_spm < expected_spm * 0.80 then
+        return cache_result({})
+    end
+    local actual_spm = (queue.get_research_speed(force_index) or 0) * 60
+    if actual_spm / expected_spm >= 0.60 or missing_spm < expected_spm * 0.40 then
+        return cache_result({})
+    end
+    return cache_result(res)
 end
 
 queue.science_is_sufficient = function(xcur, force_index)

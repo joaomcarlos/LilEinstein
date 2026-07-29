@@ -59,7 +59,7 @@ lab.tick_update = function()
     end
 
     -- Forward declare & const
-    local inv, lcur, tcur, force_index, sal, slc, lab_id, lab
+    local inv, lcur, tcur, latest_contents, force_index, sal, slc, lab_id, lab
     local max_time = 10 * 60 -- 10 sec
     local max_len = 100 -- 11 minutes at 1x/42 ticks
 
@@ -122,9 +122,19 @@ lab.tick_update = function()
         tcur = lcur[game.tick]
 
         -- Read the lab content
+        latest_contents = {}
         for _, c in pairs(inv.get_contents()) do
             tcur[c.name] = (tcur[c.name] or 0) + (c.count or 0)
+            table.insert(latest_contents, {
+                name = c.name,
+                count = c.count or 0
+            })
         end
+        -- Keep one cheap current snapshot for queue/diagnostic consumers. The
+        -- staggered updater refreshes a full large factory without a burst.
+        lcur.latest_contents = latest_contents
+        lcur.latest_status = lab.status
+        lcur.latest_tick = game.tick
 
         -- Remember the tick and clean up old ones
         if not lcur.all_ticks then
@@ -394,6 +404,10 @@ lab.get_science_availability = function(force_index)
     end
 
     return res
+end
+
+lab.get_runtime_lab_content = function(force_index)
+    return get(force_index, keys.lab_content) or {}
 end
 
 ---@param entity LuaEntity
