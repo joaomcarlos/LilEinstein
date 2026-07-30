@@ -19,12 +19,27 @@ local research_graph_plot_width = 456
 local research_graph_plot_height = 118
 local research_graph_hover_dot_height = 3
 local research_graph_hover_column_setting = "research_graph_hover_column"
+local graph_render_cache = {}
+local science_render_cache = {}
+local graph_render_jobs = {}
+local graph_hover_cache = {}
+local research_graph_render_budget = 10
+
+local get_graph_render_state = function(element)
+    local index = element.index
+    local rendered = graph_render_cache[index]
+    if not rendered or not rendered.element.valid or rendered.element ~= element then
+        rendered = {element = element}
+        graph_render_cache[index] = rendered
+    end
+    return rendered
+end
 
 local get_science_tooltip = function(player_index, force_index, science, total_count)
     local item_name = state.get_translation(player_index, "item", science, "localised_name") or science
-    local detail = queue.get_science_count_breakdown(force_index, science)
+    local detail = queue.get_science_display_breakdown(force_index, science)
     local science_policy = policy.get_science_policy(force_index, science)
-    local forecast = queue.get_science_forecast(force_index)[science] or {}
+    local forecast = queue.get_science_display_forecast(force_index)[science] or {}
     local networks = {}
     for _, item in pairs(detail.networks or {}) do
         table.insert(networks, item)
@@ -42,8 +57,8 @@ local get_science_tooltip = function(player_index, force_index, science, total_c
                    tostring(detail.lab_entity_count or 0) .. " labs\n" ..
                    "In networks: " .. gutil.format_cost(detail.network_total or 0) .. "\n" ..
                    "Priority: " .. tostring(science_policy.priority) .. "\n" ..
-                   string.format("Production / consumption: %.1f / %.1f per minute", forecast.production_per_minute or 0,
-                       forecast.consumption_per_minute or 0)
+                   "Production / consumption: " .. gutil.format_si(forecast.production_per_minute or 0) .. " / " ..
+                   gutil.format_si(forecast.consumption_per_minute or 0) .. " per minute"
 
     if forecast.depletion_seconds then
         tt = tt .. "\nEstimated depletion: " .. tostring(math.floor(forecast.depletion_seconds + 0.5)) .. "s"
@@ -67,19 +82,46 @@ local get_science_tooltip = function(player_index, force_index, science, total_c
     return tt
 end
 
-local refresh_science_counts = function(player_index, anchor)
+local refresh_science_counts = function(player_index, anchor, budget)
     local p = game.get_player(player_index)
     if not p then
         return
     end
     local force_index = p.force.index
-    local science_counts = queue.get_science_counts(force_index)
+    local science_counts = queue.get_science_display_counts(force_index)
+    local sciences = util.get_all_sciences()
+    local anchor_index = anchor.index
+    local rendered = science_render_cache[anchor_index]
+    if not rendered or not rendered.element.valid or rendered.element ~= anchor then
+        rendered = {
+            element = anchor,
+            force_index = force_index,
+            revision = nil,
+            next_index = 1,
+            sciences = {}
+        }
+        science_render_cache[anchor_index] = rendered
+    end
+    local revision = queue.get_research_health_snapshot_tick(force_index)
+    if rendered.force_index ~= force_index or rendered.revision ~= revision then
+        rendered.force_index = force_index
+        rendered.revision = revision
+        rendered.next_index = 1
+    end
+    if not rendered.next_index then
+        return
+    end
 
-    for _, science in pairs(util.get_all_sciences()) do
+    local last = math.min(#sciences, rendered.next_index + (budget or 1) - 1)
+    for index = rendered.next_index, last do
+        local science = sciences[index]
         local count = science_counts[science] or 0
         local btn = gutil.get_child(anchor, "allowed_science_btn_" .. science)
-        if btn then
-            btn.tooltip = get_science_tooltip(player_index, force_index, science, count)
+        local science_rendered = rendered.sciences[science] or {}
+        local tooltip = get_science_tooltip(player_index, force_index, science, count)
+        if btn and science_rendered.tooltip ~= tooltip then
+            btn.tooltip = tooltip
+            science_rendered.tooltip = tooltip
         end
 
         local label_name = "allowed_science_count_" .. science
@@ -87,7 +129,9 @@ local refresh_science_counts = function(player_index, anchor)
         if count > 0 then
             local caption = gutil.format_cost(count)
             if count_label then
-                count_label.caption = caption
+                if science_rendered.caption ~= caption then
+                    count_label.caption = caption
+                end
             elseif btn and btn.parent then
                 count_label = btn.parent.add({
                     type = "label",
@@ -101,10 +145,14 @@ local refresh_science_counts = function(player_index, anchor)
                 count_label.style.font = "default-small"
                 count_label.style.font_color = {r = 1, g = 1, b = 1}
             end
+            science_rendered.caption = caption
         elseif count_label then
             count_label.destroy()
+            science_rendered.caption = nil
         end
+        rendered.sciences[science] = science_rendered
     end
+    rendered.next_index = last < #sciences and last + 1 or nil
 end
 
 local format_spaced_number = function(value)
@@ -309,9 +357,15 @@ local set_research_graph_spacer = function(spacer, height)
     end
     height = math.max(0, math.floor(height or 0))
     if height > 0 then
-        spacer.style.height = height
-        spacer.visible = true
-    else
+        local rendered = get_graph_render_state(spacer)
+        if rendered.height ~= height then
+            spacer.style.height = height
+            rendered.height = height
+        end
+        if not spacer.visible then
+            spacer.visible = true
+        end
+    elseif spacer.visible then
         spacer.visible = false
     end
 end
@@ -323,12 +377,26 @@ local set_research_graph_segment = function(segment, width, height)
     width = math.max(1, math.floor(width or 1))
     height = math.max(0, math.floor(height or 0))
     if height > 0 then
-        segment.value = 1
-        segment.style.width = width
-        segment.style.height = height
-        segment.style.bar_width = height
-        segment.visible = true
-    else
+        local rendered = get_graph_render_state(segment)
+        if segment.value ~= 1 then
+            segment.value = 1
+        end
+        if not rendered or rendered.width ~= width then
+            segment.style.width = width
+        end
+        if not rendered or rendered.height ~= height then
+            segment.style.height = height
+        end
+        if not rendered or rendered.bar_width ~= height then
+            segment.style.bar_width = height
+        end
+        rendered.width = width
+        rendered.height = height
+        rendered.bar_width = height
+        if not segment.visible then
+            segment.visible = true
+        end
+    elseif segment.visible then
         segment.visible = false
     end
 end
@@ -341,13 +409,13 @@ local hide_research_graph_hover_column = function(col, i)
     local line_before = col["research_graph_hover_line_before_" .. i]
     local dot = col["research_graph_hover_dot_" .. i]
     local line_after = col["research_graph_hover_line_after_" .. i]
-    if line_before then
+    if line_before and line_before.visible then
         line_before.visible = false
     end
-    if dot then
+    if dot and dot.visible then
         dot.visible = false
     end
-    if line_after then
+    if line_after and line_after.visible then
         line_after.visible = false
     end
 end
@@ -358,9 +426,19 @@ local clear_research_graph_hover_columns = function(anchor)
         return
     end
 
-    for i = 1, research_graph_column_count do
+    local overlay_index = overlay.index
+    local rendered = graph_hover_cache[overlay_index]
+    if not rendered or not rendered.element.valid or rendered.element ~= overlay then
+        rendered = {element = overlay}
+        graph_hover_cache[overlay_index] = rendered
+        for i = 1, research_graph_column_count do
+            hide_research_graph_hover_column(overlay["research_graph_hover_column_" .. i], i)
+        end
+    elseif rendered.column_index then
+        local i = rendered.column_index
         hide_research_graph_hover_column(overlay["research_graph_hover_column_" .. i], i)
     end
+    rendered.column_index = nil
 end
 
 local set_research_graph_hover_marker = function(col, column_index, value, axis_max)
@@ -686,7 +764,7 @@ local refresh_research_details = function(player_index, anchor, diagnostic)
     if not p then
         return
     end
-    diagnostic = diagnostic or queue.get_research_diagnostic(p.force.index)
+    diagnostic = diagnostic or queue.get_research_display_diagnostic(p.force.index)
     local headline_caption, evidence_caption, state_color = get_research_health_summary(diagnostic)
     local headline = gutil.get_child(panel, "research_details_headline")
     local evidence = gutil.get_child(panel, "research_details_evidence")
@@ -799,7 +877,7 @@ local refresh_research_metrics = function(player_index, anchor)
         return
     end
 
-    local diagnostic = queue.get_research_diagnostic(p.force.index)
+    local diagnostic = queue.get_research_display_diagnostic(p.force.index)
     local diagnostic_tooltip = format_research_diagnostic(diagnostic)
     local spm_value = gutil.get_child(anchor, "research_graph_spm_value")
     if spm_value then
@@ -860,6 +938,10 @@ local refresh_research_graph_hover = function(player_index, anchor, history, axi
     if col then
         col.tooltip = get_research_graph_hover_tooltip(value, column_index)
         set_research_graph_hover_marker(col, column_index, value, axis_max)
+        local rendered = graph_hover_cache[overlay.index]
+        if rendered and rendered.element == overlay then
+            rendered.column_index = column_index
+        end
     end
 end
 
@@ -876,6 +958,70 @@ end
 local hide_research_graph_hover = function(player_index, anchor)
     state.clear_player_setting(player_index, research_graph_hover_column_setting)
     clear_research_graph_hover_columns(anchor)
+end
+
+local render_research_graph_job = function(player_index, anchor, budget)
+    local job = graph_render_jobs[anchor.index]
+    if not job or not job.element.valid or job.element ~= anchor then
+        graph_render_jobs[anchor.index] = nil
+        return
+    end
+
+    local last = math.min(
+        research_graph_column_count,
+        job.next_index + (budget or research_graph_render_budget) - 1
+    )
+    for i = job.next_index, last do
+        local col = job.plot["research_graph_column_" .. i]
+        local hover_col = job.overlay and job.overlay["research_graph_hover_column_" .. i]
+        local value = job.history[i] or 0
+        if hover_col then
+            hover_col.tooltip = get_research_graph_hover_tooltip(value, i)
+        end
+        if col then
+            local spacer = col["research_graph_spacer_" .. i]
+            local vertical_before = col["research_graph_vertical_before_" .. i]
+            local horizontal = col["research_graph_horizontal_" .. i]
+            local vertical_after = col["research_graph_vertical_after_" .. i]
+            if spacer and vertical_before and horizontal and vertical_after then
+                local column_width = get_research_graph_column_width(i)
+                local previous_value = job.history[i - 1] or value
+                local y = get_research_graph_y(value, job.axis_max)
+                local previous_y = get_research_graph_y(previous_value, job.axis_max)
+                local vertical_before_height = 0
+                local vertical_after_height = 0
+                if previous_y < y then
+                    set_research_graph_spacer(spacer, previous_y)
+                    vertical_before_height = y - previous_y
+                else
+                    set_research_graph_spacer(spacer, y)
+                    vertical_after_height = previous_y - y
+                end
+
+                if job.has_history or value > 0 or previous_value > 0 then
+                    set_research_graph_segment(vertical_before, 1, vertical_before_height)
+                    set_research_graph_segment(horizontal, column_width, 1)
+                    set_research_graph_segment(vertical_after, 1, vertical_after_height)
+                else
+                    if vertical_before.visible then
+                        vertical_before.visible = false
+                    end
+                    if horizontal.visible then
+                        horizontal.visible = false
+                    end
+                    if vertical_after.visible then
+                        vertical_after.visible = false
+                    end
+                end
+            end
+        end
+    end
+
+    job.next_index = last + 1
+    if job.next_index > research_graph_column_count then
+        graph_render_jobs[anchor.index] = nil
+        refresh_research_graph_hover(player_index, anchor, job.history, job.axis_max)
+    end
 end
 
 local refresh_research_graph = function(player_index, anchor)
@@ -901,48 +1047,20 @@ local refresh_research_graph = function(player_index, anchor)
         return
     end
 
-    for i = 1, research_graph_column_count do
-        local col = plot["research_graph_column_" .. i]
-        local hover_col = overlay and overlay["research_graph_hover_column_" .. i]
-        local value = history[i] or 0
-        if hover_col then
-            hover_col.tooltip = get_research_graph_hover_tooltip(value, i)
-        end
-        if col then
-            local spacer = col["research_graph_spacer_" .. i]
-            local vertical_before = col["research_graph_vertical_before_" .. i]
-            local horizontal = col["research_graph_horizontal_" .. i]
-            local vertical_after = col["research_graph_vertical_after_" .. i]
-            if spacer and vertical_before and horizontal and vertical_after then
-                local column_width = get_research_graph_column_width(i)
-                local previous_value = history[i - 1] or value
+    graph_render_jobs[anchor.index] = {
+        element = anchor,
+        history = history,
+        has_history = has_history,
+        axis_max = axis_max,
+        plot = plot,
+        overlay = overlay,
+        next_index = 1
+    }
+    render_research_graph_job(player_index, anchor, research_graph_render_budget)
+end
 
-                local y = get_research_graph_y(value, axis_max)
-                local previous_y = get_research_graph_y(previous_value, axis_max)
-                local vertical_before_height = 0
-                local vertical_after_height = 0
-                if previous_y < y then
-                    set_research_graph_spacer(spacer, previous_y)
-                    vertical_before_height = y - previous_y
-                else
-                    set_research_graph_spacer(spacer, y)
-                    vertical_after_height = previous_y - y
-                end
-
-                if has_history or value > 0 or previous_value > 0 then
-                    set_research_graph_segment(vertical_before, 1, vertical_before_height)
-                    set_research_graph_segment(horizontal, column_width, 1)
-                    set_research_graph_segment(vertical_after, 1, vertical_after_height)
-                else
-                    vertical_before.visible = false
-                    horizontal.visible = false
-                    vertical_after.visible = false
-                end
-            end
-        end
-    end
-
-    refresh_research_graph_hover(player_index, anchor, history, axis_max)
+local tick_research_graph = function(player_index, anchor)
+    render_research_graph_job(player_index, anchor, research_graph_render_budget)
 end
 
 local refresh_research_status = function(player_index, anchor)
@@ -1121,7 +1239,7 @@ local populate_science_filters = function(player_index, anchor)
 
     local p = game.get_player(player_index)
     local force_index = p and p.force.index or player_index
-    local science_counts = queue.get_science_counts(force_index)
+    local science_counts = queue.get_science_display_counts(force_index)
 
     -- Add all the sciences as icons to the table
     for _, s in pairs(sci) do
@@ -1519,9 +1637,9 @@ local populate_policy_science = function(player_index, anchor)
         })
         local rates = row.add({
             type = "label",
-            caption = string.format("%s  +%.1f/−%.1f min  empty %s", gutil.format_cost(data.stock or 0),
-                data.production_per_minute or 0, data.consumption_per_minute or 0,
-                format_policy_time(data.depletion_seconds))
+            caption = string.format("%s  +%s/−%s min  empty %s", gutil.format_cost(data.stock or 0),
+                gutil.format_si(data.production_per_minute or 0),
+                gutil.format_si(data.consumption_per_minute or 0), format_policy_time(data.depletion_seconds))
         })
         rates.style.left_margin = 8
     end
@@ -1565,7 +1683,7 @@ local populate_policy_budget = function(player_index, anchor)
                 type = "label",
                 caption = {"lil_einstein-policy.budget-science-row", gutil.format_cost(math.ceil(item.required)),
                            gutil.format_cost(item.available), gutil.format_cost(math.ceil(item.deficit)),
-                           string.format("%.1f", item.production_per_minute)}
+                           gutil.format_si(item.production_per_minute)}
             })
             label.style.left_margin = 5
         end
@@ -1821,11 +1939,39 @@ content.repopulate_tech = function(player_index, anchor)
     gctech.populate(player_index, anchor)
 end
 
+content.request_tech = function(player_index, anchor)
+    if policy_panel_is_visible(anchor) then
+        return true
+    end
+    return gctech.request_populate(player_index, anchor)
+end
+
+content.tick_tech = function(player_index, anchor)
+    if policy_panel_is_visible(anchor) then
+        return true
+    end
+    return gctech.tick_populate(player_index, anchor, 1)
+end
+
 content.refresh_upcoming = function(player_index, anchor)
     if policy_panel_is_visible(anchor) then
         return
     end
     gcupcoming.populate(player_index, anchor)
+end
+
+content.request_upcoming = function(player_index, anchor)
+    if policy_panel_is_visible(anchor) then
+        return true
+    end
+    return gcupcoming.request_populate(player_index, anchor)
+end
+
+content.tick_upcoming = function(player_index, anchor)
+    if policy_panel_is_visible(anchor) then
+        return true
+    end
+    return gcupcoming.tick_populate(player_index, anchor, 1)
 end
 
 content.refresh_upcoming_times = function(player_index, anchor)
@@ -1839,7 +1985,7 @@ content.refresh_science_counts = function(player_index, anchor)
     if policy_panel_is_visible(anchor) then
         return
     end
-    refresh_science_counts(player_index, anchor)
+    refresh_science_counts(player_index, anchor, 1)
 end
 
 content.refresh_research_status = function(player_index, anchor)
@@ -1847,6 +1993,13 @@ content.refresh_research_status = function(player_index, anchor)
         return
     end
     refresh_research_status(player_index, anchor)
+end
+
+content.refresh_master_enable = function(player_index, anchor)
+    if policy_panel_is_visible(anchor) or research_details_panel_is_visible(anchor) then
+        return
+    end
+    set_master_enable(player_index, anchor)
 end
 
 content.refresh_research_progress = function(player_index, anchor)
@@ -1874,6 +2027,13 @@ content.refresh_research_graph = function(player_index, anchor)
     refresh_research_graph(player_index, anchor)
 end
 
+content.tick_research_graph = function(player_index, anchor)
+    if policy_panel_is_visible(anchor) then
+        return
+    end
+    tick_research_graph(player_index, anchor)
+end
+
 content.show_research_graph_hover = function(player_index, anchor, column_index)
     show_research_graph_hover(player_index, anchor, column_index)
 end
@@ -1884,6 +2044,15 @@ end
 
 content.repopulate_policy = function(player_index, anchor)
     populate_policy_panel(player_index, anchor)
+end
+
+content.clear_runtime_cache = function()
+    graph_render_cache = {}
+    science_render_cache = {}
+    graph_render_jobs = {}
+    graph_hover_cache = {}
+    gctech.clear_runtime_cache()
+    gcupcoming.clear_runtime_cache()
 end
 
 return content

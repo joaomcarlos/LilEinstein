@@ -1722,9 +1722,8 @@ queue.get_research_summary = function(force_index)
     return res
 end
 
--- Two-tier cache per force:
---   labs_cache: labs, refreshed every 10 min (36000 ticks)
---   counts_cache: counts refreshed every tick
+-- Runtime-only caches per force. Lab membership comes from the event-driven
+-- registry in model.lab; never rescan every surface during a GUI refresh.
 local labs_cache = {}
 local counts_cache = {}
 local diagnostic_cache = {}
@@ -1733,6 +1732,14 @@ local lab_observation_cache = {}
 local lab_network_cache = {}
 local lab_input_cache = {}
 local active_bottleneck_cache = {}
+local research_health_snapshots = {}
+local research_health_jobs = {}
+local research_health_requests = {}
+local upcoming_display_jobs = {}
+local research_health_refresh_ticks = 300
+local research_health_lab_budget = 8
+local research_health_cluster_budget = 8
+local research_health_availability_budget = 32
 
 local has_invalid_ref = function(refs)
     for _, ref in pairs(refs or {}) do
@@ -1799,27 +1806,15 @@ local get_network_label = function(network, sample_lab)
 end
 
 local refresh_labs_cache = function(force_index)
-    local all_labs = {}
-
-    for _, surface in pairs(game.surfaces) do
-        local surface_labs = surface.find_entities_filtered({type = "lab", force = force_index})
-        for _, lab_entity in pairs(surface_labs) do
-            if lab_entity.valid then
-                table.insert(all_labs, lab_entity)
-            end
-        end
-    end
-
     labs_cache[force_index] = {
         tick = game.tick,
-        labs = all_labs
+        labs = lab.get_registered_labs(force_index)
     }
 end
 
 local get_cached_labs = function(force_index)
-    local now = game.tick
     local lc = labs_cache[force_index]
-    if not lc or (now - lc.tick) >= 36000 or has_invalid_ref(lc.labs) then
+    if not lc or has_invalid_ref(lc.labs) then
         refresh_labs_cache(force_index)
         lc = labs_cache[force_index]
     end
@@ -1845,36 +1840,56 @@ local get_lab_input_set = function(lab_entity)
 end
 
 local get_lab_observations = function(force_index)
-    local now = game.tick
+    local labs = get_cached_labs(force_index)
+    local labs_tick = labs_cache[force_index] and labs_cache[force_index].tick
     local cached = lab_observation_cache[force_index]
-    if cached and cached.tick == now then
+    if cached and cached.labs_tick == labs_tick and not has_invalid_ref(cached.entities) then
         return cached.values
     end
 
     local runtime_content = lab.get_runtime_lab_content(force_index)
     local observations = {}
-    for _, lab_entity in pairs(get_cached_labs(force_index)) do
+    local entities = {}
+    for _, lab_entity in pairs(labs) do
         if lab_entity and lab_entity.valid then
-            local contents
             local lcur = runtime_content[lab_entity.unit_number or 0]
-            if lcur and lcur.latest_contents and lcur.latest_tick and
-                now - lcur.latest_tick <= 900 then
-                contents = lcur.latest_contents
-            else
-                local inv = lab_entity.get_inventory(defines.inventory.lab_input)
-                contents = inv and inv.get_contents() or {}
-            end
             table.insert(observations, {
                 entity = lab_entity,
-                contents = contents,
-                network = get_lab_network(force_index, lab_entity),
-                lab_inputs = get_lab_input_set(lab_entity),
-                sampled_status = lcur and lcur.latest_status or nil
+                runtime = lcur
             })
+            table.insert(entities, lab_entity)
         end
     end
-    lab_observation_cache[force_index] = {tick = now, values = observations}
+    lab_observation_cache[force_index] = {
+        labs_tick = labs_tick,
+        values = observations,
+        entities = entities
+    }
     return observations
+end
+
+local get_observation_contents = function(observation)
+    local lcur = observation and observation.runtime
+    if lcur and lcur.latest_contents and lcur.latest_tick and
+        game.tick - lcur.latest_tick <= 900 then
+        return lcur.latest_contents
+    end
+
+    local lab_entity = observation and observation.entity
+    if not lab_entity or not lab_entity.valid then
+        return {}
+    end
+    local inv = lab_entity.get_inventory(defines.inventory.lab_input)
+    return inv and inv.get_contents() or {}
+end
+
+local get_observation_status = function(observation)
+    local lcur = observation and observation.runtime
+    if lcur and lcur.latest_status ~= nil then
+        return lcur.latest_status
+    end
+    local lab_entity = observation and observation.entity
+    return lab_entity and lab_entity.valid and lab_entity.status or nil
 end
 
 get_science_counts = function(force_index)
@@ -1904,7 +1919,7 @@ get_science_counts = function(force_index)
     for _, observation in pairs(get_lab_observations(force_index)) do
         local lab_entity = observation.entity
         if lab_entity.valid then
-            local network = observation.network
+            local network = get_lab_network(force_index, lab_entity)
             local surface_index = lab_entity.surface and lab_entity.surface.index or 0
             local cluster_key
             local cluster
@@ -1959,12 +1974,12 @@ get_science_counts = function(force_index)
                 end
             end
             cluster.lab_count = cluster.lab_count + 1
-            local lab_inputs = observation.lab_inputs
+            local lab_inputs = get_lab_input_set(lab_entity)
             for science in pairs(lab_inputs) do
                 cluster.lab_input_counts[science] = (cluster.lab_input_counts[science] or 0) + 1
             end
             table.insert(cluster.lab_input_sets, lab_inputs)
-            for _, item in pairs(observation.contents or {}) do
+            for _, item in pairs(get_observation_contents(observation)) do
                 counts[item.name] = (counts[item.name] or 0) + (item.count or 0)
                 cluster.counts[item.name] = (cluster.counts[item.name] or 0) + (item.count or 0)
                 local item_breakdown = breakdown[item.name]
@@ -2032,6 +2047,10 @@ queue.invalidate_science_cache = function(force_index)
     lab_observation_cache[force_index] = nil
     lab_network_cache[force_index] = nil
     active_bottleneck_cache[force_index] = nil
+    research_health_snapshots[force_index] = nil
+    research_health_jobs[force_index] = nil
+    research_health_requests[force_index] = true
+    upcoming_display_jobs[force_index] = nil
 end
 
 queue.get_science_count_breakdown = function(force_index, science)
@@ -2078,9 +2097,7 @@ get_lab_science_counts = function(force_index)
         return counts, valid_lab_count
     end
 
-    refresh_labs_cache(force_index)
-    local lc = labs_cache[force_index]
-    for _, lab_entity in pairs((lc and lc.labs) or {}) do
+    for _, lab_entity in pairs(get_cached_labs(force_index)) do
         if lab_entity.valid then
             valid_lab_count = valid_lab_count + 1
             local inv = lab_entity.get_inventory(defines.inventory.lab_input)
@@ -2378,12 +2395,13 @@ queue.get_research_diagnostic = function(force_index)
     for _, observation in pairs(get_lab_observations(force_index)) do
         local lab_entity = observation.entity
         if lab_entity and lab_entity.valid then
-            local network = observation.network
+            local network = get_lab_network(force_index, lab_entity)
             local cluster = get_diagnostic_cluster(clusters, lab_entity, network)
             res.total_labs = res.total_labs + 1
             cluster.total_labs = cluster.total_labs + 1
-            add_lab_stock(cluster, observation.contents)
-            if not lab_accepts_research(lab_entity, current, observation.lab_inputs) then
+            local contents = get_observation_contents(observation)
+            add_lab_stock(cluster, contents)
+            if not lab_accepts_research(lab_entity, current, get_lab_input_set(lab_entity)) then
                 res.incompatible_labs = res.incompatible_labs + 1
                 cluster.incompatible_labs = cluster.incompatible_labs + 1
                 goto continue
@@ -2394,7 +2412,7 @@ queue.get_research_diagnostic = function(force_index)
             local capacity_spm = get_lab_capacity_spm(lab_entity, current)
             res.expected_spm = res.expected_spm + capacity_spm
             cluster.expected_spm = cluster.expected_spm + capacity_spm
-            local status = observation.sampled_status or lab_entity.status
+            local status = get_observation_status(observation)
 
             if status == defines.entity_status.working then
                 res.working_labs = res.working_labs + 1
@@ -2408,7 +2426,7 @@ queue.get_research_diagnostic = function(force_index)
             end
 
             if status == defines.entity_status.missing_science_packs then
-                local missing = get_missing_lab_sciences(current, observation.contents)
+                local missing = get_missing_lab_sciences(current, contents)
                 for _, science in pairs(missing) do
                     add_missing_science_evidence(missing_sciences, science, capacity_spm)
                     add_missing_science_evidence(cluster._missing_sciences, science, capacity_spm)
@@ -2497,6 +2515,605 @@ queue.get_research_diagnostic = function(force_index)
 
     diagnostic_cache[force_index] = {tick = game.tick, value = res}
     return res
+end
+
+local new_display_diagnostic = function(force_index, current)
+    local res = {
+        available = current ~= nil,
+        state = current and "measuring" or "idle",
+        current_technology = current and current.name or nil,
+        actual_spm = 0,
+        recent_spm = nil,
+        previous_spm = nil,
+        trend_percent = nil,
+        sample_count = 0,
+        sampling_ready = false,
+        expected_spm = 0,
+        working_spm = 0,
+        utilization = 0,
+        total_labs = 0,
+        compatible_labs = 0,
+        working_labs = 0,
+        incompatible_labs = 0,
+        causes = {},
+        missing_sciences = {},
+        clusters = {},
+        material_loss_spm = 0,
+        material_threshold_spm = diagnostic_minimum_lost_spm,
+        dominant_cause = nil,
+        dominant_missing_science = nil,
+        dominant_cluster_key = nil
+    }
+    local context = {
+        result = res,
+        cause_data = {},
+        missing_sciences = {},
+        clusters = {},
+        required_sciences = {}
+    }
+    if not current then
+        return context
+    end
+
+    local sf = storage.forces[force_index]
+    local samples = sf and sf.queue and sf.queue.speed_samples
+    local measured_speed, measured_count =
+        get_research_speed_window(samples, 0, research_speed_average_samples, current.name)
+    res.actual_spm = measured_speed and (measured_speed * 60) or 0
+    res.sample_count = measured_count
+    res.sampling_ready = measured_count >= diagnostic_minimum_samples
+
+    local recent_speed, recent_count = get_research_speed_window(samples, 0, 5, current.name)
+    local previous_speed, previous_count = get_research_speed_window(samples, 5, 15, current.name)
+    if recent_count >= 2 then
+        res.recent_spm = recent_speed * 60
+    end
+    if previous_count >= 2 then
+        res.previous_spm = previous_speed * 60
+    end
+    if res.recent_spm and res.previous_spm and res.previous_spm > 0 then
+        res.trend_percent = ((res.recent_spm - res.previous_spm) * 100) / res.previous_spm
+    end
+    for _, ingredient in pairs(current.research_unit_ingredients or {}) do
+        table.insert(context.required_sciences, ingredient.name)
+    end
+    table.sort(context.required_sciences)
+    return context
+end
+
+local process_display_diagnostic_observation = function(context, current, observation, network)
+    if not current then
+        return
+    end
+    local lab_entity = observation.entity
+    if not lab_entity or not lab_entity.valid then
+        return
+    end
+
+    local res = context.result
+    local cluster = get_diagnostic_cluster(context.clusters, lab_entity, network)
+    res.total_labs = res.total_labs + 1
+    cluster.total_labs = cluster.total_labs + 1
+    local contents = get_observation_contents(observation)
+    add_lab_stock(cluster, contents)
+    if not lab_accepts_research(lab_entity, current, get_lab_input_set(lab_entity)) then
+        res.incompatible_labs = res.incompatible_labs + 1
+        cluster.incompatible_labs = cluster.incompatible_labs + 1
+        return
+    end
+
+    res.compatible_labs = res.compatible_labs + 1
+    cluster.compatible_labs = cluster.compatible_labs + 1
+    local capacity_spm = get_lab_capacity_spm(lab_entity, current)
+    res.expected_spm = res.expected_spm + capacity_spm
+    cluster.expected_spm = cluster.expected_spm + capacity_spm
+    local status = get_observation_status(observation)
+    if status == defines.entity_status.working then
+        res.working_labs = res.working_labs + 1
+        res.working_spm = res.working_spm + capacity_spm
+        cluster.working_labs = cluster.working_labs + 1
+        cluster.working_spm = cluster.working_spm + capacity_spm
+    else
+        local cause_kind = get_lab_loss_kind(lab_entity, status)
+        add_loss_cause(context.cause_data, cause_kind, capacity_spm)
+        add_loss_cause(cluster._cause_data, cause_kind, capacity_spm)
+    end
+
+    if status == defines.entity_status.missing_science_packs then
+        for _, science in pairs(get_missing_lab_sciences(current, contents)) do
+            add_missing_science_evidence(context.missing_sciences, science, capacity_spm)
+            add_missing_science_evidence(cluster._missing_sciences, science, capacity_spm)
+        end
+    end
+end
+
+local finish_display_diagnostic = function(context)
+    local res = context.result
+    if not res.available then
+        return res
+    end
+    if res.expected_spm > 0 then
+        res.utilization = math.max(0, math.min(1, res.actual_spm / res.expected_spm))
+    end
+
+    res.causes = map_values(context.cause_data)
+    res.missing_sciences = map_values(context.missing_sciences)
+    sort_loss_evidence(res.causes, "kind")
+    sort_loss_evidence(res.missing_sciences, "science")
+    res.material_threshold_spm =
+        math.max(diagnostic_minimum_lost_spm, res.expected_spm * diagnostic_meaningful_gap_fraction)
+
+    res.clusters = map_values(context.clusters)
+    table.sort(res.clusters, function(a, b)
+        if a.lost_spm == b.lost_spm then
+            if a.surface_name == b.surface_name then
+                return a.key < b.key
+            end
+            return a.surface_name < b.surface_name
+        end
+        return a.lost_spm > b.lost_spm
+    end)
+
+    if res.total_labs == 0 then
+        local cause = {kind = "no_labs", labs = 0, lost_spm = 0, material = true}
+        table.insert(res.causes, 1, cause)
+        res.state = "operational_fault"
+        res.dominant_cause = cause
+    elseif res.compatible_labs == 0 then
+        local cause = {kind = "no_compatible_labs", labs = res.total_labs, lost_spm = 0, material = true}
+        table.insert(res.causes, 1, cause)
+        res.state = "operational_fault"
+        res.dominant_cause = cause
+    elseif res.expected_spm <= 0 then
+        local cause = {kind = "no_capacity", labs = res.compatible_labs, lost_spm = 0, material = true}
+        table.insert(res.causes, 1, cause)
+        res.state = "operational_fault"
+        res.dominant_cause = cause
+    else
+        for _, cause in ipairs(res.causes) do
+            cause.material = cause.lost_spm >= res.material_threshold_spm
+            if cause.material and not res.dominant_cause then
+                res.dominant_cause = cause
+                res.material_loss_spm = cause.lost_spm
+            end
+        end
+        if res.dominant_cause then
+            if res.dominant_cause.kind == "missing_science" then
+                res.state = "pack_bound"
+                res.dominant_missing_science = res.missing_sciences[1]
+            else
+                res.state = "operational_fault"
+            end
+        elseif not res.sampling_ready then
+            res.state = "measuring"
+        elseif res.utilization >= diagnostic_healthy_utilization then
+            res.state = "at_capacity"
+        else
+            res.state = "degraded_unexplained"
+        end
+    end
+
+    if res.dominant_cause then
+        local science = res.dominant_missing_science and res.dominant_missing_science.science or nil
+        local cluster = get_dominant_cluster(res.clusters, res.dominant_cause.kind, science)
+        if cluster then
+            res.dominant_cluster_key = cluster.key
+        end
+    end
+    return res
+end
+
+local new_research_health_job = function(force_index)
+    local f = game.forces[force_index]
+    local current = f and f.current_research
+    local all_sciences = env.get_all_sciences()
+    local breakdown = {}
+    for _, science in pairs(all_sciences) do
+        breakdown[science] = {
+            lab_count = 0,
+            lab_entity_count = 0,
+            network_total = 0,
+            networks = {}
+        }
+    end
+    return {
+        force_index = force_index,
+        technology_name = current and current.name or nil,
+        current = current,
+        phase = "labs",
+        observations = get_lab_observations(force_index),
+        observation_index = 1,
+        all_sciences = all_sciences,
+        counts = {},
+        breakdown = breakdown,
+        detected_networks = {},
+        science_clusters = {},
+        lab_input_counts = {},
+        networks = nil,
+        network_index = 1,
+        availability = {},
+        availability_index = 1,
+        availability_cluster_index = 1,
+        availability_current = false,
+        science_cluster_list = nil,
+        active_science_cluster_keys = nil,
+        cluster_mode = policy.get_setting(force_index, "cluster_mode") == true,
+        forecast = {},
+        forecast_index = 1,
+        diagnostic = new_display_diagnostic(force_index, current),
+        diagnostic_clusters = nil,
+        diagnostic_cluster_index = 1
+    }
+end
+
+local process_research_health_lab = function(job, observation)
+    local lab_entity = observation and observation.entity
+    if not lab_entity or not lab_entity.valid then
+        return
+    end
+    local force_index = job.force_index
+    local network = get_lab_network(force_index, lab_entity)
+    local surface_index = lab_entity.surface and lab_entity.surface.index or 0
+    local cluster_key
+    if network and network.valid then
+        cluster_key = tostring(surface_index) .. ":network:" .. tostring(network.network_id or "unknown")
+        local meta = job.detected_networks[cluster_key]
+        if not meta then
+            meta = {
+                key = cluster_key,
+                network = network,
+                lab_count = 0,
+                sample_lab = lab_entity,
+                sample_unit_number = lab_entity.unit_number or 0
+            }
+            job.detected_networks[cluster_key] = meta
+        end
+        meta.lab_count = meta.lab_count + 1
+    else
+        cluster_key = tostring(surface_index) .. ":lab:" .. tostring(lab_entity.unit_number or 0)
+    end
+
+    local cluster = job.science_clusters[cluster_key]
+    if not cluster then
+        cluster = {
+            key = cluster_key,
+            lab_count = 0,
+            counts = {},
+            lab_input_counts = {},
+            lab_input_sets = {}
+        }
+        job.science_clusters[cluster_key] = cluster
+    end
+
+    cluster.lab_count = cluster.lab_count + 1
+    local lab_inputs = get_lab_input_set(lab_entity)
+    for science in pairs(lab_inputs) do
+        job.lab_input_counts[science] = (job.lab_input_counts[science] or 0) + 1
+        cluster.lab_input_counts[science] = (cluster.lab_input_counts[science] or 0) + 1
+    end
+    table.insert(cluster.lab_input_sets, lab_inputs)
+    local contents = get_observation_contents(observation)
+    for _, item in pairs(contents) do
+        job.counts[item.name] = (job.counts[item.name] or 0) + (item.count or 0)
+        cluster.counts[item.name] = (cluster.counts[item.name] or 0) + (item.count or 0)
+        local detail = job.breakdown[item.name]
+        if detail then
+            detail.lab_count = detail.lab_count + (item.count or 0)
+            detail.lab_entity_count = detail.lab_entity_count + 1
+        end
+    end
+    process_display_diagnostic_observation(job.diagnostic, job.current, observation, network)
+end
+
+local prepare_research_health_networks = function(job)
+    local networks = {}
+    for _, meta in pairs(job.detected_networks) do
+        table.insert(networks, meta)
+    end
+    table.sort(networks, function(a, b)
+        local a_surface = (a.sample_lab and a.sample_lab.valid and a.sample_lab.surface.name) or ""
+        local b_surface = (b.sample_lab and b.sample_lab.valid and b.sample_lab.surface.name) or ""
+        if a_surface == b_surface then
+            return (a.sample_unit_number or 0) < (b.sample_unit_number or 0)
+        end
+        return a_surface < b_surface
+    end)
+    job.networks = networks
+end
+
+local process_research_health_network = function(job, meta)
+    local network = meta and meta.network
+    if not network or not network.valid then
+        return
+    end
+    local label = get_network_label(network, meta.sample_lab)
+    for _, science in pairs(job.all_sciences) do
+        local count = network.get_item_count(science)
+        job.counts[science] = (job.counts[science] or 0) + count
+        local cluster = job.science_clusters[meta.key]
+        if cluster then
+            cluster.counts[science] = (cluster.counts[science] or 0) + count
+        end
+        local detail = job.breakdown[science]
+        detail.network_total = detail.network_total + count
+        table.insert(detail.networks, {
+            label = label,
+            count = count,
+            lab_count = meta.lab_count
+        })
+    end
+end
+
+local process_research_health_availability = function(job)
+    local science = job.all_sciences[job.availability_index]
+    if not science then
+        if job.cluster_mode then
+            policy.prune_cluster_science_states(job.force_index, job.active_science_cluster_keys or {})
+        end
+        return true
+    end
+
+    local science_policy = policy.get_science_policy(job.force_index, science)
+    if job.cluster_mode then
+        local last = math.min(
+            #job.science_cluster_list,
+            job.availability_cluster_index + research_health_availability_budget - 1
+        )
+        for index = job.availability_cluster_index, last do
+            local cluster = job.science_cluster_list[index]
+            cluster.available_sciences = cluster.available_sciences or {}
+            local previous =
+                policy.get_cluster_science_available_state(job.force_index, cluster.key, science, false)
+            local threshold = previous and science_policy.lower_threshold or science_policy.upper_threshold
+            local lab_count = cluster.lab_input_counts[science] or 0
+            local required_count = math.max(1, lab_count * science_reserve_per_lab * threshold)
+            local cluster_available = lab_count > 0 and (cluster.counts[science] or 0) >= required_count
+            policy.set_cluster_science_available_state(
+                job.force_index,
+                cluster.key,
+                science,
+                cluster_available
+            )
+            cluster.available_sciences[science] = cluster_available
+            job.availability_current = job.availability_current or cluster_available
+        end
+        job.availability_cluster_index = last + 1
+        if job.availability_cluster_index <= #job.science_cluster_list then
+            return false
+        end
+        job.availability[science] = job.availability_current
+        job.availability_index = job.availability_index + 1
+        job.availability_cluster_index = 1
+        job.availability_current = false
+    else
+        local previous = policy.get_science_available_state(job.force_index, science, false)
+        local threshold = previous and science_policy.lower_threshold or science_policy.upper_threshold
+        local lab_count = job.lab_input_counts[science] or 0
+        local required_count = math.max(1, lab_count * science_reserve_per_lab * threshold)
+        local available = lab_count > 0 and (job.counts[science] or 0) >= required_count
+        policy.set_science_available_state(job.force_index, science, available)
+        job.availability[science] = available
+        job.availability_index = job.availability_index + 1
+    end
+    return false
+end
+
+local process_research_health_forecast = function(job, science)
+    local f = game.forces[job.force_index]
+    if not f then
+        job.forecast[science] = {}
+        return
+    end
+    local production = 0
+    local consumption = 0
+    local precision = defines.flow_precision_index.one_minute
+    for _, surface in pairs(game.surfaces) do
+        local ok_stats, stats = pcall(function()
+            return f.get_item_production_statistics(surface)
+        end)
+        if ok_stats and stats and stats.valid then
+            local ok_input, input = pcall(function()
+                return stats.get_flow_count({
+                    name = science,
+                    category = "input",
+                    precision_index = precision
+                })
+            end)
+            local ok_output, output = pcall(function()
+                return stats.get_flow_count({
+                    name = science,
+                    category = "output",
+                    precision_index = precision
+                })
+            end)
+            if ok_input then
+                production = production + math.max(0, input or 0)
+            end
+            if ok_output then
+                consumption = consumption + math.max(0, output or 0)
+            end
+        end
+    end
+
+    local science_policy = policy.get_science_policy(job.force_index, science)
+    local target = (job.lab_input_counts[science] or 0) * science_reserve_per_lab *
+        science_policy.upper_threshold
+    local stock = job.counts[science] or 0
+    local net = production - consumption
+    local depletion_seconds
+    local recovery_seconds
+    if net < -0.001 and stock > 0 then
+        depletion_seconds = (stock / -net) * 60
+    elseif net > 0.001 and stock < target then
+        recovery_seconds = ((target - stock) / net) * 60
+    end
+    job.forecast[science] = {
+        stock = stock,
+        target = target,
+        production_per_minute = production,
+        consumption_per_minute = consumption,
+        net_per_minute = net,
+        depletion_seconds = depletion_seconds,
+        recovery_seconds = recovery_seconds
+    }
+end
+
+queue.request_research_health_snapshot = function(force_index)
+    local f = game.forces[force_index]
+    local technology_name = f and f.current_research and f.current_research.name or nil
+    local snapshot = research_health_snapshots[force_index]
+    if not snapshot or game.tick - snapshot.tick >= research_health_refresh_ticks or
+        snapshot.technology_name ~= technology_name then
+        research_health_requests[force_index] = true
+    end
+end
+
+queue.tick_research_health_snapshot = function(force_index)
+    local f = game.forces[force_index]
+    if not f then
+        research_health_jobs[force_index] = nil
+        research_health_snapshots[force_index] = nil
+        research_health_requests[force_index] = nil
+        return false
+    end
+
+    local technology_name = f.current_research and f.current_research.name or nil
+    local snapshot = research_health_snapshots[force_index]
+    local job = research_health_jobs[force_index]
+    if job and job.technology_name ~= technology_name then
+        job = nil
+        research_health_jobs[force_index] = nil
+    end
+    local expired = not snapshot or game.tick - snapshot.tick >= research_health_refresh_ticks or
+        snapshot.technology_name ~= technology_name
+    if not job and (research_health_requests[force_index] or expired) then
+        job = new_research_health_job(force_index)
+        research_health_jobs[force_index] = job
+    end
+    if not job then
+        return false
+    end
+
+    if job.phase == "labs" then
+        local last = math.min(#job.observations, job.observation_index + research_health_lab_budget - 1)
+        for index = job.observation_index, last do
+            process_research_health_lab(job, job.observations[index])
+        end
+        job.observation_index = last + 1
+        if job.observation_index > #job.observations then
+            prepare_research_health_networks(job)
+            job.phase = "networks"
+        end
+        return false
+    end
+
+    if job.phase == "networks" then
+        local meta = job.networks[job.network_index]
+        if meta then
+            process_research_health_network(job, meta)
+            job.network_index = job.network_index + 1
+            return false
+        end
+        job.science_cluster_list = map_values(job.science_clusters)
+        job.active_science_cluster_keys = {}
+        for _, cluster in ipairs(job.science_cluster_list) do
+            job.active_science_cluster_keys[cluster.key] = true
+        end
+        job.availability.__cluster_mode = job.cluster_mode
+        job.availability.__clusters = job.science_clusters
+        job.availability.__force_index = job.force_index
+        job.phase = "availability"
+    end
+
+    if job.phase == "availability" then
+        if not process_research_health_availability(job) then
+            return false
+        end
+        job.phase = "forecast"
+    end
+
+    if job.phase == "forecast" then
+        local science = job.all_sciences[job.forecast_index]
+        if science then
+            process_research_health_forecast(job, science)
+            job.forecast_index = job.forecast_index + 1
+            return false
+        end
+        job.diagnostic_clusters = map_values(job.diagnostic.clusters)
+        job.phase = "diagnostic_clusters"
+    end
+
+    if job.phase == "diagnostic_clusters" then
+        local last = math.min(
+            #job.diagnostic_clusters,
+            job.diagnostic_cluster_index + research_health_cluster_budget - 1
+        )
+        for index = job.diagnostic_cluster_index, last do
+            finalize_diagnostic_cluster(
+                job.diagnostic_clusters[index],
+                job.diagnostic.required_sciences
+            )
+        end
+        job.diagnostic_cluster_index = last + 1
+        if job.diagnostic_cluster_index <= #job.diagnostic_clusters then
+            return false
+        end
+        job.phase = "finish"
+    end
+
+    local diagnostic = finish_display_diagnostic(job.diagnostic)
+    research_health_snapshots[force_index] = {
+        tick = game.tick,
+        technology_name = job.technology_name,
+        counts = job.counts,
+        breakdown = job.breakdown,
+        availability = job.availability,
+        forecast = job.forecast,
+        diagnostic = diagnostic
+    }
+    research_health_jobs[force_index] = nil
+    research_health_requests[force_index] = nil
+    return true
+end
+
+queue.get_science_display_counts = function(force_index)
+    queue.request_research_health_snapshot(force_index)
+    local snapshot = research_health_snapshots[force_index]
+    return snapshot and snapshot.counts or {}
+end
+
+queue.get_science_display_breakdown = function(force_index, science)
+    queue.request_research_health_snapshot(force_index)
+    local snapshot = research_health_snapshots[force_index]
+    local breakdown = snapshot and snapshot.breakdown
+    return (breakdown and breakdown[science]) or {
+        lab_count = 0,
+        lab_entity_count = 0,
+        network_total = 0,
+        networks = {}
+    }
+end
+
+queue.get_science_display_forecast = function(force_index)
+    queue.request_research_health_snapshot(force_index)
+    local snapshot = research_health_snapshots[force_index]
+    return snapshot and snapshot.forecast or {}
+end
+
+queue.get_research_health_snapshot_tick = function(force_index)
+    local snapshot = research_health_snapshots[force_index]
+    return snapshot and snapshot.tick or -1
+end
+
+queue.get_research_display_diagnostic = function(force_index)
+    queue.request_research_health_snapshot(force_index)
+    local f = game.forces[force_index]
+    local technology_name = f and f.current_research and f.current_research.name or nil
+    local snapshot = research_health_snapshots[force_index]
+    if snapshot and snapshot.technology_name == technology_name then
+        return snapshot.diagnostic
+    end
+    return new_display_diagnostic(force_index, f and f.current_research).result
 end
 
 -- Use the staggered lab snapshots for the background switcher. This preserves
@@ -2735,6 +3352,19 @@ local get_all_runtime_candidate_names = function(force_index, tsx)
     return res
 end
 
+local compare_scored_queue_entries = function(a, b)
+    if a.pinned ~= b.pinned then
+        return a.pinned
+    end
+    if a.score == b.score then
+        if a.source_index == b.source_index then
+            return a.tech_name < b.tech_name
+        end
+        return a.source_index < b.source_index
+    end
+    return a.score > b.score
+end
+
 local get_scored_queue_source = function(force_index, tsx, source)
     local scored = {}
     local seen = {}
@@ -2759,18 +3389,7 @@ local get_scored_queue_source = function(force_index, tsx, source)
         end
     end
 
-    table.sort(scored, function(a, b)
-        if a.pinned ~= b.pinned then
-            return a.pinned
-        end
-        if a.score == b.score then
-            if a.source_index == b.source_index then
-                return a.tech_name < b.tech_name
-            end
-            return a.source_index < b.source_index
-        end
-        return a.score > b.score
-    end)
+    table.sort(scored, compare_scored_queue_entries)
 
     local res = {}
     for _, entry in ipairs(scored) do
@@ -2797,7 +3416,7 @@ get_virtual_queue_source = function(force_index, tsx)
     return get_scored_queue_source(force_index, tsx, get_all_runtime_candidate_names(force_index, tsx))
 end
 
-local get_virtual_research_entries = function(force_index, count)
+local get_virtual_research_entries = function(force_index, count, science_availability)
     local f = game.forces[force_index]
     if not f then
         return {}
@@ -2819,7 +3438,7 @@ local get_virtual_research_entries = function(force_index, count)
         speed = nil
     end
 
-    local lsci = queue.get_science_availability(force_index)
+    local lsci = science_availability or queue.get_science_availability(force_index)
     local virtually_researched = {}
     for name, xcur in pairs(tsx) do
         if xcur.technology.researched then
@@ -3164,6 +3783,275 @@ end
 
 queue.get_upcoming_research = function(force_index, count)
     return get_virtual_research_entries(force_index, count)
+end
+
+queue.get_upcoming_research_display = function(force_index, count)
+    local snapshot = research_health_snapshots[force_index]
+    local availability = snapshot and snapshot.availability
+    return get_virtual_research_entries(force_index, count, availability)
+end
+
+local add_upcoming_display_entry = function(job, tech_name, xcur)
+    local cost = get_research_unit_count(xcur)
+    local duration
+    if job.speed then
+        duration = cost / job.speed
+        if job.force.current_research and job.force.current_research.name == tech_name then
+            duration = duration * math.max(0, 1 - (job.force.research_progress or 0))
+        end
+    end
+    local availability_reason, missing_sciences = get_science_block_details(xcur, job.science_availability)
+    table.insert(job.results, {
+        tech_name = tech_name,
+        level = xcur.technology.level,
+        cost = cost,
+        duration = duration,
+        wait_time = job.speed and job.cumulative_time or nil,
+        xcur = xcur,
+        has_science = availability_reason == nil,
+        availability_reason = availability_reason,
+        missing_sciences = missing_sciences
+    })
+    job.virtually_researched[tech_name] = true
+    if duration then
+        job.cumulative_time = job.cumulative_time + duration
+    end
+end
+
+local get_upcoming_display_candidate = function(job, requested_name)
+    if job.virtually_researched[requested_name] then
+        return nil, nil
+    end
+    local xcur = job.tech_states[requested_name]
+    if not tech_can_be_runtime_candidate(job.force_index, xcur) then
+        return nil, nil
+    end
+
+    local all_pre_met = true
+    local prerequisite_names = {}
+    for prerequisite_name in pairs(xcur.meta.all_prerequisites or {}) do
+        table.insert(prerequisite_names, prerequisite_name)
+        if not job.virtually_researched[prerequisite_name] then
+            all_pre_met = false
+        end
+    end
+    if all_pre_met then
+        return requested_name, xcur
+    end
+
+    table.sort(prerequisite_names)
+    for _, prerequisite_name in ipairs(prerequisite_names) do
+        local prerequisite = job.tech_states[prerequisite_name]
+        if prerequisite and not job.virtually_researched[prerequisite_name] and
+            tech_can_be_runtime_candidate(job.force_index, prerequisite) then
+            local prerequisite_ready = true
+            for second_name in pairs(prerequisite.meta.all_prerequisites or {}) do
+                if not job.virtually_researched[second_name] then
+                    prerequisite_ready = false
+                    break
+                end
+            end
+            if prerequisite_ready then
+                return prerequisite_name, prerequisite
+            end
+        end
+    end
+    return nil, nil
+end
+
+queue.request_upcoming_research_display = function(force_index, count)
+    upcoming_display_jobs[force_index] = {
+        force_index = force_index,
+        phase = "initialize",
+        results = {},
+        maximum = count or math.huge,
+        requested_count = count,
+        complete = false
+    }
+end
+
+queue.tick_upcoming_research_display = function(force_index, budget)
+    local job = upcoming_display_jobs[force_index]
+    if not job then
+        return true, {}
+    end
+    if job.complete then
+        return true, job.results
+    end
+
+    if job.phase == "initialize" then
+        local f = game.forces[force_index]
+        local tsx = tech.get_all_tech_state_ext(force_index)
+        if not f or not tsx then
+            job.complete = true
+            return true, job.results
+        end
+
+        local stored_queue = get(force_index, keys.queue)
+        local collect_source = not stored_queue or #stored_queue == 0
+        if collect_source and (policy.get_setting(force_index, "strategy") == "focused" or
+            not state.get_force_setting(force_index, "auto_research",
+                const.default_settings.force.settings.auto_research)) then
+            collect_source = false
+        end
+
+        local source = {}
+        if stored_queue and #stored_queue > 0 then
+            for _, technology_name in ipairs(stored_queue) do
+                table.insert(source, technology_name)
+            end
+        end
+
+        local speed = queue.get_research_speed(force_index)
+        if not speed or speed <= 0 then
+            speed = nil
+        end
+        job.force = f
+        job.tech_states = tsx
+        job.source = source
+        job.collect_source = collect_source
+        job.speed = speed
+        job.virtually_researched = {}
+        job.total_candidate_cost = 0
+        job.candidate_count = 0
+        job.scan_key = nil
+        job.scored = {}
+        job.scored_seen = {}
+        job.score_index = 1
+        job.pinned = queue.get_pinned_tech(force_index)
+        job.cumulative_time = 0
+        job.phase = "scan"
+        queue.request_research_health_snapshot(force_index)
+        return false, job.results
+    end
+
+    if job.phase == "scan" then
+        for _ = 1, 16 do
+            local technology_name, xcur = next(job.tech_states, job.scan_key)
+            job.scan_key = technology_name
+            if not technology_name then
+                if job.collect_source then
+                    table.sort(job.source)
+                end
+                if job.candidate_count > 0 then
+                    job.average_cost = job.total_candidate_cost / job.candidate_count
+                end
+                job.phase = "score"
+                break
+            end
+            if xcur.technology.researched then
+                job.virtually_researched[technology_name] = true
+            end
+            if tech_can_be_runtime_candidate(force_index, xcur) then
+                job.total_candidate_cost = job.total_candidate_cost + get_research_unit_count(xcur)
+                job.candidate_count = job.candidate_count + 1
+                if job.collect_source then
+                    table.insert(job.source, technology_name)
+                end
+            end
+        end
+        return false, job.results
+    end
+
+    if job.phase == "score" then
+        for _ = 1, 8 do
+            local source_index = job.score_index
+            local technology_name = job.source[source_index]
+            if not technology_name then
+                table.sort(job.scored, compare_scored_queue_entries)
+                job.source = {}
+                for _, entry in ipairs(job.scored) do
+                    table.insert(job.source, entry.tech_name)
+                end
+                job.phase = "finalize"
+                break
+            end
+            job.score_index = source_index + 1
+            if not job.scored_seen[technology_name] then
+                job.scored_seen[technology_name] = true
+                local xcur = job.tech_states[technology_name]
+                if tech_can_be_runtime_candidate(force_index, xcur) then
+                    local stored_ub = queue.get_tech_ub(force_index, technology_name)
+                    local score = queue.score_tech_detailed(
+                        xcur,
+                        xcur.technology.level,
+                        stored_ub,
+                        job.average_cost,
+                        force_index
+                    )
+                    table.insert(job.scored, {
+                        tech_name = technology_name,
+                        score = score.total,
+                        source_index = source_index,
+                        pinned = job.pinned == technology_name
+                    })
+                end
+            end
+        end
+        return false, job.results
+    end
+
+    if job.phase == "finalize" then
+        local snapshot = research_health_snapshots[force_index]
+        if not snapshot or not snapshot.availability then
+            queue.request_research_health_snapshot(force_index)
+            return false, job.results
+        end
+        job.science_availability = snapshot.availability
+        local current_name = job.force.current_research and job.force.current_research.name
+        job.remaining_iterations = math.max(
+            #job.source * 10,
+            (job.requested_count or #job.source) * 10,
+            10
+        )
+        local current = current_name and job.tech_states[current_name]
+        if current and current.technology and current.meta then
+            add_upcoming_display_entry(job, current_name, current)
+        end
+        job.phase = "entries"
+        if #job.results >= job.maximum or (#job.source == 0 and not current_name) then
+            job.complete = true
+        end
+        if job.complete then
+            return true, job.results
+        end
+        return false, job.results
+    end
+
+    local remaining = math.max(1, math.floor(tonumber(budget) or 1))
+    while remaining > 0 and #job.results < job.maximum and job.remaining_iterations > 0 do
+        remaining = remaining - 1
+        job.remaining_iterations = job.remaining_iterations - 1
+        local selected_name
+        local selected_xcur
+        local blocked_name
+        local blocked_xcur
+        for _, requested_name in ipairs(job.source) do
+            local candidate_name, candidate_xcur = get_upcoming_display_candidate(job, requested_name)
+            if candidate_name then
+                if science_is_available(candidate_xcur, job.science_availability) then
+                    selected_name = candidate_name
+                    selected_xcur = candidate_xcur
+                    break
+                elseif not blocked_name then
+                    blocked_name = candidate_name
+                    blocked_xcur = candidate_xcur
+                end
+            end
+        end
+        selected_name = selected_name or blocked_name
+        selected_xcur = selected_xcur or blocked_xcur
+        if not selected_name then
+            job.complete = true
+            break
+        end
+        add_upcoming_display_entry(job, selected_name, selected_xcur)
+    end
+
+    if #job.results >= job.maximum or job.remaining_iterations <= 0 then
+        job.complete = true
+    end
+    return job.complete, job.results
 end
 
 local get_ingredient_name_and_amount = function(ingredient)
@@ -3576,6 +4464,7 @@ end
 
 queue.init_force = function(force_index)
     local sf = storage.forces[force_index]
+    queue.invalidate_science_cache(force_index)
     if not sf.queue then
         sf.queue = {}
     end

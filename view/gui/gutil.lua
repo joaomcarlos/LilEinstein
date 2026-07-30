@@ -2,30 +2,40 @@
 local state = require("model.state")
 local gutil = {}
 
--- Format a number in SI style: 1.5M, 500K, 2.3k, etc.
-gutil.format_cost = function(n)
-    if not n or n < 1000 then
-        return tostring(n or 0)
+local si_suffixes = {"", "K", "M", "G", "T", "P", "E", "Z", "Y", "R", "Q"}
+
+-- Format a number with a compact SI prefix and at most one decimal place.
+gutil.format_si = function(n)
+    local value = tonumber(n) or 0
+    if value == math.huge or value == -math.huge or value ~= value then
+        return tostring(value)
     end
-    if n >= 1000000 then
-        local val = n / 1000000
-        -- Show as integer if it's a whole number, otherwise one decimal
-        if val == math.floor(val) then
-            return string.format("%dM", math.floor(val))
-        else
-            return string.format("%.1fM", val)
-        end
+
+    local sign = value < 0 and -1 or 1
+    local scaled = math.abs(value)
+    local suffix_index = 1
+    while scaled >= 1000 and suffix_index < #si_suffixes do
+        scaled = scaled / 1000
+        suffix_index = suffix_index + 1
     end
-    if n >= 1000 then
-        local val = n / 1000
-        if val == math.floor(val) then
-            return string.format("%dK", math.floor(val))
-        else
-            return string.format("%.1fK", val)
-        end
+
+    -- Promote values that round to 1000 into the next prefix (999.96K -> 1M).
+    if scaled >= 999.95 and suffix_index < #si_suffixes then
+        scaled = scaled / 1000
+        suffix_index = suffix_index + 1
     end
-    return tostring(n)
+
+    scaled = math.floor((scaled * 10) + 0.5) / 10 * sign
+    local formatted
+    if scaled == math.floor(scaled) then
+        formatted = tostring(math.floor(scaled))
+    else
+        formatted = string.format("%.1f", scaled)
+    end
+    return formatted .. si_suffixes[suffix_index]
 end
+
+gutil.format_cost = gutil.format_si
 
 gutil.disenable_recursive = function(elm, enbl)
     if not elm then
@@ -44,9 +54,14 @@ gutil.disenable_recursive = function(elm, enbl)
     end
 end
 
+-- LuaGuiElement references are runtime-only and must never enter storage. Keep
+-- them in a resettable module cache so recurring value refreshes do not walk
+-- the entire GUI tree; invalid elements are rediscovered after subtree rebuilds.
+local child_cache = {}
+
 local get_child_recursive
 get_child_recursive = function(parent, target)
-    if not parent then
+    if not parent or not parent.valid then
         return nil
     end
     if parent.name == target then
@@ -61,7 +76,36 @@ get_child_recursive = function(parent, target)
     end
 end
 gutil.get_child = function(anchor, target)
-    return get_child_recursive(anchor, target)
+    if not anchor or not anchor.valid then
+        return nil
+    end
+
+    local anchor_index = anchor.index
+    local entry = child_cache[anchor_index]
+    if not entry or not entry.anchor.valid or entry.anchor ~= anchor then
+        entry = {
+            anchor = anchor,
+            children = {}
+        }
+        child_cache[anchor_index] = entry
+    end
+
+    local cached = entry.children[target]
+    if cached and cached.valid then
+        return cached
+    end
+
+    local child = get_child_recursive(anchor, target)
+    if child then
+        entry.children[target] = child
+    else
+        entry.children[target] = nil
+    end
+    return child
+end
+
+gutil.clear_child_cache = function()
+    child_cache = {}
 end
 
 gutil.get_tech_name = function(player_index, xcur, override_level)

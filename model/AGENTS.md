@@ -23,8 +23,11 @@ Runtime data model and research-autopilot logic for the LilEinstein Factorio mod
 - Temp-tech switching respects pinned techs, science priority, and a symmetric score margin; unavailable techs are scored with a discount and never act as runtime candidates
 - Runtime candidates exclude hidden, disabled, triggered, avoided, and finite/infinite capped technologies
 - Active science-supply checks use staggered live lab-starvation snapshots; non-active candidate checks cap depletion forecasts at the remaining research time
-- The per-force research diagnostic is a same-tick shared cache: it measures only samples for the current technology, classifies decision states from named material-loss thresholds, and emits deterministic semantic display clusters without persisting logistic networks
-- Lab inventory observations come from the staggered lab updater; same-tick count and diagnostic consumers share them, while logistic-network references remain short-lived module-local cache entries
+- The per-force research diagnostic measures only samples for the current technology, classifies decision states from named material-loss thresholds, and emits deterministic semantic display clusters without persisting logistic networks
+- Open decision views consume a shared per-force snapshot assembled in bounded lab, network, forecast, and cluster slices; player refreshes must never synchronously aggregate every lab
+- Upcoming display plans scan and score technologies in bounded slices before the view renders them; synchronous plan generation remains available for direct player actions
+- Lab membership is discovered once during force initialization and maintained from build, clone, and revive events; GUI refreshes must never rescan every surface
+- Lab inventory observations come from the staggered lab updater; count and diagnostic consumers share stable runtime-only descriptors, while logistic-network references remain short-lived module-local cache entries
 - Research diagnostic display clusters group logistic labs by surface/network and direct-fed labs by surface; cluster values are capacity and local-stock evidence, never inferred actual cluster throughput
 - Upcoming research plans put the active technology first and prefer science-supplied candidates before science-blocked fallbacks
 - `<module>.init` does not trigger `<module>.init_force`/`init_player`; `control.lua` calls those directly

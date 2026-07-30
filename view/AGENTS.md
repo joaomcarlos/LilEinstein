@@ -11,7 +11,7 @@ GUI layer for the LilEinstein mod: window lifecycle, layout construction, and pr
 - `gui/analyzer.lua` — turns model data (state, tech, queue, lab) into presentable data consumed directly by the GUI
 - `gui/gutil.lua` — GUI helpers/utilities
 - `gui/components.lua` — shared component library, including the decision-first Research Health card and its focused science-throughput drilldown (largest view file)
-- `gui/components/queue.lua`, `gui/components/tech.lua`, `gui/components/upcoming.lua` — per-panel components
+- `gui/components/queue.lua`, `gui/components/tech.lua`, `gui/components/upcoming.lua` — per-panel components; technology and upcoming panels expose staged automatic rebuild jobs
 
 ## Local Contracts
 
@@ -20,6 +20,9 @@ GUI layer for the LilEinstein mod: window lifecycle, layout construction, and pr
 - Player GUI state persists under `storage.players[player_index]` via `state`/`gui.init_player`
 - The science-throughput drilldown preserves the root window, keeps headers outside its single vertical scroll pane, and refreshes stable rows in place while cluster membership/order is unchanged
 - Throughput cluster rows present working/maximum capacity and local stock evidence only; force-wide measured SPM is never labeled as cluster output and overlapping missing-pack impacts are not summed
+- Recurring value refreshes reuse validated runtime-only GUI element references and skip unchanged property writes; LuaGuiElement references never enter persistent storage
+- Automatic queue/research rebuilds stage technology scoring and render one technology or upcoming-research row per tick; direct player actions may still repopulate immediately
+- Science inventory and per-minute rates use the shared compact SI formatter (`K`, `M`, `G`, and higher prefixes) with at most one decimal place
 - Upcoming rows mirror effective research order and state the science-supply reason when an entry is not selectable
 - New Upcoming LocalisedStrings include literal fallbacks so control-stage reloads cannot render `Unknown key` text
 

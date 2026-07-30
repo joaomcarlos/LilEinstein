@@ -9,6 +9,7 @@ local gcupcoming = {}
 
 -- Cache for lightweight per-second countdown refresh
 local upcoming_ui_cache = {}
+local upcoming_render_jobs = {}
 local upcoming_row_width = 525
 local upcoming_row_height = 60
 local upcoming_rank_width = 49
@@ -112,11 +113,12 @@ local set_icon_progress = function(progress_bar, progress)
     end
 
     progress = math.max(0, math.min(1, progress or 0))
-    progress_bar.visible = true
-    progress_bar.value = progress
-    progress_bar.style.width = upcoming_icon_size
-    progress_bar.style.height = upcoming_icon_progress_height
-    progress_bar.style.bar_width = upcoming_icon_size
+    if not progress_bar.visible then
+        progress_bar.visible = true
+    end
+    if progress_bar.value ~= progress then
+        progress_bar.value = progress
+    end
 end
 
 local set_progress_text = function(progress_label, progress, is_current)
@@ -125,8 +127,14 @@ local set_progress_text = function(progress_label, progress, is_current)
     end
 
     progress = math.max(0, math.min(1, progress or 0))
-    progress_label.visible = is_current or progress > 0
-    progress_label.caption = string.format("%.2f%%", progress * 100)
+    local visible = is_current or progress > 0
+    local caption = string.format("%.2f%%", progress * 100)
+    if progress_label.visible ~= visible then
+        progress_label.visible = visible
+    end
+    if progress_label.caption ~= caption then
+        progress_label.caption = caption
+    end
 end
 
 local set_rank_arrows = function(row, is_current, is_pinned)
@@ -136,12 +144,18 @@ local set_rank_arrows = function(row, is_current, is_pinned)
 
     local current_arrow = gutil.get_child(row, "upcoming_current_arrow")
     if current_arrow and current_arrow.valid then
-        current_arrow.caption = is_current and ">" or ""
+        local caption = is_current and ">" or ""
+        if current_arrow.caption ~= caption then
+            current_arrow.caption = caption
+        end
     end
 
     local pinned_arrow = gutil.get_child(row, "upcoming_pinned_arrow")
     if pinned_arrow and pinned_arrow.valid then
-        pinned_arrow.caption = is_pinned and ">" or ""
+        local caption = is_pinned and ">" or ""
+        if pinned_arrow.caption ~= caption then
+            pinned_arrow.caption = caption
+        end
     end
 end
 
@@ -270,6 +284,9 @@ local add_upcoming_row = function(parent, rank, entry, player_index)
         ignored_by_interaction = true
     })
     progress_bar.style.top_margin = -upcoming_icon_progress_height
+    progress_bar.style.width = upcoming_icon_size
+    progress_bar.style.height = upcoming_icon_progress_height
+    progress_bar.style.bar_width = upcoming_icon_size
 
     local progress = get_research_progress(player, entry.tech_name)
     set_icon_progress(progress_bar, progress)
@@ -397,10 +414,13 @@ gcupcoming.refresh_progress = function(player_index, anchor)
         return
     end
 
+    local pinned_tech = queue.get_pinned_tech(player.force.index)
+    local current_research = player.force.current_research
+    local current_tech = current_research and current_research.name
     for _, row in ipairs(flow.children) do
         if row.valid and row.tags and row.tags.technology then
-            local is_pinned = queue.get_pinned_tech(player.force.index) == row.tags.technology
-            local is_current = player.force.current_research and player.force.current_research.name == row.tags.technology
+            local is_pinned = pinned_tech == row.tags.technology
+            local is_current = current_tech == row.tags.technology
             local progress = get_research_progress(player, row.tags.technology)
             local progress_bar = gutil.get_child(row, "upcoming_icon_progress")
             local progress_label = gutil.get_child(row, "upcoming_progress_label")
@@ -411,40 +431,83 @@ gcupcoming.refresh_progress = function(player_index, anchor)
     end
 end
 
-gcupcoming.populate = function(player_index, anchor)
+gcupcoming.request_populate = function(player_index, anchor)
     local player = game.get_player(player_index)
     if not player then
-        return
+        return false
     end
 
     local flow = gutil.get_child(anchor, "flow_upcoming")
     if not flow then
-        return
+        return false
     end
-    flow.clear()
-
-    local upcoming = queue.get_upcoming_research(player.force.index, 15)
-    if not upcoming or #upcoming == 0 then
-        flow.add({
-            type = "label",
-            caption = localize_with_fallback(
-                "lil_einstein-upcoming.none-available",
-                "No upcoming research available"
-            )
-        })
-        return
-    end
-
-    upcoming_ui_cache[player_index] = {
-        tick = game.tick,
-        data = upcoming
+    queue.request_upcoming_research_display(player.force.index, 15)
+    upcoming_render_jobs[player_index] = {
+        anchor = anchor,
+        flow = flow,
+        force_index = player.force.index,
+        phase = "model",
+        upcoming = nil,
+        next_index = 1
     }
+    return false
+end
 
-    for i, entry in ipairs(upcoming) do
-        add_upcoming_row(flow, i, entry, player_index)
-        if i < #upcoming then
-            add_separator(flow)
+gcupcoming.tick_populate = function(player_index, anchor, budget)
+    local job = upcoming_render_jobs[player_index]
+    if not job then
+        return true
+    end
+    if not job.anchor.valid or job.anchor ~= anchor or not job.flow.valid then
+        upcoming_render_jobs[player_index] = nil
+        return true
+    end
+    if job.phase == "model" then
+        local complete, upcoming = queue.tick_upcoming_research_display(job.force_index, 1)
+        if not complete then
+            return false
         end
+        job.flow.clear()
+        if not upcoming or #upcoming == 0 then
+            job.flow.add({
+                type = "label",
+                caption = localize_with_fallback(
+                    "lil_einstein-upcoming.none-available",
+                    "No upcoming research available"
+                )
+            })
+            upcoming_render_jobs[player_index] = nil
+            return true
+        end
+        upcoming_ui_cache[player_index] = {
+            tick = game.tick,
+            data = upcoming
+        }
+        job.upcoming = upcoming
+        job.phase = "render"
+        return false
+    end
+
+    local last = math.min(#job.upcoming, job.next_index + (budget or 1) - 1)
+    for index = job.next_index, last do
+        add_upcoming_row(job.flow, index, job.upcoming[index], player_index)
+        if index < #job.upcoming then
+            add_separator(job.flow)
+        end
+    end
+    job.next_index = last + 1
+    if job.next_index > #job.upcoming then
+        upcoming_render_jobs[player_index] = nil
+        return true
+    end
+    return false
+end
+
+gcupcoming.populate = function(player_index, anchor)
+    if gcupcoming.request_populate(player_index, anchor) then
+        return
+    end
+    while not gcupcoming.tick_populate(player_index, anchor, 15) do
     end
 end
 
@@ -489,6 +552,11 @@ gcupcoming.refresh_times = function(player_index, anchor)
             end
         end
     end
+end
+
+gcupcoming.clear_runtime_cache = function()
+    upcoming_ui_cache = {}
+    upcoming_render_jobs = {}
 end
 
 return gcupcoming

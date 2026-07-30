@@ -410,6 +410,20 @@ lab.get_runtime_lab_content = function(force_index)
     return get(force_index, keys.lab_content) or {}
 end
 
+lab.get_registered_labs = function(force_index)
+    local lab_ids = get(force_index, keys.all_labs) or {}
+    local lab_content = get(force_index, keys.lab_content) or {}
+    local entities = {}
+    for _, lab_id in ipairs(lab_ids) do
+        local lcur = lab_content[lab_id]
+        local entity = lcur and lcur.lab
+        if entity and entity.valid then
+            table.insert(entities, entity)
+        end
+    end
+    return entities
+end
+
 ---@param entity LuaEntity
 lab.register = function(entity)
     if not entity then

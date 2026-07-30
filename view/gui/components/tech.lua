@@ -11,6 +11,8 @@ local analyzer = require("view.gui.analyzer")
 local gutil = require("view.gui.gutil")
 
 local gctech = {}
+local populate_jobs = {}
+local filtered_allowed_cache = {}
 
 local get_tech_icon = function(techtbl, xcur, enbl, player_index)
     local icn = techtbl.add({
@@ -330,6 +332,19 @@ local get_buttons = function(techtbl, xcur, enbl)
 
 end
 
+local render_technology_row = function(techtbl, entry, enabled, player_index, force_index)
+    local row = techtbl.add({
+        type = "frame",
+        direction = "horizontal",
+        style = "lil_einstein_available_row_frame",
+        enabled = enabled
+    })
+    row.style.width = 650
+    get_tech_icon(row, entry.xcur, enabled, player_index)
+    get_title(row, entry.xcur, enabled, player_index, force_index, entry.score)
+    get_buttons(row, entry.xcur, enabled)
+end
+
 gctech.populate = function(player_index, anchor)
     local p = game.get_player(player_index)
     local f = p.force
@@ -363,6 +378,7 @@ gctech.populate = function(player_index, anchor)
     for _, xcur in ipairs(filtered) do
         allowed[xcur.technology.name] = true
     end
+    filtered_allowed_cache[player_index] = allowed
 
     -- Compute average cost of all unresearched enabled techs for level boost display
     local total_cost_sum = 0
@@ -405,17 +421,163 @@ gctech.populate = function(player_index, anchor)
 
     -- Render sorted list with score breakdown
     for _, entry in ipairs(scored_techs) do
-        local row = techtbl.add({
-            type = "frame",
-            direction = "horizontal",
-            style = "lil_einstein_available_row_frame",
-            enabled = enbl
-        })
-        row.style.width = 650
-        get_tech_icon(row, entry.xcur, enbl, player_index)
-        get_title(row, entry.xcur, enbl, player_index, f.index, entry.score)
-        get_buttons(row, entry.xcur, enbl)
+        render_technology_row(techtbl, entry, enbl, player_index, f.index)
     end
+end
+
+gctech.request_populate = function(player_index, anchor)
+    local p = game.get_player(player_index)
+    local techtbl = anchor and gutil.get_child(anchor, "available_technology_table")
+    if not p or not techtbl then
+        populate_jobs[player_index] = nil
+        return true
+    end
+
+    local force_index = p.force.index
+    local order = queue.get_tech_order(force_index)
+    if not order then
+        order = queue.build_tech_order(force_index)
+    end
+    local tsx = tech.get_all_tech_state_ext(force_index)
+    if not tsx then
+        populate_jobs[player_index] = nil
+        return true
+    end
+
+    local allowed = filtered_allowed_cache[player_index]
+    if not allowed then
+        allowed = {}
+        for _, xcur in ipairs(analyzer.get_filtered_technologies_player(player_index)) do
+            allowed[xcur.technology.name] = true
+        end
+        filtered_allowed_cache[player_index] = allowed
+    end
+    local master_state = state.get_force_setting(
+        force_index,
+        "master_enable",
+        const.default_settings.force.master_enable
+    )
+    techtbl.clear()
+    populate_jobs[player_index] = {
+        anchor = anchor,
+        table = techtbl,
+        force_index = force_index,
+        order = order,
+        tech_states = tsx,
+        allowed = allowed,
+        enabled = master_state ~= "left",
+        phase = "average",
+        next_index = 1,
+        total_cost = 0,
+        cost_count = 0,
+        scored = {}
+    }
+    return false
+end
+
+gctech.tick_populate = function(player_index, anchor, budget)
+    local job = populate_jobs[player_index]
+    if not job then
+        return true
+    end
+    if not anchor or not anchor.valid or job.anchor ~= anchor or not job.table.valid then
+        populate_jobs[player_index] = nil
+        return true
+    end
+
+    if job.phase == "average" then
+        for _ = 1, 32 do
+            local technology_name = job.order[job.next_index]
+            if not technology_name then
+                job.average_cost = job.cost_count > 0 and (job.total_cost / job.cost_count) or nil
+                job.next_index = 1
+                job.phase = "score"
+                break
+            end
+            job.next_index = job.next_index + 1
+            local xcur = job.tech_states[technology_name]
+            if xcur and not xcur.technology.researched and job.allowed[xcur.technology.name] then
+                if xcur.technology.name ~= technology_name then
+                    logger.debug(
+                        nil,
+                        "key mismatch: order=" .. tostring(technology_name) ..
+                            " name=" .. tostring(xcur.technology.name)
+                    )
+                end
+                job.total_cost = job.total_cost + (xcur.technology.research_unit_count or 1)
+                job.cost_count = job.cost_count + 1
+            end
+        end
+        return false
+    end
+
+    if job.phase == "score" then
+        for _ = 1, 8 do
+            local technology_name = job.order[job.next_index]
+            if not technology_name then
+                job.phase = "sort"
+                break
+            end
+            job.next_index = job.next_index + 1
+            local xcur = job.tech_states[technology_name]
+            if xcur and not xcur.technology.researched and job.allowed[xcur.technology.name] then
+                if xcur.technology.name ~= technology_name then
+                    logger.debug(
+                        nil,
+                        "key mismatch: order=" .. tostring(technology_name) ..
+                            " name=" .. tostring(xcur.technology.name)
+                    )
+                end
+                local user_boost = queue.get_tech_ub(job.force_index, xcur.technology.name)
+                local score = queue.score_tech_detailed(
+                    xcur,
+                    xcur.technology.level,
+                    user_boost,
+                    job.average_cost,
+                    job.force_index
+                )
+                table.insert(job.scored, {
+                    tech_name = technology_name,
+                    xcur = xcur,
+                    score = score
+                })
+            end
+        end
+        return false
+    end
+
+    if job.phase == "sort" then
+        table.sort(job.scored, function(a, b)
+            return a.score.total > b.score.total
+        end)
+        job.next_index = 1
+        job.phase = "render"
+        return false
+    end
+
+    local remaining = math.max(1, math.floor(tonumber(budget) or 1))
+    while remaining > 0 do
+        local entry = job.scored[job.next_index]
+        if not entry then
+            populate_jobs[player_index] = nil
+            return true
+        end
+        remaining = remaining - 1
+        job.next_index = job.next_index + 1
+        render_technology_row(
+            job.table,
+            entry,
+            job.enabled,
+            player_index,
+            job.force_index
+        )
+    end
+    return false
+end
+
+gctech.clear_runtime_cache = function()
+    populate_jobs = {}
+    filtered_allowed_cache = {}
 end
 
 return gctech

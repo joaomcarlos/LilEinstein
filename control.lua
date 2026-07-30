@@ -153,6 +153,19 @@ script.on_event(defines.events.on_tick, function(e)
     -- Do the translation request if any
     state.tick_request_translation()
 
+    local open_force_indices = {}
+    for _, p in pairs(game.connected_players) do
+        if gui.is_open(p.index) then
+            open_force_indices[p.force.index] = true
+            gui.tick_repopulate(p.index)
+            gui.tick_science_counts(p.index)
+            gui.tick_research_graph(p.index)
+        end
+    end
+    for force_index in pairs(open_force_indices) do
+        queue.tick_research_health_snapshot(force_index)
+    end
+
     for _, f in pairs(game.forces) do
         local refresh_gui = false
 
@@ -183,7 +196,7 @@ script.on_event(defines.events.on_tick, function(e)
         end
 
         if state.gui_needs_update(f) or refresh_gui then
-            gui.repopulate_open(f.index)
+            gui.request_repopulate_open(f.index)
         end
 
         -- Sample actual research speed every 3 seconds for the 10-minute history graph.
@@ -298,6 +311,16 @@ end, labfilter)
 script.on_event(defines.events.script_raised_built, function(e)
     register_lab(e.entity)
 end, labfilter)
+script.on_event(defines.events.script_raised_revive, function(e)
+    if e.entity and e.entity.type == "lab" then
+        register_lab(e.entity)
+    end
+end)
+script.on_event(defines.events.on_entity_cloned, function(e)
+    if e.destination and e.destination.type == "lab" then
+        register_lab(e.destination)
+    end
+end)
 
 ----------------------------------------------------------------------------------------------------
 -- KEYBINDING HOOKS
