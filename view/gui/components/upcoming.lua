@@ -504,10 +504,42 @@ gcupcoming.tick_populate = function(player_index, anchor, budget)
 end
 
 gcupcoming.populate = function(player_index, anchor)
-    if gcupcoming.request_populate(player_index, anchor) then
+    upcoming_render_jobs[player_index] = nil
+    local player = game.get_player(player_index)
+    if not player then
         return
     end
-    while not gcupcoming.tick_populate(player_index, anchor, 15) do
+
+    local flow = gutil.get_child(anchor, "flow_upcoming")
+    if not flow then
+        return
+    end
+    flow.clear()
+
+    -- Direct player actions run inside the current event and cannot wait for a
+    -- background snapshot or a later on_tick. Keep this path synchronous while
+    -- automatic rebuilds use request_populate/tick_populate.
+    local upcoming = queue.get_upcoming_research_display(player.force.index, 15)
+    if not upcoming or #upcoming == 0 then
+        flow.add({
+            type = "label",
+            caption = localize_with_fallback(
+                "lil_einstein-upcoming.none-available",
+                "No upcoming research available"
+            )
+        })
+        return
+    end
+
+    upcoming_ui_cache[player_index] = {
+        tick = game.tick,
+        data = upcoming
+    }
+    for index, entry in ipairs(upcoming) do
+        add_upcoming_row(flow, index, entry, player_index)
+        if index < #upcoming then
+            add_separator(flow)
+        end
     end
 end
 
