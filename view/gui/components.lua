@@ -23,7 +23,7 @@ local graph_render_cache = {}
 local science_render_cache = {}
 local graph_render_jobs = {}
 local graph_hover_cache = {}
-local research_graph_render_budget = 10
+local research_graph_render_budget = 40
 
 local get_graph_render_state = function(element)
     local index = element.index
@@ -967,11 +967,11 @@ local render_research_graph_job = function(player_index, anchor, budget)
         return
     end
 
-    local last = math.min(
-        research_graph_column_count,
-        job.next_index + (budget or research_graph_render_budget) - 1
+    local first = math.max(
+        1,
+        job.next_index - (budget or research_graph_render_budget) + 1
     )
-    for i = job.next_index, last do
+    for i = job.next_index, first, -1 do
         local col = job.plot["research_graph_column_" .. i]
         local hover_col = job.overlay and job.overlay["research_graph_hover_column_" .. i]
         local value = job.history[i] or 0
@@ -1017,8 +1017,8 @@ local render_research_graph_job = function(player_index, anchor, budget)
         end
     end
 
-    job.next_index = last + 1
-    if job.next_index > research_graph_column_count then
+    job.next_index = first - 1
+    if job.next_index < 1 then
         graph_render_jobs[anchor.index] = nil
         refresh_research_graph_hover(player_index, anchor, job.history, job.axis_max)
     end
@@ -1054,7 +1054,7 @@ local refresh_research_graph = function(player_index, anchor)
         axis_max = axis_max,
         plot = plot,
         overlay = overlay,
-        next_index = 1
+        next_index = research_graph_column_count
     }
     render_research_graph_job(player_index, anchor, research_graph_render_budget)
 end

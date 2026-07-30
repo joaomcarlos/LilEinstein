@@ -23,6 +23,8 @@ GUI layer for the LilEinstein mod: window lifecycle, layout construction, and pr
 - Recurring value refreshes reuse validated runtime-only GUI element references and skip unchanged property writes; LuaGuiElement references never enter persistent storage
 - Automatic queue/research rebuilds stage technology scoring and render one technology or upcoming-research row per tick; direct player actions may still repopulate immediately
 - Direct open/action rebuilds must never spin on a staged job or wait for a future `on_tick`; use an immediate model read for those event-bound paths
+- Initial component population receives the built `lil_einstein_gui` window, matching the anchor used by later refresh and tick jobs
+- Research-history graph jobs paint the newest samples first and finish their bounded 200-column redraw within five render passes
 - Science inventory and per-minute rates use the shared compact SI formatter (`K`, `M`, `G`, and higher prefixes) with at most one decimal place
 - Upcoming rows mirror effective research order and state the science-supply reason when an entry is not selectable
 - New Upcoming LocalisedStrings include literal fallbacks so control-stage reloads cannot render `Unknown key` text

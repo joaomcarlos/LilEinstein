@@ -11,7 +11,7 @@ local components = require("view.gui.components")
 local target = "screen"
 local repopulate_jobs = {}
 
-local open = function(player_index, anchor)
+local open = function(player_index, parent)
     -- Close any open windows
     local p = game.get_player(player_index)
     p.opened = nil
@@ -23,10 +23,14 @@ local open = function(player_index, anchor)
     repopulate_jobs[player_index] = nil
 
     -- Build the skeleton
-    builder.build(player_index, anchor)
+    builder.build(player_index, parent)
+    local main = gui.get(player_index)
+    if not main then
+        return
+    end
 
     -- Repopulate the content
-    components.repopulate_all(player_index, anchor)
+    components.repopulate_all(player_index, main)
     if state.get_player_setting(player_index, "policy_panel_open", false) then
         gui.toggle_policy_panel(player_index)
     elseif state.get_player_setting(player_index, "research_details_open", false) then
