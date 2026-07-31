@@ -1939,20 +1939,6 @@ content.repopulate_tech = function(player_index, anchor)
     gctech.populate(player_index, anchor)
 end
 
-content.request_tech = function(player_index, anchor)
-    if policy_panel_is_visible(anchor) then
-        return true
-    end
-    return gctech.request_populate(player_index, anchor)
-end
-
-content.tick_tech = function(player_index, anchor)
-    if policy_panel_is_visible(anchor) then
-        return true
-    end
-    return gctech.tick_populate(player_index, anchor, 1)
-end
-
 content.refresh_upcoming = function(player_index, anchor)
     if policy_panel_is_visible(anchor) then
         return
@@ -1971,7 +1957,7 @@ content.tick_upcoming = function(player_index, anchor)
     if policy_panel_is_visible(anchor) then
         return true
     end
-    return gcupcoming.tick_populate(player_index, anchor, 1)
+    return gcupcoming.tick_populate(player_index, anchor)
 end
 
 content.refresh_upcoming_times = function(player_index, anchor)
@@ -2051,7 +2037,6 @@ content.clear_runtime_cache = function()
     science_render_cache = {}
     graph_render_jobs = {}
     graph_hover_cache = {}
-    gctech.clear_runtime_cache()
     gcupcoming.clear_runtime_cache()
 end
 

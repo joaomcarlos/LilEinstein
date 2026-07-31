@@ -159,6 +159,15 @@ local set_rank_arrows = function(row, is_current, is_pinned)
     end
 end
 
+local get_structure_key = function(entry)
+    return table.concat({
+        entry.tech_name or "",
+        tostring(entry.level or ""),
+        entry.availability_reason or "",
+        table.concat(entry.missing_sciences or {}, ",")
+    }, "|")
+end
+
 local add_upcoming_row = function(parent, rank, entry, player_index)
     local xcur = entry.xcur
     if not xcur then
@@ -189,7 +198,8 @@ local add_upcoming_row = function(parent, rank, entry, player_index)
         duration_known = entry.duration ~= nil,
         wait_time_known = entry.wait_time ~= nil,
         rank = rank,
-        technology = entry.tech_name
+        technology = entry.tech_name,
+        structure_key = get_structure_key(entry)
     }
 
     local rank_flow = row.add({
@@ -403,6 +413,63 @@ local add_separator = function(parent)
     separator.style.stretch_image_to_widget_size = true
 end
 
+local get_rendered_rows = function(flow)
+    local rows = {}
+    for _, child in ipairs(flow.children) do
+        if child.valid and child.tags and child.tags.technology then
+            table.insert(rows, child)
+        end
+    end
+    return rows
+end
+
+local structure_matches = function(flow, upcoming)
+    local rows = get_rendered_rows(flow)
+    if #rows ~= #upcoming then
+        return false, rows
+    end
+    for index, entry in ipairs(upcoming) do
+        if rows[index].tags.structure_key ~= get_structure_key(entry) then
+            return false, rows
+        end
+    end
+    return true, rows
+end
+
+local update_existing_rows = function(rows, upcoming)
+    for index, entry in ipairs(upcoming) do
+        rows[index].tags = {
+            duration = entry.duration or 0,
+            wait_time = entry.wait_time or 0,
+            duration_known = entry.duration ~= nil,
+            wait_time_known = entry.wait_time ~= nil,
+            rank = index,
+            technology = entry.tech_name,
+            structure_key = get_structure_key(entry)
+        }
+    end
+end
+
+local render_upcoming = function(flow, upcoming, player_index)
+    flow.clear()
+    if #upcoming == 0 then
+        flow.add({
+            type = "label",
+            caption = localize_with_fallback(
+                "lil_einstein-upcoming.none-available",
+                "No upcoming research available"
+            )
+        })
+        return
+    end
+    for index, entry in ipairs(upcoming) do
+        add_upcoming_row(flow, index, entry, player_index)
+        if index < #upcoming then
+            add_separator(flow)
+        end
+    end
+end
+
 gcupcoming.refresh_progress = function(player_index, anchor)
     local player = game.get_player(player_index)
     if not player then
@@ -445,15 +512,12 @@ gcupcoming.request_populate = function(player_index, anchor)
     upcoming_render_jobs[player_index] = {
         anchor = anchor,
         flow = flow,
-        force_index = player.force.index,
-        phase = "model",
-        upcoming = nil,
-        next_index = 1
+        force_index = player.force.index
     }
     return false
 end
 
-gcupcoming.tick_populate = function(player_index, anchor, budget)
+gcupcoming.tick_populate = function(player_index, anchor)
     local job = upcoming_render_jobs[player_index]
     if not job then
         return true
@@ -462,45 +526,23 @@ gcupcoming.tick_populate = function(player_index, anchor, budget)
         upcoming_render_jobs[player_index] = nil
         return true
     end
-    if job.phase == "model" then
-        local complete, upcoming = queue.tick_upcoming_research_display(job.force_index, 1)
-        if not complete then
-            return false
-        end
-        job.flow.clear()
-        if not upcoming or #upcoming == 0 then
-            job.flow.add({
-                type = "label",
-                caption = localize_with_fallback(
-                    "lil_einstein-upcoming.none-available",
-                    "No upcoming research available"
-                )
-            })
-            upcoming_render_jobs[player_index] = nil
-            return true
-        end
-        upcoming_ui_cache[player_index] = {
-            tick = game.tick,
-            data = upcoming
-        }
-        job.upcoming = upcoming
-        job.phase = "render"
+    local complete, upcoming = queue.tick_upcoming_research_display(job.force_index, 1)
+    if not complete then
         return false
     end
-
-    local last = math.min(#job.upcoming, job.next_index + (budget or 1) - 1)
-    for index = job.next_index, last do
-        add_upcoming_row(job.flow, index, job.upcoming[index], player_index)
-        if index < #job.upcoming then
-            add_separator(job.flow)
-        end
+    upcoming = upcoming or {}
+    upcoming_ui_cache[player_index] = {
+        tick = game.tick,
+        data = upcoming
+    }
+    local matches, rows = structure_matches(job.flow, upcoming)
+    if matches then
+        update_existing_rows(rows, upcoming)
+    else
+        render_upcoming(job.flow, upcoming, player_index)
     end
-    job.next_index = last + 1
-    if job.next_index > #job.upcoming then
-        upcoming_render_jobs[player_index] = nil
-        return true
-    end
-    return false
+    upcoming_render_jobs[player_index] = nil
+    return true
 end
 
 gcupcoming.populate = function(player_index, anchor)
@@ -514,33 +556,16 @@ gcupcoming.populate = function(player_index, anchor)
     if not flow then
         return
     end
-    flow.clear()
-
     -- Direct player actions run inside the current event and cannot wait for a
     -- background snapshot or a later on_tick. Keep this path synchronous while
     -- automatic rebuilds use request_populate/tick_populate.
-    local upcoming = queue.get_upcoming_research_display(player.force.index, 15)
-    if not upcoming or #upcoming == 0 then
-        flow.add({
-            type = "label",
-            caption = localize_with_fallback(
-                "lil_einstein-upcoming.none-available",
-                "No upcoming research available"
-            )
-        })
-        return
-    end
+    local upcoming = queue.get_upcoming_research_display(player.force.index, 15) or {}
 
     upcoming_ui_cache[player_index] = {
         tick = game.tick,
         data = upcoming
     }
-    for index, entry in ipairs(upcoming) do
-        add_upcoming_row(flow, index, entry, player_index)
-        if index < #upcoming then
-            add_separator(flow)
-        end
-    end
+    render_upcoming(flow, upcoming, player_index)
 end
 
 -- Lightweight refresh: only updates countdown labels, does not re-fetch queue

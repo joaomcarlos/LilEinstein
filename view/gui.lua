@@ -220,7 +220,7 @@ gui.request_repopulate_open = function(force_index)
             if anchor then
                 repopulate_jobs[p.index] = {
                     anchor = anchor,
-                    stage = "tech_request"
+                    stage = "upcoming_request"
                 }
             end
         end
@@ -239,17 +239,7 @@ gui.tick_repopulate = function(player_index)
     end
 
     local processed_stage = job.stage
-    if job.stage == "static" then
-        components.repopulate_static(player_index, anchor)
-        job.stage = "tech_request"
-    elseif job.stage == "tech_request" then
-        job.stage = components.request_tech(player_index, anchor) and "upcoming_request" or "tech"
-    elseif job.stage == "tech" then
-        if not components.tick_tech(player_index, anchor) then
-            return processed_stage
-        end
-        job.stage = "upcoming_request"
-    elseif job.stage == "upcoming_request" then
+    if job.stage == "upcoming_request" then
         job.stage = components.request_upcoming(player_index, anchor) and "finish_progress" or "upcoming"
     elseif job.stage == "upcoming" then
         if components.tick_upcoming(player_index, anchor) then

@@ -11,7 +11,7 @@ GUI layer for the LilEinstein mod: window lifecycle, layout construction, and pr
 - `gui/analyzer.lua` — turns model data (state, tech, queue, lab) into presentable data consumed directly by the GUI
 - `gui/gutil.lua` — GUI helpers/utilities
 - `gui/components.lua` — shared component library, including the decision-first Research Health card and its focused science-throughput drilldown (largest view file)
-- `gui/components/queue.lua`, `gui/components/tech.lua`, `gui/components/upcoming.lua` — per-panel components; technology and upcoming panels expose staged automatic rebuild jobs
+- `gui/components/queue.lua`, `gui/components/tech.lua`, `gui/components/upcoming.lua` — per-panel components; available technologies rebuild on direct actions, while Upcoming keeps visible rows during bounded background calculation
 
 ## Local Contracts
 
@@ -21,7 +21,8 @@ GUI layer for the LilEinstein mod: window lifecycle, layout construction, and pr
 - The science-throughput drilldown preserves the root window, keeps headers outside its single vertical scroll pane, and refreshes stable rows in place while cluster membership/order is unchanged
 - Throughput cluster rows present working/maximum capacity and local stock evidence only; force-wide measured SPM is never labeled as cluster output and overlapping missing-pack impacts are not summed
 - Recurring value refreshes reuse validated runtime-only GUI element references and skip unchanged property writes; LuaGuiElement references never enter persistent storage
-- Automatic queue/research rebuilds stage technology scoring and render one technology or upcoming-research row per tick; direct player actions may still repopulate immediately
+- Available technologies rebuild synchronously only after direct player actions or filter changes; automatic queue/research refreshes do not rescore or repaint that list
+- Upcoming background refreshes leave the current list visible, update rows in place when identity/order is unchanged, and replace a changed list completely in one render pass after bounded model calculation
 - Direct open/action rebuilds must never spin on a staged job or wait for a future `on_tick`; use an immediate model read for those event-bound paths
 - Initial component population receives the built `lil_einstein_gui` window, matching the anchor used by later refresh and tick jobs
 - Research-history graph jobs paint the newest samples first and finish their bounded 200-column redraw within five render passes
