@@ -19,7 +19,9 @@ GUI layer for the LilEinstein mod: window lifecycle, layout construction, and pr
 - GUI style prototypes live in `data/style.lua`, not here; reference styles by name
 - Player GUI state persists under `storage.players[player_index]` via `state`/`gui.init_player`
 - The science-throughput drilldown preserves the root window, keeps headers outside its single vertical scroll pane, and refreshes stable rows in place while cluster membership/order is unchanged
-- Throughput cluster rows present working/maximum capacity and local stock evidence only; force-wide measured SPM is never labeled as cluster output and overlapping missing-pack impacts are not summed
+- Throughput cluster rows present working/maximum capacity, every current-research pack's local demand/stock, and missing-pack evidence; force-wide measured SPM is never labeled as cluster output and overlapping missing-pack impacts are not summed
+- The throughput details summary compares force-wide maximum and currently working pack demand with the latest one-minute production statistics for each required science pack
+- Dynamic multi-row LocalisedStrings are composed in chunks of at most Factorio's 20-parameter limit
 - Recurring value refreshes reuse validated runtime-only GUI element references and skip unchanged property writes; LuaGuiElement references never enter persistent storage
 - Available technologies rebuild synchronously only after direct player actions or filter changes; automatic queue/research refreshes do not rescore or repaint that list
 - Upcoming background refreshes leave the current list visible, update rows in place when identity/order is unchanged, and replace a changed list completely in one render pass after bounded model calculation

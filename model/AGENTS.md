@@ -24,6 +24,7 @@ Runtime data model and research-autopilot logic for the LilEinstein Factorio mod
 - Runtime candidates exclude hidden, disabled, triggered, avoided, and finite/infinite capped technologies
 - Active science-supply checks use staggered live lab-starvation snapshots; non-active candidate checks cap depletion forecasts at the remaining research time
 - The per-force research diagnostic measures only samples for the current technology, classifies decision states from named material-loss thresholds, and emits deterministic semantic display clusters without persisting logistic networks
+- The per-force research diagnostic also emits exact science-pack demand per minute for all current-research ingredients, separating maximum compatible-lab demand from currently working-lab demand; pack demand uses lab/quality science-pack drain with research-unit consumption and is not inflated by productivity bonuses
 - Open decision views consume a shared per-force snapshot assembled in bounded lab, network, forecast, and cluster slices; player refreshes must never synchronously aggregate every lab
 - Upcoming display plans scan and score technologies in bounded slices before the view renders them; synchronous plan generation remains available for direct player actions
 - Lab membership is discovered once during force initialization and maintained from build, clone, and revive events; GUI refreshes must never rescan every surface

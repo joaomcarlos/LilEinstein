@@ -507,6 +507,31 @@ local diagnostic_state_colors = {
     degraded_unexplained = {1.00, 0.80, 0.20}
 }
 
+local localised_parameter_limit = 20
+local concat_localised_parts
+concat_localised_parts = function(parts)
+    if #parts <= localised_parameter_limit then
+        local res = {""}
+        for _, part in ipairs(parts) do
+            table.insert(res, part)
+        end
+        return res
+    end
+
+    local groups = {}
+    local index = 1
+    while index <= #parts do
+        local group = {""}
+        local group_end = math.min(index + localised_parameter_limit - 1, #parts)
+        for group_index = index, group_end do
+            table.insert(group, parts[group_index])
+        end
+        table.insert(groups, group)
+        index = group_end + 1
+    end
+    return concat_localised_parts(groups)
+end
+
 local item_caption = function(science)
     if not science then
         return {"lil_einstein-throughput.no-pack"}
@@ -653,7 +678,7 @@ local format_research_diagnostic = function(diagnostic)
                  cause.labs or 0, format_spaced_number(cause.lost_spm)}
             })
         end
-        table.insert(tt, causes)
+        table.insert(tt, concat_localised_parts(causes))
     end
 
     if diagnostic.missing_sciences and #diagnostic.missing_sciences > 0 then
@@ -688,24 +713,68 @@ local get_cluster_causes_caption = function(cluster)
         return {"lil_einstein-throughput.no-live-loss"}
     end
 
-    local res = {""}
+    local parts = {}
     for index, cause in ipairs(cluster.causes) do
         if index > 1 then
-            table.insert(res, "\n")
+            table.insert(parts, "\n")
         end
-        table.insert(res, {"lil_einstein-throughput.cause-evidence", cause_caption(cause.kind),
-                           cause.labs or 0, format_spaced_number(cause.lost_spm)})
+        table.insert(parts, {"lil_einstein-throughput.cause-evidence", cause_caption(cause.kind),
+                             cause.labs or 0, format_spaced_number(cause.lost_spm)})
     end
-    return res
+    return concat_localised_parts(parts)
 end
 
 local get_cluster_pack_caption = function(cluster)
-    local item = cluster.dominant_missing_science
-    if not item then
-        return {"lil_einstein-throughput.no-pack-loss"}
+    local rates = cluster and cluster.science_pack_rates or {}
+    if #rates == 0 then
+        return {"lil_einstein-throughput.no-pack"}
     end
-    return {"lil_einstein-throughput.cluster-pack-evidence", item_caption(item.science), item.labs or 0,
-            format_spaced_number(item.lost_spm), format_spaced_number(item.local_stock)}
+
+    local parts = {}
+    for index, item in ipairs(rates) do
+        if index > 1 then
+            table.insert(parts, "\n")
+        end
+        table.insert(parts, {"", {"lil_einstein-throughput.cluster-pack-demand", item_caption(item.science),
+                                   format_spaced_number(item.maximum_per_minute),
+                                   format_spaced_number(item.working_per_minute),
+                                   format_spaced_number((cluster.local_stock and cluster.local_stock[item.science]) or 0)}})
+        for _, missing in ipairs(cluster.missing_sciences or {}) do
+            if missing.science == item.science then
+                table.insert(parts, {"", "\n", {"lil_einstein-throughput.cluster-pack-missing",
+                                                   missing.labs or 0,
+                                                   format_spaced_number(missing.lost_spm)}})
+                break
+            end
+        end
+    end
+    return concat_localised_parts(parts)
+end
+
+local format_research_pack_demand = function(diagnostic, forecast)
+    local rates = diagnostic and diagnostic.science_pack_rates or {}
+    if #rates == 0 or (diagnostic.expected_spm or 0) <= 0 then
+        return {"lil_einstein-throughput.pack-demand-none"}
+    end
+
+    local parts = {
+        {"lil_einstein-throughput.pack-demand-title"},
+        "\n",
+        {"lil_einstein-throughput.pack-demand-scope"}
+    }
+    for _, item in ipairs(rates) do
+        local produced = "--"
+        local production = forecast and forecast[item.science]
+        if production and production.production_per_minute ~= nil then
+            produced = format_spaced_number(production.production_per_minute)
+        end
+        table.insert(parts, {"", "\n", {"lil_einstein-throughput.pack-demand-row",
+                                          item_caption(item.science),
+                                          format_spaced_number(item.maximum_per_minute),
+                                          format_spaced_number(item.working_per_minute),
+                                          produced}})
+    end
+    return concat_localised_parts(parts)
 end
 
 local set_details_cell_width = function(element, width)
@@ -765,6 +834,7 @@ local refresh_research_details = function(player_index, anchor, diagnostic)
         return
     end
     diagnostic = diagnostic or queue.get_research_display_diagnostic(p.force.index)
+    local forecast = queue.get_science_display_forecast(p.force.index)
     local headline_caption, evidence_caption, state_color = get_research_health_summary(diagnostic)
     local headline = gutil.get_child(panel, "research_details_headline")
     local evidence = gutil.get_child(panel, "research_details_evidence")
@@ -783,6 +853,7 @@ local refresh_research_details = function(player_index, anchor, diagnostic)
         "research_details_evidence",
         "research_details_scope_note",
         "research_details_overlap_note",
+        "research_details_pack_demand",
         "research_details_ceiling_hint"
     }) do
         local label = gutil.get_child(panel, name)
@@ -790,6 +861,10 @@ local refresh_research_details = function(player_index, anchor, diagnostic)
             label.style.width = research_details_content_width
             label.style.single_line = false
         end
+    end
+    local pack_demand = gutil.get_child(panel, "research_details_pack_demand")
+    if pack_demand then
+        pack_demand.caption = format_research_pack_demand(diagnostic, forecast)
     end
 
     local header = gutil.get_child(panel, "research_details_header")

@@ -2122,7 +2122,7 @@ local lab_accepts_research = function(lab_entity, current, accepted)
     return true
 end
 
-local get_lab_capacity_spm = function(lab_entity, current)
+local get_lab_research_unit_spm = function(lab_entity, current)
     local research_energy = current.research_unit_energy or 0
     if research_energy <= 0 then
         return 0
@@ -2130,10 +2130,30 @@ local get_lab_capacity_spm = function(lab_entity, current)
 
     local base_speed = lab_entity.prototype.get_researching_speed(lab_entity.quality) or 0
     local speed_multiplier = math.max(0, 1 + (lab_entity.speed_bonus or 0))
-    local productivity_multiplier = math.max(0, 1 + (lab_entity.productivity_bonus or 0))
 
     -- Runtime research energy is measured in ticks; 3600 converts units/tick to units/minute.
-    return base_speed * speed_multiplier * productivity_multiplier * 3600 / research_energy
+    return base_speed * speed_multiplier * 3600 / research_energy
+end
+
+local get_lab_capacity_spm = function(lab_entity, current)
+    local productivity_multiplier = math.max(0, 1 + (lab_entity.productivity_bonus or 0))
+    return get_lab_research_unit_spm(lab_entity, current) * productivity_multiplier
+end
+
+local get_lab_science_pack_drain_multiplier = function(lab_entity)
+    local prototype = lab_entity.prototype
+    local drain_rate = math.max(0, math.min(100, prototype.science_pack_drain_rate_percent or 100)) / 100
+    if prototype.uses_quality_drain_modifier and lab_entity.quality then
+        drain_rate = drain_rate * (lab_entity.quality.science_pack_drain_multiplier or 1)
+    end
+    return drain_rate
+end
+
+local get_lab_science_consumption_spm = function(lab_entity, current, amount)
+    -- Productivity increases research progress without consuming extra packs. The
+    -- prototype/quality drain is the separate factor that changes pack demand.
+    return get_lab_research_unit_spm(lab_entity, current) *
+        get_lab_science_pack_drain_multiplier(lab_entity) * math.max(0, amount or 1)
 end
 
 local get_missing_lab_sciences = function(current, contents)
@@ -2208,6 +2228,42 @@ local map_values = function(source)
     return res
 end
 
+local sort_science_pack_rates = function(items)
+    table.sort(items, function(a, b)
+        return tostring(a.science or "") < tostring(b.science or "")
+    end)
+end
+
+local initialize_science_pack_rates = function(current)
+    local res = {}
+    for _, ingredient in pairs(current and current.research_unit_ingredients or {}) do
+        res[ingredient.name] = {
+            science = ingredient.name,
+            amount = ingredient.amount or 1,
+            maximum_per_minute = 0,
+            working_per_minute = 0
+        }
+    end
+    return res
+end
+
+local add_science_pack_rate = function(pack_rates, science, amount, rate, working)
+    local item = pack_rates[science]
+    if not item then
+        item = {
+            science = science,
+            amount = amount or 1,
+            maximum_per_minute = 0,
+            working_per_minute = 0
+        }
+        pack_rates[science] = item
+    end
+    item.maximum_per_minute = item.maximum_per_minute + (rate or 0)
+    if working then
+        item.working_per_minute = item.working_per_minute + (rate or 0)
+    end
+end
+
 local new_diagnostic_cluster = function(key, scope, surface_index, surface_name, network_id, lab_entity)
     local position
     if lab_entity and lab_entity.valid and lab_entity.position then
@@ -2231,9 +2287,11 @@ local new_diagnostic_cluster = function(key, scope, surface_index, surface_name,
         unavailable_spm = 0,
         causes = {},
         missing_sciences = {},
+        science_pack_rates = {},
         local_stock = {},
         _cause_data = {},
         _missing_sciences = {},
+        _science_pack_rates = {},
         _lab_stock = {},
         _network = nil
     }
@@ -2272,11 +2330,23 @@ local add_lab_stock = function(cluster, contents)
     end
 end
 
-local finalize_diagnostic_cluster = function(cluster, required_sciences)
+local finalize_diagnostic_cluster = function(cluster, required_sciences, required_pack_amounts)
     cluster.causes = map_values(cluster._cause_data)
     sort_loss_evidence(cluster.causes, "kind")
     cluster.missing_sciences = map_values(cluster._missing_sciences)
     sort_loss_evidence(cluster.missing_sciences, "science")
+    for _, science in ipairs(required_sciences or {}) do
+        if not cluster._science_pack_rates[science] then
+            cluster._science_pack_rates[science] = {
+                science = science,
+                amount = (required_pack_amounts and required_pack_amounts[science]) or 1,
+                maximum_per_minute = 0,
+                working_per_minute = 0
+            }
+        end
+    end
+    cluster.science_pack_rates = map_values(cluster._science_pack_rates)
+    sort_science_pack_rates(cluster.science_pack_rates)
     cluster.lost_spm = math.max(0, cluster.expected_spm - cluster.working_spm)
     cluster.unavailable_spm = cluster.lost_spm
 
@@ -2296,6 +2366,7 @@ local finalize_diagnostic_cluster = function(cluster, required_sciences)
     cluster.dominant_missing_science = cluster.missing_sciences[1]
     cluster._cause_data = nil
     cluster._missing_sciences = nil
+    cluster._science_pack_rates = nil
     cluster._lab_stock = nil
     cluster._network = nil
 end
@@ -2350,6 +2421,7 @@ queue.get_research_diagnostic = function(force_index)
         incompatible_labs = 0,
         causes = {},
         missing_sciences = {},
+        science_pack_rates = {},
         clusters = {},
         material_loss_spm = 0,
         material_threshold_spm = diagnostic_minimum_lost_spm,
@@ -2387,10 +2459,13 @@ queue.get_research_diagnostic = function(force_index)
     local missing_sciences = {}
     local clusters = {}
     local required_sciences = {}
+    local required_pack_amounts = {}
     for _, ingredient in pairs(current.research_unit_ingredients or {}) do
         table.insert(required_sciences, ingredient.name)
+        required_pack_amounts[ingredient.name] = ingredient.amount or 1
     end
     table.sort(required_sciences)
+    res.science_pack_rates = initialize_science_pack_rates(current)
 
     for _, observation in pairs(get_lab_observations(force_index)) do
         local lab_entity = observation.entity
@@ -2413,8 +2488,16 @@ queue.get_research_diagnostic = function(force_index)
             res.expected_spm = res.expected_spm + capacity_spm
             cluster.expected_spm = cluster.expected_spm + capacity_spm
             local status = get_observation_status(observation)
+            local working = status == defines.entity_status.working
+            for _, ingredient in pairs(current.research_unit_ingredients or {}) do
+                local pack_rate = get_lab_science_consumption_spm(lab_entity, current, ingredient.amount)
+                add_science_pack_rate(res.science_pack_rates, ingredient.name, ingredient.amount,
+                    pack_rate, working)
+                add_science_pack_rate(cluster._science_pack_rates, ingredient.name, ingredient.amount,
+                    pack_rate, working)
+            end
 
-            if status == defines.entity_status.working then
+            if working then
                 res.working_labs = res.working_labs + 1
                 res.working_spm = res.working_spm + capacity_spm
                 cluster.working_labs = cluster.working_labs + 1
@@ -2442,14 +2525,16 @@ queue.get_research_diagnostic = function(force_index)
 
     res.causes = map_values(cause_data)
     res.missing_sciences = map_values(missing_sciences)
+    res.science_pack_rates = map_values(res.science_pack_rates)
     sort_loss_evidence(res.causes, "kind")
     sort_loss_evidence(res.missing_sciences, "science")
+    sort_science_pack_rates(res.science_pack_rates)
     res.material_threshold_spm =
         math.max(diagnostic_minimum_lost_spm, res.expected_spm * diagnostic_meaningful_gap_fraction)
 
     res.clusters = map_values(clusters)
     for _, cluster in ipairs(res.clusters) do
-        finalize_diagnostic_cluster(cluster, required_sciences)
+        finalize_diagnostic_cluster(cluster, required_sciences, required_pack_amounts)
     end
     table.sort(res.clusters, function(a, b)
         if a.lost_spm == b.lost_spm then
@@ -2537,6 +2622,7 @@ local new_display_diagnostic = function(force_index, current)
         incompatible_labs = 0,
         causes = {},
         missing_sciences = {},
+        science_pack_rates = {},
         clusters = {},
         material_loss_spm = 0,
         material_threshold_spm = diagnostic_minimum_lost_spm,
@@ -2549,7 +2635,8 @@ local new_display_diagnostic = function(force_index, current)
         cause_data = {},
         missing_sciences = {},
         clusters = {},
-        required_sciences = {}
+        required_sciences = {},
+        required_pack_amounts = {}
     }
     if not current then
         return context
@@ -2576,8 +2663,10 @@ local new_display_diagnostic = function(force_index, current)
     end
     for _, ingredient in pairs(current.research_unit_ingredients or {}) do
         table.insert(context.required_sciences, ingredient.name)
+        context.required_pack_amounts[ingredient.name] = ingredient.amount or 1
     end
     table.sort(context.required_sciences)
+    res.science_pack_rates = initialize_science_pack_rates(current)
     return context
 end
 
@@ -2608,7 +2697,15 @@ local process_display_diagnostic_observation = function(context, current, observ
     res.expected_spm = res.expected_spm + capacity_spm
     cluster.expected_spm = cluster.expected_spm + capacity_spm
     local status = get_observation_status(observation)
-    if status == defines.entity_status.working then
+    local working = status == defines.entity_status.working
+    for _, ingredient in pairs(current.research_unit_ingredients or {}) do
+        local pack_rate = get_lab_science_consumption_spm(lab_entity, current, ingredient.amount)
+        add_science_pack_rate(res.science_pack_rates, ingredient.name, ingredient.amount,
+            pack_rate, working)
+        add_science_pack_rate(cluster._science_pack_rates, ingredient.name, ingredient.amount,
+            pack_rate, working)
+    end
+    if working then
         res.working_labs = res.working_labs + 1
         res.working_spm = res.working_spm + capacity_spm
         cluster.working_labs = cluster.working_labs + 1
@@ -2638,8 +2735,10 @@ local finish_display_diagnostic = function(context)
 
     res.causes = map_values(context.cause_data)
     res.missing_sciences = map_values(context.missing_sciences)
+    res.science_pack_rates = map_values(res.science_pack_rates)
     sort_loss_evidence(res.causes, "kind")
     sort_loss_evidence(res.missing_sciences, "science")
+    sort_science_pack_rates(res.science_pack_rates)
     res.material_threshold_spm =
         math.max(diagnostic_minimum_lost_spm, res.expected_spm * diagnostic_meaningful_gap_fraction)
 
@@ -3051,7 +3150,8 @@ queue.tick_research_health_snapshot = function(force_index)
         for index = job.diagnostic_cluster_index, last do
             finalize_diagnostic_cluster(
                 job.diagnostic_clusters[index],
-                job.diagnostic.required_sciences
+                job.diagnostic.required_sciences,
+                job.diagnostic.required_pack_amounts
             )
         end
         job.diagnostic_cluster_index = last + 1

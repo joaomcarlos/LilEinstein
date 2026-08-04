@@ -550,6 +550,10 @@ local research_details_panel = {
         caption = {"lil_einstein-throughput.overlap-note"}
     }, {
         type = "label",
+        name = "research_details_pack_demand",
+        caption = {"lil_einstein-throughput.pack-demand-none"}
+    }, {
+        type = "label",
         name = "research_details_ceiling_hint",
         caption = {"lil_einstein-throughput.raise-ceiling"},
         visible = false
