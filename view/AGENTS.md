@@ -25,6 +25,7 @@ GUI layer for the LilEinstein mod: window lifecycle, layout construction, and pr
 - Recurring value refreshes reuse validated runtime-only GUI element references and skip unchanged property writes; LuaGuiElement references never enter persistent storage
 - Available technologies rebuild synchronously only after direct player actions or filter changes; automatic queue/research refreshes do not rescore or repaint that list
 - Upcoming background refreshes leave the current list visible, update rows in place when identity/order is unchanged, and replace a changed list completely in one render pass after bounded model calculation
+- Background refresh requests coalesce while a repopulation job is active; a queued follow-up starts after the current bounded refresh finishes instead of resetting its calculation state
 - Direct open/action rebuilds must never spin on a staged job or wait for a future `on_tick`; use an immediate model read for those event-bound paths
 - Initial component population receives the built `lil_einstein_gui` window, matching the anchor used by later refresh and tick jobs
 - Research-history graph jobs paint the newest samples first and finish their bounded 200-column redraw within five render passes

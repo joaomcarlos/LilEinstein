@@ -3079,10 +3079,10 @@ queue.tick_research_health_snapshot = function(force_index)
     local technology_name = f.current_research and f.current_research.name or nil
     local snapshot = research_health_snapshots[force_index]
     local job = research_health_jobs[force_index]
-    if job and job.technology_name ~= technology_name then
-        job = nil
-        research_health_jobs[force_index] = nil
-    end
+    -- Complete a snapshot against the technology it captured. Cancelling a
+    -- large staged job whenever research rotates can starve the snapshot
+    -- forever; display getters reject a finished snapshot when its technology
+    -- no longer matches the live force and request the current one next.
     local expired = not snapshot or game.tick - snapshot.tick >= research_health_refresh_ticks or
         snapshot.technology_name ~= technology_name
     if not job and (research_health_requests[force_index] or expired) then
@@ -3176,15 +3176,24 @@ queue.tick_research_health_snapshot = function(force_index)
     return true
 end
 
-queue.get_science_display_counts = function(force_index)
+local get_current_research_health_snapshot = function(force_index)
     queue.request_research_health_snapshot(force_index)
+    local f = game.forces[force_index]
+    local technology_name = f and f.current_research and f.current_research.name or nil
     local snapshot = research_health_snapshots[force_index]
+    if snapshot and snapshot.technology_name == technology_name then
+        return snapshot
+    end
+    return nil
+end
+
+queue.get_science_display_counts = function(force_index)
+    local snapshot = get_current_research_health_snapshot(force_index)
     return snapshot and snapshot.counts or {}
 end
 
 queue.get_science_display_breakdown = function(force_index, science)
-    queue.request_research_health_snapshot(force_index)
-    local snapshot = research_health_snapshots[force_index]
+    local snapshot = get_current_research_health_snapshot(force_index)
     local breakdown = snapshot and snapshot.breakdown
     return (breakdown and breakdown[science]) or {
         lab_count = 0,
@@ -3195,8 +3204,7 @@ queue.get_science_display_breakdown = function(force_index, science)
 end
 
 queue.get_science_display_forecast = function(force_index)
-    queue.request_research_health_snapshot(force_index)
-    local snapshot = research_health_snapshots[force_index]
+    local snapshot = get_current_research_health_snapshot(force_index)
     return snapshot and snapshot.forecast or {}
 end
 
@@ -3206,10 +3214,9 @@ queue.get_research_health_snapshot_tick = function(force_index)
 end
 
 queue.get_research_display_diagnostic = function(force_index)
-    queue.request_research_health_snapshot(force_index)
     local f = game.forces[force_index]
     local technology_name = f and f.current_research and f.current_research.name or nil
-    local snapshot = research_health_snapshots[force_index]
+    local snapshot = get_current_research_health_snapshot(force_index)
     if snapshot and snapshot.technology_name == technology_name then
         return snapshot.diagnostic
     end
@@ -4096,6 +4103,10 @@ queue.tick_upcoming_research_display = function(force_index, budget)
         if not snapshot or not snapshot.availability then
             queue.request_research_health_snapshot(force_index)
             return false, job.results
+        end
+        local speed = queue.get_research_speed(force_index)
+        if speed and speed > 0 then
+            job.speed = speed
         end
         job.science_availability = snapshot.availability
         local current_name = job.force.current_research and job.force.current_research.name

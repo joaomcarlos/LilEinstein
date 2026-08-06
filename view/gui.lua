@@ -218,10 +218,16 @@ gui.request_repopulate_open = function(force_index)
         if p.force.index == force_index then
             local anchor = gui.get(p.index)
             if anchor then
-                repopulate_jobs[p.index] = {
-                    anchor = anchor,
-                    stage = "upcoming_request"
-                }
+                local job = repopulate_jobs[p.index]
+                if job and job.anchor == anchor then
+                    job.refresh_requested = true
+                else
+                    repopulate_jobs[p.index] = {
+                        anchor = anchor,
+                        stage = "upcoming_request",
+                        refresh_requested = false
+                    }
+                end
             end
         end
     end
@@ -255,7 +261,12 @@ gui.tick_repopulate = function(player_index)
         components.refresh_research_graph(player_index, anchor)
         job.stage = "finish"
     elseif job.stage == "finish" then
-        repopulate_jobs[player_index] = nil
+        if job.refresh_requested then
+            job.refresh_requested = false
+            job.stage = "upcoming_request"
+        else
+            repopulate_jobs[player_index] = nil
+        end
     end
     return processed_stage
 end
