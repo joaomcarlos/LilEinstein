@@ -20,6 +20,8 @@ GUI layer for the LilEinstein mod: window lifecycle, layout construction, and pr
 - Player GUI state persists under `storage.players[player_index]` via `state`/`gui.init_player`
 - The science-throughput drilldown preserves the root window, keeps headers outside its single vertical scroll pane, and refreshes stable rows in place while cluster membership/order is unchanged
 - Throughput cluster rows present working/maximum capacity, every current-research pack's local demand/stock, and missing-pack evidence; force-wide measured SPM is never labeled as cluster output and overlapping missing-pack impacts are not summed
+- Throughput details render force-wide demand and per-cluster pack evidence as aligned native tables; missing science is shown as physical packs per minute with the associated negative SPM in parentheses, using normal quality for the pack-count conversion
+- The throughput location table is shortage-first: its missing-pack/SPM column leads the capacity evidence, and the Fix first column owns the nested per-pack stock, demand, working, and missing table
 - The throughput details summary compares force-wide maximum and currently working pack demand with the latest one-minute production statistics for each required science pack
 - Research Health and throughput details keep the last completed report visible during bounded measurement and replace the complete report atomically only after the new snapshot finishes
 - Dynamic multi-row LocalisedStrings are composed in chunks of at most Factorio's 20-parameter limit

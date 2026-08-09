@@ -549,9 +549,56 @@ local research_details_panel = {
         name = "research_details_overlap_note",
         caption = {"lil_einstein-throughput.overlap-note"}
     }, {
-        type = "label",
+        type = "frame",
         name = "research_details_pack_demand",
-        caption = {"lil_einstein-throughput.pack-demand-none"}
+        style = "lil_einstein_throughput_demand_frame",
+        direction = "vertical",
+        children = {{
+            type = "label",
+            name = "research_details_pack_demand_title",
+            style = "bold_label",
+            caption = {"lil_einstein-throughput.pack-demand-title"}
+        }, {
+            type = "label",
+            name = "research_details_pack_demand_scope",
+            caption = {"lil_einstein-throughput.pack-demand-scope"}
+        }, {
+            type = "table",
+            name = "research_details_pack_demand_header",
+            style = "lil_einstein_throughput_demand_table",
+            column_count = 4,
+            children = {{
+                type = "label",
+                name = "research_details_pack_demand_header_science",
+                style = "bold_label",
+                caption = {"lil_einstein-throughput.pack-table-science"}
+            }, {
+                type = "label",
+                name = "research_details_pack_demand_header_maximum",
+                style = "bold_label",
+                caption = {"lil_einstein-throughput.pack-table-maximum"}
+            }, {
+                type = "label",
+                name = "research_details_pack_demand_header_working",
+                style = "bold_label",
+                caption = {"lil_einstein-throughput.pack-table-working"}
+            }, {
+                type = "label",
+                name = "research_details_pack_demand_header_produced",
+                style = "bold_label",
+                caption = {"lil_einstein-throughput.pack-table-produced"}
+            }}
+        }, {
+            type = "label",
+            name = "research_details_pack_demand_empty",
+            caption = {"lil_einstein-throughput.pack-demand-none"},
+            visible = false
+        }, {
+            type = "table",
+            name = "research_details_pack_demand_rows",
+            style = "lil_einstein_throughput_demand_table",
+            column_count = 4
+        }}
     }, {
         type = "label",
         name = "research_details_ceiling_hint",
@@ -560,12 +607,18 @@ local research_details_panel = {
     }, {
         type = "table",
         name = "research_details_header",
-        column_count = 7,
+        style = "lil_einstein_throughput_table",
+        column_count = 6,
         children = {{
             type = "label",
             name = "research_details_header_location",
             style = "bold_label",
             caption = {"lil_einstein-throughput.column-location"}
+        }, {
+            type = "label",
+            name = "research_details_header_missing",
+            style = "bold_label",
+            caption = {"lil_einstein-throughput.column-missing"}
         }, {
             type = "label",
             name = "research_details_header_labs",
@@ -578,19 +631,9 @@ local research_details_panel = {
             caption = {"lil_einstein-throughput.column-capacity"}
         }, {
             type = "label",
-            name = "research_details_header_lost",
-            style = "bold_label",
-            caption = {"lil_einstein-throughput.column-lost"}
-        }, {
-            type = "label",
             name = "research_details_header_cause",
             style = "bold_label",
             caption = {"lil_einstein-throughput.column-cause"}
-        }, {
-            type = "label",
-            name = "research_details_header_pack",
-            style = "bold_label",
-            caption = {"lil_einstein-throughput.column-pack"}
         }, {
             type = "label",
             name = "research_details_header_action",

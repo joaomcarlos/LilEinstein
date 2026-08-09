@@ -489,15 +489,29 @@ end
 local throughput_prefix = "lil_einstein-throughput."
 local research_details_content_width = 1510
 local research_details_columns = {
-    location = 220,
-    labs = 140,
-    capacity = 160,
-    lost = 120,
-    cause = 230,
-    pack = 260,
-    action = 250
+    location = 180,
+    missing = 220,
+    labs = 190,
+    capacity = 205,
+    cause = 300,
+    action = 415
 }
-local research_details_column_order = {"location", "labs", "capacity", "lost", "cause", "pack", "action"}
+local research_details_column_order = {"location", "missing", "labs", "capacity", "cause", "action"}
+local research_details_pack_columns = {
+    science = 165,
+    stock = 55,
+    maximum = 65,
+    working = 65,
+    missing = 65
+}
+local research_details_pack_column_order = {"science", "stock", "maximum", "working", "missing"}
+local research_details_demand_columns = {
+    science = 400,
+    maximum = 370,
+    working = 370,
+    produced = 370
+}
+local research_details_demand_column_order = {"science", "maximum", "working", "produced"}
 local diagnostic_state_colors = {
     idle = {0.70, 0.69, 0.64},
     measuring = {0.48, 0.78, 1.00},
@@ -561,6 +575,22 @@ local find_diagnostic_cluster = function(diagnostic, key)
     return nil
 end
 
+local get_dominant_missing_pack = function(source)
+    if source and source.dominant_missing_science then
+        return source.dominant_missing_science
+    end
+    return source and source.missing_sciences and source.missing_sciences[1] or nil
+end
+
+local format_missing_pack_summary = function(missing, fallback_lost_spm)
+    if not missing then
+        return {"lil_einstein-throughput.lost-cell", format_spaced_number(fallback_lost_spm)}
+    end
+    local lost_spm = format_spaced_number(-(missing.lost_spm or fallback_lost_spm or 0))
+    return {"lil_einstein-throughput.missing-pack-summary", lost_spm,
+            format_spaced_number(missing.missing_per_minute or 0), lost_spm}
+end
+
 local get_diagnostic_action = function(diagnostic, cluster)
     local cause = cluster and cluster.dominant_cause or diagnostic and diagnostic.dominant_cause
     if cause then
@@ -609,8 +639,10 @@ local get_research_health_summary = function(diagnostic)
         action = {"lil_einstein-throughput.raise-ceiling"}
     elseif state_name == "pack_bound" then
         local missing = diagnostic.dominant_missing_science
-        headline = {"lil_einstein-throughput.headline-lost", state_label,
-                    format_spaced_number(diagnostic.material_loss_spm)}
+        headline = {"lil_einstein-throughput.headline-missing-pack", state_label,
+                    format_spaced_number(missing and missing.missing_per_minute or 0),
+                    format_spaced_number(-(diagnostic.material_loss_spm or
+                                           missing and missing.lost_spm or 0))}
         evidence = {"lil_einstein-throughput.pack-bound-evidence", item_caption(missing and missing.science),
                     missing and missing.labs or 0}
         action = {"lil_einstein-throughput.inspect-location",
@@ -674,8 +706,12 @@ local format_research_diagnostic = function(diagnostic)
             table.insert(causes, {
                 "",
                 "\n",
-                {"lil_einstein-throughput.cause-evidence", cause_caption(cause.kind),
-                 cause.labs or 0, format_spaced_number(cause.lost_spm)}
+                cause.kind == "missing_science" and {
+                    "lil_einstein-throughput.missing-pack-cause",
+                    format_spaced_number((get_dominant_missing_pack(diagnostic) or {}).missing_per_minute or 0),
+                    format_spaced_number(-(cause.lost_spm or 0)), cause.labs or 0
+                } or {"lil_einstein-throughput.cause-evidence", cause_caption(cause.kind),
+                      cause.labs or 0, format_spaced_number(cause.lost_spm)}
             })
         end
         table.insert(tt, concat_localised_parts(causes))
@@ -695,7 +731,8 @@ local format_research_diagnostic = function(diagnostic)
                 "",
                 "\n",
                 {"lil_einstein-throughput.pack-evidence", item_caption(item.science),
-                 item.labs or 0, format_spaced_number(item.lost_spm)}
+                 format_spaced_number(item.missing_per_minute or 0),
+                 format_spaced_number(-(item.lost_spm or 0)), item.labs or 0}
             })
         end
         table.insert(tt, packs)
@@ -718,61 +755,15 @@ local get_cluster_causes_caption = function(cluster)
         if index > 1 then
             table.insert(parts, "\n")
         end
-        table.insert(parts, {"lil_einstein-throughput.cause-evidence", cause_caption(cause.kind),
-                             cause.labs or 0, format_spaced_number(cause.lost_spm)})
-    end
-    return concat_localised_parts(parts)
-end
-
-local get_cluster_pack_caption = function(cluster)
-    local rates = cluster and cluster.science_pack_rates or {}
-    if #rates == 0 then
-        return {"lil_einstein-throughput.no-pack"}
-    end
-
-    local parts = {}
-    for index, item in ipairs(rates) do
-        if index > 1 then
-            table.insert(parts, "\n")
+        if cause.kind == "missing_science" then
+            local missing = get_dominant_missing_pack(cluster)
+            table.insert(parts, {"lil_einstein-throughput.missing-pack-cause",
+                                 format_spaced_number(missing and missing.missing_per_minute or 0),
+                                 format_spaced_number(-(cause.lost_spm or 0)), cause.labs or 0})
+        else
+            table.insert(parts, {"lil_einstein-throughput.cause-evidence", cause_caption(cause.kind),
+                                 cause.labs or 0, format_spaced_number(cause.lost_spm)})
         end
-        table.insert(parts, {"", {"lil_einstein-throughput.cluster-pack-demand", item_caption(item.science),
-                                   format_spaced_number(item.maximum_per_minute),
-                                   format_spaced_number(item.working_per_minute),
-                                   format_spaced_number((cluster.local_stock and cluster.local_stock[item.science]) or 0)}})
-        for _, missing in ipairs(cluster.missing_sciences or {}) do
-            if missing.science == item.science then
-                table.insert(parts, {"", "\n", {"lil_einstein-throughput.cluster-pack-missing",
-                                                   missing.labs or 0,
-                                                   format_spaced_number(missing.lost_spm)}})
-                break
-            end
-        end
-    end
-    return concat_localised_parts(parts)
-end
-
-local format_research_pack_demand = function(diagnostic, forecast)
-    local rates = diagnostic and diagnostic.science_pack_rates or {}
-    if #rates == 0 or (diagnostic.expected_spm or 0) <= 0 then
-        return {"lil_einstein-throughput.pack-demand-none"}
-    end
-
-    local parts = {
-        {"lil_einstein-throughput.pack-demand-title"},
-        "\n",
-        {"lil_einstein-throughput.pack-demand-scope"}
-    }
-    for _, item in ipairs(rates) do
-        local produced = "--"
-        local production = forecast and forecast[item.science]
-        if production and production.production_per_minute ~= nil then
-            produced = format_spaced_number(production.production_per_minute)
-        end
-        table.insert(parts, {"", "\n", {"lil_einstein-throughput.pack-demand-row",
-                                          item_caption(item.science),
-                                          format_spaced_number(item.maximum_per_minute),
-                                          format_spaced_number(item.working_per_minute),
-                                          produced}})
     end
     return concat_localised_parts(parts)
 end
@@ -783,6 +774,149 @@ local set_details_cell_width = function(element, width)
     end
     element.style.width = width
     element.style.single_line = false
+end
+
+local get_cluster_missing_pack = function(cluster, science)
+    for _, missing in ipairs(cluster and cluster.missing_sciences or {}) do
+        if missing.science == science then
+            return missing
+        end
+    end
+    return nil
+end
+
+local add_details_table_cell = function(parent, name, caption, width, is_header, style_name)
+    local label = parent.add({
+        type = "label",
+        name = name,
+        style = style_name or (is_header and "bold_label" or nil),
+        caption = caption
+    })
+    set_details_cell_width(label, width)
+    return label
+end
+
+local refresh_research_pack_demand_table = function(panel, diagnostic, forecast)
+    local frame = gutil.get_child(panel, "research_details_pack_demand")
+    if not frame then
+        return
+    end
+    frame.style.width = research_details_content_width
+    local rates = diagnostic and diagnostic.science_pack_rates or {}
+    local active = #rates > 0 and (diagnostic.expected_spm or 0) > 0
+    local header = gutil.get_child(frame, "research_details_pack_demand_header")
+    local rows = gutil.get_child(frame, "research_details_pack_demand_rows")
+    local empty = gutil.get_child(frame, "research_details_pack_demand_empty")
+    if header then
+        header.visible = active
+        header.style.width = research_details_content_width
+        for _, column in ipairs(research_details_demand_column_order) do
+            set_details_cell_width(gutil.get_child(header, "research_details_pack_demand_header_" .. column),
+                                   research_details_demand_columns[column])
+        end
+    end
+    if empty then
+        empty.visible = not active
+    end
+    if not rows then
+        return
+    end
+    rows.style.width = research_details_content_width
+    rows.visible = active
+    if not active then
+        return
+    end
+
+    if #rows.children ~= #rates * #research_details_demand_column_order then
+        rows.clear()
+        for index, item in ipairs(rates) do
+            add_details_table_cell(rows, "research_details_pack_demand_science_" .. index,
+                                   item_caption(item.science), research_details_demand_columns.science, false)
+            add_details_table_cell(rows, "research_details_pack_demand_maximum_" .. index, "",
+                                   research_details_demand_columns.maximum, false)
+            add_details_table_cell(rows, "research_details_pack_demand_working_" .. index, "",
+                                   research_details_demand_columns.working, false)
+            add_details_table_cell(rows, "research_details_pack_demand_produced_" .. index, "",
+                                   research_details_demand_columns.produced, false)
+        end
+    end
+
+    for index, item in ipairs(rates) do
+        local production = forecast and forecast[item.science]
+        local produced = production and production.production_per_minute ~= nil and
+                         format_spaced_number(production.production_per_minute) or "--"
+        local science = gutil.get_child(rows, "research_details_pack_demand_science_" .. index)
+        local maximum = gutil.get_child(rows, "research_details_pack_demand_maximum_" .. index)
+        local working = gutil.get_child(rows, "research_details_pack_demand_working_" .. index)
+        local produced_label = gutil.get_child(rows, "research_details_pack_demand_produced_" .. index)
+        if science then
+            science.caption = item_caption(item.science)
+        end
+        if maximum then
+            maximum.caption = format_spaced_number(item.maximum_per_minute)
+        end
+        if working then
+            working.caption = format_spaced_number(item.working_per_minute)
+        end
+        if produced_label then
+            produced_label.caption = produced
+        end
+    end
+end
+
+local refresh_research_pack_table = function(pack_cell, cluster, index)
+    local pack_table = gutil.get_child(pack_cell, "research_details_pack_table_" .. index)
+    if not pack_table then
+        return
+    end
+    pack_table.style.width = research_details_columns.action
+    local rates = cluster and cluster.science_pack_rates or {}
+    local column_count = #research_details_pack_column_order
+    if #pack_table.children ~= column_count + (#rates * column_count) then
+        pack_table.clear()
+        for _, column in ipairs(research_details_pack_column_order) do
+            add_details_table_cell(pack_table, "research_details_pack_header_" .. column .. "_" .. index,
+                                   {"lil_einstein-throughput.pack-table-" .. column},
+                                   research_details_pack_columns[column], true)
+        end
+        for rate_index, item in ipairs(rates) do
+            for _, column in ipairs(research_details_pack_column_order) do
+                add_details_table_cell(pack_table,
+                                       "research_details_pack_" .. column .. "_" .. index .. "_" .. rate_index,
+                                       "", research_details_pack_columns[column], false,
+                                       column == "missing" and
+                                           "lil_einstein_throughput_missing_label" or nil)
+            end
+        end
+    end
+
+    for rate_index, item in ipairs(rates) do
+        local missing = get_cluster_missing_pack(cluster, item.science)
+        local base = column_count + ((rate_index - 1) * column_count)
+        local science = pack_table.children[base + 1]
+        local stock = pack_table.children[base + 2]
+        local maximum = pack_table.children[base + 3]
+        local working = pack_table.children[base + 4]
+        local missing_label = pack_table.children[base + 5]
+        if science then
+            science.caption = item_caption(item.science)
+        end
+        if maximum then
+            maximum.caption = format_spaced_number(item.maximum_per_minute)
+        end
+        if working then
+            working.caption = format_spaced_number(item.working_per_minute)
+        end
+        if stock then
+            stock.caption = format_spaced_number((cluster.local_stock and cluster.local_stock[item.science]) or 0)
+        end
+        if missing_label then
+            missing_label.caption = missing and
+                {"lil_einstein-throughput.pack-missing-cell",
+                 format_spaced_number(missing.missing_per_minute or 0),
+                 format_spaced_number(-(missing.lost_spm or 0))} or "--"
+        end
+    end
 end
 
 local create_research_details_row = function(rows, index, cluster)
@@ -800,12 +934,33 @@ local create_research_details_row = function(rows, index, cluster)
         column_count = #research_details_column_order
     })
     for _, column in ipairs(research_details_column_order) do
-        local label = cells.add({
-            type = "label",
-            name = "research_details_" .. column .. "_" .. index,
-            caption = ""
-        })
-        set_details_cell_width(label, research_details_columns[column])
+        if column == "action" then
+            local action_cell = cells.add({
+                type = "flow",
+                name = "research_details_action_cell_" .. index,
+                style = "lil_einstein_throughput_pack_cell",
+                direction = "vertical"
+            })
+            action_cell.style.width = research_details_columns.action
+            action_cell.add({
+                type = "table",
+                name = "research_details_pack_table_" .. index,
+                style = "lil_einstein_throughput_pack_table",
+                column_count = #research_details_pack_column_order
+            })
+            add_details_table_cell(action_cell, "research_details_action_" .. index, "",
+                                   research_details_columns.action, false)
+            add_details_table_cell(action_cell, "research_details_action_detail_" .. index, "",
+                                   research_details_columns.action, false,
+                                   "lil_einstein_throughput_missing_label")
+        elseif column == "missing" then
+            add_details_table_cell(cells, "research_details_missing_" .. index, "",
+                                   research_details_columns.missing, false,
+                                   "lil_einstein_throughput_missing_label")
+        else
+            add_details_table_cell(cells, "research_details_" .. column .. "_" .. index, "",
+                                   research_details_columns[column], false)
+        end
     end
     return row
 end
@@ -853,7 +1008,6 @@ local refresh_research_details = function(player_index, anchor, diagnostic)
         "research_details_evidence",
         "research_details_scope_note",
         "research_details_overlap_note",
-        "research_details_pack_demand",
         "research_details_ceiling_hint"
     }) do
         local label = gutil.get_child(panel, name)
@@ -862,10 +1016,7 @@ local refresh_research_details = function(player_index, anchor, diagnostic)
             label.style.single_line = false
         end
     end
-    local pack_demand = gutil.get_child(panel, "research_details_pack_demand")
-    if pack_demand then
-        pack_demand.caption = format_research_pack_demand(diagnostic, forecast)
-    end
+    refresh_research_pack_demand_table(panel, diagnostic, forecast)
 
     local header = gutil.get_child(panel, "research_details_header")
     if header then
@@ -907,12 +1058,13 @@ local refresh_research_details = function(player_index, anchor, diagnostic)
     for index, cluster in ipairs(clusters) do
         local row = rows.children[index]
         local location = gutil.get_child(row, "research_details_location_" .. index)
+        local missing = gutil.get_child(row, "research_details_missing_" .. index)
         local labs = gutil.get_child(row, "research_details_labs_" .. index)
         local capacity = gutil.get_child(row, "research_details_capacity_" .. index)
-        local lost = gutil.get_child(row, "research_details_lost_" .. index)
         local cause = gutil.get_child(row, "research_details_cause_" .. index)
-        local pack = gutil.get_child(row, "research_details_pack_" .. index)
+        local action_cell = gutil.get_child(row, "research_details_action_cell_" .. index)
         local action = gutil.get_child(row, "research_details_action_" .. index)
+        local action_detail = gutil.get_child(row, "research_details_action_detail_" .. index)
         if location then
             location.caption = cluster_location_caption(cluster)
             if cluster.representative_position then
@@ -923,6 +1075,9 @@ local refresh_research_details = function(player_index, anchor, diagnostic)
                 location.tooltip = nil
             end
         end
+        if missing then
+            missing.caption = format_missing_pack_summary(get_dominant_missing_pack(cluster), cluster.lost_spm)
+        end
         if labs then
             labs.caption = {"lil_einstein-throughput.labs-cell", cluster.working_labs or 0,
                             cluster.compatible_labs or 0, cluster.incompatible_labs or 0}
@@ -931,17 +1086,21 @@ local refresh_research_details = function(player_index, anchor, diagnostic)
             capacity.caption = {"lil_einstein-throughput.capacity-cell",
                                 format_spaced_number(cluster.working_spm), format_spaced_number(cluster.expected_spm)}
         end
-        if lost then
-            lost.caption = {"lil_einstein-throughput.lost-cell", format_spaced_number(cluster.lost_spm)}
-        end
         if cause then
             cause.caption = get_cluster_causes_caption(cluster)
         end
-        if pack then
-            pack.caption = get_cluster_pack_caption(cluster)
+        if action_cell then
+            refresh_research_pack_table(action_cell, cluster, index)
         end
         if action then
             action.caption = get_diagnostic_action(diagnostic, cluster)
+        end
+        if action_detail then
+            local missing_pack = get_dominant_missing_pack(cluster)
+            action_detail.visible = missing_pack ~= nil
+            action_detail.caption = missing_pack and
+                {"lil_einstein-throughput.action-missing-pack", item_caption(missing_pack.science),
+                 format_spaced_number(missing_pack.missing_per_minute or 0)} or ""
         end
     end
 end
@@ -1597,10 +1756,14 @@ local populate_policy_general = function(player_index, anchor)
             selected = index
         end
     end
+    local selected_strategy = policy.strategy_order[selected] or "balanced"
+    local strategy_help = {"lil_einstein-strategy-help." .. selected_strategy}
+    strategy_label.tooltip = strategy_help
     strategy_row.add({
         type = "drop-down",
         items = items,
         selected_index = selected,
+        tooltip = strategy_help,
         tags = {lil_einstein_on_state_change = true, handler = "policy_strategy"}
     })
 

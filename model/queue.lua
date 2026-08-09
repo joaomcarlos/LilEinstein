@@ -2202,13 +2202,14 @@ local add_loss_cause = function(cause_data, kind, capacity_spm)
     cause.lost_spm = cause.lost_spm + capacity_spm
 end
 
-local add_missing_science_evidence = function(missing_sciences, science, capacity_spm)
+local add_missing_science_evidence = function(missing_sciences, science, capacity_spm, missing_per_minute)
     local item = missing_sciences[science]
     if not item then
-        item = {science = science, labs = 0, lost_spm = 0}
+        item = {science = science, labs = 0, missing_per_minute = 0, lost_spm = 0}
         missing_sciences[science] = item
     end
     item.labs = item.labs + 1
+    item.missing_per_minute = item.missing_per_minute + (missing_per_minute or 0)
     item.lost_spm = item.lost_spm + capacity_spm
 end
 
@@ -2490,8 +2491,10 @@ queue.get_research_diagnostic = function(force_index)
             cluster.expected_spm = cluster.expected_spm + capacity_spm
             local status = get_observation_status(observation)
             local working = status == defines.entity_status.working
+            local pack_rates = {}
             for _, ingredient in pairs(current.research_unit_ingredients or {}) do
                 local pack_rate = get_lab_science_consumption_spm(lab_entity, current, ingredient.amount)
+                pack_rates[ingredient.name] = (pack_rates[ingredient.name] or 0) + pack_rate
                 add_science_pack_rate(res.science_pack_rates, ingredient.name, ingredient.amount,
                     pack_rate, working)
                 add_science_pack_rate(cluster._science_pack_rates, ingredient.name, ingredient.amount,
@@ -2512,8 +2515,9 @@ queue.get_research_diagnostic = function(force_index)
             if status == defines.entity_status.missing_science_packs then
                 local missing = get_missing_lab_sciences(current, contents)
                 for _, science in pairs(missing) do
-                    add_missing_science_evidence(missing_sciences, science, capacity_spm)
-                    add_missing_science_evidence(cluster._missing_sciences, science, capacity_spm)
+                    add_missing_science_evidence(missing_sciences, science, capacity_spm, pack_rates[science])
+                    add_missing_science_evidence(cluster._missing_sciences, science, capacity_spm,
+                                                 pack_rates[science])
                 end
             end
         end
@@ -2699,8 +2703,10 @@ local process_display_diagnostic_observation = function(context, current, observ
     cluster.expected_spm = cluster.expected_spm + capacity_spm
     local status = get_observation_status(observation)
     local working = status == defines.entity_status.working
+    local pack_rates = {}
     for _, ingredient in pairs(current.research_unit_ingredients or {}) do
         local pack_rate = get_lab_science_consumption_spm(lab_entity, current, ingredient.amount)
+        pack_rates[ingredient.name] = (pack_rates[ingredient.name] or 0) + pack_rate
         add_science_pack_rate(res.science_pack_rates, ingredient.name, ingredient.amount,
             pack_rate, working)
         add_science_pack_rate(cluster._science_pack_rates, ingredient.name, ingredient.amount,
@@ -2719,8 +2725,8 @@ local process_display_diagnostic_observation = function(context, current, observ
 
     if status == defines.entity_status.missing_science_packs then
         for _, science in pairs(get_missing_lab_sciences(current, contents)) do
-            add_missing_science_evidence(context.missing_sciences, science, capacity_spm)
-            add_missing_science_evidence(cluster._missing_sciences, science, capacity_spm)
+            add_missing_science_evidence(context.missing_sciences, science, capacity_spm, pack_rates[science])
+            add_missing_science_evidence(cluster._missing_sciences, science, capacity_spm, pack_rates[science])
         end
     end
 end
