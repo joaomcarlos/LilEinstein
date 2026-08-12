@@ -11,9 +11,6 @@ local cmd = {}
 local command_admin = "Subject314159"
 
 local init_player = function(player_index)
-    if not storage then
-        return
-    end
     -- Init storage
     if not player_index then
         return
@@ -27,9 +24,6 @@ local init_player = function(player_index)
     gui.init_player(player_index)
 end
 local init_force = function(force_index)
-    if not storage then
-        return
-    end
     -- Init storage
     if not storage.forces[force_index] then
         storage.forces[force_index] = {}

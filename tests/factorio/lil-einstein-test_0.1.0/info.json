@@ -1,0 +1,12 @@
+{
+  "name": "lil-einstein-test",
+  "version": "0.1.0",
+  "title": "LilEinstein Test Harness",
+  "author": "LilEinstein",
+  "factorio_version": "2.0",
+  "dependencies": [
+    "base >= 2.0.77",
+    "LilEinstein"
+  ],
+  "description": "Disposable runtime assertions for LilEinstein development."
+}

@@ -1,5 +1,14 @@
 package.path = ".\\?.lua;.\\?\\init.lua;" .. package.path
 
+local preload_names = {
+    "lib.util", "lib.log", "lib.const", "model.state", "model.tech", "model.lab",
+    "model.env", "model.research_weights", "model.research_policy"
+}
+local original_preloads = {}
+for _, name in ipairs(preload_names) do
+    original_preloads[name] = package.preload[name]
+end
+
 local function assert_equal(actual, expected, message)
     if actual ~= expected then
         error((message or "values differ") .. ": expected " .. tostring(expected) .. ", got " .. tostring(actual), 2)
@@ -144,6 +153,51 @@ local function test_active_force_keeps_current_research_guard()
         "active research state must remain unchanged")
 end
 
+local function test_forced_reselection_updates_active_research_queue()
+    local queue = load_queue()
+    local force, queue_state = make_force("worker-robots-speed-7", {"worker-robots-speed-7"})
+    force.current_research = {name = "worker-robots-speed-7"}
+    local reorder_calls = 0
+
+    queue.reorder_queue_by_score = function()
+        reorder_calls = reorder_calls + 1
+        queue_state.current_tech = "research-productivity"
+        force.research_queue = {"research-productivity"}
+    end
+
+    queue.start_next_research(force, true)
+
+    assert_equal(reorder_calls, 1, "a forced reselection must reorder active research")
+    assert_equal(force.research_queue[1], "research-productivity",
+        "forced reselection must keep the replacement in the runtime queue")
+    assert_equal(queue_state.current_tech, "research-productivity",
+        "forced reselection must update the selected technology")
+end
+
+local function test_stale_current_cache_reconciles_live_research()
+    local queue = load_queue()
+    local force = make_force("worker-robots-speed-7", {"research-productivity"})
+    force.current_research = {name = "research-productivity"}
+    local reorder_calls = 0
+
+    queue.reorder_queue_by_score = function()
+        reorder_calls = reorder_calls + 1
+    end
+
+    queue.start_next_research(force)
+
+    assert_equal(reorder_calls, 1,
+        "a stale cached technology must not suppress live research reconciliation")
+end
+
 test_idle_force_rebuilds_after_research_was_cancelled()
 test_active_force_keeps_current_research_guard()
-print("queue_spec: OK")
+test_forced_reselection_updates_active_research_queue()
+test_stale_current_cache_reconciles_live_research()
+
+reset_modules()
+for _, name in ipairs(preload_names) do
+    package.preload[name] = original_preloads[name]
+end
+print("queue_spec: 4 passed")
+return 4

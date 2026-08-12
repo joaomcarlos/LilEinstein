@@ -21,6 +21,7 @@ Runtime data model and research-autopilot logic for the LilEinstein Factorio mod
 - Data model follows `standard.md`: `storage.<module>.<key>`, `storage.forces[force_index].<module>.<key>`, `storage.players[player_index].<module>.<key>`
 - Module dependency order (must not be violated by new requires): env, state → tech → queue → cmd/lab; `cmd.lua` is the only model file allowed to require `view.gui`
 - Temp-tech switching respects pinned techs, science priority, and a symmetric score margin; unavailable techs are scored with a discount and never act as runtime candidates
+- Event/request-driven reselection passes an explicit force flag so active temporary switches and queue changes update `LuaForce.research_queue`; periodic maintenance compares the cached and live technology names, and bookkeeping follows the queue Factorio actually accepted
 - Runtime candidates exclude hidden, disabled, triggered, avoided, and finite/infinite capped technologies
 - Active science-supply checks use staggered live lab-starvation snapshots; non-active candidate checks cap depletion forecasts at the remaining research time
 - The per-force research diagnostic measures only samples for the current technology, classifies decision states from named material-loss thresholds, and emits deterministic semantic display clusters without persisting logistic networks
@@ -43,7 +44,9 @@ Runtime data model and research-autopilot logic for the LilEinstein Factorio mod
 
 ## Verification
 
-- No automated tests; verify in-game against Factorio 2.0.77+
+- Run `lua52 .\tests\run_all.lua` for model and cross-layer unit coverage.
+- Run `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\run_tests.ps1 -RequireInGame`
+  for disposable Factorio 2.0.77+ runtime verification.
 
 ## Child DOX Index
 

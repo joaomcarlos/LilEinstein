@@ -19,9 +19,6 @@ local keys = {
     all_labs = "all_labs",
     lab_content = "lab_content"
 }
-local set = function(force_index, key, val)
-    storage.forces[force_index].lab[key] = val
-end
 local get = function(force_index, key)
     if not storage.forces[force_index] then
         return
@@ -164,9 +161,7 @@ lab.tick_update = function()
         end
 
         -- Early exit if we ran through everything before we hit the rate limit
-        if current_force_idx == 0 then
-            break
-        end
+        if current_force_idx == 0 then return end
     end
 end
 

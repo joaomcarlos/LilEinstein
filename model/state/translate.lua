@@ -23,8 +23,8 @@ translate.request = function(player_index)
     local stp = get_translation_player(player_index, true)
 
     -- Clear previous translations
-    for k, v in pairs(stp or {}) do
-        k = nil
+    for k, _ in pairs(stp or {}) do
+        stp[k] = nil
     end
 
     -- Create array of attributes to be translated

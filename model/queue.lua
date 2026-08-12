@@ -63,13 +63,15 @@ local keys = {
 ---------------------------------------------------------------------------
 
 local set = function(force_index, key, val)
-    if not storage.forces[force_index] then
+    local force_state = storage and storage.forces and storage.forces[force_index]
+    if not force_state or not force_state.queue then
         return
     end
-    storage.forces[force_index].queue[key] = val
+    force_state.queue[key] = val
 end
 local get = function(force_index, key)
-    return storage.forces[force_index].queue[key]
+    local force_state = storage and storage.forces and storage.forces[force_index]
+    return force_state and force_state.queue and force_state.queue[key]
 end
 
 ---------------------------------------------------------------------------
@@ -192,44 +194,8 @@ end
 
 -- Research weights and caps are maintained in model/research_weights.lua for easy editing.
 
-local get_tech_weight = function(xcur)
-    local name = xcur.technology.name
-
-    -- Hard-cap check: deprioritize techs that have reached their practical limit
-    local cap = rw.research_caps[name]
-    if cap and xcur.technology.level >= cap then
-        return -1000
-    end
-
-    local w = rw.research_weights[name]
-    if w then
-        return w
-    end
-
-    -- Default weight inference from research effects
-    local effects = xcur.meta.research_effects or {}
-    if effects["unlock-space-location"] then
-        return 5
-    end
-    if effects["unlock-recipe"] then
-        return 3
-    end
-    if effects["change-recipe-productivity"] or effects["laboratory-productivity"] or effects["laboratory-speed"] then
-        return 4
-    end
-    if effects["mining-drill-productivity-bonus"] then
-        return 6
-    end
-    if effects["turret-attack"] or effects["ammo-damage"] or effects["gun-speed"] or effects["artillery-range"] then
-        return 2
-    end
-    if effects["character-health-bonus"] or effects["character-inventory-slots-bonus"] then
-        return 1
-    end
-
-    return 2
-end
-
+-- Removed: get_tech_weight was never referenced; score_tech_detailed uses
+-- get_tech_weight_at_level, which is the only scoring path.
 local eval_formula = function(formula, level)
     if not formula then return nil end
     -- Factorio formulas may use implicit multiplication e.g. "100(L-6)+1000"
@@ -267,7 +233,6 @@ local get_tech_weight_at_level = function(xcur, level)
 end
 
 local get_science_counts
-local get_lab_science_counts
 local get_virtual_queue_source
 local set_runtime_research_queue
 local get_runtime_candidate_average_cost
@@ -426,10 +391,6 @@ queue.score_tech_detailed = function(xcur, level, user_boost, avg_cost, force_in
     }
 end
 
-local tech_is_available = function(xcur)
-    return xcur and not xcur.technology.researched and xcur.available and xcur.technology.enabled and
-               not xcur.meta.has_trigger
-end
 queue.science_is_available = function(xcur, lsci)
     if not xcur or not xcur.meta then
         return false
@@ -634,75 +595,6 @@ local get_first_next_tech = function(f)
         set(f.index, keys.current_tech, fallback)
         return fallback
     end
-end
-
-local get_first_next_tech_smart = function(f)
-    -- AI weighted scoring + custom order bonus. Skips disabled techs.
-    local tsx = tech.get_all_tech_state_ext(f.index)
-    local lsci = queue.get_science_availability(f.index)
-
-    local all_candidates = {}
-    for tech_name, xcur in pairs(tsx) do
-        if xcur.technology.researched then goto skip end
-        if not xcur.technology.enabled or xcur.meta.hidden then goto skip end
-        if not queue.get_tech_enabled(f.index, tech_name) then goto skip end
-        if xcur.meta.is_infinite then
-            local cap = rw.research_caps[tech_name]
-            if cap and xcur.technology.level >= cap then goto skip end
-        end
-
-        -- Find actual researchable candidate (prerequisite if not directly available)
-        local candidate
-        if xcur.available then
-            if xcur.available and science_is_available(xcur, lsci) then
-                candidate = xcur
-            end
-        else
-            for pre_req_tech, _ in pairs(xcur.meta.all_prerequisites or {}) do
-                local xpre = tsx[pre_req_tech]
-                if xpre and xpre.available and science_is_available(xpre, lsci) then
-                    candidate = xpre
-                    break
-                end
-            end
-        end
-
-        if candidate then
-            all_candidates[candidate.technology.name] = candidate
-        end
-        ::skip::
-    end
-
-    local order = queue.get_tech_order(f.index)
-
-    -- Compute average cost of all candidates for level boost
-    local total_cost_sum = 0
-    local cost_count = 0
-    for tech_name, xcur in pairs(all_candidates) do
-        local cost = xcur.technology.research_unit_count or 1
-        total_cost_sum = total_cost_sum + cost
-        cost_count = cost_count + 1
-    end
-    local avg_cost = cost_count > 0 and (total_cost_sum / cost_count) or nil
-
-    local best_score = -math.huge
-    local nexttech
-
-    for tech_name, xcur in pairs(all_candidates) do
-        local stored_ub = queue.get_tech_ub(f.index, tech_name)
-        local sd = queue.score_tech_detailed(xcur, xcur.technology.level, stored_ub, avg_cost, f.index)
-        if sd.total > best_score then
-            best_score = sd.total
-            nexttech = tech_name
-        end
-    end
-
-    if nexttech then
-        set(f.index, keys.current_tech, nil)
-        set(f.index, keys.current_tech_smart, nexttech)
-        return nexttech
-    end
-    set(f.index, keys.current_tech_smart, nil)
 end
 
 local get_queue_position = function(f, tech_name)
@@ -1166,7 +1058,9 @@ queue.requeue_finished = function(f, t)
     end
 end
 
-queue.start_next_research = function(f)
+---@param f LuaForce
+---@param force_reselection? boolean
+queue.start_next_research = function(f, force_reselection)
     -- Early exit if no force
     if not f then
         return
@@ -1184,11 +1078,15 @@ queue.start_next_research = function(f)
     -- While research is active, event-driven queue updates already keep the
     -- runtime queue current. Do not rescore the entire technology graph on the
     -- 30-second maintenance call.
-    if get(f.index, keys.current_tech) then
+    local stored_current_name = get(f.index, keys.current_tech)
+    local live_current_name = f.current_research and f.current_research.name
+    if stored_current_name and live_current_name and
+        stored_current_name == live_current_name and not force_reselection then
         return
     end
 
     local sfq = get(f.index, keys.queue)
+    local rebuilt_from_empty = false
     local auto_research = state.get_force_setting(f.index, "auto_research",
         const.default_settings.force.settings.auto_research)
 
@@ -1204,6 +1102,7 @@ queue.start_next_research = function(f)
             return
         end
         queue.build_queue_from_available(f.index)
+        rebuilt_from_empty = true
         sfq = get(f.index, keys.queue)
         if not sfq or #sfq == 0 then
             f.research_queue = {}
@@ -1213,7 +1112,16 @@ queue.start_next_research = function(f)
     end
 
     queue.reorder_queue_by_score(f.index)
-    if auto_research and not f.current_research then
+    -- A forced update may be applying a temporary switch or a queue/policy change
+    -- while research is already active. Keep the newly written runtime queue; the
+    -- idle-only cleanup below would otherwise cancel the live research.
+    if f.current_research then
+        return
+    end
+    if rebuilt_from_empty and get(f.index, keys.current_tech) then
+        return
+    end
+    if auto_research and not f.current_research and not rebuilt_from_empty then
         queue.build_queue_from_available(f.index)
         queue.reorder_queue_by_score(f.index)
         if get(f.index, keys.current_tech) then
@@ -2074,43 +1982,6 @@ queue.get_science_count_breakdown = function(force_index, science)
         network_total = 0,
         networks = {}
     }
-end
-
-get_lab_science_counts = function(force_index)
-    local counts = {}
-    local valid_lab_count = 0
-    local sfl = storage.forces[force_index] and storage.forces[force_index].lab
-
-    if sfl and sfl.all_labs and sfl.lab_content then
-        for _, unit_number in ipairs(sfl.all_labs) do
-            local lcur = sfl.lab_content[unit_number]
-            local lab_entity = lcur and lcur.lab
-            if lab_entity and lab_entity.valid then
-                valid_lab_count = valid_lab_count + 1
-                local inv = lab_entity.get_inventory(defines.inventory.lab_input)
-                if inv then
-                    for _, item in pairs(inv.get_contents()) do
-                        counts[item.name] = (counts[item.name] or 0) + (item.count or 0)
-                    end
-                end
-            end
-        end
-        return counts, valid_lab_count
-    end
-
-    for _, lab_entity in pairs(get_cached_labs(force_index)) do
-        if lab_entity.valid then
-            valid_lab_count = valid_lab_count + 1
-            local inv = lab_entity.get_inventory(defines.inventory.lab_input)
-            if inv then
-                for _, item in pairs(inv.get_contents()) do
-                    counts[item.name] = (counts[item.name] or 0) + (item.count or 0)
-                end
-            end
-        end
-    end
-
-    return counts, valid_lab_count
 end
 
 local lab_accepts_research = function(lab_entity, current, accepted)
@@ -3641,18 +3512,19 @@ local get_virtual_research_entries = function(force_index, count, science_availa
         local blocked_name
         local blocked_xcur
 
-        for _, q in ipairs(sfq) do
-            local candidate_name, candidate_xcur = get_ready_candidate(q)
+        local queue_index = 1
+        while sfq[queue_index] ~= nil and not selected_name do
+            local candidate_name, candidate_xcur = get_ready_candidate(sfq[queue_index])
             if candidate_name then
                 if science_is_available(candidate_xcur, lsci) then
                     selected_name = candidate_name
                     selected_xcur = candidate_xcur
-                    break
                 elseif not blocked_name then
                     blocked_name = candidate_name
                     blocked_xcur = candidate_xcur
                 end
             end
+            queue_index = queue_index + 1
         end
 
         selected_name = selected_name or blocked_name
@@ -3746,10 +3618,11 @@ end
 
 set_runtime_research_queue = function(f, names)
     if research_queue_matches(f, names) then
-        return
+        return true
     end
     mark_internal_research_queue_update(f.index, names)
     f.research_queue = names
+    return research_queue_matches(f, names)
 end
 
 queue.reorder_queue_by_score = function(force_index)
@@ -3762,7 +3635,15 @@ queue.reorder_queue_by_score = function(force_index)
         set(force_index, keys.current_tech, fallback_active)
     end
 
-    set_runtime_research_queue(f, names)
+    local applied = set_runtime_research_queue(f, names)
+    if not applied then
+        -- LuaForce silently drops invalid or unavailable technologies. Do not
+        -- leave bookkeeping claiming a technology that Factorio rejected.
+        local live_name = f.current_research and f.current_research.name
+        local first_runtime_tech = f.research_queue and f.research_queue[1]
+        local runtime_name = first_runtime_tech and first_runtime_tech.name or first_runtime_tech
+        set(force_index, keys.current_tech, runtime_name or live_name)
+    end
 end
 
 queue.rotate_parallel_research = function(f)
@@ -3802,18 +3683,16 @@ queue.rotate_parallel_research = function(f)
     end
     sq.parallel_rotation_index = ((sq.parallel_rotation_index or 0) % #names) + 1
     local selected = names[sq.parallel_rotation_index]
-    if not selected then
-        return
-    end
-
-    local rotated_names = {selected}
-    for index, tech_name in ipairs(names) do
-        if index ~= sq.parallel_rotation_index then
-            table.insert(rotated_names, tech_name)
+    if selected then
+        local rotated_names = {selected}
+        for index, tech_name in ipairs(names) do
+            if index ~= sq.parallel_rotation_index then
+                table.insert(rotated_names, tech_name)
+            end
         end
+        set(f.index, keys.current_tech, selected)
+        set_runtime_research_queue(f, rotated_names)
     end
-    set(f.index, keys.current_tech, selected)
-    set_runtime_research_queue(f, rotated_names)
 end
 
 queue.build_queue_from_available = function(force_index)
@@ -4137,18 +4016,19 @@ queue.tick_upcoming_research_display = function(force_index, budget)
         local selected_xcur
         local blocked_name
         local blocked_xcur
-        for _, requested_name in ipairs(job.source) do
-            local candidate_name, candidate_xcur = get_upcoming_display_candidate(job, requested_name)
+        local source_index = 1
+        while job.source[source_index] ~= nil and not selected_name do
+            local candidate_name, candidate_xcur = get_upcoming_display_candidate(job, job.source[source_index])
             if candidate_name then
                 if science_is_available(candidate_xcur, job.science_availability) then
                     selected_name = candidate_name
                     selected_xcur = candidate_xcur
-                    break
                 elseif not blocked_name then
                     blocked_name = candidate_name
                     blocked_xcur = candidate_xcur
                 end
             end
+            source_index = source_index + 1
         end
         selected_name = selected_name or blocked_name
         selected_xcur = selected_xcur or blocked_xcur

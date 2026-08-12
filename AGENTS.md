@@ -94,7 +94,7 @@ LilEinstein is a Factorio 2.0 mod (base >= 2.0.77): a science-aware research aut
 
 Root-owned (no child doc):
 
-- `control.lua` — runtime entry point: inits `storage`/`storage.forces`/`storage.players`, wires lifecycle and lab-membership events, and advances bounded per-open-force display jobs plus non-destructive Upcoming refreshes
+- `control.lua` — runtime entry point: inits `storage`/`storage.forces`/`storage.players`, wires lifecycle and lab-membership events, and advances bounded per-open-force display jobs plus non-destructive Upcoming refreshes on staggered `on_nth_tick` schedules; it has no heavyweight `on_tick` work
 - `data.lua`, `settings.lua`, `info.json`, `changelog.txt`, `locale/` (de, en, fr, pt-PT), `migrations/` (version migration scripts)
 - `standard.md` — coding standard: naming, data model, module order; binding for all Lua edits
 - `RESEARCH_AUTOPILOT_IMPLEMENTATION.md` — maintainer/tester notes for the research-autopilot branch
@@ -109,4 +109,4 @@ Root-owned (no child doc):
 - `view/AGENTS.md` — GUI layer: gui entry, builder, analyzer, gutil, components
 - `lib/AGENTS.md` — foundation utilities: const, util, log, ui_slices
 - `data/AGENTS.md` — data-stage prototypes: style, shortcut, sprites, signals
-- `tests/AGENTS.md` — focused Lua unit tests for queue and autopilot contracts
+- `tests/AGENTS.md` — Lua unit, data/migration, GUI, and disposable in-game test contracts

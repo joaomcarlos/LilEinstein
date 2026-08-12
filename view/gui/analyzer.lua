@@ -133,7 +133,6 @@ analyzer.get_queue_meta = function(force_index) -- This function recalculates th
 
     -- TODO: Clear any remaining technology that was finished in the meantime --> In a different function
     local rolling_queue = {}
-    local rolling_inherit = {}
     local res = {}
     for _, q in pairs(sfq) do
         local item = {
@@ -209,23 +208,14 @@ analyzer.get_queue_meta = function(force_index) -- This function recalculates th
             end
 
             -- Get array of prerequisites by new/inherit/all un-/blocked
-            local is_new = util.array_has_value(rolling_inherit, pre_req_tech)
             if xpre.meta.has_trigger or not xpre.technology.enabled or xpre.meta.hidden or next(xpre.blocked_by) ~= nil or
                 next(xpre.disabled_by) ~= nil then
                 -- if pt.has_trigger or not pt.technology.enabled or pt.hidden or pt.blocked_by then
-                if is_new then
-                    table.insert(item.new_blocked, pre_req_tech)
-                else
-                    table.insert(item.inherit_blocked, pre_req_tech)
-                end
+                table.insert(item.inherit_blocked, pre_req_tech)
                 table.insert(item.all_blocked, pre_req_tech)
                 item.is_blocked = true
             else
-                if is_new then
-                    table.insert(item.new_unblocked, pre_req_tech)
-                else
-                    table.insert(item.inherit_unblocked, pre_req_tech)
-                end
+                table.insert(item.inherit_unblocked, pre_req_tech)
                 table.insert(item.all_unblocked, pre_req_tech)
             end
 
@@ -250,11 +240,6 @@ analyzer.get_queue_meta = function(force_index) -- This function recalculates th
                 end
                 -- Add to metadata
                 table.insert(item.blocking_reasons[reason], pre_req_tech)
-            end
-
-            -- Append prerequisite to rolling inherit array
-            if is_new then
-                table.insert(rolling_inherit, pre_req_tech)
             end
 
             ::continue::

@@ -27,9 +27,7 @@ local get_tech_icon = function(techtbl, xcur, enbl, player_index)
     })
     icn.style.width = 74
     icn.style.height = 74
-    if xcur.technology.researched then
-        icn.style = "lil_einstein_tech_btn_researched"
-    elseif xcur.available and xcur.meta.has_trigger then
+    if xcur.available and xcur.meta.has_trigger then
         icn.style = "lil_einstein_tech_btn_blocked"
     elseif not xcur.available then
         icn.style = "lil_einstein_tech_btn_unavailable"

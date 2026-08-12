@@ -10,6 +10,51 @@ local gutil = require("view.gui.gutil")
 local const = require("lib.const")
 local util = require("lib.util")
 
+-- Development-only read-only snapshot for the disposable Factorio test mod.
+-- The interface is absent from normal saves because the test mod is not active.
+if script.active_mods and script.active_mods["lil-einstein-test"] then
+    remote.add_interface("lil_einstein_test", {
+        snapshot = function(force_index)
+            local f = game.forces[force_index or "player"]
+            local sf = f and storage and storage.forces and storage.forces[f.index] or nil
+            local safe_type = function(callback)
+                local ok, value = pcall(callback)
+                return ok and type(value) or "error"
+            end
+            return {
+                storage_initialized = storage ~= nil and storage.forces ~= nil and storage.players ~= nil,
+                force_initialized = sf ~= nil,
+                queue_initialized = sf ~= nil and sf.queue ~= nil,
+                policy_initialized = sf ~= nil and sf.research_policy ~= nil,
+                lab_initialized = sf ~= nil and sf.lab ~= nil,
+                strategy = f and policy.get_setting(f.index, "strategy") or nil,
+                queue_type = f and type(queue.get_queue(f.index)) or "nil",
+                pinned_is_nil = f and queue.get_pinned_tech(f.index) == nil or false,
+                history_type = f and type(queue.get_research_history(f.index, 5)) or "nil",
+                sciences_type = type(env.get_all_sciences()),
+                labs_type = f and type(lab.get_registered_labs(f.index)) or "nil",
+                policy_export_type = f and type(policy.export_settings(f.index)) or "nil",
+                policy_sanitized_type = f and type(policy.sanitize_settings(policy.export_settings(f.index))) or "nil",
+                science_counts_type = f and safe_type(function() return queue.get_science_counts(f.index) end) or "nil",
+                science_breakdown_type = f and safe_type(function()
+                    return queue.get_science_count_breakdown(f.index, "automation-science-pack")
+                end) or "nil",
+                science_clusters_type = f and safe_type(function() return queue.get_science_clusters(f.index) end) or "nil",
+                science_forecast_type = f and safe_type(function() return queue.get_science_forecast(f.index) end) or "nil",
+                science_availability_type = f and safe_type(function() return queue.get_science_availability(f.index) end) or "nil",
+                research_summary_type = f and safe_type(function() return queue.get_research_summary(f.index) end) or "nil",
+                diagnostic_type = f and safe_type(function() return queue.get_research_diagnostic(f.index) end) or "nil",
+                upcoming_type = f and safe_type(function() return queue.get_upcoming_research(f.index, 3) end) or "nil",
+                upcoming_display_type = f and safe_type(function() return queue.get_upcoming_research_display(f.index, 3) end) or "nil",
+                queue_budget_type = f and safe_type(function() return queue.get_queue_budget(f.index, 3) end) or "nil",
+                health_snapshot_tick_type = f and safe_type(function() return queue.get_research_health_snapshot_tick(f.index) end) or "nil",
+                trigger_objectives_type = f and safe_type(function() return queue.get_trigger_objectives(f.index) end) or "nil",
+                si = gutil.format_si(1250)
+            }
+        end
+    })
+end
+
 ----------------------------------------------------------------------------------------------------
 -- INITIALIZATION
 ----------------------------------------------------------------------------------------------------
@@ -133,14 +178,6 @@ end)
 -- TICK
 ----------------------------------------------------------------------------------------------------
 
-local refresh_open_research_progress = function()
-    for _, p in pairs(game.players) do
-        if gui.is_open(p.index) then
-            gui.refresh_research_progress(p.index)
-        end
-    end
-end
-
 local refresh_open_research_graph = function(force_index)
     for _, p in pairs(game.players) do
         if p.force.index == force_index and gui.is_open(p.index) then
@@ -149,8 +186,8 @@ local refresh_open_research_graph = function(force_index)
     end
 end
 
-script.on_event(defines.events.on_tick, function(e)
-    -- Do the translation request if any
+local run_open_view_updates = function()
+    -- Translation requests are bounded internally and do not need a per-tick hook.
     state.tick_request_translation()
 
     local open_force_indices = {}
@@ -165,16 +202,19 @@ script.on_event(defines.events.on_tick, function(e)
     for force_index in pairs(open_force_indices) do
         queue.tick_research_health_snapshot(force_index)
     end
+end
 
+local run_force_maintenance = function()
     for _, f in pairs(game.forces) do
         local refresh_gui = false
+        local needs_next_research = state.research_needs_next(f)
 
         if state.queue_needs_sync(f) then
             queue.sync_ingame_queue(f)
             refresh_gui = true
         end
-        if state.research_needs_next(f) then
-            queue.start_next_research(f)
+        if needs_next_research then
+            queue.start_next_research(f, true)
             refresh_gui = true
         end
         if state.ingame_queue_needs_cleanup(f) then
@@ -182,9 +222,12 @@ script.on_event(defines.events.on_tick, function(e)
             refresh_gui = true
         end
 
-        -- Sync actual game queue to reordered mod queue: run immediately when idle
-        -- or every 30s (1800 ticks) while researching
-        if not f.current_research or game.tick % 1800 == 0 then
+        -- Event-driven requests handle ordinary queue changes. Keep a slower
+        -- fallback for external changes while idle and a 30-second active check.
+        local periodic_research_check = (not f.current_research and
+            game.tick % const.runtime_intervals.idle_research_check_ticks == 0) or
+            (f.current_research and game.tick % 1800 == 0)
+        if not needs_next_research and periodic_research_check then
             queue.start_next_research(f)
         end
 
@@ -205,8 +248,14 @@ script.on_event(defines.events.on_tick, function(e)
             refresh_open_research_graph(f.index)
         end
     end
+end
 
-    refresh_open_research_progress()
+script.on_nth_tick(const.runtime_intervals.open_view_ticks, function(e)
+    run_open_view_updates()
+end)
+
+script.on_nth_tick(const.runtime_intervals.force_maintenance_ticks, function(e)
+    run_force_maintenance()
 end)
 
 script.on_nth_tick(42, function(e)
@@ -219,8 +268,8 @@ script.on_nth_tick(60, function(e)
     for _, p in pairs(game.players) do
         if gui.is_open(p.index) then
             gui.refresh_upcoming_times(p.index)
-            gui.refresh_science_counts(p.index)
             gui.refresh_research_metrics(p.index)
+            gui.refresh_research_progress(p.index)
         end
     end
 end)

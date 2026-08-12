@@ -99,8 +99,7 @@ local sanitize_setting = function(key, value)
     elseif type(default_settings[key]) == "boolean" then
         return value == true, type(value) == "boolean"
     end
-
-    return value, type(value) == type(default_settings[key])
+    return nil, false
 end
 
 policy.init_force = function(force_index)
