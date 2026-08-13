@@ -35,6 +35,13 @@ local compact_number = function(value)
     return gutil.format_si(number(value))
 end
 
+local compact_optional = function(value)
+    if value == nil then
+        return "-"
+    end
+    return compact_number(value)
+end
+
 local yes_no = function(value)
     return value and "YES" or "NO"
 end
@@ -239,8 +246,8 @@ local add_science = function(lines, force_index, sciences, counts, forecast, ava
     for _, science in ipairs(sciences) do
         local item = forecast[science] or {}
         append(lines, "%s|%s|%s|%s|%s|%s|%s|%s|%s", safe_string(science), compact_number(counts[science] or item.stock),
-            compact_number(item.consumption_per_minute), compact_number(get_flow_value(flow_history, 1, science)),
-            compact_number(get_flow_value(flow_history, 2, science)), compact_number(item.production_per_minute),
+            compact_number(item.consumption_per_minute), compact_optional(get_flow_value(flow_history, 1, science)),
+            compact_optional(get_flow_value(flow_history, 2, science)), compact_number(item.production_per_minute),
             compact_number(item.net_per_minute), format_seconds(item.depletion_seconds),
             yes_no(availability[science]))
     end
@@ -292,6 +299,10 @@ local add_warnings = function(lines, force_index, force, diagnostic, upcoming, a
         add_warning("current_cache_mismatch: live=" .. safe_string(control.live_current_tech) ..
             " cached=" .. safe_string(control.cached_current_tech))
     end
+    if diagnostic.current_technology ~= control.live_current_tech then
+        add_warning("health_snapshot_mismatch: snapshot=" .. safe_string(diagnostic.current_technology) ..
+            " live=" .. safe_string(control.live_current_tech))
+    end
     if control.is_stuck then
         add_warning("queue_marked_stuck")
     end
@@ -340,7 +351,7 @@ debug_report.generate = function(player_index)
     local speed = queue.get_research_speed(force_index)
     local lines = {
         "LilEinstein debug report",
-        "schema=1 | generated_tick=" .. safe_string(game.tick) .. " | force_index=" .. safe_string(force_index) ..
+        "schema=2 | generated_tick=" .. safe_string(game.tick) .. " | force_index=" .. safe_string(force_index) ..
             " | force_name=" .. safe_string(force.name),
         "note=This report is generated from the live force/model state. The in-game report box selects all text; press Ctrl+C.",
         ""
@@ -351,8 +362,9 @@ debug_report.generate = function(player_index)
         safe_string(force.current_research and force.current_research.name), number(summary.progress) * 100,
         compact_number(summary.done), compact_number(summary.total), exact_number(speed), exact_number(summary.spm),
         format_seconds(summary.remaining_seconds))
-    append(lines, "health_state=%s | actual_spm=%s | expected_spm=%s | working_spm=%s | utilization=%.2f%% | labs=%s/%s compatible | working_labs=%s | incompatible_labs=%s | health_snapshot_tick=%s",
-        safe_string(diagnostic.state), exact_number(diagnostic.actual_spm), exact_number(diagnostic.expected_spm),
+    append(lines, "health_state=%s | health_snapshot_technology=%s | actual_spm=%s | expected_spm=%s | working_spm=%s | utilization=%.2f%% | labs=%s/%s compatible | working_labs=%s | incompatible_labs=%s | health_snapshot_tick=%s",
+        safe_string(diagnostic.state), safe_string(diagnostic.current_technology), exact_number(diagnostic.actual_spm),
+        exact_number(diagnostic.expected_spm),
         exact_number(diagnostic.working_spm), number(diagnostic.utilization) * 100, safe_string(diagnostic.total_labs),
         safe_string(diagnostic.compatible_labs), safe_string(diagnostic.working_labs), safe_string(diagnostic.incompatible_labs),
         safe_string(queue.get_research_health_snapshot_tick(force_index)))

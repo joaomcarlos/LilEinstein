@@ -104,6 +104,7 @@ local queue = {
     get_research_display_diagnostic = function()
         return {
             state = "pack_bound",
+            current_technology = "stale-alpha",
             actual_spm = 12.5,
             expected_spm = 20,
             working_spm = 12.5,
@@ -192,6 +193,7 @@ local debug_report = require("view.gui.debug_report")
 local tests = {
     {"includes the queue, score, graph, science, and warning sections", function()
         local report = debug_report.generate(1)
+        t.assert_true(report:find("schema=2", 1, true) ~= nil)
         t.assert_true(report:find("CURRENT RESEARCH", 1, true) ~= nil)
         t.assert_true(report:find("UPCOMING RESEARCH", 1, true) ~= nil)
         t.assert_true(report:find("beta|2|0.00%|3m 00s|1m 30s|NO", 1, true) ~= nil)
@@ -203,6 +205,7 @@ local tests = {
         t.assert_true(report:find("WARNINGS", 1, true) ~= nil)
         t.assert_true(report:find("pack_bound", 1, true) ~= nil)
         t.assert_true(report:find("current_cache_mismatch", 1, true) ~= nil)
+        t.assert_true(report:find("health_snapshot_mismatch", 1, true) ~= nil)
     end}
 }
 

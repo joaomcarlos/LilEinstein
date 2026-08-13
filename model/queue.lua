@@ -639,7 +639,11 @@ queue.get_research_control_state = function(force_index)
         storage.forces[force_index].queue
     local runtime_queue = {}
     for _, technology in ipairs((f and f.research_queue) or {}) do
-        table.insert(runtime_queue, type(technology) == "string" and technology or technology.name)
+        local technology_name = type(technology) == "string" and technology or
+            (technology and technology.name)
+        if technology_name then
+            table.insert(runtime_queue, technology_name)
+        end
     end
     return {
         live_current_tech = f and f.current_research and f.current_research.name or nil,
