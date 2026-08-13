@@ -24,6 +24,7 @@ local specs = {
     "tests.gutil_spec",
     "tests.gutil_deep_spec",
     "tests.analyzer_spec",
+    "tests.debug_report_spec",
     "tests.builder_spec",
     "tests.gui_spec",
     "tests.component_guard_spec",

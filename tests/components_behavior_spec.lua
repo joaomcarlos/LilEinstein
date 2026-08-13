@@ -235,6 +235,28 @@ local function reset_fixture()
                 },
                 dominant_cause = {kind = "missing_science"},
                 local_stock = {science_a = 9},
+                lab_descriptors = {
+                    {
+                        unit_number = 101,
+                        prototype_name = "lab",
+                        surface_name = "Nauvis",
+                        position = {x = 12.4, y = -8.6},
+                        compatible = true,
+                        working = false,
+                        status_key = "missing_science",
+                        missing_sciences = {"science_a"}
+                    },
+                    {
+                        unit_number = 102,
+                        prototype_name = "lab",
+                        surface_name = "Nauvis",
+                        position = {x = 18.2, y = -4.1},
+                        compatible = true,
+                        working = false,
+                        status_key = "missing_science",
+                        missing_sciences = {"science_a"}
+                    }
+                },
                 science_pack_rates = {
                     {science = "science_a", maximum_per_minute = 240, working_per_minute = 123}
                 }
@@ -493,6 +515,17 @@ local function make_details_anchor()
     local pane = add_named(panel, "research_details_scroll_pane", "scroll-pane")
     pane.style = {}
     add_named(panel, "research_details_rows")
+    local inspection = add_named(panel, "research_lab_inspection_panel", "frame")
+    inspection.visible = false
+    add_named(inspection, "research_lab_inspection_summary", "label")
+    local inspection_header = add_named(inspection, "research_lab_inspection_header", "table")
+    for _, name in ipairs({"name", "location", "status", "missing"}) do
+        add_named(inspection_header, "research_lab_inspection_header_" .. name, "label")
+    end
+    add_named(inspection, "research_lab_inspection_empty", "label")
+    local inspection_pane = add_named(inspection, "research_lab_inspection_scroll_pane", "scroll-pane")
+    inspection_pane.style = {}
+    add_named(inspection, "research_lab_inspection_rows", "table")
     local demand = add_named(panel, "research_details_pack_demand")
     local demand_header = add_named(demand, "research_details_pack_demand_header", "table")
     for _, name in ipairs({"science", "maximum", "working", "produced"}) do
@@ -616,6 +649,8 @@ local tests = {
         local rows = find_element(panel, "research_details_rows")
         t.assert_equal(#rows.children, 1)
         t.assert_equal(rows.children[1].tags.cluster_key, "network-main")
+        t.assert_equal(find_element(rows, "research_details_cells_1").style_name,
+                       "lil_einstein_throughput_table")
         t.assert_equal(caption_head(find_element(rows, "research_details_location_1").caption),
                        "lil_einstein-throughput.location-network")
         t.assert_equal(find_element(rows, "research_details_location_1").tooltip[2], 12)
@@ -624,10 +659,28 @@ local tests = {
         t.assert_equal(caption_head(find_element(rows, "research_details_action_1").caption),
                        "lil_einstein-throughput.action-restock")
         t.assert_true(find_element(rows, "research_details_action_detail_1").visible)
+        local inspect_labs = find_element(rows, "research_details_inspect_labs_1")
+        t.assert_true(inspect_labs.visible)
+        t.assert_equal(caption_head(inspect_labs.caption), "lil_einstein-throughput.inspect-labs")
+        t.assert_equal(inspect_labs.caption[2], 2)
+        t.assert_equal(inspect_labs.tags.handler, "inspect_research_cluster_labs")
+        t.assert_equal(inspect_labs.tags.cluster_key, "network-main")
         t.assert_equal(#find_element(rows, "research_details_pack_table_1").children, 10)
         t.assert_equal(#find_element(panel, "research_details_pack_demand_rows").children, 4)
         t.assert_true(find_element(panel, "research_details_pack_demand_header").visible)
         t.assert_false(find_element(panel, "research_details_pack_demand_empty").visible)
+
+        components.show_research_lab_inspection(1, anchor, "network-main")
+        local inspection = find_element(panel, "research_lab_inspection_panel")
+        t.assert_true(inspection.visible)
+        t.assert_false(find_element(panel, "research_details_headline").visible)
+        t.assert_equal(#find_element(inspection, "research_lab_inspection_rows").children, 8)
+        t.assert_equal(caption_head(find_element(inspection, "research_lab_inspection_summary").caption),
+                       "lil_einstein-throughput.inspect-labs-summary")
+        t.assert_equal(find_element(inspection, "research_lab_inspection_name_1").caption[3], 101)
+        components.hide_research_lab_inspection(1, anchor)
+        t.assert_false(inspection.visible)
+        t.assert_true(find_element(panel, "research_details_headline").visible)
 
         research_diagnostic.state = "at_capacity"
         components.refresh_research_metrics(1, anchor)

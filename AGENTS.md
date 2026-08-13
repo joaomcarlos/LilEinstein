@@ -98,6 +98,7 @@ Root-owned (no child doc):
 - `data.lua`, `settings.lua`, `info.json`, `changelog.txt`, `locale/` (de, en, fr, pt-PT), `migrations/` (version migration scripts)
 - `standard.md` — coding standard: naming, data model, module order; binding for all Lua edits
 - `RESEARCH_AUTOPILOT_IMPLEMENTATION.md` — maintainer/tester notes for the research-autopilot branch
+- `docs/_human/raw_request_log.md` — append-only verbatim record of user requests and project decisions
 - `audit/` — GUI mockup reference assets; `scripts/import_ui_slices.ps1` regenerates `lib/ui_slices.lua` from them
 - `graphics/` — mod icons and UI sprite assets
 - `output/` — generated output folder (currently `output/imagegen/`)

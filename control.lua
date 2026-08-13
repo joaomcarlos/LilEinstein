@@ -265,8 +265,13 @@ end)
 
 -- Per-second countdown refresh for upcoming research panel (lightweight, no reprocessing)
 script.on_nth_tick(60, function(e)
+    local sampled_forces = {}
     for _, p in pairs(game.players) do
         if gui.is_open(p.index) then
+            if not sampled_forces[p.force.index] then
+                queue.record_science_flow(p.force.index)
+                sampled_forces[p.force.index] = true
+            end
             gui.refresh_upcoming_times(p.index)
             gui.refresh_research_metrics(p.index)
             gui.refresh_research_progress(p.index)
@@ -397,7 +402,9 @@ end)
 
 -- Player events handling
 script.on_event(defines.events.on_gui_closed, function(e)
-    if gui.is_open(e.player_index) then
+    if gui.is_debug_report_open(e.player_index) then
+        gui.close_debug_report(e.player_index)
+    elseif gui.is_open(e.player_index) then
         -- Check if the search field is focussed
         if gui.is_search_focussed(e.player_index) then
             gui.defocus_search(e.player_index)
@@ -579,6 +586,18 @@ script.on_event(defines.events.on_gui_click, function(e)
         repopulate = false
     elseif h == "toggle_research_details" then
         gui.toggle_research_details(p.index)
+        repopulate = false
+    elseif h == "open_debug_report" then
+        gui.open_debug_report(p.index)
+        repopulate = false
+    elseif h == "close_debug_report" then
+        gui.close_debug_report(p.index)
+        repopulate = false
+    elseif h == "inspect_research_cluster_labs" then
+        gui.show_research_lab_inspection(p.index, t.cluster_key)
+        repopulate = false
+    elseif h == "hide_research_lab_inspection" then
+        gui.hide_research_lab_inspection(p.index)
         repopulate = false
     elseif h == "show_trigger_technology" then
         p.open_technology_gui(t.technology)

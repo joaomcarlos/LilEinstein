@@ -15,6 +15,9 @@ local research_history_seconds = 10 * 60
 local research_history_sample_seconds = 3
 local research_history_samples = math.floor(research_history_seconds / research_history_sample_seconds)
 local research_speed_average_samples = math.floor(60 / research_history_sample_seconds)
+local science_flow_history_sample_seconds = 60
+local science_flow_history_seconds = 2 * 60
+local science_flow_history_samples = math.floor(science_flow_history_seconds / science_flow_history_sample_seconds) + 1
 local diagnostic_healthy_utilization = 0.90
 local diagnostic_meaningful_gap_fraction = 0.05
 local diagnostic_minimum_lost_spm = 1
@@ -629,6 +632,27 @@ queue.get_current_researching = function(force_index)
 end
 queue.get_current_smart_researching = function(force_index)
     return get(force_index, keys.current_tech_smart)
+end
+queue.get_research_control_state = function(force_index)
+    local f = game.forces[force_index]
+    local sq = storage and storage.forces and storage.forces[force_index] and
+        storage.forces[force_index].queue
+    local runtime_queue = {}
+    for _, technology in ipairs((f and f.research_queue) or {}) do
+        table.insert(runtime_queue, type(technology) == "string" and technology or technology.name)
+    end
+    return {
+        live_current_tech = f and f.current_research and f.current_research.name or nil,
+        cached_current_tech = sq and sq[keys.current_tech] or nil,
+        cached_smart_tech = sq and sq[keys.current_tech_smart] or nil,
+        target_tech = sq and sq[keys.target_tech] or nil,
+        temp_tech = sq and sq[keys.temp_tech] or nil,
+        temp_tech_timeout_tick = sq and sq[keys.temp_tech_timeout] or nil,
+        last_switch_tick = sq and sq[keys.last_switch_tick] or nil,
+        is_stuck = sq and sq[keys.is_stuck] == true or false,
+        stored_queue = sq and sq[keys.queue] or {},
+        runtime_queue = runtime_queue
+    }
 end
 queue.get_pinned_tech = function(force_index)
     return get(force_index, keys.pinned_tech)
@@ -1596,6 +1620,42 @@ queue.get_research_history = function(force_index, bucket_count)
     return res, true
 end
 
+queue.record_science_flow = function(force_index)
+    local sf = storage and storage.forces and storage.forces[force_index]
+    local sq = sf and sf.queue
+    if not sq then
+        return
+    end
+
+    local history = sq.science_flow_history or {}
+    local last = history[#history]
+    if last and game.tick - (last.tick or 0) < science_flow_history_sample_seconds then
+        return
+    end
+
+    local forecast = queue.get_science_forecast(force_index)
+    local values = {}
+    for science, item in pairs(forecast or {}) do
+        values[science] = {
+            stock = item.stock or 0,
+            production_per_minute = item.production_per_minute or 0,
+            consumption_per_minute = item.consumption_per_minute or 0,
+            net_per_minute = item.net_per_minute or 0
+        }
+    end
+    table.insert(history, {tick = game.tick, values = values})
+    while #history > science_flow_history_samples do
+        table.remove(history, 1)
+    end
+    sq.science_flow_history = history
+end
+
+queue.get_science_flow_history = function(force_index)
+    local sf = storage and storage.forces and storage.forces[force_index]
+    local sq = sf and sf.queue
+    return sq and sq.science_flow_history or {}
+end
+
 queue.get_research_summary = function(force_index)
     local f = game.forces[force_index]
     local speed = queue.get_research_speed(force_index)
@@ -2162,6 +2222,7 @@ local new_diagnostic_cluster = function(key, scope, surface_index, surface_name,
         missing_sciences = {},
         science_pack_rates = {},
         local_stock = {},
+        lab_descriptors = {},
         _cause_data = {},
         _missing_sciences = {},
         _science_pack_rates = {},
@@ -2237,6 +2298,14 @@ local finalize_diagnostic_cluster = function(cluster, required_sciences, require
 
     cluster.dominant_cause = cluster.causes[1]
     cluster.dominant_missing_science = cluster.missing_sciences[1]
+    table.sort(cluster.lab_descriptors, function(a, b)
+        local a_unit = a.unit_number or math.huge
+        local b_unit = b.unit_number or math.huge
+        if a_unit == b_unit then
+            return tostring(a.prototype_name or "") < tostring(b.prototype_name or "")
+        end
+        return a_unit < b_unit
+    end)
     cluster._cause_data = nil
     cluster._missing_sciences = nil
     cluster._science_pack_rates = nil
@@ -2349,6 +2418,22 @@ queue.get_research_diagnostic = function(force_index)
             cluster.total_labs = cluster.total_labs + 1
             local contents = get_observation_contents(observation)
             add_lab_stock(cluster, contents)
+            local surface = lab_entity.surface
+            local descriptor = {
+                unit_number = lab_entity.unit_number,
+                prototype_name = lab_entity.name or "lab",
+                surface_index = surface and surface.index or 0,
+                surface_name = surface and surface.name or "unknown",
+                position = lab_entity.position and {
+                    x = lab_entity.position.x,
+                    y = lab_entity.position.y
+                } or nil,
+                compatible = false,
+                working = false,
+                status_key = "incompatible",
+                missing_sciences = {}
+            }
+            table.insert(cluster.lab_descriptors, descriptor)
             if not lab_accepts_research(lab_entity, current, get_lab_input_set(lab_entity)) then
                 res.incompatible_labs = res.incompatible_labs + 1
                 cluster.incompatible_labs = cluster.incompatible_labs + 1
@@ -2362,6 +2447,9 @@ queue.get_research_diagnostic = function(force_index)
             cluster.expected_spm = cluster.expected_spm + capacity_spm
             local status = get_observation_status(observation)
             local working = status == defines.entity_status.working
+            descriptor.compatible = true
+            descriptor.working = working
+            descriptor.status_key = working and "working" or get_lab_loss_kind(lab_entity, status)
             local pack_rates = {}
             for _, ingredient in pairs(current.research_unit_ingredients or {}) do
                 local pack_rate = get_lab_science_consumption_spm(lab_entity, current, ingredient.amount)
@@ -2384,8 +2472,8 @@ queue.get_research_diagnostic = function(force_index)
             end
 
             if status == defines.entity_status.missing_science_packs then
-                local missing = get_missing_lab_sciences(current, contents)
-                for _, science in pairs(missing) do
+                descriptor.missing_sciences = get_missing_lab_sciences(current, contents)
+                for _, science in pairs(descriptor.missing_sciences) do
                     add_missing_science_evidence(missing_sciences, science, capacity_spm, pack_rates[science])
                     add_missing_science_evidence(cluster._missing_sciences, science, capacity_spm,
                                                  pack_rates[science])
@@ -2561,6 +2649,22 @@ local process_display_diagnostic_observation = function(context, current, observ
     cluster.total_labs = cluster.total_labs + 1
     local contents = get_observation_contents(observation)
     add_lab_stock(cluster, contents)
+    local surface = lab_entity.surface
+    local descriptor = {
+        unit_number = lab_entity.unit_number,
+        prototype_name = lab_entity.name or "lab",
+        surface_index = surface and surface.index or 0,
+        surface_name = surface and surface.name or "unknown",
+        position = lab_entity.position and {
+            x = lab_entity.position.x,
+            y = lab_entity.position.y
+        } or nil,
+        compatible = false,
+        working = false,
+        status_key = "incompatible",
+        missing_sciences = {}
+    }
+    table.insert(cluster.lab_descriptors, descriptor)
     if not lab_accepts_research(lab_entity, current, get_lab_input_set(lab_entity)) then
         res.incompatible_labs = res.incompatible_labs + 1
         cluster.incompatible_labs = cluster.incompatible_labs + 1
@@ -2574,6 +2678,9 @@ local process_display_diagnostic_observation = function(context, current, observ
     cluster.expected_spm = cluster.expected_spm + capacity_spm
     local status = get_observation_status(observation)
     local working = status == defines.entity_status.working
+    descriptor.compatible = true
+    descriptor.working = working
+    descriptor.status_key = working and "working" or get_lab_loss_kind(lab_entity, status)
     local pack_rates = {}
     for _, ingredient in pairs(current.research_unit_ingredients or {}) do
         local pack_rate = get_lab_science_consumption_spm(lab_entity, current, ingredient.amount)
@@ -2595,7 +2702,8 @@ local process_display_diagnostic_observation = function(context, current, observ
     end
 
     if status == defines.entity_status.missing_science_packs then
-        for _, science in pairs(get_missing_lab_sciences(current, contents)) do
+        descriptor.missing_sciences = get_missing_lab_sciences(current, contents)
+        for _, science in pairs(descriptor.missing_sciences) do
             add_missing_science_evidence(context.missing_sciences, science, capacity_spm, pack_rates[science])
             add_missing_science_evidence(cluster._missing_sciences, science, capacity_spm, pack_rates[science])
         end
@@ -3144,8 +3252,14 @@ queue.get_active_missing_science_bottleneck = function(force_index, xcur)
     if expected_spm <= 0 or sampled_spm < expected_spm * 0.80 then
         return cache_result({})
     end
-    local actual_spm = (queue.get_research_speed(force_index) or 0) * 60
-    if actual_spm / expected_spm >= 0.60 or missing_spm < expected_spm * 0.40 then
+    -- Use the same material-loss threshold as the player-facing diagnostic. The
+    -- switcher must react to a visible PACK-BOUND state even when the remaining
+    -- labs keep total utilization above the old 60%/40% emergency thresholds.
+    local material_threshold_spm = math.max(
+        diagnostic_minimum_lost_spm,
+        expected_spm * diagnostic_meaningful_gap_fraction
+    )
+    if missing_spm < material_threshold_spm then
         return cache_result({})
     end
     return cache_result(res)

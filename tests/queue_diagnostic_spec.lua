@@ -421,6 +421,22 @@ local tests = {
         t.assert_equal(diagnostic.dominant_cause.kind, "missing_science")
         t.assert_equal(diagnostic.dominant_missing_science.science, "automation-science-pack")
         t.assert_true(diagnostic.dominant_cluster_key ~= nil)
+        local missing_descriptor
+        local incompatible_descriptor
+        for _, cluster in ipairs(diagnostic.clusters) do
+            for _, descriptor in ipairs(cluster.lab_descriptors or {}) do
+                if descriptor.unit_number == 5 then
+                    missing_descriptor = descriptor
+                elseif descriptor.unit_number == 7 then
+                    incompatible_descriptor = descriptor
+                end
+            end
+        end
+        t.assert_true(missing_descriptor ~= nil)
+        t.assert_equal(missing_descriptor.status_key, "missing_science")
+        t.assert_equal(missing_descriptor.missing_sciences[1], "automation-science-pack")
+        t.assert_true(incompatible_descriptor ~= nil)
+        t.assert_equal(incompatible_descriptor.status_key, "incompatible")
         t.assert_equal(queue.get_research_diagnostic(1), diagnostic)
         game.tick = game.tick + 1
         reset({current = current, labs = {}, runtime = {}, tick = game.tick})

@@ -512,6 +512,13 @@ local research_details_demand_columns = {
     produced = 370
 }
 local research_details_demand_column_order = {"science", "maximum", "working", "produced"}
+local research_lab_inspection_columns = {
+    name = 385,
+    location = 380,
+    status = 380,
+    missing = 365
+}
+local research_lab_inspection_column_order = {"name", "location", "status", "missing"}
 local diagnostic_state_colors = {
     idle = {0.70, 0.69, 0.64},
     measuring = {0.48, 0.78, 1.00},
@@ -785,6 +792,57 @@ local get_cluster_missing_pack = function(cluster, science)
     return nil
 end
 
+local get_cluster_affected_labs = function(cluster)
+    local missing = get_dominant_missing_pack(cluster)
+    if not missing then
+        return {}
+    end
+
+    local affected = {}
+    for _, descriptor in ipairs(cluster.lab_descriptors or {}) do
+        for _, science in ipairs(descriptor.missing_sciences or {}) do
+            if science == missing.science then
+                table.insert(affected, descriptor)
+                break
+            end
+        end
+    end
+    return affected
+end
+
+local lab_status_caption = function(status_key)
+    local key = tostring(status_key or "other"):gsub("_", "-")
+    return {throughput_prefix .. "lab-status-" .. key}
+end
+
+local lab_identity_caption = function(descriptor)
+    local prototype_name = descriptor.prototype_name or "lab"
+    return {throughput_prefix .. "lab-identity",
+            {"", "[entity=", prototype_name, "]"}, descriptor.unit_number or 0}
+end
+
+local lab_location_caption = function(descriptor)
+    if not descriptor.position then
+        return {throughput_prefix .. "lab-location-unknown", descriptor.surface_name or "unknown"}
+    end
+    return {throughput_prefix .. "lab-location", descriptor.surface_name or "unknown",
+            math.floor(descriptor.position.x + 0.5), math.floor(descriptor.position.y + 0.5)}
+end
+
+local lab_missing_caption = function(descriptor)
+    local parts = {}
+    for index, science in ipairs(descriptor.missing_sciences or {}) do
+        if index > 1 then
+            table.insert(parts, ", ")
+        end
+        table.insert(parts, item_caption(science))
+    end
+    if #parts == 0 then
+        return {throughput_prefix .. "lab-missing-none"}
+    end
+    return concat_localised_parts(parts)
+end
+
 local add_details_table_cell = function(parent, name, caption, width, is_header, style_name)
     local label = parent.add({
         type = "label",
@@ -931,8 +989,10 @@ local create_research_details_row = function(rows, index, cluster)
     local cells = row.add({
         type = "table",
         name = "research_details_cells_" .. index,
+        style = "lil_einstein_throughput_table",
         column_count = #research_details_column_order
     })
+    cells.style.width = research_details_content_width
     for _, column in ipairs(research_details_column_order) do
         if column == "action" then
             local action_cell = cells.add({
@@ -948,6 +1008,20 @@ local create_research_details_row = function(rows, index, cluster)
                 style = "lil_einstein_throughput_pack_table",
                 column_count = #research_details_pack_column_order
             })
+            local inspect_labs = action_cell.add({
+                type = "button",
+                name = "research_details_inspect_labs_" .. index,
+                caption = {throughput_prefix .. "inspect-labs", 0},
+                visible = false,
+                tags = {
+                    lil_einstein_on_click = true,
+                    handler = "inspect_research_cluster_labs",
+                    cluster_key = cluster.key,
+                    ignore_force_enable = true
+                }
+            })
+            inspect_labs.style.width = research_details_columns.action
+            inspect_labs.style.single_line = false
             add_details_table_cell(action_cell, "research_details_action_" .. index, "",
                                    research_details_columns.action, false)
             add_details_table_cell(action_cell, "research_details_action_detail_" .. index, "",
@@ -965,6 +1039,132 @@ local create_research_details_row = function(rows, index, cluster)
     return row
 end
 
+local refresh_research_details
+
+local set_research_details_main_visibility = function(panel, visible)
+    for _, name in ipairs({
+        "research_details_headline",
+        "research_details_evidence",
+        "research_details_scope_note",
+        "research_details_overlap_note",
+        "research_details_pack_demand",
+        "research_details_ceiling_hint",
+        "research_details_header",
+        "research_details_scroll_pane"
+    }) do
+        local element = gutil.get_child(panel, name)
+        if element then
+            element.visible = visible
+        end
+    end
+end
+
+local refresh_research_lab_inspection = function(player_index, anchor, cluster_key, diagnostic)
+    local panel = gutil.get_child(anchor, "research_details_panel")
+    local inspection = panel and gutil.get_child(panel, "research_lab_inspection_panel")
+    if not panel or not inspection then
+        return
+    end
+
+    local p = game.get_player(player_index)
+    if not p then
+        return
+    end
+    diagnostic = diagnostic or queue.get_research_display_diagnostic(p.force.index)
+    local cluster = find_diagnostic_cluster(diagnostic, cluster_key)
+    local affected = get_cluster_affected_labs(cluster)
+    local missing = get_dominant_missing_pack(cluster)
+    local summary = gutil.get_child(inspection, "research_lab_inspection_summary")
+    if summary then
+        summary.caption = {throughput_prefix .. "inspect-labs-summary", item_caption(missing and missing.science),
+                           #affected, cluster_location_caption(cluster)}
+        summary.style.width = research_details_content_width
+        summary.style.single_line = false
+    end
+
+    local header = gutil.get_child(inspection, "research_lab_inspection_header")
+    if header then
+        header.style.width = research_details_content_width
+        for _, column in ipairs(research_lab_inspection_column_order) do
+            set_details_cell_width(gutil.get_child(header,
+                "research_lab_inspection_header_" .. column), research_lab_inspection_columns[column])
+        end
+    end
+
+    local empty = gutil.get_child(inspection, "research_lab_inspection_empty")
+    if empty then
+        empty.visible = #affected == 0
+    end
+    local pane = gutil.get_child(inspection, "research_lab_inspection_scroll_pane")
+    if pane then
+        pane.style.width = research_details_content_width
+        pane.style.height = 545
+        pane.horizontal_scroll_policy = "never"
+        pane.vertical_scroll_policy = "auto"
+    end
+    local rows = gutil.get_child(inspection, "research_lab_inspection_rows")
+    if not rows then
+        return
+    end
+    rows.style.width = research_details_content_width
+    if #rows.children ~= #affected * #research_lab_inspection_column_order then
+        rows.clear()
+        for index, descriptor in ipairs(affected) do
+            add_details_table_cell(rows, "research_lab_inspection_name_" .. index, "",
+                                   research_lab_inspection_columns.name, false)
+            add_details_table_cell(rows, "research_lab_inspection_location_" .. index, "",
+                                   research_lab_inspection_columns.location, false)
+            add_details_table_cell(rows, "research_lab_inspection_status_" .. index, "",
+                                   research_lab_inspection_columns.status, false)
+            add_details_table_cell(rows, "research_lab_inspection_missing_" .. index, "",
+                                   research_lab_inspection_columns.missing, false)
+        end
+    end
+
+    for index, descriptor in ipairs(affected) do
+        local name = gutil.get_child(rows, "research_lab_inspection_name_" .. index)
+        local location = gutil.get_child(rows, "research_lab_inspection_location_" .. index)
+        local status = gutil.get_child(rows, "research_lab_inspection_status_" .. index)
+        local missing_label = gutil.get_child(rows, "research_lab_inspection_missing_" .. index)
+        if name then
+            name.caption = lab_identity_caption(descriptor)
+        end
+        if location then
+            location.caption = lab_location_caption(descriptor)
+        end
+        if status then
+            status.caption = lab_status_caption(descriptor.status_key)
+        end
+        if missing_label then
+            missing_label.caption = lab_missing_caption(descriptor)
+        end
+    end
+end
+
+local show_research_lab_inspection = function(player_index, anchor, cluster_key)
+    local panel = gutil.get_child(anchor, "research_details_panel")
+    local inspection = panel and gutil.get_child(panel, "research_lab_inspection_panel")
+    if not panel or not inspection or not panel.visible then
+        return
+    end
+    state.set_player_setting(player_index, "research_lab_cluster_key", cluster_key)
+    set_research_details_main_visibility(panel, false)
+    inspection.visible = true
+    refresh_research_lab_inspection(player_index, anchor, cluster_key)
+end
+
+local hide_research_lab_inspection = function(player_index, anchor)
+    local panel = gutil.get_child(anchor, "research_details_panel")
+    local inspection = panel and gutil.get_child(panel, "research_lab_inspection_panel")
+    if not panel or not inspection then
+        return
+    end
+    state.clear_player_setting(player_index, "research_lab_cluster_key")
+    inspection.visible = false
+    set_research_details_main_visibility(panel, true)
+    refresh_research_details(player_index, anchor)
+end
+
 local research_details_rows_match = function(rows, clusters)
     if #rows.children ~= #clusters then
         return false
@@ -978,7 +1178,7 @@ local research_details_rows_match = function(rows, clusters)
     return true
 end
 
-local refresh_research_details = function(player_index, anchor, diagnostic)
+refresh_research_details = function(player_index, anchor, diagnostic)
     local panel = gutil.get_child(anchor, "research_details_panel")
     if not panel or not panel.visible then
         return
@@ -989,6 +1189,7 @@ local refresh_research_details = function(player_index, anchor, diagnostic)
         return
     end
     diagnostic = diagnostic or queue.get_research_display_diagnostic(p.force.index)
+    local inspection_key = state.get_player_setting(player_index, "research_lab_cluster_key")
     local forecast = queue.get_science_display_forecast(p.force.index)
     local headline_caption, evidence_caption, state_color = get_research_health_summary(diagnostic)
     local headline = gutil.get_child(panel, "research_details_headline")
@@ -1020,6 +1221,7 @@ local refresh_research_details = function(player_index, anchor, diagnostic)
 
     local header = gutil.get_child(panel, "research_details_header")
     if header then
+        header.style.width = research_details_content_width
         for _, column in ipairs(research_details_column_order) do
             set_details_cell_width(gutil.get_child(header, "research_details_header_" .. column),
                                    research_details_columns[column])
@@ -1035,8 +1237,12 @@ local refresh_research_details = function(player_index, anchor, diagnostic)
 
     local rows = gutil.get_child(panel, "research_details_rows")
     if not rows then
+        if inspection_key then
+            refresh_research_lab_inspection(player_index, anchor, inspection_key, diagnostic)
+        end
         return
     end
+    rows.style.width = research_details_content_width
     local clusters = (diagnostic and diagnostic.clusters) or {}
     if #clusters == 0 then
         if #rows.children ~= 1 or rows.children[1].name ~= "research_details_empty" then
@@ -1046,6 +1252,9 @@ local refresh_research_details = function(player_index, anchor, diagnostic)
                 name = "research_details_empty",
                 caption = {"lil_einstein-throughput.no-clusters"}
             })
+        end
+        if inspection_key then
+            refresh_research_lab_inspection(player_index, anchor, inspection_key, diagnostic)
         end
         return
     elseif not research_details_rows_match(rows, clusters) then
@@ -1063,6 +1272,7 @@ local refresh_research_details = function(player_index, anchor, diagnostic)
         local capacity = gutil.get_child(row, "research_details_capacity_" .. index)
         local cause = gutil.get_child(row, "research_details_cause_" .. index)
         local action_cell = gutil.get_child(row, "research_details_action_cell_" .. index)
+        local inspect_labs = gutil.get_child(row, "research_details_inspect_labs_" .. index)
         local action = gutil.get_child(row, "research_details_action_" .. index)
         local action_detail = gutil.get_child(row, "research_details_action_detail_" .. index)
         if location then
@@ -1092,6 +1302,11 @@ local refresh_research_details = function(player_index, anchor, diagnostic)
         if action_cell then
             refresh_research_pack_table(action_cell, cluster, index)
         end
+        if inspect_labs then
+            local affected_labs = get_cluster_affected_labs(cluster)
+            inspect_labs.visible = #affected_labs > 0
+            inspect_labs.caption = {throughput_prefix .. "inspect-labs", #affected_labs}
+        end
         if action then
             action.caption = get_diagnostic_action(diagnostic, cluster)
         end
@@ -1102,6 +1317,9 @@ local refresh_research_details = function(player_index, anchor, diagnostic)
                 {"lil_einstein-throughput.action-missing-pack", item_caption(missing_pack.science),
                  format_spaced_number(missing_pack.missing_per_minute or 0)} or ""
         end
+    end
+    if inspection_key then
+        refresh_research_lab_inspection(player_index, anchor, inspection_key, diagnostic)
     end
 end
 
@@ -2242,6 +2460,14 @@ end
 
 content.refresh_research_details = function(player_index, anchor)
     refresh_research_details(player_index, anchor)
+end
+
+content.show_research_lab_inspection = function(player_index, anchor, cluster_key)
+    show_research_lab_inspection(player_index, anchor, cluster_key)
+end
+
+content.hide_research_lab_inspection = function(player_index, anchor)
+    hide_research_lab_inspection(player_index, anchor)
 end
 
 content.refresh_research_graph = function(player_index, anchor)

@@ -89,6 +89,19 @@ local tests = {
         testlib.assert_true(anchor.lil_einstein_gui ~= nil, "the parent frame must still be built")
         testlib.assert_true(#errors > 0, "a permanently unsupported child must be logged")
     end},
+    {"builds a focused, selectable debug report text box", function()
+        local player = {opened = nil}
+        local anchor = make_element(false)
+        _G.game = {get_player = function() return player end}
+        local frame = builder.build_debug_report(1, anchor, "debug text")
+        testlib.assert_true(frame ~= nil, "debug report frame")
+        local text_box = frame.lil_einstein_debug_report_text
+        testlib.assert_equal(text_box.text, "debug text")
+        testlib.assert_true(text_box.read_only)
+        testlib.assert_true(text_box.selectable)
+        testlib.assert_false(text_box.word_wrap)
+        testlib.assert_equal(player.opened, text_box)
+    end},
     {"covers private builder fallbacks, empty structures, and tab mappings", function()
         errors = {}
         local build_recursive = get_upvalue(builder.build, "build_recursive")

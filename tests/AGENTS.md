@@ -19,6 +19,9 @@ runtime, data-stage, migration, queue, policy, lab, and GUI contracts.
 - Tests exercise public interfaces with explicit, narrow Factorio stubs; private
   implementation details are not imported solely to make assertions possible.
 - Tests must distinguish an idle force from an actively researching force.
+- Active science-switch regressions exercise `queue.check_and_switch_temp_research` with a live current technology, lab starvation evidence, and a supplied alternate candidate; do not test only the lower-level science predicate.
+- Throughput GUI/model regressions cover fixed-width cluster rows, deterministic lab descriptors, and the affected-lab inspection transition.
+- Debug-report tests cover deterministic report sections and the copy-ready, selected text-box modal seam.
 - Data-stage and migration tests execute against isolated `data`/`game` doubles.
 - In-game checks must use the disposable runner and must not open or mutate a
   player save.

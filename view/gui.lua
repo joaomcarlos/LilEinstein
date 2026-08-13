@@ -7,6 +7,7 @@ local const = require("lib.const")
 
 local builder = require("view.gui.builder")
 local components = require("view.gui.components")
+local debug_report = require("view.gui.debug_report")
 
 local target = "screen"
 local repopulate_jobs = {}
@@ -48,9 +49,13 @@ local close = function(player_index, anchor)
     -- Clear the search text
     state.clear_player_setting(player_index, "search_text")
     state.clear_player_setting(player_index, "research_graph_hover_column")
+    state.clear_player_setting(player_index, "research_lab_cluster_key")
 end
 
 gui.init_player = function(player_index)
+    if gui.is_debug_report_open(player_index) then
+        gui.close_debug_report(player_index)
+    end
     local p = game.get_player(player_index)
     if p.opened and p.opened.name == "lil_einstein_gui" then
         local anchor = gui.get(p.index)
@@ -77,7 +82,9 @@ gui.toggle = function(player_index)
         return
     end
 
-    if gui.is_open(player_index) then
+    if gui.is_debug_report_open(player_index) then
+        gui.close_debug_report(player_index)
+    elseif gui.is_open(player_index) then
         close(player_index, gui.get(player_index))
     else
         open(player_index, player.gui[target])
@@ -131,8 +138,66 @@ gui.toggle_research_details = function(player_index)
     state.set_player_setting(player_index, "policy_panel_open", false)
     if show_details then
         components.refresh_research_details(player_index, anchor)
+        local cluster_key = state.get_player_setting(player_index, "research_lab_cluster_key")
+        if cluster_key then
+            components.show_research_lab_inspection(player_index, anchor, cluster_key)
+        end
     else
+        state.clear_player_setting(player_index, "research_lab_cluster_key")
         components.repopulate_all(player_index, anchor)
+    end
+end
+
+gui.is_debug_report_open = function(player_index)
+    local player = game.get_player(player_index)
+    if not player then
+        return false
+    end
+    local report = player.gui[target]["lil_einstein_debug_report"]
+    return report ~= nil and (report.valid == nil or report.valid)
+end
+
+gui.open_debug_report = function(player_index)
+    local player = game.get_player(player_index)
+    if not player or not gui.is_open(player_index) then
+        return
+    end
+    if gui.is_debug_report_open(player_index) then
+        gui.close_debug_report(player_index)
+    end
+    local report = debug_report.generate(player_index)
+    builder.build_debug_report(player_index, player.gui[target], report)
+end
+
+gui.close_debug_report = function(player_index)
+    local player = game.get_player(player_index)
+    if not player then
+        return
+    end
+    local report = player.gui[target]["lil_einstein_debug_report"]
+    local main = gui.get(player_index)
+    if report and report.valid ~= false then
+        if player.opened == report then
+            player.opened = nil
+        end
+        report.destroy()
+    end
+    if main and main.valid ~= false then
+        player.opened = main
+    end
+end
+
+gui.show_research_lab_inspection = function(player_index, cluster_key)
+    local anchor = gui.get(player_index)
+    if anchor then
+        components.show_research_lab_inspection(player_index, anchor, cluster_key)
+    end
+end
+
+gui.hide_research_lab_inspection = function(player_index)
+    local anchor = gui.get(player_index)
+    if anchor then
+        components.hide_research_lab_inspection(player_index, anchor)
     end
 end
 

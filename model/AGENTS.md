@@ -23,7 +23,7 @@ Runtime data model and research-autopilot logic for the LilEinstein Factorio mod
 - Temp-tech switching respects pinned techs, science priority, and a symmetric score margin; unavailable techs are scored with a discount and never act as runtime candidates
 - Event/request-driven reselection passes an explicit force flag so active temporary switches and queue changes update `LuaForce.research_queue`; periodic maintenance compares the cached and live technology names, and bookkeeping follows the queue Factorio actually accepted
 - Runtime candidates exclude hidden, disabled, triggered, avoided, and finite/infinite capped technologies
-- Active science-supply checks use staggered live lab-starvation snapshots; non-active candidate checks cap depletion forecasts at the remaining research time
+- Active science-supply checks use staggered live lab-starvation snapshots and the same material-loss threshold as the player-facing PACK-BOUND diagnostic; non-active candidate checks cap depletion forecasts at the remaining research time
 - The per-force research diagnostic measures only samples for the current technology, classifies decision states from named material-loss thresholds, and emits deterministic semantic display clusters without persisting logistic networks
 - The per-force research diagnostic also emits exact science-pack demand per minute for all current-research ingredients, separating maximum compatible-lab demand from currently working-lab demand; pack demand uses lab/quality science-pack drain with research-unit consumption and is not inflated by productivity bonuses
 - Missing-science evidence also records the physical normal-quality science-pack rate for the affected labs; its parenthesized SPM remains capacity-loss evidence and overlapping pack impacts are not additive
@@ -33,7 +33,10 @@ Runtime data model and research-autopilot logic for the LilEinstein Factorio mod
 - Lab membership is discovered once during force initialization and maintained from build, clone, and revive events; GUI refreshes must never rescan every surface
 - Lab inventory observations come from the staggered lab updater; count and diagnostic consumers share stable runtime-only descriptors, while logistic-network references remain short-lived module-local cache entries
 - Research diagnostic display clusters group logistic labs by surface/network and direct-fed labs by surface; cluster values are capacity and local-stock evidence, never inferred actual cluster throughput
+- Research diagnostic clusters include deterministic, save-safe lab descriptors for affected-lab inspection; descriptors contain identity, surface/position, status, compatibility, and missing-pack names only, never LuaEntity references
 - Upcoming research plans put the active technology first and prefer science-supplied candidates before science-blocked fallbacks
+- Science-flow history is bounded to the current two-minute window plus the current sample; it is sampled once per minute only for forces with an open LilEinstein view and remains save-safe
+- Read-only queue control-state access may expose live-vs-cached research names, temporary targets, stored queue names, and the runtime queue for diagnostics; it must not mutate queue state
 - `<module>.init` does not trigger `<module>.init_force`/`init_player`; `control.lua` calls those directly
 - Everything in `storage` must be save/load-safe (no LuaObject references persisted across saves except valid entity refs handled defensively)
 

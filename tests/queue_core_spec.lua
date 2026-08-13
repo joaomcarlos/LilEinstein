@@ -451,6 +451,74 @@ local tests = {
         queue.get_science_forecast = old_forecast
         queue.get_active_missing_science_bottleneck = old_bottleneck
     end},
+    {"switches when a material pack-bound loss leaves an alternate supplied", function()
+        local force = reset_runtime()
+        science_names = {"starved-pack", "available-pack"}
+        defines = {
+            entity_status = {
+                working = "working",
+                missing_science_packs = "missing-science-packs"
+            },
+            inventory = {lab_input = 1}
+        }
+
+        local old_availability = queue.get_science_availability
+        local old_speed = queue.get_research_speed
+        queue.get_science_availability = function()
+            return {['starved-pack'] = true, ['available-pack'] = true}
+        end
+        queue.get_research_speed = function() return 16 / 60, true end
+
+        local make_lab = function(unit_number, status, speed)
+            return {
+                valid = true,
+                unit_number = unit_number,
+                speed_bonus = speed - 1,
+                productivity_bonus = 0,
+                prototype = {
+                    name = "switch-lab-" .. tostring(unit_number),
+                    lab_inputs = {"starved-pack", "available-pack"},
+                    get_researching_speed = function() return 1 end
+                }
+            }, {
+                lab = nil,
+                latest_tick = game.tick,
+                latest_status = status,
+                latest_contents = {{name = "available-pack", count = 1}}
+            }
+        end
+
+        local missing_lab, missing_content = make_lab(1, defines.entity_status.missing_science_packs, 1)
+        missing_content.lab = missing_lab
+        runtime_lab_content[1] = missing_content
+        for unit_number = 2, 5 do
+            local working_lab, working_content = make_lab(
+                unit_number, defines.entity_status.working, 4.75
+            )
+            working_content.lab = working_lab
+            runtime_lab_content[unit_number] = working_content
+        end
+
+        tech_state = {
+            current = xcur("current", {sciences = {"starved-pack"}}),
+            alternate = xcur("alternate", {sciences = {"available-pack"}})
+        }
+        storage.forces[1].queue.queue = {"current", "alternate"}
+        force.current_research = {
+            name = "current",
+            research_unit_energy = 100,
+            research_unit_ingredients = {{name = "starved-pack", amount = 1}}
+        }
+
+        t.assert_equal(queue.get_active_missing_science_bottleneck(1, tech_state.current)["starved-pack"], true)
+        queue.check_and_switch_temp_research(force)
+        t.assert_equal(storage.forces[1].queue.temp_tech, "alternate",
+            "a material pack-bound loss must switch to a supplied alternate research")
+        t.assert_equal(requests, 1, "switching must request active research reselection")
+
+        queue.get_science_availability = old_availability
+        queue.get_research_speed = old_speed
+    end},
     {"adds, removes, reorders, and clears queue entries", function()
         local force = reset_runtime()
         queue.add(force, "d", 2, false)

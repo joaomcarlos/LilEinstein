@@ -348,6 +348,17 @@ local allowed_science = {
                     handler = "toggle_research_details",
                     ignore_force_enable = true
                 }
+            }, {
+                type = "button",
+                name = "research_health_copy_debug_button",
+                style = "lil_einstein_research_health_details_button",
+                caption = {"lil_einstein-debug.copy-report"},
+                tooltip = {"lil_einstein-debug.copy-report-tooltip"},
+                tags = {
+                    lil_einstein_on_click = true,
+                    handler = "open_debug_report",
+                    ignore_force_enable = true
+                }
             }}
         }}
     }}
@@ -650,6 +661,79 @@ local research_details_panel = {
             name = "research_details_rows",
             direction = "vertical"
         }}
+    }, {
+        type = "frame",
+        name = "research_lab_inspection_panel",
+        style = "inside_shallow_frame",
+        direction = "vertical",
+        visible = false,
+        children = {{
+            type = "flow",
+            direction = "horizontal",
+            children = {{
+                type = "label",
+                style = "heading_2_label",
+                caption = {"lil_einstein-throughput.inspect-labs-title"}
+            }, {
+                type = "flow",
+                style = "lil_einstein_horizontal_flow_right",
+                children = {{
+                    type = "button",
+                    caption = {"lil_einstein-throughput.back-to-details"},
+                    tags = {
+                        lil_einstein_on_click = true,
+                        handler = "hide_research_lab_inspection",
+                        ignore_force_enable = true
+                    }
+                }}
+            }}
+        }, {
+            type = "label",
+            name = "research_lab_inspection_summary",
+            caption = {"lil_einstein-throughput.inspect-labs-summary", "", 0, ""}
+        }, {
+            type = "table",
+            name = "research_lab_inspection_header",
+            style = "lil_einstein_throughput_table",
+            column_count = 4,
+            children = {{
+                type = "label",
+                name = "research_lab_inspection_header_name",
+                style = "bold_label",
+                caption = {"lil_einstein-throughput.lab-column-name"}
+            }, {
+                type = "label",
+                name = "research_lab_inspection_header_location",
+                style = "bold_label",
+                caption = {"lil_einstein-throughput.lab-column-location"}
+            }, {
+                type = "label",
+                name = "research_lab_inspection_header_status",
+                style = "bold_label",
+                caption = {"lil_einstein-throughput.lab-column-status"}
+            }, {
+                type = "label",
+                name = "research_lab_inspection_header_missing",
+                style = "bold_label",
+                caption = {"lil_einstein-throughput.lab-column-missing"}
+            }}
+        }, {
+            type = "label",
+            name = "research_lab_inspection_empty",
+            caption = {"lil_einstein-throughput.no-affected-labs"},
+            visible = false
+        }, {
+            type = "scroll-pane",
+            name = "research_lab_inspection_scroll_pane",
+            style = "lil_einstein_vertical_scroll_pane",
+            direction = "vertical",
+            children = {{
+                type = "table",
+                name = "research_lab_inspection_rows",
+                style = "lil_einstein_throughput_table",
+                column_count = 4
+            }}
+        }}
     }}
 }
 
@@ -771,6 +855,67 @@ builder.build = function(player_index, anchor)
     main.auto_center = true
     main.style.height = 941
     player.opened = main
+end
+
+builder.build_debug_report = function(player_index, anchor, report)
+    local player = game.get_player(player_index)
+    if not player or not anchor then
+        return nil
+    end
+
+    local structure = {
+        type = "frame",
+        name = "lil_einstein_debug_report",
+        style = "inside_shallow_frame",
+        direction = "vertical",
+        children = {{
+            type = "flow",
+            direction = "horizontal",
+            children = {{
+                type = "label",
+                style = "heading_1_label",
+                caption = {"lil_einstein-debug.report-title"}
+            }, {
+                type = "empty-widget",
+                style = "draggable_space",
+                ignored_by_interaction = true
+            }, {
+                type = "button",
+                caption = {"lil_einstein-debug.close"},
+                tags = {
+                    lil_einstein_on_click = true,
+                    handler = "close_debug_report",
+                    ignore_force_enable = true
+                }
+            }}
+        }, {
+            type = "label",
+            caption = {"lil_einstein-debug.report-instruction"}
+        }, {
+            type = "text-box",
+            name = "lil_einstein_debug_report_text"
+        }}
+    }
+    build_recursive(anchor, structure)
+    local frame = anchor["lil_einstein_debug_report"]
+    local text_box = frame and frame["lil_einstein_debug_report_text"]
+    if not frame or not text_box then
+        return nil
+    end
+
+    frame.auto_center = true
+    frame.style.width = 1200
+    frame.style.height = 800
+    text_box.text = report or ""
+    text_box.read_only = true
+    text_box.selectable = true
+    text_box.word_wrap = false
+    text_box.style.width = 1160
+    text_box.style.height = 700
+    player.opened = text_box
+    pcall(text_box.focus, text_box)
+    pcall(text_box.select_all, text_box)
+    return frame
 end
 
 return builder

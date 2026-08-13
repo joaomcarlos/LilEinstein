@@ -22,6 +22,7 @@ GUI layer for the LilEinstein mod: window lifecycle, layout construction, and pr
 - Throughput cluster rows present working/maximum capacity, every current-research pack's local demand/stock, and missing-pack evidence; force-wide measured SPM is never labeled as cluster output and overlapping missing-pack impacts are not summed
 - Throughput details render force-wide demand and per-cluster pack evidence as aligned native tables; missing science is shown as physical packs per minute with the associated negative SPM in parentheses, using normal quality for the pack-count conversion
 - The throughput location table is shortage-first: its missing-pack/SPM column leads the capacity evidence, and the Fix first column owns the nested per-pack stock, demand, working, and missing table
+- Throughput rows use the same fixed-width table style as the header; a visible affected-labs action opens a replacement single-scroll inspection view listing the lab identity, location, status, and missing packs for the selected cluster
 - The throughput details summary compares force-wide maximum and currently working pack demand with the latest one-minute production statistics for each required science pack
 - Research Health and throughput details keep the last completed report visible during bounded measurement and replace the complete report atomically only after the new snapshot finishes
 - Dynamic multi-row LocalisedStrings are composed in chunks of at most Factorio's 20-parameter limit
@@ -35,6 +36,8 @@ GUI layer for the LilEinstein mod: window lifecycle, layout construction, and pr
 - Science inventory and per-minute rates use the shared compact SI formatter (`K`, `M`, `G`, and higher prefixes) with at most one decimal place
 - Upcoming rows mirror effective research order and state the science-supply reason when an entry is not selectable
 - New Upcoming LocalisedStrings include literal fallbacks so control-stage reloads cannot render `Unknown key` text
+- The Research Health header exposes a copy-debug-report action; because Factorio mods cannot write arbitrary text to the OS clipboard, the action opens a focused, read-only text box with the full report selected for Ctrl+C
+- Debug reports include live/current queue state, score components, pack-sufficiency decisions, the last 2 minutes of graph samples, bounded science-flow samples, and all current diagnostic warnings
 
 ## Work Guidance
 

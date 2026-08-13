@@ -1,7 +1,7 @@
 package.path = ".\\?.lua;.\\?\\init.lua;" .. package.path
 
 local t = require("tests.testlib")
-local names = {"view.gui.gutil", "model.state", "lib.const", "view.gui.builder", "view.gui.components", "view.gui"}
+local names = {"view.gui.gutil", "model.state", "lib.const", "view.gui.builder", "view.gui.components", "view.gui.debug_report", "view.gui"}
 local original = {}
 for _, name in ipairs(names) do
     original[name] = package.preload[name]
@@ -67,14 +67,29 @@ local state = {
 local builder = {
     build = function(_, parent)
         parent.lil_einstein_gui = make_anchor(parent)
+    end,
+    build_debug_report = function(_, parent, report)
+        local modal
+        modal = {
+            valid = true,
+            report = report,
+            destroy = function()
+                modal.valid = false
+                parent.lil_einstein_debug_report = nil
+            end
+        }
+        parent.lil_einstein_debug_report = modal
+        player.opened = modal
     end
 }
+local debug_report = {generate = function() calls[#calls + 1] = "generate_debug_report"; return "snapshot" end}
 
 t.install_module("view.gui.gutil", gutil)
 t.install_module("model.state", state)
 t.install_module("lib.const", {default_settings = {force = {master_enable = "right"}}})
 t.install_module("view.gui.builder", builder)
 t.install_module("view.gui.components", components)
+t.install_module("view.gui.debug_report", debug_report)
 local gui = require("view.gui")
 
 local function reset()
@@ -135,6 +150,16 @@ local tests = {
         t.assert_false(settings.search_is_focused)
         t.assert_equal(player.opened, anchor)
         t.assert_false(gui.is_search_focussed(1))
+    end},
+    {"opens and closes the copy-ready debug report modal", function()
+        reset()
+        gui.toggle(1)
+        gui.open_debug_report(1)
+        t.assert_true(gui.is_debug_report_open(1))
+        t.assert_equal(player.gui.screen.lil_einstein_debug_report.report, "snapshot")
+        gui.close_debug_report(1)
+        t.assert_false(gui.is_debug_report_open(1))
+        t.assert_equal(player.opened, player.gui.screen.lil_einstein_gui)
     end},
     {"runs bounded repopulation jobs and forwards refreshes", function()
         reset()
