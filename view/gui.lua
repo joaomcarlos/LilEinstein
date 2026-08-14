@@ -129,7 +129,10 @@ gui.toggle_policy_panel = function(player_index)
     if research_details_panel then
         research_details_panel.visible = false
     end
-    set_main_chrome_visible(anchor, true)
+    -- The control center is its own full-window sprite-backed surface. Keep
+    -- the normal header/footer hidden so the approved 1672x941 background
+    -- remains aligned with the live panel bounds.
+    set_main_chrome_visible(anchor, not show_policy)
     if science_pack_panel then
         science_pack_panel.visible = false
     end
@@ -223,10 +226,10 @@ gui.toggle_science_pack_details = function(player_index, science)
     if show_panel then
         panel.visible = true
         science_bottom.visible = false
-        content_flow.visible = true
+        content_flow.visible = false
         policy_panel.visible = false
         details_panel.visible = false
-        set_main_chrome_visible(anchor, true)
+        set_main_chrome_visible(anchor, false)
         state.set_player_setting(player_index, "science_pack_panel_open", true)
         state.set_player_setting(player_index, "science_pack_panel_science", science)
         state.set_player_setting(player_index, "policy_panel_open", false)
@@ -236,6 +239,7 @@ gui.toggle_science_pack_details = function(player_index, science)
     else
         panel.visible = false
         science_bottom.visible = true
+        content_flow.visible = true
         set_main_chrome_visible(anchor, true)
         state.set_player_setting(player_index, "science_pack_panel_open", false)
         state.clear_player_setting(player_index, "science_pack_panel_science")

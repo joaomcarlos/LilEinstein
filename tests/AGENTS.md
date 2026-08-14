@@ -20,6 +20,7 @@ runtime, data-stage, migration, queue, policy, lab, and GUI contracts.
   implementation details are not imported solely to make assertions possible.
 - Tests must distinguish an idle force from an actively researching force.
 - Active science-switch regressions exercise `queue.check_and_switch_temp_research` with a live current technology, lab starvation evidence, and a supplied alternate candidate; do not test only the lower-level science predicate.
+- Stale-sampler regressions also keep a recent completed PACK-BOUND display snapshot and assert that the full switch path selects the supplied alternate when the bounded live sampler has not reached 80% fresh coverage.
 - Starvation fallback regressions keep the explicit queue at one pack-bound technology and place the supplied alternate outside it; recovery regressions prove a small idle buffer cannot satisfy a high-demand target.
 - Emergency fallback regressions cap per-check technology and availability work, reject a long available-but-forecast-insufficient alternate, accept a finite alternate stocked to completion, preserve compatible-scope cluster attribution, and prove that incompatible remote stock, force-wide production, and a one-time partial delivery cannot restore a target before enough local stock is reachable.
 - Throughput GUI/model regressions cover fixed-width cluster rows, deterministic lab descriptors, and the affected-lab inspection transition.

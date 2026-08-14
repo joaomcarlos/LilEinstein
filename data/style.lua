@@ -177,14 +177,14 @@ data.raw["gui-style"].default["lil_einstein_throughput_demand_table"] = {
     parent = "lil_einstein_throughput_table",
     vertical_spacing = 2
 }
-data.raw["gui-style"].default["lil_einstein_science_pack_section"] = {
+data.raw["gui-style"].default["lil_einstein_science_pack_sprite_section"] = {
     type = "frame_style",
     parent = "inside_shallow_frame",
     width = 485,
     padding = 8,
     graphical_set = {}
 }
-data.raw["gui-style"].default["lil_einstein_science_pack_table"] = {
+data.raw["gui-style"].default["lil_einstein_science_pack_sprite_table"] = {
     type = "table_style",
     parent = "table",
     width = 465,
@@ -224,6 +224,369 @@ data.raw["gui-style"].default["lil_einstein_throughput_details_panel"] = {
             height = 941
         }
     }
+}
+data.raw["gui-style"].default["lil_einstein_decision_console_panel"] = {
+    type = "frame_style",
+    parent = "frame",
+    width = 1672,
+    height = 941,
+    padding = 0,
+    graphical_set = {
+        base = {
+            filename = "__LilEinstein__/graphics/ui/decision-console-background-clean.png",
+            width = 1672,
+            height = 941
+        }
+    }
+}
+data.raw["gui-style"].default["lil_einstein_decision_console_header"] = {
+    type = "horizontal_flow_style",
+    parent = "lil_einstein_horizontal_flow_nospacing",
+    width = 1672,
+    height = 252,
+    padding = 0
+}
+data.raw["gui-style"].default["lil_einstein_decision_console_header_spacer"] = {
+    type = "empty_widget_style",
+    parent = "empty_widget",
+    width = 482,
+    height = 252
+}
+data.raw["gui-style"].default["lil_einstein_decision_console_header_main"] = {
+    type = "horizontal_flow_style",
+    parent = "lil_einstein_horizontal_flow_nospacing",
+    width = 892,
+    height = 224,
+    top_margin = 28,
+    vertical_align = "center"
+}
+data.raw["gui-style"].default["lil_einstein_decision_console_header_title"] = {
+    type = "vertical_flow_style",
+    parent = "lil_einstein_vertical_flow_nospacing",
+    width = 206,
+    height = 96,
+    vertical_align = "center",
+    vertical_spacing = 2
+}
+data.raw["gui-style"].default["lil_einstein_decision_console_header_mode"] = {
+    type = "vertical_flow_style",
+    parent = "lil_einstein_vertical_flow_nospacing",
+    width = 154,
+    height = 120,
+    left_margin = 8,
+    vertical_spacing = 2
+}
+data.raw["gui-style"].default["lil_einstein_decision_console_header_health"] = {
+    type = "vertical_flow_style",
+    parent = "lil_einstein_vertical_flow_nospacing",
+    width = 166,
+    height = 120,
+    left_margin = 8,
+    vertical_spacing = 2
+}
+data.raw["gui-style"].default["lil_einstein_decision_console_header_next"] = {
+    type = "vertical_flow_style",
+    parent = "lil_einstein_vertical_flow_nospacing",
+    width = 214,
+    height = 120,
+    left_margin = 8,
+    vertical_spacing = 2
+}
+data.raw["gui-style"].default["lil_einstein_decision_console_header_rationale"] = {
+    type = "label_style",
+    parent = "label",
+    width = 136,
+    height = 132,
+    left_margin = 8,
+    single_line = false,
+    vertical_align = "center"
+}
+data.raw["gui-style"].default["lil_einstein_decision_console_back"] = {
+    type = "vertical_flow_style",
+    parent = "lil_einstein_vertical_flow_nospacing",
+    width = 204,
+    height = 86,
+    top_margin = 151,
+    left_margin = 2,
+    padding = 0,
+    vertical_align = "center"
+}
+data.raw["gui-style"].default["lil_einstein_decision_console_back_button"] = {
+    type = "button_style",
+    parent = "lil_einstein_button",
+    width = 198,
+    height = 46,
+    padding = 0
+}
+data.raw["gui-style"].default["lil_einstein_decision_console_stage_row"] = {
+    type = "horizontal_flow_style",
+    parent = "lil_einstein_horizontal_flow_nospacing",
+    width = 1596,
+    height = 234,
+    left_margin = 38,
+    top_margin = 6,
+    vertical_align = "top"
+}
+data.raw["gui-style"].default["lil_einstein_decision_console_stage"] = {
+    type = "vertical_flow_style",
+    parent = "lil_einstein_vertical_flow_nospacing",
+    height = 224,
+    vertical_spacing = 4
+}
+data.raw["gui-style"].default["lil_einstein_decision_console_stage_choose"] = {
+    type = "vertical_flow_style",
+    parent = "lil_einstein_decision_console_stage",
+    width = 500
+}
+data.raw["gui-style"].default["lil_einstein_decision_console_stage_science"] = {
+    type = "vertical_flow_style",
+    parent = "lil_einstein_decision_console_stage",
+    width = 512,
+    left_margin = 4
+}
+data.raw["gui-style"].default["lil_einstein_decision_console_stage_switch"] = {
+    type = "vertical_flow_style",
+    parent = "lil_einstein_decision_console_stage",
+    width = 500,
+    left_margin = 4
+}
+data.raw["gui-style"].default["lil_einstein_decision_console_stage_heading"] = {
+    type = "horizontal_flow_style",
+    parent = "lil_einstein_horizontal_flow_nospacing",
+    height = 44,
+    vertical_align = "center"
+}
+data.raw["gui-style"].default["lil_einstein_decision_console_step"] = {
+    type = "image_style",
+    parent = "image",
+    width = 39,
+    height = 39,
+    right_margin = 8
+}
+data.raw["gui-style"].default["lil_einstein_decision_console_stage_title"] = {
+    type = "label_style",
+    parent = "heading_2_label",
+    height = 28,
+    vertical_align = "center"
+}
+data.raw["gui-style"].default["lil_einstein_decision_console_stage_subtitle"] = {
+    type = "label_style",
+    parent = "label",
+    height = 20,
+    single_line = true
+}
+data.raw["gui-style"].default["lil_einstein_decision_console_stage_card"] = {
+    type = "frame_style",
+    parent = "inside_shallow_frame",
+    height = 136,
+    padding = 8
+}
+data.raw["gui-style"].default["lil_einstein_decision_console_stage_arrow"] = {
+    type = "image_style",
+    parent = "image",
+    width = 40,
+    height = 52,
+    top_margin = 70,
+    left_margin = 4,
+    right_margin = 4
+}
+data.raw["gui-style"].default["lil_einstein_decision_console_stage_footer"] = {
+    type = "horizontal_flow_style",
+    parent = "lil_einstein_horizontal_flow_nospacing",
+    height = 28,
+    top_margin = 4,
+    vertical_align = "center"
+}
+data.raw["gui-style"].default["lil_einstein_decision_console_tab_bar"] = {
+    type = "horizontal_flow_style",
+    parent = "lil_einstein_horizontal_flow_nospacing",
+    width = 900,
+    height = 32,
+    left_margin = 38,
+    top_margin = 2,
+    vertical_align = "center"
+}
+data.raw["gui-style"].default["lil_einstein_decision_console_tab"] = {
+    type = "button_style",
+    parent = "lil_einstein_button",
+    width = 150,
+    height = 32,
+    padding = 0
+}
+data.raw["gui-style"].default["lil_einstein_decision_console_content"] = {
+    type = "horizontal_flow_style",
+    parent = "lil_einstein_horizontal_flow_nospacing",
+    width = 1596,
+    height = 335,
+    left_margin = 38,
+    top_margin = 5,
+    vertical_align = "top"
+}
+data.raw["gui-style"].default["lil_einstein_decision_console_panel_small"] = {
+    type = "frame_style",
+    parent = "inside_shallow_frame",
+    height = 328,
+    padding = 8,
+    vertical_align = "top"
+}
+data.raw["gui-style"].default["lil_einstein_decision_console_behavior"] = {
+    type = "frame_style",
+    parent = "lil_einstein_decision_console_panel_small",
+    width = 310
+}
+data.raw["gui-style"].default["lil_einstein_decision_console_settings"] = {
+    type = "frame_style",
+    parent = "lil_einstein_decision_console_panel_small",
+    width = 310,
+    left_margin = 10
+}
+data.raw["gui-style"].default["lil_einstein_decision_console_evidence"] = {
+    type = "frame_style",
+    parent = "lil_einstein_decision_console_panel_small",
+    width = 500,
+    left_margin = 10
+}
+data.raw["gui-style"].default["lil_einstein_decision_console_history"] = {
+    type = "frame_style",
+    parent = "lil_einstein_decision_console_panel_small",
+    width = 416,
+    left_margin = 10
+}
+data.raw["gui-style"].default["lil_einstein_decision_console_content_title"] = {
+    type = "label_style",
+    parent = "heading_2_label",
+    height = 28,
+    single_line = true
+}
+data.raw["gui-style"].default["lil_einstein_decision_console_note"] = {
+    type = "label_style",
+    parent = "label",
+    height = 34,
+    single_line = false
+}
+data.raw["gui-style"].default["lil_einstein_decision_console_value"] = {
+    type = "label_style",
+    parent = "label",
+    width = 78,
+    horizontal_align = "right",
+    single_line = true
+}
+data.raw["gui-style"].default["lil_einstein_decision_console_science_table"] = {
+    type = "table_style",
+    parent = "table",
+    width = 484,
+    column_count = 5,
+    horizontal_spacing = 6,
+    vertical_spacing = 2
+}
+data.raw["gui-style"].default["lil_einstein_decision_console_history_row"] = {
+    type = "horizontal_flow_style",
+    parent = "lil_einstein_horizontal_flow_nospacing",
+    width = 398,
+    height = 42,
+    vertical_align = "center"
+}
+data.raw["gui-style"].default["lil_einstein_decision_console_history_time"] = {
+    type = "label_style",
+    parent = "label",
+    width = 66,
+    single_line = true
+}
+data.raw["gui-style"].default["lil_einstein_decision_console_history_detail"] = {
+    type = "label_style",
+    parent = "label",
+    width = 320,
+    single_line = false
+}
+data.raw["gui-style"].default["lil_einstein_science_pack_details_panel"] = {
+    type = "frame_style",
+    parent = "frame",
+    width = 1672,
+    height = 941,
+    padding = 0,
+    graphical_set = {
+        base = {
+            filename = "__LilEinstein__/graphics/ui/science-throughput-background-clean.png",
+            width = 1672,
+            height = 941
+        }
+    }
+}
+data.raw["gui-style"].default["lil_einstein_science_pack_title_flow"] = {
+    type = "horizontal_flow_style",
+    parent = "lil_einstein_throughput_title_flow"
+}
+data.raw["gui-style"].default["lil_einstein_science_pack_title"] = {
+    type = "label_style",
+    parent = "lil_einstein_throughput_title",
+    width = 880
+}
+data.raw["gui-style"].default["lil_einstein_science_pack_title_icon"] = {
+    type = "image_style",
+    parent = "image",
+    width = 42,
+    height = 42,
+    left_margin = 4,
+    right_margin = 10
+}
+data.raw["gui-style"].default["lil_einstein_science_pack_summary"] = {
+    type = "horizontal_flow_style",
+    parent = "lil_einstein_horizontal_flow_nospacing",
+    width = 1588,
+    height = 64,
+    left_margin = 42,
+    padding = 8,
+    vertical_align = "center"
+}
+data.raw["gui-style"].default["lil_einstein_science_pack_summary_value"] = {
+    type = "label_style",
+    parent = "label",
+    width = 760,
+    height = 42,
+    vertical_align = "center",
+    single_line = true
+}
+data.raw["gui-style"].default["lil_einstein_science_pack_scroll_pane"] = {
+    type = "scroll_pane_style",
+    parent = "lil_einstein_vertical_scroll_pane",
+    width = 1578,
+    height = 700,
+    left_margin = 42,
+    horizontally_stretchable = "off",
+    vertically_stretchable = "off"
+}
+data.raw["gui-style"].default["lil_einstein_science_pack_body"] = {
+    type = "vertical_flow_style",
+    parent = "lil_einstein_vertical_flow_nospacing",
+    width = 1578,
+    vertical_spacing = 8
+}
+data.raw["gui-style"].default["lil_einstein_science_pack_evidence"] = {
+    type = "horizontal_flow_style",
+    parent = "lil_einstein_horizontal_flow_nospacing",
+    width = 1578,
+    horizontal_spacing = 16
+}
+data.raw["gui-style"].default["lil_einstein_science_pack_section"] = {
+    type = "frame_style",
+    parent = "frame",
+    width = 515,
+    padding = 8,
+    graphical_set = {}
+}
+data.raw["gui-style"].default["lil_einstein_science_pack_table"] = {
+    type = "table_style",
+    parent = "table",
+    width = 499,
+    horizontal_spacing = 4,
+    vertical_spacing = 4
+}
+data.raw["gui-style"].default["lil_einstein_science_pack_flow_balance"] = {
+    type = "horizontal_flow_style",
+    parent = "lil_einstein_horizontal_flow_nospacing",
+    width = 1578,
+    height = 42,
+    vertical_align = "center"
 }
 data.raw["gui-style"].default["lil_einstein_throughput_title_flow"] = {
     type = "horizontal_flow_style",

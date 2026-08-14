@@ -215,3 +215,18 @@ it smissing a button to go back to the main screen
 
 ## My request:
 review your changes for impact in the games UPS stability
+
+## My request:
+its implemented as nomal factorio gui insted o fwhat we agreed to
+
+## My request:
+its not switching techs still
+
+## My request:
+launch the game properly, like the skill tells you, dont make shit up
+
+## My request:
+what you implemented ingame does not use the gui we agreed to
+
+## My request:
+did you fix it? if not, instruct devin to fix it

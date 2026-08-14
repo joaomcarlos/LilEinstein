@@ -146,14 +146,16 @@ local tests = {
         t.assert_true(anchor.top_flow.visible)
         t.assert_true(anchor.footer_frame.visible)
     end},
-    {"opens the selected science-pack inspector in the science pane", function()
+    {"opens the selected science-pack inspector as a sprite-backed replacement panel", function()
         reset()
         gui.toggle(1)
         local anchor = player.gui.screen.lil_einstein_gui
         gui.toggle_science_pack_details(1, "science_a")
         t.assert_true(anchor.science_pack_panel.visible)
         t.assert_false(anchor.science_bottom.visible)
-        t.assert_true(anchor.content_flow.visible)
+        t.assert_false(anchor.content_flow.visible)
+        t.assert_false(anchor.top_flow.visible)
+        t.assert_false(anchor.footer_frame.visible)
         t.assert_false(anchor.policy_panel.visible)
         t.assert_false(anchor.research_details_panel.visible)
         t.assert_true(settings.science_pack_panel_open)
@@ -162,6 +164,9 @@ local tests = {
         gui.toggle_science_pack_details(1, "science_a")
         t.assert_false(anchor.science_pack_panel.visible)
         t.assert_true(anchor.science_bottom.visible)
+        t.assert_true(anchor.content_flow.visible)
+        t.assert_true(anchor.top_flow.visible)
+        t.assert_true(anchor.footer_frame.visible)
         t.assert_nil(settings.science_pack_panel_science)
         t.assert_false(settings.science_pack_panel_open)
     end},
@@ -174,9 +179,11 @@ local tests = {
 
         gui.toggle_science_pack_details(1, "science_a")
 
-        t.assert_true(anchor.content_flow.visible)
+        t.assert_false(anchor.content_flow.visible)
         t.assert_true(anchor.science_pack_panel.visible)
         t.assert_false(anchor.research_details_panel.visible)
+        t.assert_false(anchor.top_flow.visible)
+        t.assert_false(anchor.footer_frame.visible)
     end},
     {"focuses, defocuses, and updates the search field", function()
         reset()

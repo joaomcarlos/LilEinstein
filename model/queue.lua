@@ -3830,6 +3830,41 @@ end
 -- Use the staggered lab snapshots for the background switcher. This preserves
 -- the diagnostic's missing-pack thresholds without rebuilding its full cluster
 -- model in one scheduler tick.
+local get_display_pack_bound_bottleneck = function(force_index, current)
+    if not current or not current.name or
+        not queue.get_research_health_snapshot_tick or
+        not queue.get_research_display_diagnostic then
+        return {}
+    end
+
+    local snapshot_tick = queue.get_research_health_snapshot_tick(force_index)
+    if type(snapshot_tick) ~= "number" or snapshot_tick < 0 or
+        snapshot_tick < game.tick - 900 or
+        snapshot_tick > game.tick then
+        return {}
+    end
+
+    local diagnostic = queue.get_research_display_diagnostic(force_index)
+    if not diagnostic or diagnostic.current_technology ~= current.name or
+        diagnostic.state ~= "pack_bound" then
+        return {}
+    end
+
+    local result = {}
+    for _, item in pairs(diagnostic.missing_sciences or {}) do
+        local science = type(item) == "string" and item or item and item.science
+        if science then
+            result[science] = true
+        end
+    end
+    local dominant = diagnostic.dominant_missing_science
+    local dominant_science = type(dominant) == "string" and dominant or dominant and dominant.science
+    if dominant_science then
+        result[dominant_science] = true
+    end
+    return result
+end
+
 queue.get_active_missing_science_bottleneck = function(force_index, xcur)
     local f = game.forces[force_index]
     if not f or not f.current_research or not xcur or not xcur.technology or
@@ -3884,8 +3919,13 @@ queue.get_active_missing_science_bottleneck = function(force_index, xcur)
     research_capacity_cache[force_index][current.name] = expected_spm
 
     -- Wait for one near-complete staggered pass after load or large lab changes.
+    -- The completed health diagnostic uses the same lab observations but can
+    -- finish before this bounded sampler has 80% fresh coverage. Keep the
+    -- switcher aligned with that player-visible PACK-BOUND result during this
+    -- short gap instead of leaving the force on a starving technology.
+    local display_bottleneck = get_display_pack_bound_bottleneck(force_index, current)
     if expected_spm <= 0 or sampled_spm < expected_spm * 0.80 then
-        return cache_result({})
+        return cache_result(display_bottleneck)
     end
     -- Use the same material-loss threshold as the player-facing diagnostic. The
     -- switcher must react to a visible PACK-BOUND state even when the remaining
@@ -3895,7 +3935,7 @@ queue.get_active_missing_science_bottleneck = function(force_index, xcur)
         expected_spm * diagnostic_meaningful_gap_fraction
     )
     if missing_spm < material_threshold_spm then
-        return cache_result({})
+        return cache_result(display_bottleneck)
     end
     return cache_result(res)
 end

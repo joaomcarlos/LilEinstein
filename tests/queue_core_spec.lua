@@ -523,6 +523,87 @@ local tests = {
         queue.get_science_availability = old_availability
         queue.get_research_speed = old_speed
     end},
+    {"uses the completed pack-bound diagnostic when staggered samples are stale", function()
+        local force = reset_runtime()
+        game.tick = 2000
+        science_names = {"starved-pack", "available-pack"}
+        defines = {
+            entity_status = {
+                working = "working",
+                missing_science_packs = "missing-science-packs"
+            },
+            inventory = {lab_input = 1}
+        }
+
+        local old_availability = queue.get_science_availability
+        local old_diagnostic = queue.get_research_display_diagnostic
+        local old_snapshot_tick = queue.get_research_health_snapshot_tick
+        local old_forecast = queue.get_science_forecast
+        policy_settings.forecast_seconds = 0
+        queue.get_science_availability = function()
+            return {['starved-pack'] = true, ['available-pack'] = true}
+        end
+        queue.get_science_forecast = function()
+            return {}
+        end
+        queue.get_research_health_snapshot_tick = function()
+            return game.tick
+        end
+        queue.get_research_display_diagnostic = function()
+            return {
+                state = "pack_bound",
+                current_technology = "current",
+                missing_sciences = {
+                    {science = "starved-pack", lost_spm = 100}
+                }
+            }
+        end
+
+        local current = xcur("current", {
+            sciences = {"starved-pack"},
+            research_unit_ingredients = {{name = "starved-pack", amount = 1}}
+        })
+        current.technology.research_unit_energy = 60
+        force.current_research = current.technology
+        local alternate = xcur("alternate", {
+            sciences = {"available-pack"},
+            research_unit_ingredients = {{name = "available-pack", amount = 1}}
+        })
+        alternate.technology.research_unit_energy = 60
+
+        local stale_lab = {
+            valid = true,
+            unit_number = 1,
+            speed_bonus = 0,
+            productivity_bonus = 0,
+            prototype = {
+                name = "stale-diagnostic-lab",
+                lab_inputs = {"starved-pack"},
+                get_researching_speed = function() return 1 end
+            }
+        }
+        runtime_lab_content[1] = {
+            lab = stale_lab,
+            latest_tick = game.tick - 1000,
+            latest_status = defines.entity_status.missing_science_packs,
+            latest_contents = {}
+        }
+
+        tech_state = {current = current, alternate = alternate}
+        storage.forces[1].queue.queue = {"current"}
+
+        local bottleneck = queue.get_active_missing_science_bottleneck(1, current)
+        t.assert_equal(bottleneck["starved-pack"], true,
+            "the switcher must honor a fresh completed PACK-BOUND diagnostic even when its lab samples are stale")
+        queue.check_and_switch_temp_research(force)
+        t.assert_equal(storage.forces[1].queue.temp_tech, "alternate",
+            "a player-visible PACK-BOUND result must trigger the alternate research switch")
+
+        queue.get_science_availability = old_availability
+        queue.get_research_display_diagnostic = old_diagnostic
+        queue.get_research_health_snapshot_tick = old_snapshot_tick
+        queue.get_science_forecast = old_forecast
+    end},
     {"uses a supplied unqueued fallback when the only queued technology is pack-bound", function()
         local force = reset_runtime()
         game.tick = 31000

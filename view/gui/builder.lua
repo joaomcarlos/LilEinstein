@@ -479,25 +479,154 @@ local policy_section = function(name, caption)
     }
 end
 
+local decision_stage_heading = function(name, sprite_name, title, subtitle)
+    return {
+        type = "flow",
+        name = name .. "_heading",
+        style = "lil_einstein_decision_console_stage_heading",
+        direction = "horizontal",
+        children = {{
+            type = "sprite",
+            name = name .. "_step",
+            sprite = sprite_name,
+            style = "lil_einstein_decision_console_step",
+            ignored_by_interaction = true
+        }, {
+            type = "flow",
+            direction = "vertical",
+            children = {{
+                type = "label",
+                style = "lil_einstein_decision_console_stage_title",
+                caption = title
+            }, {
+                type = "label",
+                style = "lil_einstein_decision_console_stage_subtitle",
+                caption = subtitle
+            }}
+        }}
+    }
+end
+
 local policy_panel = {
     type = "frame",
     name = "policy_panel",
-    style = "inside_shallow_frame",
+    style = "lil_einstein_decision_console_panel",
     direction = "vertical",
     visible = false,
     tags = {ignore_force_enable = true},
     children = {{
         type = "flow",
+        name = "decision_console_header",
+        style = "lil_einstein_decision_console_header",
         direction = "horizontal",
         children = {{
-            type = "label",
-            style = "heading_1_label",
-            caption = {"lil_einstein-policy.control-center"}
+            type = "empty-widget",
+            style = "lil_einstein_decision_console_header_spacer",
+            ignored_by_interaction = true
         }, {
             type = "flow",
-            style = "lil_einstein_horizontal_flow_right",
+            name = "decision_console_header_main",
+            style = "lil_einstein_decision_console_header_main",
+            direction = "horizontal",
+            children = {{
+                type = "flow",
+                name = "decision_console_header_title",
+                style = "lil_einstein_decision_console_header_title",
+                direction = "vertical",
+                children = {{
+                    type = "label",
+                    style = "heading_1_label",
+                    caption = "Decision Console"
+                }, {
+                    type = "label",
+                    caption = {"lil_einstein-policy.control-center"}
+                }}
+            }, {
+                type = "flow",
+                name = "decision_console_header_mode",
+                style = "lil_einstein_decision_console_header_mode",
+                direction = "vertical",
+                children = {{
+                    type = "label",
+                    caption = "Operating mode"
+                }, {
+                    type = "label",
+                    name = "decision_mode_value",
+                    style = "heading_2_label",
+                    caption = "Balanced"
+                }, {
+                    type = "label",
+                    name = "decision_mode_detail",
+                    caption = "Maintains steady progress while staying ready to switch."
+                }}
+            }, {
+                type = "flow",
+                name = "decision_console_header_health",
+                style = "lil_einstein_decision_console_header_health",
+                direction = "vertical",
+                children = {{
+                    type = "label",
+                    caption = "Health"
+                }, {
+                    type = "flow",
+                    direction = "horizontal",
+                    children = {{
+                        type = "sprite",
+                        name = "decision_health_icon",
+                        sprite = "utility/status_working",
+                        ignored_by_interaction = true
+                    }, {
+                        type = "label",
+                        name = "decision_health_value",
+                        style = "heading_2_label",
+                        caption = "Good"
+                    }}
+                }, {
+                    type = "label",
+                    name = "decision_health_detail",
+                    caption = "Ready to switch."
+                }}
+            }, {
+                type = "flow",
+                name = "decision_console_header_next",
+                style = "lil_einstein_decision_console_header_next",
+                direction = "vertical",
+                children = {{
+                    type = "label",
+                    caption = "Next planned research"
+                }, {
+                    type = "flow",
+                    direction = "horizontal",
+                    children = {{
+                        type = "sprite",
+                        name = "decision_next_research_icon",
+                        sprite = "utility/technology",
+                        ignored_by_interaction = true
+                    }, {
+                        type = "label",
+                        name = "decision_next_research_name",
+                        caption = "No planned research"
+                    }}
+                }, {
+                    type = "label",
+                    name = "decision_next_research_start",
+                    caption = "Est. start: --"
+                }}
+            }, {
+                type = "label",
+                name = "decision_rationale",
+                style = "lil_einstein_decision_console_header_rationale",
+                caption = "Reserve-for-type protection is active."
+            }}
+        }, {
+            type = "flow",
+            name = "decision_console_header_back",
+            style = "lil_einstein_decision_console_back",
+            direction = "vertical",
             children = {{
                 type = "button",
+                name = "decision_back_button",
+                style = "lil_einstein_decision_console_back_button",
                 caption = {"lil_einstein-policy.back-to-research"},
                 tags = {
                     lil_einstein_on_click = true,
@@ -508,39 +637,279 @@ local policy_panel = {
         }}
     }, {
         type = "flow",
+        name = "decision_console_stage_row",
+        style = "lil_einstein_decision_console_stage_row",
+        direction = "horizontal",
+        children = {{
+            type = "flow",
+            name = "decision_choose_stage",
+            style = "lil_einstein_decision_console_stage_choose",
+            direction = "vertical",
+            children = {
+                decision_stage_heading("decision_choose", "lil_einstein_mockup_decision_console_step_1", "Choose", "What should we research next?"),
+                {
+                    type = "frame",
+                    name = "decision_choose_card",
+                    style = "lil_einstein_decision_console_stage_card",
+                    direction = "horizontal",
+                    children = {{
+                        type = "flow",
+                        name = "decision_choose_controls",
+                        direction = "vertical",
+                        children = {{
+                            type = "drop-down",
+                            name = "decision_strategy_dropdown",
+                            items = {"Balanced"},
+                            selected_index = 1,
+                            tags = {lil_einstein_on_state_change = true, handler = "policy_strategy"}
+                        }, {
+                            type = "checkbox",
+                            name = "decision_manual_override",
+                            caption = "Allow instant plan-demand override",
+                            tags = {lil_einstein_on_state_change = true, handler = "toggle_policy_setting", setting_name = "instant_switch_override"}
+                        }, {
+                            type = "checkbox",
+                            name = "decision_lock_current",
+                            caption = "Pause after current research",
+                            tags = {lil_einstein_on_state_change = true, handler = "toggle_policy_setting", setting_name = "planning_paused"}
+                        }}
+                    }, {
+                        type = "frame",
+                        name = "decision_candidate_card",
+                        direction = "vertical",
+                        children = {{
+                            type = "label",
+                            caption = "Top candidate"
+                        }, {
+                            type = "flow",
+                            direction = "horizontal",
+                            children = {{
+                                type = "sprite",
+                                name = "decision_candidate_icon",
+                                sprite = "utility/technology",
+                                ignored_by_interaction = true
+                            }, {
+                                type = "label",
+                                name = "decision_candidate_name",
+                                caption = "No candidate"
+                            }}
+                        }, {
+                            type = "label",
+                            name = "decision_candidate_score",
+                            caption = "Score: --"
+                        }, {
+                            type = "label",
+                            name = "decision_candidate_priority",
+                            caption = "Priority: --"
+                        }}
+                    }}
+                }
+            }
+        }, {
+            type = "sprite",
+            name = "decision_stage_arrow_one",
+            sprite = "lil_einstein_mockup_decision_console_stage_arrow",
+            style = "lil_einstein_decision_console_stage_arrow",
+            ignored_by_interaction = true
+        }, {
+            type = "flow",
+            name = "decision_science_stage",
+            style = "lil_einstein_decision_console_stage_science",
+            direction = "vertical",
+            children = {
+                decision_stage_heading("decision_science", "lil_einstein_mockup_decision_console_step_2", "Check science", "Do we have (or will we have) what we need?"),
+                {
+                    type = "frame",
+                    name = "decision_science_card",
+                    style = "lil_einstein_decision_console_stage_card",
+                    direction = "vertical",
+                    children = {{
+                        type = "flow",
+                        direction = "horizontal",
+                        children = {{
+                            type = "sprite",
+                            name = "decision_science_status_dot",
+                            sprite = "utility/status_working",
+                            ignored_by_interaction = true
+                        }, {
+                            type = "label",
+                            name = "decision_science_status",
+                            caption = "Science sufficient"
+                        }}
+                    }, {
+                        type = "label",
+                        name = "decision_science_detail",
+                        caption = "Supply runtime covers the switch window."
+                    }, {
+                        type = "label",
+                        name = "decision_science_detail_two",
+                        caption = "All required packs are above minimum."
+                    }, {
+                        type = "flow",
+                        name = "decision_science_footer",
+                        style = "lil_einstein_decision_console_stage_footer",
+                        direction = "horizontal",
+                        children = {{
+                            type = "button",
+                            name = "decision_recalculate_button",
+                            caption = "Recalculate now",
+                            tags = {lil_einstein_on_click = true, handler = "policy_recalculate"}
+                        }, {
+                            type = "label",
+                            name = "decision_last_checked",
+                            caption = "Last checked: --"
+                        }}
+                    }}
+                }
+            }
+        }, {
+            type = "sprite",
+            name = "decision_stage_arrow_two",
+            sprite = "lil_einstein_mockup_decision_console_stage_arrow",
+            style = "lil_einstein_decision_console_stage_arrow",
+            ignored_by_interaction = true
+        }, {
+            type = "flow",
+            name = "decision_switch_stage",
+            style = "lil_einstein_decision_console_stage_switch",
+            direction = "vertical",
+            children = {
+                decision_stage_heading("decision_switch", "lil_einstein_mockup_decision_console_step_3", "Switch", "When should we switch?"),
+                {
+                    type = "frame",
+                    name = "decision_switch_card",
+                    style = "lil_einstein_decision_console_stage_card",
+                    direction = "horizontal",
+                    children = {{
+                        type = "flow",
+                        direction = "vertical",
+                        children = {{
+                            type = "label",
+                            caption = "Minimum switch time"
+                        }, {
+                            type = "flow",
+                            direction = "horizontal",
+                            children = {{
+                                type = "button",
+                                style = "lil_einstein_settings_stepper_left",
+                                tags = {lil_einstein_on_click = true, handler = "adjust_policy_setting", setting_name = "min_switch_seconds", delta = -5}
+                            }, {
+                                type = "label",
+                                name = "decision_min_switch_value",
+                                caption = "20s"
+                            }, {
+                                type = "button",
+                                style = "lil_einstein_settings_stepper_right",
+                                tags = {lil_einstein_on_click = true, handler = "adjust_policy_setting", setting_name = "min_switch_seconds", delta = 5}
+                            }}
+                        }, {
+                            type = "label",
+                            caption = "Instant plan-demand override is enabled."
+                        }}
+                    }, {
+                        type = "flow",
+                        name = "decision_switch_summary",
+                        direction = "vertical",
+                        children = {{
+                            type = "label",
+                            caption = "Summary"
+                        }, {
+                            type = "label",
+                            name = "decision_switch_in",
+                            caption = "Switch in: --"
+                        }, {
+                            type = "label",
+                            name = "decision_parallel_slots",
+                            caption = "Parallel slots: --"
+                        }, {
+                            type = "label",
+                            name = "decision_supply_horizon",
+                            caption = "Supply horizon: --"
+                        }, {
+                            type = "label",
+                            name = "decision_plan_override",
+                            caption = "Plan override: --"
+                        }}
+                    }}
+                }
+            }
+        }}
+    }, {
+        type = "flow",
         name = "policy_tab_bar",
         direction = "horizontal",
-        style = "lil_einstein_horizontal_flow_nospacing",
+        style = "lil_einstein_decision_console_tab_bar",
         children = {
-            {type = "button", name = "policy_tab_automation", caption = {"lil_einstein-policy.automation"},
+            {type = "button", name = "policy_tab_automation", style = "lil_einstein_decision_console_tab", caption = {"lil_einstein-policy.automation"},
                 tags = {lil_einstein_on_click = true, handler = "policy_tab", tab = "automation"}},
-            {type = "button", name = "policy_tab_budget", caption = {"lil_einstein-policy.plan-budget"},
+            {type = "button", name = "policy_tab_budget", style = "lil_einstein_decision_console_tab", caption = {"lil_einstein-policy.plan-budget"},
                 tags = {lil_einstein_on_click = true, handler = "policy_tab", tab = "budget"}},
-            {type = "button", name = "policy_tab_science", caption = {"lil_einstein-policy.science-policies"},
+            {type = "button", name = "policy_tab_science", style = "lil_einstein_decision_console_tab", caption = {"lil_einstein-policy.science-policies"},
                 tags = {lil_einstein_on_click = true, handler = "policy_tab", tab = "science"}},
-            {type = "button", name = "policy_tab_objectives", caption = {"lil_einstein-policy.manual-objectives"},
+            {type = "button", name = "policy_tab_objectives", style = "lil_einstein_decision_console_tab", caption = {"lil_einstein-policy.manual-objectives"},
                 tags = {lil_einstein_on_click = true, handler = "policy_tab", tab = "objectives"}},
-            {type = "button", name = "policy_tab_presets", caption = {"lil_einstein-policy.plan-presets"},
+            {type = "button", name = "policy_tab_presets", style = "lil_einstein_decision_console_tab", caption = {"lil_einstein-policy.plan-presets"},
                 tags = {lil_einstein_on_click = true, handler = "policy_tab", tab = "presets"}},
-            {type = "button", name = "policy_tab_history", caption = {"lil_einstein-policy.history"},
+            {type = "button", name = "policy_tab_history", style = "lil_einstein_decision_console_tab", caption = {"lil_einstein-policy.history"},
                 tags = {lil_einstein_on_click = true, handler = "policy_tab", tab = "history"}}
         }
     }, {
-        type = "scroll-pane",
-        name = "policy_scroll_pane",
-        direction = "vertical",
+        type = "flow",
+        name = "decision_console_content",
+        style = "lil_einstein_decision_console_content",
+        direction = "horizontal",
         children = {{
-            type = "table",
-            name = "policy_sections_table",
-            column_count = 1,
-            children = {
-                policy_section("policy_general_flow", {"lil_einstein-policy.automation"}),
-                policy_section("policy_budget_flow", {"lil_einstein-policy.plan-budget"}),
-                policy_section("policy_science_flow", {"lil_einstein-policy.science-policies"}),
-                policy_section("policy_trigger_flow", {"lil_einstein-policy.manual-objectives"}),
-                policy_section("policy_preset_flow", {"lil_einstein-policy.plan-presets"}),
-                policy_section("policy_history_flow", {"lil_einstein-policy.history"})
-            }
+            type = "flow",
+            name = "decision_automation_surface",
+            direction = "horizontal",
+            children = {{
+                type = "frame",
+                name = "decision_automation_behavior",
+                style = "lil_einstein_decision_console_behavior",
+                direction = "vertical"
+            }, {
+                type = "frame",
+                name = "decision_automation_settings",
+                style = "lil_einstein_decision_console_settings",
+                direction = "vertical"
+            }, {
+                type = "frame",
+                name = "decision_evidence_snapshot",
+                style = "lil_einstein_decision_console_evidence",
+                direction = "vertical"
+            }, {
+                type = "frame",
+                name = "decision_recent_changes",
+                style = "lil_einstein_decision_console_history",
+                direction = "vertical"
+            }}
+        }, {
+            type = "scroll-pane",
+            name = "policy_scroll_pane",
+            direction = "vertical",
+            visible = false,
+            children = {{
+                type = "table",
+                name = "policy_sections_table",
+                column_count = 1,
+                children = {
+                    policy_section("policy_general_flow", {"lil_einstein-policy.automation"}),
+                    policy_section("policy_budget_flow", {"lil_einstein-policy.plan-budget"}),
+                    policy_section("policy_science_flow", {"lil_einstein-policy.science-policies"}),
+                    policy_section("policy_trigger_flow", {"lil_einstein-policy.manual-objectives"}),
+                    policy_section("policy_preset_flow", {"lil_einstein-policy.plan-presets"}),
+                    policy_section("policy_history_flow", {"lil_einstein-policy.history"})
+                }
+            }}
+        }}
+    }, {
+        type = "flow",
+        name = "decision_console_footer",
+        direction = "horizontal",
+        children = {{
+            type = "label",
+            name = "decision_console_footer_status",
+            caption = ""
         }}
     }}
 }
@@ -928,13 +1297,14 @@ research_details_panel = {
 local science_pack_panel = {
     type = "frame",
     name = "science_pack_panel",
-    style = "inside_shallow_frame",
+    style = "lil_einstein_science_pack_details_panel",
     direction = "vertical",
     visible = false,
     tags = {ignore_force_enable = true},
     children = {{
         type = "flow",
         name = "science_pack_panel_header",
+        style = "lil_einstein_science_pack_title_flow",
         direction = "horizontal",
         children = {{
             type = "flow",
@@ -942,14 +1312,15 @@ local science_pack_panel = {
             children = {{
                 type = "sprite",
                 name = "science_pack_panel_icon",
-                sprite = "item/iron-plate"
+                sprite = "item/iron-plate",
+                style = "lil_einstein_science_pack_title_icon"
             }, {
                 type = "flow",
                 direction = "vertical",
                 children = {{
                     type = "label",
                     name = "science_pack_panel_name",
-                    style = "heading_1_label",
+                    style = "lil_einstein_science_pack_title",
                     caption = "Science pack"
                 }, {
                     type = "label",
@@ -970,6 +1341,7 @@ local science_pack_panel = {
                 caption = {"lil_einstein-science-pack.refreshes-in", 0}
             }, {
                 type = "button",
+                style = "lil_einstein_throughput_back_button",
                 name = "science_pack_panel_back",
                 caption = {"lil_einstein-science-pack.back"},
                 tags = {
@@ -982,33 +1354,38 @@ local science_pack_panel = {
     }, {
         type = "flow",
         name = "science_pack_panel_summary",
+        style = "lil_einstein_science_pack_summary",
         direction = "horizontal",
         children = {{
             type = "label",
             name = "science_pack_panel_current_stock",
+            style = "lil_einstein_science_pack_summary_value",
             caption = ""
         }, {
             type = "label",
             name = "science_pack_panel_flow_summary",
+            style = "lil_einstein_science_pack_summary_value",
             caption = ""
         }}
     }, {
         type = "scroll-pane",
         name = "science_pack_panel_scroll_pane",
-        style = "lil_einstein_vertical_scroll_pane",
+        style = "lil_einstein_science_pack_scroll_pane",
         direction = "vertical",
         children = {{
             type = "flow",
             name = "science_pack_panel_body",
+            style = "lil_einstein_science_pack_body",
             direction = "vertical",
             children = {{
                 type = "flow",
                 name = "science_pack_panel_evidence",
+                style = "lil_einstein_science_pack_evidence",
                 direction = "horizontal",
                 children = {{
                     type = "frame",
                     name = "science_pack_panel_labs",
-                    style = "lil_einstein_science_pack_section",
+                    style = "lil_einstein_science_pack_sprite_section",
                     direction = "vertical",
                     children = {{
                         type = "label",
@@ -1021,7 +1398,7 @@ local science_pack_panel = {
                     }, {
                         type = "table",
                         name = "science_pack_panel_labs_header",
-                        style = "lil_einstein_science_pack_table",
+                        style = "lil_einstein_science_pack_sprite_table",
                         column_count = 4,
                         children = {{
                             type = "label", style = "bold_label",
@@ -1044,13 +1421,13 @@ local science_pack_panel = {
                     }, {
                         type = "table",
                         name = "science_pack_panel_labs_rows",
-                        style = "lil_einstein_science_pack_table",
+                        style = "lil_einstein_science_pack_sprite_table",
                         column_count = 4
                     }}
                 }, {
                     type = "frame",
                     name = "science_pack_panel_planet_stock",
-                    style = "lil_einstein_science_pack_section",
+                    style = "lil_einstein_science_pack_sprite_section",
                     direction = "vertical",
                     children = {{
                         type = "label", style = "heading_2_label",
@@ -1062,7 +1439,7 @@ local science_pack_panel = {
                     }, {
                         type = "table",
                         name = "science_pack_panel_planet_stock_header",
-                        style = "lil_einstein_science_pack_table",
+                        style = "lil_einstein_science_pack_sprite_table",
                         column_count = 2,
                         children = {{
                             type = "label", style = "bold_label",
@@ -1079,13 +1456,13 @@ local science_pack_panel = {
                     }, {
                         type = "table",
                         name = "science_pack_panel_planet_stock_rows",
-                        style = "lil_einstein_science_pack_table",
+                    style = "lil_einstein_science_pack_sprite_table",
                         column_count = 2
                     }}
                 }, {
                     type = "frame",
                     name = "science_pack_panel_transit",
-                    style = "lil_einstein_science_pack_section",
+                    style = "lil_einstein_science_pack_sprite_section",
                     direction = "vertical",
                     children = {{
                         type = "label", style = "heading_2_label",
@@ -1097,7 +1474,7 @@ local science_pack_panel = {
                     }, {
                         type = "table",
                         name = "science_pack_panel_transit_header",
-                        style = "lil_einstein_science_pack_table",
+                        style = "lil_einstein_science_pack_sprite_table",
                         column_count = 4,
                         children = {{
                             type = "label", style = "bold_label",
@@ -1120,13 +1497,14 @@ local science_pack_panel = {
                     }, {
                         type = "table",
                         name = "science_pack_panel_transit_rows",
-                        style = "lil_einstein_science_pack_table",
+                        style = "lil_einstein_science_pack_sprite_table",
                         column_count = 4
                     }}
                 }}
             }, {
                 type = "flow",
                 name = "science_pack_panel_flow_balance",
+                style = "lil_einstein_science_pack_flow_balance",
                 direction = "horizontal",
                 children = {{
                     type = "label", style = "bold_label",
@@ -1203,10 +1581,10 @@ local structure = {
                 style = "lil_einstein_horizontal_flow_nospacing",
                 name = "science_bottom",
                 direction = "horizontal",
-                children = {science_filter, science_pane}
-            }, science_pack_panel}
+                 children = {science_filter, science_pane}
+            }}
         }}
-    }, research_details_panel, policy_panel, footer}
+    }, science_pack_panel, research_details_panel, policy_panel, footer}
 }
 
 -- Builder

@@ -107,6 +107,34 @@ local tests = {
         local analyze = find_named(panel, "research_details_analyze_button")
         testlib.assert_equal(analyze.tags.handler, "analyze_research_throughput")
     end},
+    {"builds the sprite-backed research decision console shell", function()
+        local player = {opened = nil}
+        local anchor = make_element(false)
+        _G.game = {get_player = function() return player end}
+        builder.build(1, anchor)
+        local panel = find_named(anchor.lil_einstein_gui, "policy_panel")
+        testlib.assert_equal(panel.name, "policy_panel")
+        testlib.assert_true(find_named(panel, "decision_console_header") ~= nil)
+        testlib.assert_true(find_named(panel, "decision_console_stage_row") ~= nil)
+        testlib.assert_true(find_named(panel, "decision_automation_surface") ~= nil)
+        testlib.assert_equal(find_named(panel, "decision_back_button").tags.handler, "toggle_policy_panel")
+        testlib.assert_equal(find_named(panel, "policy_tab_history").tags.tab, "history")
+    end},
+    {"builds the science-pack inspector as a top-level replacement surface", function()
+        local player = {opened = nil}
+        local anchor = make_element(false)
+        _G.game = {get_player = function() return player end}
+        builder.build(1, anchor)
+        local main = anchor.lil_einstein_gui
+        local panel = main.science_pack_panel
+        testlib.assert_true(panel ~= nil, "science-pack panel must be top-level")
+        testlib.assert_true(main.content_flow ~= nil, "normal content must remain separate")
+        local right = find_named(main, "right")
+        testlib.assert_true(right ~= nil, "normal right content must remain separate")
+        testlib.assert_nil(right.science_pack_panel)
+        testlib.assert_true(find_named(panel, "science_pack_panel_header") ~= nil)
+        testlib.assert_true(find_named(panel, "science_pack_panel_planet_stock_rows") ~= nil)
+    end},
     {"retries an element without style after the first add fails", function()
         errors = {}
         local player = {opened = nil}

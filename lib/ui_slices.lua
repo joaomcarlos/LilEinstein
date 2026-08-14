@@ -6,6 +6,11 @@ local ui = "__LilEinstein__/graphics/ui/"
 
 local slices = {
     { name = "window-background-clean", key = "window_background_clean", file = ui .. "window-background-clean.png", w = 1672, h = 941, image_w = 1672, image_h = 941 },
+    { name = "decision-console-background-clean", key = "decision_console_background", file = ui .. "decision-console-background-clean.png", w = 1672, h = 941, image_w = 1672, image_h = 941 },
+    { name = "decision-console-stage-arrow", key = "decision_console_stage_arrow", file = ui .. "decision-console-stage-arrow.png", w = 40, h = 52, image_w = 40, image_h = 52 },
+    { name = "decision-console-step-1", key = "decision_console_step_1", file = ui .. "decision-console-step-1.png", w = 39, h = 39, image_w = 39, image_h = 39 },
+    { name = "decision-console-step-2", key = "decision_console_step_2", file = ui .. "decision-console-step-2.png", w = 39, h = 39, image_w = 39, image_h = 39 },
+    { name = "decision-console-step-3", key = "decision_console_step_3", file = ui .. "decision-console-step-3.png", w = 39, h = 39, image_w = 39, image_h = 39 },
     { name = "allowed-button-all",      key = "allowed_button_all",      file = ui .. "allowed-button-all.png",      w = 55,   h = 27,  image_w = 55,   image_h = 27 },
     { name = "allowed-button-invert",   key = "allowed_button_invert",   file = ui .. "allowed-button-invert.png",   w = 66,   h = 27,  image_w = 66,   image_h = 27 },
     { name = "allowed-button-none",     key = "allowed_button_none",     file = ui .. "allowed-button-none.png",     w = 58,   h = 27,  image_w = 58,   image_h = 27 },

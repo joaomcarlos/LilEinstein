@@ -78,6 +78,11 @@ local ui_sprite_names = {
     "radio_on",
     "row_arrow_down",
     "row_arrow_up",
+    "decision_console_background",
+    "decision_console_stage_arrow",
+    "decision_console_step_1",
+    "decision_console_step_2",
+    "decision_console_step_3",
     "stepper_left",
     "stepper_right",
     "upcoming_row_separator"

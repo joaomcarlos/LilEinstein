@@ -2859,6 +2859,20 @@ local format_policy_time = function(seconds)
     return tostring(math.floor(seconds + 0.5)) .. "s"
 end
 
+local format_policy_history_detail = function(item)
+    if not item then
+        return "Research plan updated"
+    end
+    if item.reason == "reserve-for-type" then
+        local after = item.after
+        local value = after == "safety_first" and "Safety first" or tostring(after or "unchanged")
+        return "Reserve for type: " .. value
+    elseif item.action == "strategy" then
+        return "Strategy: " .. tostring(item.detail or item.after or "updated")
+    end
+    return tostring(item.detail or item.reason or item.trigger or item.action or "Research plan updated")
+end
+
 local populate_policy_science = function(player_index, anchor)
     local p = game.get_player(player_index)
     local flow = gutil.get_child(anchor, "policy_science_flow")
@@ -3182,13 +3196,299 @@ local populate_policy_history = function(player_index, anchor)
     for index = 1, math.min(10, #history) do
         local item = history[index]
         local seconds_ago = math.max(0, math.floor((game.tick - (item.tick or game.tick)) / 60))
-        local detail = item.detail or item.reason or item.trigger or item.action or ""
+        local detail = format_policy_history_detail(item)
         flow.add({
             type = "label",
             caption = {"lil_einstein-policy.history-row", format_policy_time(seconds_ago), item.player, item.action,
                        detail}
         })
     end
+end
+
+local set_decision_caption = function(anchor, name, caption)
+    local element = gutil.get_child(anchor, name)
+    if element then
+        element.caption = caption
+    end
+    return element
+end
+
+local set_decision_sprite = function(anchor, name, sprite)
+    local element = gutil.get_child(anchor, name)
+    if element and sprite then
+        element.sprite = sprite
+    end
+    return element
+end
+
+local get_decision_candidate = function(force_index)
+    local f = game and game.forces and game.forces[force_index]
+    if not f then
+        return nil, nil, nil
+    end
+    local tech_name = f.current_research and f.current_research.name
+    if not tech_name then
+        local names = queue.get_queue(force_index)
+        tech_name = names and names[1]
+    end
+    if not tech_name then
+        return nil, nil, nil
+    end
+    return tech_name, tech.get_single_tech_state_ext(force_index, tech_name), f.technologies[tech_name]
+end
+
+local get_decision_technology_caption = function(tech_name)
+    if not tech_name then
+        return "No planned research"
+    end
+    local prototype = prototypes and prototypes.technology and prototypes.technology[tech_name]
+    return prototype and prototype.localised_name or tech_name
+end
+
+local populate_decision_console_header = function(player_index, anchor)
+    local p = game.get_player(player_index)
+    if not p then
+        return
+    end
+    local force_index = p.force.index
+    local strategy = policy.get_setting(force_index, "strategy") or "balanced"
+    local strategy_caption = {"lil_einstein-strategy." .. strategy}
+    local strategy_help = {"lil_einstein-strategy-help." .. strategy}
+    local strategy_dropdown = gutil.get_child(anchor, "decision_strategy_dropdown")
+    if strategy_dropdown then
+        local items = {}
+        local selected = 1
+        for index, name in ipairs(policy.strategy_order) do
+            items[index] = {"lil_einstein-strategy." .. name}
+            if name == strategy then
+                selected = index
+            end
+        end
+        strategy_dropdown.items = items
+        strategy_dropdown.selected_index = selected
+        strategy_dropdown.tooltip = strategy_help
+    end
+
+    set_decision_caption(anchor, "decision_mode_value", strategy_caption)
+    set_decision_caption(anchor, "decision_mode_detail", strategy_help)
+    local planning_paused = policy.get_setting(force_index, "planning_paused") == true
+    local instant_override = policy.get_setting(force_index, "instant_switch_override") == true
+    local manual_override = gutil.get_child(anchor, "decision_manual_override")
+    local lock_current = gutil.get_child(anchor, "decision_lock_current")
+    if manual_override then
+        manual_override.state = instant_override
+    end
+    if lock_current then
+        lock_current.state = planning_paused
+    end
+
+    local tech_name, xcur, current = get_decision_candidate(force_index)
+    local tech_caption = get_decision_technology_caption(tech_name)
+    if tech_name then
+        set_decision_sprite(anchor, "decision_candidate_icon", "technology/" .. tech_name)
+        set_decision_sprite(anchor, "decision_next_research_icon", "technology/" .. tech_name)
+    else
+        set_decision_sprite(anchor, "decision_candidate_icon", "utility/technology")
+        set_decision_sprite(anchor, "decision_next_research_icon", "utility/technology")
+    end
+    set_decision_caption(anchor, "decision_candidate_name", tech_caption)
+    set_decision_caption(anchor, "decision_next_research_name", tech_caption)
+    local priority = xcur and policy.get_tech_science_priority(force_index, xcur) or nil
+    set_decision_caption(anchor, "decision_candidate_score", priority and ("Priority score: " .. tostring(priority)) or "Priority score: --")
+    set_decision_caption(anchor, "decision_candidate_priority", current and ("Level: " .. tostring(current.level or 1)) or "Level: --")
+
+    local diagnostic = queue.get_research_display_diagnostic(force_index) or {}
+    local health_state = diagnostic.state or "idle"
+    local health_value = (health_state == "operational_fault" or health_state == "pack_bound") and "Watch" or "Good"
+    set_decision_caption(anchor, "decision_health_value", health_value)
+    set_decision_caption(anchor, "decision_health_detail", health_state == "idle" and "No active research." or
+        (health_state == "measuring" and "Measuring current research." or "Research health is being monitored."))
+
+    local summary = queue.get_research_summary(force_index) or {}
+    local remaining = summary.remaining_seconds
+    set_decision_caption(anchor, "decision_next_research_start", "Est. start: " .. format_policy_time(remaining))
+    set_decision_caption(anchor, "decision_switch_in", "Switch in: " .. format_policy_time(remaining))
+    set_decision_caption(anchor, "decision_parallel_slots", "Parallel slots: " .. tostring(policy.get_setting(force_index, "parallel_slots") or 1))
+    set_decision_caption(anchor, "decision_supply_horizon", "Supply horizon: " .. tostring(policy.get_setting(force_index, "forecast_seconds") or 0) .. "s")
+    set_decision_caption(anchor, "decision_plan_override", "Plan override: " .. (instant_override and "Instant" or "Normal"))
+    set_decision_caption(anchor, "decision_min_switch_value", tostring(policy.get_setting(force_index, "min_switch_seconds") or 0) .. "s")
+
+    local reserve = policy.get_setting(force_index, "reserve_for_type") or "safety_first"
+    local reserve_caption = reserve == "safety_first" and "Safety first" or reserve
+    set_decision_caption(anchor, "decision_rationale", "Reserve-for-type policy: " .. reserve_caption .. ".")
+
+    local snapshot_tick = queue.get_research_health_snapshot_tick(force_index)
+    local checked = snapshot_tick and snapshot_tick >= 0 and format_policy_time(math.max(0, (game.tick - snapshot_tick) / 60)) or "--"
+    set_decision_caption(anchor, "decision_last_checked", "Last checked: " .. checked .. " ago")
+
+    local forecast = queue.get_science_display_forecast and queue.get_science_display_forecast(force_index)
+    if not forecast or not next(forecast) then
+        forecast = queue.get_science_forecast and queue.get_science_forecast(force_index)
+    end
+    forecast = forecast or {}
+    local sufficient = true
+    local limiting_science
+    if current then
+        for _, ingredient in pairs(current.research_unit_ingredients or {}) do
+            local science = ingredient.name
+            local item = forecast[science] or {}
+            if (item.stock or 0) < (ingredient.amount or 1) then
+                sufficient = false
+                limiting_science = science
+                break
+            end
+        end
+    end
+    set_decision_caption(anchor, "decision_science_status", sufficient and "Science sufficient" or "Science at risk")
+    set_decision_caption(anchor, "decision_science_detail", sufficient and "All required packs are above minimum." or
+        ("Waiting on " .. tostring(limiting_science or "required science") .. "."))
+    set_decision_caption(anchor, "decision_science_detail_two", sufficient and "Supply runtime covers the switch window." or
+        "The planner will avoid an uncovered switch.")
+end
+
+local add_decision_setting = function(flow, force_index, setting_name, caption, step, suffix)
+    local row = flow.add({type = "flow", direction = "horizontal"})
+    row.style.height = 27
+    row.style.vertical_align = "center"
+    local label = row.add({type = "label", caption = caption})
+    label.style.width = 180
+    local value = policy.get_setting(force_index, setting_name) or 0
+    local value_label = row.add({type = "label", name = "decision_setting_" .. setting_name,
+        caption = tostring(value) .. (suffix or "")})
+    value_label.style.width = 58
+    value_label.style.horizontal_align = "right"
+    row.add({type = "button", style = "lil_einstein_settings_stepper_left", tags = {
+        lil_einstein_on_click = true, handler = "adjust_policy_setting", setting_name = setting_name, delta = -step
+    }})
+    row.add({type = "button", style = "lil_einstein_settings_stepper_right", tags = {
+        lil_einstein_on_click = true, handler = "adjust_policy_setting", setting_name = setting_name, delta = step
+    }})
+end
+
+local add_decision_dropdown = function(flow, force_index, setting_name, caption, order, item_prefix)
+    local row = flow.add({type = "flow", direction = "horizontal"})
+    row.style.height = 27
+    row.style.vertical_align = "center"
+    local label = row.add({type = "label", caption = caption})
+    label.style.width = 180
+    local items = {}
+    local selected = 1
+    local current = policy.get_setting(force_index, setting_name)
+    for index, value in ipairs(order or {}) do
+        items[index] = {"lil_einstein-policy." .. item_prefix .. value}
+        if value == current then
+            selected = index
+        end
+    end
+    row.add({
+        type = "drop-down",
+        items = items,
+        selected_index = selected,
+        tags = {
+            lil_einstein_on_state_change = true,
+            handler = "policy_policy_dropdown",
+            setting_name = setting_name
+        }
+    })
+end
+
+local populate_decision_automation = function(player_index, anchor)
+    local p = game.get_player(player_index)
+    if not p then
+        return
+    end
+    local force_index = p.force.index
+    local behavior = gutil.get_child(anchor, "decision_automation_behavior")
+    local settings = gutil.get_child(anchor, "decision_automation_settings")
+    local evidence = gutil.get_child(anchor, "decision_evidence_snapshot")
+    local history_flow = gutil.get_child(anchor, "decision_recent_changes")
+    if not behavior or not settings or not evidence or not history_flow then
+        return
+    end
+
+    behavior.clear()
+    behavior.add({type = "label", style = "lil_einstein_decision_console_content_title", caption = "Automation behavior"})
+    local selected = policy.get_setting(force_index, "strategy") or "balanced"
+    for _, name in ipairs({"conservative", "balanced", "aggressive"}) do
+        local row = behavior.add({type = "flow", direction = "horizontal"})
+        row.style.height = 42
+        local radio = row.add({type = "button", style = name == selected and "lil_einstein_radio_button_on" or "lil_einstein_radio_button_off",
+            tags = {lil_einstein_on_click = true, handler = "decision_strategy", strategy = name}})
+        radio.style.right_margin = 7
+        local text = row.add({type = "flow", direction = "vertical"})
+        text.add({type = "label", caption = {"lil_einstein-strategy." .. name}})
+        text.add({type = "label", caption = {"lil_einstein-strategy-help." .. name}})
+    end
+    behavior.add({type = "line"})
+    local pause = policy.get_setting(force_index, "planning_paused") == true
+    local parallel = policy.get_setting(force_index, "parallel_research") == true
+    local cluster = policy.get_setting(force_index, "cluster_mode") == true
+    for _, item in ipairs({
+        {"planning_paused", "Pause after current research", pause},
+        {"parallel_research", "Enable parallel research", parallel},
+        {"cluster_mode", "Require a usable lab cluster", cluster}
+    }) do
+        local row = behavior.add({type = "flow", direction = "horizontal"})
+        row.style.height = 27
+        local toggle = row.add({type = "button", style = item[3] and "lil_einstein_settings_checkbox_on" or "lil_einstein_settings_checkbox_off",
+            tags = {lil_einstein_on_click = true, handler = "toggle_policy_setting", setting_name = item[1]}})
+        toggle.style.right_margin = 7
+        row.add({type = "label", caption = item[2]})
+    end
+
+    settings.clear()
+    settings.add({type = "label", style = "lil_einstein_decision_console_content_title", caption = "Operational settings"})
+    add_decision_setting(settings, force_index, "min_switch_seconds", "Minimum switch time", 5, "s")
+    add_decision_setting(settings, force_index, "forecast_seconds", "Supply horizon", 30, "s")
+    add_decision_setting(settings, force_index, "parallel_slots", "Parallel slots", 1)
+    add_decision_setting(settings, force_index, "replan_interval_seconds", "Replan interval", 30, "s")
+    add_decision_setting(settings, force_index, "plan_horizon_minutes", "Plan horizon", 5, "m")
+    add_decision_dropdown(settings, force_index, "reserve_for_type", {"lil_einstein-policy.reserve-for-type"},
+        policy.reserve_for_type_order, "reserve-for-type-")
+    settings.add({type = "label", style = "lil_einstein_decision_console_note",
+        caption = "Normal replan follows the interval. Plan or setting changes request an immediate replan."})
+
+    evidence.clear()
+    evidence.add({type = "label", style = "lil_einstein_decision_console_content_title", caption = "Evidence snapshot"})
+    evidence.add({type = "label", style = "lil_einstein_decision_console_note",
+        caption = "Runtime to depletion uses stock, measured production, consumption, and deliveries. ∞ means no depletion is projected."})
+    local table_element = evidence.add({type = "table", name = "decision_evidence_table",
+        style = "lil_einstein_decision_console_science_table", column_count = 5})
+    for _, caption in ipairs({"Science pack", "In stock", "In production", "Per minute", "Runtime"}) do
+        table_element.add({type = "label", caption = caption})
+    end
+    local forecast = queue.get_science_display_forecast and queue.get_science_display_forecast(force_index)
+    if not forecast or not next(forecast) then
+        forecast = queue.get_science_forecast and queue.get_science_forecast(force_index)
+    end
+    forecast = forecast or {}
+    for _, science in ipairs(util.get_all_sciences()) do
+        local item = forecast[science] or {}
+        table_element.add({type = "sprite", sprite = "item/" .. science, tooltip = {"item-name." .. science}})
+        table_element.add({type = "label", caption = gutil.format_cost(item.stock or 0)})
+        table_element.add({type = "label", caption = gutil.format_si(item.production_per_minute or 0)})
+        table_element.add({type = "label", caption = gutil.format_si(item.net_per_minute or 0)})
+        table_element.add({type = "label", caption = format_policy_time(item.depletion_seconds)})
+    end
+
+    history_flow.clear()
+    history_flow.add({type = "label", style = "lil_einstein_decision_console_content_title", caption = "Recent changes"})
+    local history = policy.get_history(force_index) or {}
+    if #history == 0 then
+        history_flow.add({type = "label", caption = {"lil_einstein-policy.no-history"}})
+    else
+        for index = 1, math.min(6, #history) do
+            local item = history[index]
+            local row = history_flow.add({type = "flow", style = "lil_einstein_decision_console_history_row", direction = "horizontal"})
+            local seconds_ago = math.max(0, math.floor((game.tick - (item.tick or game.tick)) / 60))
+            row.add({type = "label", style = "lil_einstein_decision_console_history_time", caption = format_policy_time(seconds_ago) .. " ago"})
+            row.add({type = "label", style = "lil_einstein_decision_console_history_detail",
+                caption = format_policy_history_detail(item)})
+        end
+    end
+    local full_history = history_flow.add({type = "button", caption = "View full history",
+        tags = {lil_einstein_on_click = true, handler = "policy_tab", tab = "history"}})
+    full_history.style.width = 398
 end
 
 local apply_policy_tab = function(player_index, anchor)
@@ -3215,13 +3515,23 @@ local apply_policy_tab = function(player_index, anchor)
             button.enabled = tab.name ~= selected
         end
     end
+    local automation_surface = gutil.get_child(anchor, "decision_automation_surface")
+    local policy_scroll_pane = gutil.get_child(anchor, "policy_scroll_pane")
+    if automation_surface then
+        automation_surface.visible = selected == "automation"
+    end
+    if policy_scroll_pane then
+        policy_scroll_pane.visible = selected ~= "automation"
+    end
 end
 
 local populate_policy_panel = function(player_index, anchor)
+    populate_decision_console_header(player_index, anchor)
+    populate_decision_automation(player_index, anchor)
     local pane = gutil.get_child(anchor, "policy_scroll_pane")
     if pane then
-        pane.style.height = 640
-        pane.style.width = 1510
+        pane.style.height = 328
+        pane.style.width = 1596
     end
     local sections = gutil.get_child(anchor, "policy_sections_table")
     if sections then

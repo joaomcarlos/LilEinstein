@@ -670,6 +670,18 @@ script.on_event(defines.events.on_gui_click, function(e)
                 break
             end
         end
+    elseif h == "policy_recalculate" then
+        queue.request_research_health_snapshot(f.index)
+        repopulate = true
+    elseif h == "decision_strategy" then
+        if not policy.can_edit(p) then
+            p.print({"lil_einstein-msg.multiplayer-locked"})
+        elseif t.strategy then
+            policy.set_setting(f.index, "strategy", t.strategy)
+            policy.record_action(f.index, p.index, "strategy", t.strategy)
+            policy.request_instant_switch(f.index, "strategy-change")
+            state.request_next_research(f)
+        end
     elseif h == "toggle_research_details" then
         gui.toggle_research_details(p.index)
         repopulate = false
