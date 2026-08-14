@@ -525,7 +525,8 @@ local policy_panel = {
     }}
 }
 
-local research_details_panel = {
+local research_details_panel
+local legacy_research_details_panel = {
     type = "frame",
     name = "research_details_panel",
     style = "inside_shallow_frame",
@@ -744,6 +745,153 @@ local research_details_panel = {
                 column_count = 4
             }}
         }}
+    }}
+}
+
+research_details_panel = {
+    type = "frame",
+    name = "research_details_panel",
+    style = "lil_einstein_throughput_details_panel",
+    direction = "vertical",
+    visible = false,
+    tags = {ignore_force_enable = true},
+    children = {{
+        type = "flow",
+        name = "research_details_title_flow",
+        style = "lil_einstein_throughput_title_flow",
+        direction = "horizontal",
+        children = {{
+            type = "flow",
+            name = "research_details_title_stack",
+            style = "lil_einstein_vertical_flow_nospacing",
+            direction = "vertical",
+            children = {{
+                type = "label",
+                name = "research_details_eyebrow",
+                caption = {"lil_einstein-throughput.panel-kicker"}
+            }, {
+                type = "label",
+                name = "research_details_title",
+                style = "lil_einstein_throughput_title",
+                caption = {"lil_einstein-throughput.details-title"}
+            }}
+        }, {
+            type = "label",
+            name = "research_details_current_research",
+            style = "lil_einstein_throughput_title_meta",
+            caption = {"lil_einstein-throughput.current-research-none"}
+        }}
+    }, {
+        type = "frame",
+        name = "research_details_warning",
+        style = "lil_einstein_throughput_warning",
+        direction = "horizontal",
+        children = {{
+            type = "sprite",
+            name = "research_details_warning_icon",
+            sprite = "utility/status_not_working",
+            style = "lil_einstein_throughput_warning_icon"
+        }, {
+            type = "flow",
+            name = "research_details_warning_text",
+            style = "lil_einstein_throughput_warning_text",
+            direction = "vertical",
+            children = {{
+                type = "label",
+                name = "research_details_warning_headline",
+                style = "lil_einstein_throughput_warning_headline",
+                caption = {"lil_einstein-throughput.warning-clear"}
+            }, {
+                type = "label",
+                name = "research_details_warning_evidence",
+                style = "lil_einstein_throughput_warning_evidence",
+                caption = {"lil_einstein-throughput.warning-evidence-none"}
+            }}
+        }, {
+            type = "button",
+            name = "research_details_analyze_button",
+            style = "lil_einstein_throughput_analyze_button",
+            caption = {"lil_einstein-throughput.analyze-bottleneck"},
+            tags = {
+                lil_einstein_on_click = true,
+                handler = "analyze_research_throughput",
+                ignore_force_enable = true
+            }
+        }}
+    }, {
+        type = "frame",
+        name = "research_details_analysis",
+        style = "lil_einstein_throughput_analysis",
+        direction = "horizontal",
+        visible = false,
+        children = {{
+            type = "label",
+            name = "research_details_analysis_text",
+            style = "lil_einstein_throughput_analysis_text",
+            caption = {"lil_einstein-throughput.analysis-not-run"}
+        }, {
+            type = "button",
+            name = "research_details_analysis_close",
+            style = "lil_einstein_throughput_analysis_close",
+            caption = {"lil_einstein-throughput.close-analysis"},
+            tags = {
+                lil_einstein_on_click = true,
+                handler = "close_research_throughput_analysis",
+                ignore_force_enable = true
+            }
+        }}
+    }, {
+        type = "table",
+        name = "research_details_table_header",
+        style = "lil_einstein_throughput_header",
+        column_count = 6,
+        children = {{
+            type = "label",
+            name = "research_details_header_science",
+            style = "bold_label",
+            caption = {"lil_einstein-throughput.column-science"}
+        }, {
+            type = "label",
+            name = "research_details_header_need",
+            style = "bold_label",
+            caption = {"lil_einstein-throughput.column-need"}
+        }, {
+            type = "label",
+            name = "research_details_header_used",
+            style = "bold_label",
+            caption = {"lil_einstein-throughput.column-used"}
+        }, {
+            type = "label",
+            name = "research_details_header_produced",
+            style = "bold_label",
+            caption = {"lil_einstein-throughput.column-produced"}
+        }, {
+            type = "label",
+            name = "research_details_header_gap",
+            style = "bold_label",
+            caption = {"lil_einstein-throughput.column-gap"}
+        }, {
+            type = "label",
+            name = "research_details_header_status",
+            style = "bold_label",
+            caption = {"lil_einstein-throughput.column-status"}
+        }}
+    }, {
+        type = "scroll-pane",
+        name = "research_details_scroll_pane",
+        style = "lil_einstein_throughput_scroll_pane",
+        direction = "vertical",
+        children = {{
+            type = "flow",
+            name = "research_details_rows",
+            style = "lil_einstein_throughput_rows",
+            direction = "vertical"
+        }}
+    }, {
+        type = "label",
+        name = "research_details_footer",
+        style = "lil_einstein_throughput_footer",
+        caption = {"lil_einstein-throughput.footer-overproducing"}
     }}
 }
 

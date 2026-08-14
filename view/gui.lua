@@ -12,6 +12,17 @@ local debug_report = require("view.gui.debug_report")
 local target = "screen"
 local repopulate_jobs = {}
 
+local set_main_chrome_visible = function(anchor, visible)
+    local top_flow = gutil.get_child(anchor, "top_flow")
+    local footer = gutil.get_child(anchor, "footer_frame")
+    if top_flow then
+        top_flow.visible = visible
+    end
+    if footer then
+        footer.visible = visible
+    end
+end
+
 local open = function(player_index, parent)
     -- Close any open windows
     local p = game.get_player(player_index)
@@ -118,6 +129,7 @@ gui.toggle_policy_panel = function(player_index)
     if research_details_panel then
         research_details_panel.visible = false
     end
+    set_main_chrome_visible(anchor, true)
     if science_pack_panel then
         science_pack_panel.visible = false
     end
@@ -154,6 +166,7 @@ gui.toggle_research_details = function(player_index)
     details_panel.visible = show_details
     content_flow.visible = not show_details
     policy_panel.visible = false
+    set_main_chrome_visible(anchor, not show_details)
     if science_pack_panel then
         science_pack_panel.visible = false
     end
@@ -213,6 +226,7 @@ gui.toggle_science_pack_details = function(player_index, science)
         content_flow.visible = true
         policy_panel.visible = false
         details_panel.visible = false
+        set_main_chrome_visible(anchor, true)
         state.set_player_setting(player_index, "science_pack_panel_open", true)
         state.set_player_setting(player_index, "science_pack_panel_science", science)
         state.set_player_setting(player_index, "policy_panel_open", false)
@@ -222,6 +236,7 @@ gui.toggle_science_pack_details = function(player_index, science)
     else
         panel.visible = false
         science_bottom.visible = true
+        set_main_chrome_visible(anchor, true)
         state.set_player_setting(player_index, "science_pack_panel_open", false)
         state.clear_player_setting(player_index, "science_pack_panel_science")
         components.repopulate_all(player_index, anchor)
@@ -271,6 +286,20 @@ gui.show_research_lab_inspection = function(player_index, cluster_key)
     local anchor = gui.get(player_index)
     if anchor then
         components.show_research_lab_inspection(player_index, anchor, cluster_key)
+    end
+end
+
+gui.analyze_research_throughput = function(player_index)
+    local anchor = gui.get(player_index)
+    if anchor then
+        components.analyze_science_throughput(player_index, anchor)
+    end
+end
+
+gui.close_research_throughput_analysis = function(player_index)
+    local anchor = gui.get(player_index)
+    if anchor then
+        components.close_science_throughput_analysis(anchor)
     end
 end
 

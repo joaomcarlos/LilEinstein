@@ -43,6 +43,8 @@ local function make_anchor(screen)
         research_details_panel = child("research_details_panel"),
         science_pack_panel = child("science_pack_panel"),
         science_bottom = child("science_bottom"),
+        top_flow = child("top_flow"),
+        footer_frame = child("footer_frame"),
         search_textfield = child("search_textfield"),
         search_button = child("search_button")
     }
@@ -137,8 +139,12 @@ local tests = {
         gui.toggle_research_details(1)
         t.assert_true(anchor.research_details_panel.visible)
         t.assert_false(anchor.policy_panel.visible)
+        t.assert_false(anchor.top_flow.visible)
+        t.assert_false(anchor.footer_frame.visible)
         gui.toggle_research_details(1)
         t.assert_true(anchor.content_flow.visible)
+        t.assert_true(anchor.top_flow.visible)
+        t.assert_true(anchor.footer_frame.visible)
     end},
     {"opens the selected science-pack inspector in the science pane", function()
         reset()

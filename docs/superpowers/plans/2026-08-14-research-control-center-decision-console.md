@@ -61,7 +61,8 @@
 
 **Interfaces:**
 - The demo renders one 1672x941 Decision Console frame without browser chrome or a second concept.
-- Tabs switch the focused lower content; radio buttons, checkboxes, steppers, and Back to research provide visible state changes; the demo remains offline and requires no dependency install.
+- Tabs switch the focused lower content; radio buttons, checkboxes, steppers, and Back to research provide visible state changes; the demo remains offline and requires no dependency install. The checkpoint covers Automation, Plan budget, Science policies, Manual objectives, Plan presets, and History.
+- The demo mirrors the current code units (20s minimum switch time, 120s supply horizon, 5 parallel slots when enabled) and explicitly labels proposed runtime behavior: bounded Reserve for type, delivery-aware depletion runtime, 30s switch cap with instant plan-demand override, and immediate replanning on plan/settings changes.
 
 - [x] **Step 1: Build the page shell over the cleaned background at the exact reference dimensions.** Use real image assets for the background and icons; do not replace sprites with emoji, inline SVG, gradients, or CSS drawings.
 - [x] **Step 2: Add the top summary strip, three numbered decision stages, tab row, and Automation content using the measured geometry.**

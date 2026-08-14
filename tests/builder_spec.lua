@@ -90,6 +90,20 @@ local tests = {
         testlib.assert_equal(copy_debug_button.sprite, "utility/copy")
         testlib.assert_true(anchor.brand_header == nil, "brand header belongs below main frame")
     end},
+    {"builds the compact science throughput details surface", function()
+        local player = {opened = nil}
+        local anchor = make_element(false)
+        _G.game = {get_player = function() return player end}
+        builder.build(1, anchor)
+        local panel = find_named(anchor.lil_einstein_gui, "research_details_panel")
+        testlib.assert_equal(panel.type, "frame")
+        testlib.assert_true(find_named(panel, "research_details_warning") ~= nil)
+        testlib.assert_true(find_named(panel, "research_details_analyze_button") ~= nil)
+        testlib.assert_true(find_named(panel, "research_details_table_header") ~= nil)
+        testlib.assert_true(find_named(panel, "research_details_rows") ~= nil)
+        local analyze = find_named(panel, "research_details_analyze_button")
+        testlib.assert_equal(analyze.tags.handler, "analyze_research_throughput")
+    end},
     {"retries an element without style after the first add fails", function()
         errors = {}
         local player = {opened = nil}

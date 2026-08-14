@@ -161,6 +161,14 @@ the background for the red science pack warning is off, maybe remove it from the
 Otherwise looks good
 <image name=[Image #1] path="C:\Users\silent\AppData\Local\Temp\codex-clipboard-295fe426-b797-4dc3-9d5b-25d3f39af3e7.png">[image content omitted]</image>
 
+## 2026-08-14
+
+## My request:
+looks good, impl;eent it
+
+## My request:
+that looks much better, do it
+
 ## My request:
 on the demo, the sprites are all correct, can you check? Also, you didnt do the other tabs
 
@@ -186,3 +194,15 @@ The plan presets should also include a megabase plan which prioritizes high yiel
 "Multiplayer history" tab should just be "History" and keep the filters, love that. Merge the History filtes and Collaboration controls panels into one, putting the history filters on the right side on the collabiration controls tab but above collaboration controls
 
 For switch time, 3m switch time is too big. Needs to be like 30 seconds max and instant if plan demands it
+
+## My request:
+also, the science pack icons in runtime to depletion for example are not cut correctly
+
+## My request:
+**Megabase**
+High yield, balanced science, reserve for type
+
+should be
+
+**Megabase**
+Infinite focused research, accounted for logistics

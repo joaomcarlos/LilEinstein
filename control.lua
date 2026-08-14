@@ -663,6 +663,12 @@ script.on_event(defines.events.on_gui_click, function(e)
     elseif h == "toggle_research_details" then
         gui.toggle_research_details(p.index)
         repopulate = false
+    elseif h == "analyze_research_throughput" then
+        gui.analyze_research_throughput(p.index)
+        repopulate = false
+    elseif h == "close_research_throughput_analysis" then
+        gui.close_research_throughput_analysis(p.index)
+        repopulate = false
     elseif h == "close_science_pack_details" then
         local science = state.get_player_setting(p.index, "science_pack_panel_science")
         if science then

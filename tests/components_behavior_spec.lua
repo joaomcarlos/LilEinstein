@@ -920,6 +920,38 @@ local tests = {
         research_diagnostic.causes = many_causes
         components.refresh_research_metrics(1, anchor)
     end},
+    {"classifies throughput rows by need, use, production, and gap", function()
+        local diagnostic = {
+            science_pack_rates = {
+                {science = "science_a", maximum_per_minute = 100, working_per_minute = 100},
+                {science = "science_b", maximum_per_minute = 100, working_per_minute = 40},
+                {science = "science_c", maximum_per_minute = 100, working_per_minute = 100},
+                {science = "science_d", maximum_per_minute = 0, working_per_minute = 0}
+            },
+            dominant_missing_science = {science = "science_b"}
+        }
+        local forecast = {
+            science_a = {production_per_minute = 70},
+            science_b = {production_per_minute = 40},
+            science_c = {production_per_minute = 140},
+            science_d = {production_per_minute = 0}
+        }
+        local rows = components.build_science_throughput_rows(
+            {"science_a", "science_b", "science_c", "science_d"}, diagnostic, forecast)
+        local by_science = {}
+        for _, row in ipairs(rows) do
+            by_science[row.science] = row
+        end
+        t.assert_equal(rows[1].science, "science_b")
+        t.assert_equal(by_science.science_a.status, "bottleneck")
+        t.assert_equal(by_science.science_a.need, 100)
+        t.assert_equal(by_science.science_a.used, 100)
+        t.assert_equal(by_science.science_a.produced, 70)
+        t.assert_equal(by_science.science_a.gap, -30)
+        t.assert_equal(by_science.science_b.status, "starving")
+        t.assert_equal(by_science.science_c.status, "overproducing")
+        t.assert_equal(by_science.science_d.status, "balanced")
+    end},
     {"does not apply label-only style properties to the inspect button", function()
         reset_fixture()
         local anchor = make_details_anchor()
