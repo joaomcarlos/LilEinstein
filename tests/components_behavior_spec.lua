@@ -763,6 +763,12 @@ local tests = {
         t.assert_true(string.find(button.tooltip, "Estimated depletion: 42s", 1, true) ~= nil)
         t.assert_true(string.find(button.tooltip, "main: 12\norbit: 3", 1, true) ~= nil)
 
+        science_forecast.science_a.depletion_seconds = math.huge
+        components.clear_runtime_cache()
+        components.refresh_science_counts(1, anchor)
+        t.assert_true(string.find(button.tooltip, "Estimated depletion: ∞", 1, true) ~= nil)
+        science_forecast.science_a.depletion_seconds = 41.6
+
         science_breakdown.science_a.networks = {
             {label = "same-b", count = 3},
             {label = "same-a", count = 3}

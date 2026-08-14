@@ -800,6 +800,16 @@ research_details_panel = {
             name = "research_details_current_research",
             style = "lil_einstein_throughput_title_meta",
             caption = {"lil_einstein-throughput.current-research-none"}
+        }, {
+            type = "button",
+            name = "research_details_back_button",
+            style = "lil_einstein_throughput_back_button",
+            caption = {"lil_einstein-throughput.back"},
+            tags = {
+                lil_einstein_on_click = true,
+                handler = "toggle_research_details",
+                ignore_force_enable = true
+            }
         }}
     }, {
         type = "frame",

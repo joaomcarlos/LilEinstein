@@ -245,11 +245,18 @@ data.raw["gui-style"].default["lil_einstein_throughput_title"] = {
 data.raw["gui-style"].default["lil_einstein_throughput_title_meta"] = {
     type = "label_style",
     parent = "label",
-    width = 598,
+    width = 470,
     height = 32,
     horizontal_align = "right",
     vertical_align = "center",
     single_line = true
+}
+data.raw["gui-style"].default["lil_einstein_throughput_back_button"] = {
+    type = "button_style",
+    parent = "lil_einstein_button",
+    width = 120,
+    height = 32,
+    padding = 0
 }
 data.raw["gui-style"].default["lil_einstein_throughput_warning"] = {
     type = "frame_style",

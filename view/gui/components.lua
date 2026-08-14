@@ -72,7 +72,12 @@ local get_science_tooltip = function(player_index, force_index, science, total_c
                    gutil.format_si(forecast.consumption_per_minute or 0) .. " per minute"
 
     if forecast.depletion_seconds then
-        tt = tt .. "\nEstimated depletion: " .. tostring(math.floor(forecast.depletion_seconds + 0.5)) .. "s"
+        local depletion = forecast.depletion_seconds
+        if depletion == math.huge then
+            tt = tt .. "\nEstimated depletion: ∞"
+        else
+            tt = tt .. "\nEstimated depletion: " .. tostring(math.floor(depletion + 0.5)) .. "s"
+        end
     elseif forecast.recovery_seconds then
         tt = tt .. "\nEstimated recovery: " .. tostring(math.floor(forecast.recovery_seconds + 0.5)) .. "s"
     end

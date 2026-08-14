@@ -46,6 +46,8 @@ local tests = {
         t.assert_equal(styles.lil_einstein_throughput_details_panel.width, 1672)
         t.assert_equal(styles.lil_einstein_throughput_details_panel.height, 941)
         t.assert_equal(styles.lil_einstein_throughput_title.parent, "frame_title")
+        t.assert_equal(styles.lil_einstein_throughput_title_meta.width, 470)
+        t.assert_equal(styles.lil_einstein_throughput_back_button.width, 120)
         t.assert_equal(styles.lil_einstein_throughput_warning.type, "frame_style")
         t.assert_equal(styles.lil_einstein_throughput_meter.type, "progressbar_style")
         t.assert_equal(styles.lil_einstein_research_health_details_button.parent, "lil_einstein_button")

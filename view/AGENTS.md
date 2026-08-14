@@ -19,6 +19,7 @@ GUI layer for the LilEinstein mod: window lifecycle, layout construction, and pr
 - GUI style prototypes live in `data/style.lua`, not here; reference styles by name
 - Player GUI state persists under `storage.players[player_index]` via `state`/`gui.init_player`
 - The science-throughput details view replaces the normal content chrome with the approved full-window sprite-backed panel so the 1672x941 background remains aligned to the live window bounds
+- The science-throughput details view exposes an explicit Back button in its title bar; it routes through the same toggle path as the Research Health entry point and restores the normal content chrome
 - Throughput details render every lab-accepted science pack as one stable fixed-width row with live item sprites, need/used/produced rates, a signed supply-gap meter, and a native status indicator
 - Throughput status is shortage-first: the dominant missing pack is promoted to the warning strip, production shortfalls are separated from delivery bottlenecks, and positive gaps are labeled `OVERPRODUCING*`
 - The warning and optional analysis treatments are component backgrounds; the neutral full-window background must not bake in the red warning state
