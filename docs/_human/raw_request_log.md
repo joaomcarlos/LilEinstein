@@ -145,6 +145,8 @@ Codex could not read the local image at `/C:/Users/silent/.codex/generated_image
 
 AutoSwitchTechs is on but disabled. Ignore it.
 
+lets do it. ask devin to AutoSwitchTechs approach as a separate module, with tests and everything (guide him) so things stay organized
+
 ## 2026-08-14
 
 ensure you save this fact to ob1 too, so you remember it next i guess

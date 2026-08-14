@@ -3,7 +3,8 @@ package.path = ".\\?.lua;.\\?\\init.lua;" .. package.path
 local t = require("tests.testlib")
 local names = {
     "lib.util", "lib.const", "model.state", "model.tech", "model.lab", "model.env",
-    "lib.log", "model.research_weights", "model.research_policy", "model.queue"
+    "lib.log", "model.research_weights", "model.research_policy", "model.auto_switch",
+    "model.queue"
 }
 local original = {}
 for _, name in ipairs(names) do
@@ -2318,6 +2319,177 @@ local tests = {
         queue.invalidate_science_cache(1)
         queue.get_science_counts(1)
         _G.defines = nil
+    end},
+    {"auto_switch fallback switches a singleton queued pack-bound tech to a supplied unqueued alternate", function()
+        local force = reset_runtime()
+        game.tick = 33000
+        science_names = {"starved-pack", "available-pack"}
+        defines = {
+            entity_status = {
+                working = "working",
+                missing_science_packs = "missing-science-packs"
+            },
+            inventory = {lab_input = 1}
+        }
+
+        local old_availability = queue.get_science_availability
+        local old_bottleneck = queue.get_active_missing_science_bottleneck
+        local old_forecast = queue.get_science_forecast
+        local old_speed = queue.get_research_speed
+        policy_settings.forecast_seconds = 0
+        queue.get_science_availability = function()
+            return {['starved-pack'] = true, ['available-pack'] = true}
+        end
+        queue.get_science_forecast = function() return {} end
+        queue.get_research_speed = function() return 1 end
+        -- Simulate the staggered sampler/display being temporarily unavailable:
+        -- the existing bottleneck path finds nothing, so the auto_switch
+        -- direct-inventory fallback must confirm the pack-bound state.
+        queue.get_active_missing_science_bottleneck = function() return {} end
+
+        local current = xcur("current", {
+            sciences = {"starved-pack"},
+            research_unit_ingredients = {{name = "starved-pack", amount = 1}}
+        })
+        current.technology.research_unit_energy = 60
+        current.queued = true
+        local alternate = xcur("alternate", {
+            sciences = {"available-pack"},
+            research_unit_ingredients = {{name = "available-pack", amount = 1}}
+        })
+        alternate.technology.research_unit_energy = 60
+        tech_state = {current = current, alternate = alternate}
+        storage.forces[1].queue.queue = {"current"}
+        force.current_research = current.technology
+
+        -- Labs accept both packs but only hold available-pack; starved-pack is
+        -- present in zero accepting labs, so auto_switch must flag it missing.
+        local function add_lab(unit_number, contents)
+            local lab_entity = {
+                valid = true,
+                unit_number = unit_number,
+                frozen = false,
+                electric_buffer_size = 0,
+                energy = 100,
+                disabled_by_script = false,
+                disabled_by_control_behavior = false,
+                prototype = {
+                    name = "auto-switch-lab-" .. tostring(unit_number),
+                    lab_inputs = {"starved-pack", "available-pack"}
+                },
+                get_inventory = function()
+                    return {
+                        is_empty = function() return #contents == 0 end,
+                        get_contents = function() return contents end
+                    }
+                end
+            }
+            runtime_lab_content[unit_number] = {
+                lab = lab_entity,
+                latest_tick = game.tick,
+                latest_status = defines.entity_status.working,
+                latest_contents = contents
+            }
+        end
+        add_lab(1, {{name = "available-pack", count = 100}})
+        add_lab(2, {{name = "available-pack", count = 100}})
+
+        queue.check_and_switch_temp_research(force)
+        local selected = storage.forces[1].queue.temp_tech
+        local requested = requests
+
+        queue.get_science_availability = old_availability
+        queue.get_active_missing_science_bottleneck = old_bottleneck
+        queue.get_science_forecast = old_forecast
+        queue.get_research_speed = old_speed
+
+        t.assert_equal(selected, "alternate",
+            "the auto_switch fallback must switch a pack-bound current tech to a supplied unqueued alternate")
+        t.assert_equal(requested, 1,
+            "the emergency switch must request active reselection")
+    end},
+    {"auto_switch fallback rejects an alternate that fails existing sufficiency", function()
+        local force = reset_runtime()
+        game.tick = 33500
+        science_names = {"starved-pack", "unavailable-pack"}
+        defines = {
+            entity_status = {
+                working = "working",
+                missing_science_packs = "missing-science-packs"
+            },
+            inventory = {lab_input = 1}
+        }
+
+        local old_availability = queue.get_science_availability
+        local old_bottleneck = queue.get_active_missing_science_bottleneck
+        local old_forecast = queue.get_science_forecast
+        local old_speed = queue.get_research_speed
+        policy_settings.forecast_seconds = 0
+        queue.get_science_availability = function()
+            return {['starved-pack'] = true, ['unavailable-pack'] = false}
+        end
+        queue.get_science_forecast = function() return {} end
+        queue.get_research_speed = function() return 1 end
+        queue.get_active_missing_science_bottleneck = function() return {} end
+
+        local current = xcur("current", {
+            sciences = {"starved-pack"},
+            research_unit_ingredients = {{name = "starved-pack", amount = 1}}
+        })
+        current.technology.research_unit_energy = 60
+        current.queued = true
+        local alternate = xcur("alternate", {
+            sciences = {"unavailable-pack"},
+            research_unit_ingredients = {{name = "unavailable-pack", amount = 1}}
+        })
+        alternate.technology.research_unit_energy = 60
+        tech_state = {current = current, alternate = alternate}
+        storage.forces[1].queue.queue = {"current"}
+        force.current_research = current.technology
+
+        local function add_lab(unit_number, contents)
+            local lab_entity = {
+                valid = true,
+                unit_number = unit_number,
+                frozen = false,
+                electric_buffer_size = 0,
+                energy = 100,
+                disabled_by_script = false,
+                disabled_by_control_behavior = false,
+                prototype = {
+                    name = "reject-lab-" .. tostring(unit_number),
+                    lab_inputs = {"starved-pack", "unavailable-pack"}
+                },
+                get_inventory = function()
+                    return {
+                        is_empty = function() return #contents == 0 end,
+                        get_contents = function() return contents end
+                    }
+                end
+            }
+            runtime_lab_content[unit_number] = {
+                lab = lab_entity,
+                latest_tick = game.tick,
+                latest_status = defines.entity_status.working,
+                latest_contents = contents
+            }
+        end
+        -- Labs hold unavailable-pack but NOT starved-pack, so auto_switch flags
+        -- starved-pack as missing. The alternate requires unavailable-pack which
+        -- is not available in queue.get_science_availability, so it must be rejected.
+        add_lab(1, {{name = "unavailable-pack", count = 100}})
+        add_lab(2, {{name = "unavailable-pack", count = 100}})
+
+        queue.check_and_switch_temp_research(force)
+        local selected = storage.forces[1].queue.temp_tech
+
+        queue.get_science_availability = old_availability
+        queue.get_active_missing_science_bottleneck = old_bottleneck
+        queue.get_science_forecast = old_forecast
+        queue.get_research_speed = old_speed
+
+        t.assert_equal(selected, nil,
+            "an alternate that fails existing sufficiency must not be selected by the auto_switch fallback")
     end},
     {"rotates parallel candidates and honors the dedicated-mod handoff", function()
         local force = reset_runtime()

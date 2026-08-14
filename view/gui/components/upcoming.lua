@@ -21,7 +21,7 @@ local upcoming_icon_progress_height = 4
 local upcoming_name_width = 272
 local upcoming_science_icon_size = 14
 local upcoming_time_width = 68
-local upcoming_content_bottom_margin = 8
+local upcoming_content_bottom_margin = 22
 
 local localize_with_fallback = function(key, fallback, ...)
     return {"?", {key, ...}, fallback}

@@ -282,6 +282,7 @@ tests[#tests + 1] = {"renders a synchronous populated list with current and pinn
     t.assert_true(find_child(first, "upcoming_icon_progress").visible)
     t.assert_equal(find_child(first, "upcoming_icon_progress").value, 0.4)
     t.assert_equal(find_child(first, "upcoming_duration_label").caption[3], "2m 00s")
+    t.assert_equal(first.children[4].style.bottom_margin, 22)
 
     t.assert_equal(second.tags.technology, "logistics")
     t.assert_equal(second.tags.rank, 2)
@@ -290,6 +291,7 @@ tests[#tests + 1] = {"renders a synchronous populated list with current and pinn
     t.assert_equal(find_child(second, "upcoming_progress_label").caption, "25.00%")
     t.assert_equal(find_child(second, "upcoming_duration_label").caption[3], "1m 30s")
     t.assert_equal(find_child(second, "upcoming_wait_label").caption[3][3][3], "30s")
+    t.assert_equal(second.children[4].style.bottom_margin, 22)
 end}
 
 tests[#tests + 1] = {"renders the empty state for a nil or empty display", function()

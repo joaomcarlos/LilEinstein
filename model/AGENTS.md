@@ -11,7 +11,8 @@ Runtime data model and research-autopilot logic for the LilEinstein Factorio mod
 - `tech.lua` — extended technology state (`state_ext`) layered over `LuaTechnology`
 - `queue.lua` — core queue engine: force queue, current tech selection, science budgets/deficits, research-rate history, temp-tech switching with pinned/score/priority rules, discounted scoring for unavailable techs, depletion-horizon supply checks, and plan import/export. Largest and most sensitive module
 - `queue/modqueue.lua` — documented data-model stub for the per-force queue entries; `queue/parser.lua` is a placeholder
-- `lab.lua` — lab discovery, supply clusters, logistic-network awareness, per-prototype accepted packs
+- `lab.lua` — lab discovery, supply clusters, logistic-network awareness, per-prototype accepted packs; `get_science_availability` is a thin compatibility wrapper delegating to `auto_switch`
+- `auto_switch.lua` — AutoSwitch-style emergency science detector: sole owner of the direct registered-lab inventory availability scan with a bounded per-force cache; consumed by `queue.lua` only as an emergency fallback when the current technology is materially pack-bound and the staggered sampler/display evidence is temporarily unavailable
 - `research_policy.lua` — strategy profiles (`policy.strategy_order`), infinite-research repeat policies
 - `research_weights.lua` — editable AI scoring tables for tech prioritization; designed to be regenerated via external AI chat (see file header)
 - `cmd.lua` — chat/console commands; wires model + gui
@@ -19,7 +20,7 @@ Runtime data model and research-autopilot logic for the LilEinstein Factorio mod
 ## Local Contracts
 
 - Data model follows `standard.md`: `storage.<module>.<key>`, `storage.forces[force_index].<module>.<key>`, `storage.players[player_index].<module>.<key>`
-- Module dependency order (must not be violated by new requires): env, state → tech → queue → cmd/lab; `cmd.lua` is the only model file allowed to require `view.gui`
+- Module dependency order (must not be violated by new requires): env, state → tech → queue → cmd/lab; `cmd.lua` is the only model file allowed to require `view.gui`. `auto_switch.lua` requires `env` only (as a fallback when callers omit `all_sciences`); `queue.lua` and `lab.lua` both require `auto_switch` at the top level without creating a circular dependency
 - Temp-tech switching respects pinned techs, science priority, and a symmetric score margin; unavailable techs are scored with a discount and never act as runtime candidates
 - The explicit queue remains authoritative for normal selection; only a materially PACK-BOUND active technology may widen the temporary-candidate search to a fixed-size scored slice of eligible technologies outside that queue, while preserving the original queued target for recovery
 - There is no finish-current threshold override; near-complete research can still yield to a higher-priority or supplied alternate when the switching rules select it
@@ -29,6 +30,7 @@ Runtime data model and research-autopilot logic for the LilEinstein Factorio mod
 - When the bounded lab sampler temporarily has less than 80% fresh coverage, active science-supply checks may use a recent completed PACK-BOUND display snapshot for the same live technology; future or older snapshots are ignored
 - Transit science used by health and depletion forecasts is aggregated once per force per bounded refresh window from platform hubs and cargo-pod inventories; callers reuse the cached per-pack totals instead of scanning every surface once per science
 - Emergency fallback reuses one availability snapshot, one forecast, and one precomputed per-science cluster-scope stock map across its bounded candidate slice; candidate count must not hide a technologies-by-sciences-by-clusters maintenance spike
+- `auto_switch.lua` is the sole owner of the direct registered-lab inventory availability scan; it uses LilEinstein's already-registered lab runtime data and never performs a world-wide `find_entities_filtered` search. It caches per-force results for a short bounded interval and exposes explicit `invalidate`/`force_refresh` seams. The queue consumes `auto_switch.get_missing_sciences` only as an emergency supplement when the staggered sampler/display bottleneck is temporarily empty; it must not reorder a healthy queue, replace `queue.get_science_availability`'s cluster/policy semantics, or treat a stale/empty/no-lab scan as starvation. Candidate acceptance still passes the existing sufficiency/forecast path
 - The per-force research diagnostic measures only samples for the current technology, classifies decision states from named material-loss thresholds, and emits deterministic semantic display clusters without persisting logistic networks
 - The per-force research diagnostic also emits exact science-pack demand per minute for all current-research ingredients, separating maximum compatible-lab demand from currently working-lab demand; pack demand uses lab/quality science-pack drain with research-unit consumption and is not inflated by productivity bonuses
 - Missing-science evidence also records the physical normal-quality science-pack rate for the affected labs; its parenthesized SPM remains capacity-loss evidence and overlapping pack impacts are not additive

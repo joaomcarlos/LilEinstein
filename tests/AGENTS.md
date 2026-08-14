@@ -9,8 +9,8 @@ runtime, data-stage, migration, queue, policy, lab, and GUI contracts.
 
 - `testlib.lua` — shared assertions, module isolation, and suite runner.
 - `run_all.lua` — canonical local suite entry point.
-- `*_spec.lua` — focused public-seam tests; queue, policy, lab, model, view, data,
-  migration, translation, and GUI guard contracts are kept in separate suites.
+- `*_spec.lua` — focused public-seam tests; queue, policy, lab, auto_switch, model,
+  view, data, migration, translation, and GUI guard contracts are kept in separate suites.
 - `coverage.lua` — line-hit instrumentation used by `scripts/measure_coverage.ps1`.
 - `factorio/` — disposable test-only mod and its local DOX contract.
 
@@ -23,6 +23,7 @@ runtime, data-stage, migration, queue, policy, lab, and GUI contracts.
 - Stale-sampler regressions also keep a recent completed PACK-BOUND display snapshot and assert that the full switch path selects the supplied alternate when the bounded live sampler has not reached 80% fresh coverage.
 - Starvation fallback regressions keep the explicit queue at one pack-bound technology and place the supplied alternate outside it; recovery regressions prove a small idle buffer cannot satisfy a high-demand target.
 - Emergency fallback regressions cap per-check technology and availability work, reject a long available-but-forecast-insufficient alternate, accept a finite alternate stocked to completion, preserve compatible-scope cluster attribution, and prove that incompatible remote stock, force-wide production, and a one-time partial delivery cannot restore a target before enough local stock is reachable.
+- AutoSwitch emergency detector regressions exercise `auto_switch.get_availability`, `auto_switch.get_missing_sciences`, and `auto_switch.invalidate` with valid, empty, frozen, unpowered, disabled, invalid, and mixed-pack labs; assert exact `with`/`allowing`/`fraction` counts, cache reuse within the bounded interval, explicit invalidation, force-refresh, and that a no-lab or empty snapshot is not treated as starvation. Queue integration regressions exercise `queue.check_and_switch_temp_research` with the staggered sampler/display bottleneck stubbed empty so the direct-inventory fallback confirms a singleton queued pack-bound technology and switches to a supplied unqueued alternate, while an alternate that fails existing sufficiency is rejected.
 - Throughput GUI/model regressions cover fixed-width cluster rows, deterministic lab descriptors, and the affected-lab inspection transition.
 - Science-pack inspector regressions cover lazy world scans, Nauvis-only lab rows, per-planet stock including zero values, in-transit platform stock, stable row refreshes, and the open-panel countdown seam.
 - Transit forecast regressions preserve per-pack cargo-pod totals while asserting that a bounded refresh scans cargo pods once per surface rather than once per science pack.

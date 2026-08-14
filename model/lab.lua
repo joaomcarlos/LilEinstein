@@ -1,5 +1,6 @@
 local util = require("lib.util")
 local env = require("model.env")
+local auto_switch = require("model.auto_switch")
 
 local lab = {}
 
@@ -345,65 +346,24 @@ lab.get_labs_fill_rate = function(force_index)
 end
 
 lab.get_science_availability = function(force_index)
-    -- Compute per-science lab availability using the AutoSwitchTechs algorithm.
-    -- For each science pack, count how many labs currently have it vs how many
-    -- labs allow that pack. Returns {science_name = {with = n, allowing = n, frac = n}}.
-    local slc = get(force_index, keys.lab_content)
+    -- Compatibility wrapper: the direct-inventory availability scan now lives
+    -- in model/auto_switch.lua. Delegate rather than duplicate logic.
+    -- auto_switch has only a load-time env dependency and no lab dependency,
+    -- so this top-level require does not create a circular dependency.
+    local slc = get(force_index, keys.lab_content) or {}
     local all_sciences = env.get_all_sciences()
-
-    local sci_data = {}
-    for _, sci in pairs(all_sciences) do
-        sci_data[sci] = {with = 0, allowing = 0}
-    end
-
-    for lab_id, lcur in pairs(slc or {}) do
-        local lab_entity = lcur.lab
-        if not lab_entity or not lab_entity.valid then
-            goto continue
-        end
-
-        -- Skip frozen, unpowered, or disabled labs
-        if lab_entity.frozen then goto continue end
-        if lab_entity.electric_buffer_size ~= nil and lab_entity.electric_buffer_size > 0 and lab_entity.energy == 0 then goto continue end
-        if lab_entity.disabled_by_script or lab_entity.disabled_by_control_behavior then goto continue end
-
-        -- Skip labs with no science packs
-        local inv = lab_entity.get_inventory(defines.inventory.lab_input)
-        if not inv or inv.is_empty() then goto continue end
-
-        -- Record which packs this lab currently holds
-        local has_packs = {}
-        for _, item in pairs(inv.get_contents()) do
-            if sci_data[item.name] ~= nil then
-                has_packs[item.name] = true
-            end
-        end
-
-        if next(has_packs) == nil then goto continue end
-
-        -- Count allowing vs having for each pack the lab accepts
-        for _, pack_name in pairs(lab_entity.prototype.lab_inputs or {}) do
-            if sci_data[pack_name] then
-                sci_data[pack_name].allowing = sci_data[pack_name].allowing + 1
-                if has_packs[pack_name] then
-                    sci_data[pack_name].with = sci_data[pack_name].with + 1
-                end
-            end
-        end
-
-        ::continue::
-    end
-
+    local availability = auto_switch.get_availability(force_index, true, slc, all_sciences)
+    -- Map fraction -> frac for backward compatibility with existing callers.
     local res = {}
-    for pack_name, data in pairs(sci_data) do
-        if data.allowing > 0 then
-            data.frac = data.with / data.allowing
-        else
-            data.frac = 0
+    for pack_name, data in pairs(availability) do
+        if type(pack_name) == "string" and pack_name:sub(1, 2) ~= "__" then
+            res[pack_name] = {
+                with = data.with,
+                allowing = data.allowing,
+                frac = data.fraction
+            }
         end
-        res[pack_name] = data
     end
-
     return res
 end
 

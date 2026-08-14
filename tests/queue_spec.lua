@@ -2,7 +2,7 @@ package.path = ".\\?.lua;.\\?\\init.lua;" .. package.path
 
 local preload_names = {
     "lib.util", "lib.log", "lib.const", "model.state", "model.tech", "model.lab",
-    "model.env", "model.research_weights", "model.research_policy"
+    "model.env", "model.research_weights", "model.research_policy", "model.auto_switch"
 }
 local original_preloads = {}
 for _, name in ipairs(preload_names) do
@@ -20,7 +20,7 @@ local function reset_modules()
         if name == "model.queue" or name == "lib.util" or name == "lib.const" or
             name == "lib.log" or name == "model.state" or name == "model.tech" or
             name == "model.lab" or name == "model.env" or name == "model.research_weights" or
-            name == "model.research_policy" then
+            name == "model.research_policy" or name == "model.auto_switch" then
             package.loaded[name] = nil
         end
     end

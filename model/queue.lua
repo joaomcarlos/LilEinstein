@@ -8,6 +8,7 @@ local env = require("model.env")
 local logger = require("lib.log")
 local rw = require("model.research_weights")
 local policy = require("model.research_policy")
+local auto_switch = require("model.auto_switch")
 
 local queue = {}
 
@@ -388,7 +389,21 @@ local science_supply_is_sufficient = function(
         f.current_research.name == xcur.technology.name then
         local live_bottleneck = queue.get_active_missing_science_bottleneck and
             queue.get_active_missing_science_bottleneck(force_index, xcur)
-        return not live_bottleneck or not next(live_bottleneck)
+        if live_bottleneck and next(live_bottleneck) then
+            return false
+        end
+        -- Emergency fallback: when the staggered sampler/display evidence is
+        -- temporarily unavailable, use the direct registered-lab inventory scan
+        -- to confirm a materially pack-bound current technology. Do not treat a
+        -- stale or empty scan as starvation.
+        local emergency_missing = auto_switch.get_missing_sciences(
+            force_index, xcur.technology,
+            lab.get_runtime_lab_content(force_index),
+            env.get_all_sciences())
+        if emergency_missing and next(emergency_missing) then
+            return false
+        end
+        return true
     end
 
     local availability = supplied_availability or queue.get_science_availability(force_index)
@@ -1188,6 +1203,16 @@ queue.check_and_switch_temp_research = function(f)
     -- Current tech is low on packs. Find next suitable tech in order.
     local lsci = queue.get_science_availability(f.index)
     local live_bottleneck = queue.get_active_missing_science_bottleneck(f.index, xcur)
+    -- Emergency fallback: when the staggered sampler/display evidence is
+    -- temporarily unavailable (no bottleneck detected), use the direct
+    -- registered-lab inventory scan to confirm a materially pack-bound current
+    -- technology. Do not treat a stale or empty scan as starvation.
+    if not next(live_bottleneck) then
+        live_bottleneck = auto_switch.get_missing_sciences(
+            f.index, xcur.technology,
+            lab.get_runtime_lab_content(f.index),
+            env.get_all_sciences())
+    end
     if next(live_bottleneck) then
         local effective_availability = {}
         for science, available in pairs(lsci or {}) do
@@ -2259,6 +2284,7 @@ queue.invalidate_science_cache = function(force_index)
     research_capacity_cache[force_index] = nil
     emergency_candidate_jobs[force_index] = nil
     science_pack_insight_cache[force_index] = nil
+    auto_switch.invalidate(force_index)
     -- Keep the last completed report visible while the replacement is measured.
     -- tick_research_health_snapshot swaps in the new complete snapshot atomically.
     research_health_jobs[force_index] = nil

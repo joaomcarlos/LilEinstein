@@ -8,7 +8,7 @@ t.install_module("model.env", {
         return science_list
     end
 })
-t.reset_modules({"model.lab"})
+t.reset_modules({"model.lab", "model.auto_switch"})
 
 local lab = require("model.lab")
 local tests = {}
@@ -234,4 +234,5 @@ end}
 local passed = t.run("lab_spec", tests)
 package.preload["model.env"] = old_env
 package.loaded["model.lab"] = nil
+package.loaded["model.auto_switch"] = nil
 return passed

@@ -21,6 +21,7 @@ local specs = {
     "tests.policy_spec",
     "tests.policy_edges_spec",
     "tests.lab_spec",
+    "tests.auto_switch_spec",
     "tests.gutil_spec",
     "tests.gutil_deep_spec",
     "tests.analyzer_spec",
