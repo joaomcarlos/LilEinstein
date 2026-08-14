@@ -31,6 +31,7 @@ local default_settings = {
     parallel_research = false,
     min_switch_seconds = 20,
     forecast_seconds = 120,
+    plan_horizon_minutes = 30,
     science_lower_threshold = 0.25,
     science_upper_threshold = 0.80,
     cluster_mode = true,
@@ -104,9 +105,11 @@ local sanitize_setting = function(key, value)
     elseif key == "reserve_for_type" then
         return value, type(value) == "string" and valid_reserve_for_types[value] == true
     elseif key == "min_switch_seconds" then
-        return math.floor(clamp(value, 5, 600)), true
+        return math.floor(clamp(value, 5, 30)), true
     elseif key == "forecast_seconds" then
-        return math.floor(clamp(value, 0, 3600)), true
+        return math.floor(clamp(value, 0, 300)), true
+    elseif key == "plan_horizon_minutes" then
+        return math.floor(clamp(value, 1, 300)), true
     elseif key == "replan_interval_seconds" then
         return math.floor(clamp(value, replan_interval_min_seconds, replan_interval_max_seconds)), true
     elseif key == "parallel_slots" then
