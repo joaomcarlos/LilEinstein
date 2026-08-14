@@ -464,6 +464,7 @@ local science_pane = {
 local policy_section = function(name, caption)
     return {
         type = "frame",
+        name = name .. "_section",
         style = "inside_shallow_frame",
         direction = "vertical",
         children = {{
@@ -506,20 +507,39 @@ local policy_panel = {
             }}
         }}
     }, {
+        type = "flow",
+        name = "policy_tab_bar",
+        direction = "horizontal",
+        style = "lil_einstein_horizontal_flow_nospacing",
+        children = {
+            {type = "button", name = "policy_tab_automation", caption = {"lil_einstein-policy.automation"},
+                tags = {lil_einstein_on_click = true, handler = "policy_tab", tab = "automation"}},
+            {type = "button", name = "policy_tab_budget", caption = {"lil_einstein-policy.plan-budget"},
+                tags = {lil_einstein_on_click = true, handler = "policy_tab", tab = "budget"}},
+            {type = "button", name = "policy_tab_science", caption = {"lil_einstein-policy.science-policies"},
+                tags = {lil_einstein_on_click = true, handler = "policy_tab", tab = "science"}},
+            {type = "button", name = "policy_tab_objectives", caption = {"lil_einstein-policy.manual-objectives"},
+                tags = {lil_einstein_on_click = true, handler = "policy_tab", tab = "objectives"}},
+            {type = "button", name = "policy_tab_presets", caption = {"lil_einstein-policy.plan-presets"},
+                tags = {lil_einstein_on_click = true, handler = "policy_tab", tab = "presets"}},
+            {type = "button", name = "policy_tab_history", caption = {"lil_einstein-policy.history"},
+                tags = {lil_einstein_on_click = true, handler = "policy_tab", tab = "history"}}
+        }
+    }, {
         type = "scroll-pane",
         name = "policy_scroll_pane",
         direction = "vertical",
         children = {{
             type = "table",
             name = "policy_sections_table",
-            column_count = 2,
+            column_count = 1,
             children = {
                 policy_section("policy_general_flow", {"lil_einstein-policy.automation"}),
                 policy_section("policy_budget_flow", {"lil_einstein-policy.plan-budget"}),
                 policy_section("policy_science_flow", {"lil_einstein-policy.science-policies"}),
                 policy_section("policy_trigger_flow", {"lil_einstein-policy.manual-objectives"}),
                 policy_section("policy_preset_flow", {"lil_einstein-policy.plan-presets"}),
-                policy_section("policy_history_flow", {"lil_einstein-policy.multiplayer-history"})
+                policy_section("policy_history_flow", {"lil_einstein-policy.history"})
             }
         }}
     }}

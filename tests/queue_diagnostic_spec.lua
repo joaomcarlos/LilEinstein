@@ -294,7 +294,7 @@ local tests = {
         local forecast = queue.get_science_forecast(1)
         t.assert_equal(forecast["automation-science-pack"].net_per_minute, 8)
         t.assert_true(forecast["logistic-science-pack"].recovery_seconds ~= nil)
-        t.assert_nil(forecast["automation-science-pack"].depletion_seconds)
+        t.assert_equal(forecast["automation-science-pack"].depletion_seconds, math.huge)
         game.tick = game.tick + 1
         queue.get_science_counts(1)
         runtime[3].latest_tick = -1000
@@ -1451,8 +1451,8 @@ local tests = {
         }
 
         t.assert_true(finish_health_snapshot())
-        t.assert_equal(scan_counts.nauvis, 0)
-        t.assert_equal(scan_counts.vulcanus, 0)
+        t.assert_equal(scan_counts.nauvis, 2)
+        t.assert_equal(scan_counts.vulcanus, 2)
 
         local insight = queue.get_science_pack_insight(1, "automation-science-pack")
         t.assert_equal(insight.labs.surface_name, "nauvis")

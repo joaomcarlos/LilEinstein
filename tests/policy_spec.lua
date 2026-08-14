@@ -354,6 +354,19 @@ tests[#tests + 1] = {"filters history by equality predicates and stays bounded",
     t.assert_equal(#policy.get_history(1), 40)
 end}
 
+tests[#tests + 1] = {"normalizes legacy history categories for the live filters", function()
+    reset_policy()
+    policy.record_action(1, nil, "toggle_policy_setting", "planning_paused")
+    policy.record_action(1, nil, "add_queue_bottom", "tech-a")
+    policy.record_action(1, nil, "strategy", "megabase")
+    policy.record_action(1, nil, "instant_switch", "plan-demand")
+    t.assert_equal(#policy.get_history(1, {category = "policy"}), 1)
+    t.assert_equal(#policy.get_history(1, {category = "queue"}), 1)
+    t.assert_equal(#policy.get_history(1, {category = "strategy"}), 1)
+    t.assert_equal(#policy.get_history(1, {category = "switch"}), 1)
+    t.assert_equal(policy.get_history(1, {category = "policy"})[1].detail, "planning_paused")
+end}
+
 tests[#tests + 1] = {"manages instant switch request, consume, and reason preservation", function()
     reset_policy()
     t.assert_false(policy.has_instant_switch_request(1))

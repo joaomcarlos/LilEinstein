@@ -12,6 +12,15 @@ local gctech = require("view.gui.components.tech")
 local gcupcoming = require("view.gui.components.upcoming")
 
 local content = {}
+local policy_tabs = {
+    {name = "automation", section = "policy_general_flow", button = "policy_tab_automation"},
+    {name = "budget", section = "policy_budget_flow", button = "policy_tab_budget"},
+    {name = "science", section = "policy_science_flow", button = "policy_tab_science"},
+    {name = "objectives", section = "policy_trigger_flow", button = "policy_tab_objectives"},
+    {name = "presets", section = "policy_preset_flow", button = "policy_tab_presets"},
+    {name = "history", section = "policy_history_flow", button = "policy_tab_history"}
+}
+local policy_history_filters = {"all", "switch", "strategy", "policy", "queue", "setting"}
 local ordered_force_settings = {"requeue_infinite_tech", "auto_research"}
 local research_graph_column_count = 200
 local research_graph_sample_seconds = 3
@@ -2748,6 +2757,33 @@ local add_policy_number = function(flow, force_index, setting_name, caption, ste
     })
 end
 
+local add_policy_dropdown = function(flow, force_index, setting_name, caption, order, item_prefix, tooltip)
+    local row = flow.add({type = "flow", direction = "horizontal"})
+    row.style.vertical_align = "center"
+    local label = row.add({type = "label", caption = caption, tooltip = tooltip})
+    label.style.width = 265
+    local items = {}
+    local selected = 1
+    local current = policy.get_setting(force_index, setting_name)
+    for index, value in ipairs(order or {}) do
+        items[index] = {"lil_einstein-policy." .. item_prefix .. value}
+        if value == current then
+            selected = index
+        end
+    end
+    row.add({
+        type = "drop-down",
+        items = items,
+        selected_index = selected,
+        tooltip = tooltip,
+        tags = {
+            lil_einstein_on_state_change = true,
+            handler = "policy_policy_dropdown",
+            setting_name = setting_name
+        }
+    })
+end
+
 local populate_policy_general = function(player_index, anchor)
     local p = game.get_player(player_index)
     local flow = gutil.get_child(anchor, "policy_general_flow")
@@ -2793,7 +2829,13 @@ local populate_policy_general = function(player_index, anchor)
         {"lil_einstein-policy.performance-mode-description"})
     add_policy_number(flow, p.force.index, "min_switch_seconds", {"lil_einstein-policy.minimum-switch-time"}, 5, "s")
     add_policy_number(flow, p.force.index, "forecast_seconds", {"lil_einstein-policy.forecast-horizon"}, 30, "s")
+    add_policy_number(flow, p.force.index, "replan_interval_seconds", {"lil_einstein-policy.replan-interval"}, 30, "s")
     add_policy_number(flow, p.force.index, "parallel_slots", {"lil_einstein-policy.parallel-slots"}, 1)
+    add_policy_toggle(flow, p.force.index, "instant_switch_override", {"lil_einstein-policy.instant-switch-override"},
+        {"lil_einstein-policy.instant-switch-override-description"})
+    add_policy_dropdown(flow, p.force.index, "reserve_for_type", {"lil_einstein-policy.reserve-for-type"},
+        policy.reserve_for_type_order, "reserve-for-type-", {"lil_einstein-policy.reserve-for-type-description"})
+    add_policy_number(flow, p.force.index, "plan_horizon_minutes", {"lil_einstein-policy.plan-horizon"}, 5, "m")
 end
 
 local format_policy_time = function(seconds)
@@ -2801,7 +2843,7 @@ local format_policy_time = function(seconds)
         return "--"
     end
     if seconds == math.huge then
-        return "never"
+        return "∞"
     end
     if seconds >= 3600 then
         return string.format("%.1fh", seconds / 3600)
@@ -2889,7 +2931,7 @@ local populate_policy_science = function(player_index, anchor)
         })
         local rates = row.add({
             type = "label",
-            caption = string.format("%s  +%s/−%s min  empty %s", gutil.format_cost(data.stock or 0),
+            caption = string.format("%s  +%s/−%s min  runtime %s", gutil.format_cost(data.stock or 0),
                 gutil.format_si(data.production_per_minute or 0),
                 gutil.format_si(data.consumption_per_minute or 0), format_policy_time(data.depletion_seconds))
         })
@@ -3104,9 +3146,30 @@ local populate_policy_history = function(player_index, anchor)
     flow.clear()
     flow.style.width = 690
     flow.style.padding = 8
+    local filter_row = flow.add({type = "flow", direction = "horizontal"})
+    filter_row.style.vertical_align = "center"
+    local filter_label = filter_row.add({type = "label", caption = {"lil_einstein-policy.history-filter"}})
+    filter_label.style.width = 265
+    local selected_filter = state.get_player_setting(player_index, "policy_history_filter", "all")
+    local selected_index = 1
+    local filter_items = {}
+    for index, value in ipairs(policy_history_filters) do
+        filter_items[index] = {"lil_einstein-policy.history-filter-" .. value}
+        if value == selected_filter then
+            selected_index = index
+        end
+    end
+    filter_row.add({
+        type = "drop-down",
+        items = filter_items,
+        selected_index = selected_index,
+        tags = {lil_einstein_on_state_change = true, handler = "policy_history_filter"}
+    })
     add_policy_toggle(flow, p.force.index, "multiplayer_lock", {"lil_einstein-policy.multiplayer-lock"},
         {"lil_einstein-policy.multiplayer-lock-description"}, p.admin)
-    local history = policy.get_history(p.force.index)
+    local filter = state.get_player_setting(player_index, "policy_history_filter", "all")
+    local history = filter == "all" and policy.get_history(p.force.index) or
+        policy.get_history(p.force.index, {category = filter})
     if #history == 0 then
         flow.add({type = "label", caption = {"lil_einstein-policy.no-history"}})
         return
@@ -3114,11 +3177,38 @@ local populate_policy_history = function(player_index, anchor)
     for index = 1, math.min(10, #history) do
         local item = history[index]
         local seconds_ago = math.max(0, math.floor((game.tick - (item.tick or game.tick)) / 60))
+        local detail = item.detail or item.reason or item.trigger or item.action or ""
         flow.add({
             type = "label",
             caption = {"lil_einstein-policy.history-row", format_policy_time(seconds_ago), item.player, item.action,
-                       item.detail}
+                       detail}
         })
+    end
+end
+
+local apply_policy_tab = function(player_index, anchor)
+    local selected = state.get_player_setting(player_index, "policy_active_tab", "automation")
+    local valid = false
+    for _, tab in ipairs(policy_tabs) do
+        if tab.name == selected then
+            valid = true
+            break
+        end
+    end
+    if not valid then
+        selected = "automation"
+        state.set_player_setting(player_index, "policy_active_tab", selected)
+    end
+
+    for _, tab in ipairs(policy_tabs) do
+        local section = gutil.get_child(anchor, tab.section .. "_section")
+        if section then
+            section.visible = tab.name == selected
+        end
+        local button = gutil.get_child(anchor, tab.button)
+        if button then
+            button.enabled = tab.name ~= selected
+        end
     end
 end
 
@@ -3139,6 +3229,7 @@ local populate_policy_panel = function(player_index, anchor)
     populate_policy_triggers(player_index, anchor)
     populate_policy_presets(player_index, anchor)
     populate_policy_history(player_index, anchor)
+    apply_policy_tab(player_index, anchor)
 end
 
 local policy_panel_is_visible = function(anchor)

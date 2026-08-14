@@ -244,6 +244,7 @@ local get_bounded_emergency_candidate
 local set_runtime_research_queue
 local get_runtime_candidate_average_cost
 local get_inactive_science_demand_spm
+local get_in_transit_science_total
 local science_demand_cache = {}
 local research_capacity_cache = {}
 local emergency_candidate_jobs = {}
@@ -3258,6 +3259,41 @@ local process_research_health_availability = function(job)
     return false
 end
 
+-- Transit stock is not part of lab/network counts yet, but it is already
+-- committed science. Include it in the player-facing runtime forecast so an
+-- incoming delivery extends the depletion runtime instead of showing a false
+-- imminent starvation.
+get_in_transit_science_total = function(force_index, science)
+    local force = game.forces[force_index]
+    local total = 0
+    for _, platform in pairs(force and force.platforms or {}) do
+        local ok_platform, connection, hub = pcall(function()
+            return platform and platform.valid and platform.space_connection, platform and platform.hub
+        end)
+        if ok_platform and connection and hub then
+            local ok_count, count = pcall(function() return hub.get_item_count(science) end)
+            if ok_count and type(count) == "number" then
+                total = total + math.max(0, count)
+            end
+        end
+    end
+    for _, surface in pairs(game.surfaces or {}) do
+        local ok_pods, pods = pcall(function()
+            return surface.find_entities_filtered({force = force_index, type = "cargo-pod",
+                                                   has_item_inside = science})
+        end)
+        if ok_pods and type(pods) == "table" then
+            for _, pod in pairs(pods) do
+                local ok_count, count = pcall(function() return pod.get_item_count(science) end)
+                if ok_count and type(count) == "number" then
+                    total = total + math.max(0, count)
+                end
+            end
+        end
+    end
+    return total
+end
+
 local process_research_health_forecast = function(job, science)
     local f = game.forces[job.force_index]
     if not f then
@@ -3298,14 +3334,18 @@ local process_research_health_forecast = function(job, science)
     local science_policy = policy.get_science_policy(job.force_index, science)
     local target = (job.lab_input_counts[science] or 0) * science_reserve_per_lab *
         science_policy.upper_threshold
-    local stock = job.counts[science] or 0
+    local in_transit = get_in_transit_science_total(job.force_index, science)
+    local stock = (job.counts[science] or 0) + in_transit
     local net = production - consumption
     local depletion_seconds
     local recovery_seconds
-    if net < -0.001 and stock > 0 then
-        depletion_seconds = (stock / -net) * 60
+    if net < -0.001 then
+        depletion_seconds = stock > 0 and (stock / -net) * 60 or 0
     elseif net > 0.001 and stock < target then
         recovery_seconds = ((target - stock) / net) * 60
+        depletion_seconds = math.huge
+    else
+        depletion_seconds = math.huge
     end
     job.forecast[science] = {
         stock = stock,
@@ -3313,6 +3353,7 @@ local process_research_health_forecast = function(job, science)
         production_per_minute = production,
         consumption_per_minute = consumption,
         net_per_minute = net,
+        in_transit = in_transit,
         depletion_seconds = depletion_seconds,
         recovery_seconds = recovery_seconds
     }
@@ -3932,14 +3973,18 @@ queue.get_science_forecast = function(force_index)
                 ((cluster.lab_input_counts and cluster.lab_input_counts[science]) or 0)
         end
         local target = relevant_lab_count * science_reserve_per_lab * science_policy.upper_threshold
-        local stock = counts[science] or 0
+        local in_transit = get_in_transit_science_total(force_index, science)
+        local stock = (counts[science] or 0) + in_transit
         local net = production - consumption
         local depletion_seconds
         local recovery_seconds
-        if net < -0.001 and stock > 0 then
-            depletion_seconds = (stock / -net) * 60
+        if net < -0.001 then
+            depletion_seconds = stock > 0 and (stock / -net) * 60 or 0
         elseif net > 0.001 and stock < target then
             recovery_seconds = ((target - stock) / net) * 60
+            depletion_seconds = math.huge
+        else
+            depletion_seconds = math.huge
         end
 
         res[science] = {
@@ -3948,6 +3993,7 @@ queue.get_science_forecast = function(force_index)
             production_per_minute = production,
             consumption_per_minute = consumption,
             net_per_minute = net,
+            in_transit = in_transit,
             depletion_seconds = depletion_seconds,
             recovery_seconds = recovery_seconds
         }

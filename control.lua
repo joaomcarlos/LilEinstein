@@ -279,9 +279,11 @@ local run_force_maintenance = function()
 
         -- Event-driven requests handle ordinary queue changes. Keep a slower
         -- fallback for external changes while idle and a 30-second active check.
+        local replan_seconds = policy.get_setting(f.index, "replan_interval_seconds") or 120
+        local replan_ticks = math.max(60, math.floor(replan_seconds * 60))
         local periodic_research_check = (not f.current_research and
             game.tick % const.runtime_intervals.idle_research_check_ticks == 0) or
-            (f.current_research and game.tick % 1800 == 0)
+            (f.current_research and game.tick % replan_ticks == 0)
         if not needs_next_research and periodic_research_check then
             queue.start_next_research(f)
         end
@@ -660,6 +662,14 @@ script.on_event(defines.events.on_gui_click, function(e)
     elseif h == "toggle_policy_panel" then
         gui.toggle_policy_panel(p.index)
         repopulate = false
+    elseif h == "policy_tab" then
+        local selected = t.tab
+        for _, tab in ipairs({"automation", "budget", "science", "objectives", "presets", "history"}) do
+            if tab == selected then
+                state.set_player_setting(p.index, "policy_active_tab", selected)
+                break
+            end
+        end
     elseif h == "toggle_research_details" then
         gui.toggle_research_details(p.index)
         repopulate = false
@@ -760,6 +770,7 @@ script.on_event(defines.events.on_gui_click, function(e)
     elseif h == "load_plan_preset" then
         local name = state.get_player_setting(p.index, "selected_plan_preset")
         if name and queue.load_preset(f.index, name) then
+            policy.request_instant_switch(f.index, "preset-load")
             p.print({"lil_einstein-msg.preset-loaded", name})
         end
     elseif h == "delete_plan_preset" then
@@ -776,6 +787,7 @@ script.on_event(defines.events.on_gui_click, function(e)
         local field = gutil.get_child(anchor, "policy_exchange_string")
         local ok = field and queue.import_plan(f.index, field.text)
         if ok then
+            policy.request_instant_switch(f.index, "plan-import")
             p.print({"lil_einstein-msg.plan-imported"})
         else
             p.print({"lil_einstein-msg.plan-import-failed"})
@@ -861,9 +873,32 @@ script.on_event(defines.events.on_gui_selection_state_changed, function(e)
         if strategy then
             policy.set_setting(f.index, "strategy", strategy)
             policy.record_action(f.index, p.index, "strategy", strategy)
+            policy.request_instant_switch(f.index, "strategy-change")
             state.request_next_research(f)
             gui.repopulate_open(f.index)
         end
+    elseif h == "policy_policy_dropdown" then
+        if not policy.can_edit(p) then
+            p.print({"lil_einstein-msg.multiplayer-locked"})
+            return
+        end
+        if t.setting_name == "reserve_for_type" then
+            local value = policy.reserve_for_type_order[e.element.selected_index]
+            if value then
+                policy.set_setting(f.index, t.setting_name, value)
+                policy.record_action(f.index, p.index, "policy", {
+                    category = "policy",
+                    reason = "reserve-for-type",
+                    after = value
+                })
+                state.request_next_research(f)
+                gui.repopulate_open(f.index)
+            end
+        end
+    elseif h == "policy_history_filter" then
+        local filters = {"all", "switch", "strategy", "policy", "queue", "setting"}
+        state.set_player_setting(p.index, "policy_history_filter", filters[e.element.selected_index] or "all")
+        gui.repopulate_open(f.index)
     elseif h == "policy_preset_selection" then
         local names = queue.get_preset_names(f.index)
         state.set_player_setting(p.index, "selected_plan_preset", names[e.element.selected_index])

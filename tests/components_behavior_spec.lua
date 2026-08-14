@@ -427,6 +427,7 @@ local queue = {
 
 local policy = {
     strategy_order = {"balanced", "throughput", "conservative"},
+    reserve_for_type_order = {"off", "safety_first", "balanced"},
     get_setting = function(_, setting_name)
         return policy_settings[setting_name]
     end,
@@ -620,8 +621,21 @@ end
 
 local function make_policy_anchor()
     local anchor = make_element("anchor")
+    add_named(anchor, "policy_tab_bar")
+    add_named(anchor, "policy_tab_automation", "button")
+    add_named(anchor, "policy_tab_budget", "button")
+    add_named(anchor, "policy_tab_science", "button")
+    add_named(anchor, "policy_tab_objectives", "button")
+    add_named(anchor, "policy_tab_presets", "button")
+    add_named(anchor, "policy_tab_history", "button")
     add_named(anchor, "policy_scroll_pane", "scroll-pane")
     add_named(anchor, "policy_sections_table", "table")
+    add_named(anchor, "policy_general_flow_section", "frame")
+    add_named(anchor, "policy_budget_flow_section", "frame")
+    add_named(anchor, "policy_science_flow_section", "frame")
+    add_named(anchor, "policy_trigger_flow_section", "frame")
+    add_named(anchor, "policy_preset_flow_section", "frame")
+    add_named(anchor, "policy_history_flow_section", "frame")
     add_named(anchor, "policy_general_flow")
     add_named(anchor, "policy_budget_flow")
     add_named(anchor, "policy_science_flow")
@@ -1068,6 +1082,7 @@ local tests = {
         t.assert_equal(get_ratio(2, 1), 1)
         t.assert_equal(get_ratio(-1, 1), 0)
         t.assert_equal(format_policy_time(60), "1.0m")
+        t.assert_equal(format_policy_time(math.huge), "∞")
         t.assert_true(type(refresh_science_counts) == "function")
 
         local science_anchor = make_static_anchor()
@@ -1120,6 +1135,11 @@ local tests = {
 
         components.repopulate_policy(1, anchor)
 
+        t.assert_equal(find_element(anchor, "policy_general_flow_section").visible, true)
+        t.assert_equal(find_element(anchor, "policy_budget_flow_section").visible, false)
+        t.assert_equal(find_element(anchor, "policy_tab_automation").enabled, false)
+        t.assert_equal(find_element(anchor, "policy_tab_budget").enabled, true)
+
         local general = find_element(anchor, "policy_general_flow")
         t.assert_equal(general.clear_count, 1)
         local strategy = find_by_tag(general, "handler", "policy_strategy")
@@ -1127,6 +1147,10 @@ local tests = {
         t.assert_equal(strategy.items[2][1], "lil_einstein-strategy.throughput")
         local paused = find_by_tag(general, "setting_name", "planning_paused")
         t.assert_equal(paused.style_name, "lil_einstein_settings_checkbox_off")
+        t.assert_true(find_by_tag(general, "setting_name", "replan_interval_seconds") ~= nil)
+        t.assert_true(find_by_tag(general, "setting_name", "instant_switch_override") ~= nil)
+        t.assert_true(find_by_tag(general, "setting_name", "reserve_for_type") ~= nil)
+        t.assert_true(find_by_tag(general, "setting_name", "plan_horizon_minutes") ~= nil)
         t.assert_equal(find_by_tag(general, "setting_name", "finish_current_threshold"), nil)
 
         local science_flow = find_element(anchor, "policy_science_flow")
@@ -1137,7 +1161,7 @@ local tests = {
         t.assert_true(rates == nil or rates.valid)
         local rate_caption
         for _, child in ipairs(science_flow.children[1].children) do
-            if type(child.caption) == "string" and string.find(child.caption, "empty 42s", 1, true) then
+            if type(child.caption) == "string" and string.find(child.caption, "runtime 42s", 1, true) then
                 rate_caption = child.caption
             end
         end
@@ -1155,9 +1179,11 @@ local tests = {
         local preset = find_element(anchor, "policy_preset_name")
         t.assert_equal(preset.text, "night-plan")
         t.assert_equal(find_element(anchor, "policy_exchange_string").tags.handler, "policy_exchange_string")
-        t.assert_equal(find_element(anchor, "policy_history_flow").children[1].children[1].tags.setting_name,
+        t.assert_equal(find_element(anchor, "policy_history_flow").children[2].children[1].tags.setting_name,
                        "multiplayer_lock")
-        t.assert_equal(#find_element(anchor, "policy_history_flow").children, 3)
+        t.assert_equal(find_by_tag(find_element(anchor, "policy_history_flow"), "handler", "policy_history_filter") ~= nil,
+                       true)
+        t.assert_equal(#find_element(anchor, "policy_history_flow").children, 4)
 
         queue_budget.repeat_unbounded = true
         queue_budget.repeat_truncated = false
@@ -1215,7 +1241,7 @@ local tests = {
         t.assert_equal(#find_element(anchor, "policy_trigger_flow").children, 1)
         policy_history = {}
         components.repopulate_policy(1, anchor)
-        t.assert_equal(#find_element(anchor, "policy_history_flow").children, 2)
+        t.assert_equal(#find_element(anchor, "policy_history_flow").children, 3)
 
         science_forecast.science_a.depletion_seconds = math.huge
         science_forecast.science_b.recovery_seconds = 7200

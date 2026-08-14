@@ -369,6 +369,25 @@ policy.can_edit = function(player)
     return player.admin == true
 end
 
+local normalize_history_category = function(action)
+    local value = tostring(action or "update")
+    if string.find(value, "switch", 1, true) then
+        return "switch"
+    elseif value == "strategy" or string.find(value, "strategy", 1, true) then
+        return "strategy"
+    elseif string.find(value, "queue", 1, true) or value == "move_tech_up" or
+        value == "move_tech_down" or value == "promote_research" or value == "demote_research" then
+        return "queue"
+    elseif string.find(value, "policy", 1, true) or string.find(value, "priority", 1, true) or
+        string.find(value, "threshold", 1, true) or string.find(value, "repeat", 1, true) or
+        value == "master_enable" then
+        return "policy"
+    elseif string.find(value, "setting", 1, true) then
+        return "setting"
+    end
+    return value
+end
+
 -- Structured action history. `detail` may be a plain string (legacy callers,
 -- stored verbatim in `detail`) or a table carrying any of:
 --   category, reason, trigger, before, after, reserved, release_reason, detail
@@ -395,7 +414,7 @@ policy.record_action = function(force_index, player_index, action, detail)
         entry.release_reason = detail.release_reason ~= nil and tostring(detail.release_reason) or nil
         entry.detail = detail.detail ~= nil and tostring(detail.detail) or nil
     else
-        entry.category = entry.action
+        entry.category = normalize_history_category(entry.action)
         entry.detail = tostring(detail or "")
     end
     table.insert(store.history, 1, entry)

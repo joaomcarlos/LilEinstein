@@ -310,7 +310,7 @@ local tests = {
         local forecast = queue.get_science_forecast(1)
         t.assert_equal(forecast["automation-science-pack"].production_per_minute, 5)
         t.assert_equal(forecast["automation-science-pack"].consumption_per_minute, 2)
-        t.assert_true(forecast["automation-science-pack"].depletion_seconds == nil)
+        t.assert_equal(forecast["automation-science-pack"].depletion_seconds, math.huge)
         policy_settings.cluster_mode = true
         game.tick = game.tick + 1
         queue.invalidate_science_cache(1)

@@ -1,8 +1,8 @@
 # Research Control Center Decision Console Implementation Plan
 
-> **For agentic workers:** This plan is executed inline in the current shared checkout. The standalone demo is the review gate; live Factorio GUI wiring is intentionally deferred until the user approves the demo.
+> **For agentic workers:** The standalone demo was approved as the visual reference on 2026-08-14. Live integration is now authorized, using isolated model/view worktrees and the contract below. The demo remains the visual review gate for each live slice.
 
-**Goal:** Turn selected visual direction 3 into a sprite-backed, exact-size standalone demo that can be reviewed before integrating the Decision Console into the Factorio GUI.
+**Goal:** Turn selected visual direction 3 into a sprite-backed, exact-size standalone demo and a live Factorio Decision Console backed by authoritative planning, forecasting, reservation, history, and collaboration state.
 
 **Architecture:** Use the selected 1672x941 image as the visual source, derive a deterministic cleaned background and atomic sprite crops, and register the asset contract without contaminating live controls with baked text or sample rows. Build an interactive offline HTML demo over the cleaned background so tabs, radio controls, checkboxes, steppers, and the Back to research action can be reviewed at the same scale as the game window. After feedback, reuse the same measured rectangles and sprite names in `data/sprites.lua`, `data/style.lua`, `view/gui/builder.lua`, and `view/gui/components.lua`.
 
@@ -15,7 +15,9 @@
 - Static artwork may be baked only into cleaned background/sprite assets; dynamic labels, controls, rows, science icons, timers, and tabs must remain live in the future Factorio GUI.
 - Register only existing PNG files; every registered sprite path must be checked after generation.
 - Keep Factorio data-stage code free of runtime APIs and validate new style fields against Factorio 2.0.
-- This pass ends with the standalone demo and asset review checkpoint; live GUI integration waits for user feedback.
+- Live integration must preserve the existing bounded refresh and save-safe storage contracts; the standalone demo remains a visual reference, not a source of runtime truth.
+- Devin owns model/data-stage changes in an isolated worktree; Codex owns view/control/locale changes in the main checkout. Do not edit the same file from both workspaces.
+- Freeze these additive seams before view wiring: `policy.get_history(force_index, filters)`, `policy.get_setting(force_index, "reserve_for_type")`, `policy.get_setting(force_index, "replan_interval_seconds")`, `policy.get_setting(force_index, "instant_switch_override")`, and `queue.get_plan_snapshot(force_index)`.
 
 ---
 
@@ -88,7 +90,16 @@
 - Modify: `view/gui/components.lua`
 - Modify: relevant locale files and tests under `tests/`
 
-- [ ] **Step 1: Register only approved clean background and atomic sprites.**
-- [ ] **Step 2: Replace the policy panel structure with named live elements matching the approved demo geometry.**
-- [ ] **Step 3: Preserve existing policy model/event behavior while routing tab selection and controls to current handlers.**
-- [ ] **Step 4: Run unit, parser, locale, production lint, and disposable in-game checks, then perform an actual in-game visual smoke test.**
+- [x] **Step 1: Devin — add the model foundation: bounded policy settings, `Megabase` strategy semantics, structured/filterable history, plan snapshot read API, and the instant-switch/replan contract. Add focused tests without touching view files.**
+- [x] **Step 2: Codex — add the live six-tab policy shell: persistent tab selection, named tab routing, and visible sections matching the approved demo while preserving current handlers. Do not claim the new plan/reservation values are authoritative until the model seam exists.**
+- [x] **Step 3: Codex — add localized tab/filter/collaboration strings and route the new controls through validated GUI tags and player state.**
+- [ ] **Step 4: Merge/review the isolated model and view slices, then implement delivery-aware planning, bounded Reserve for type, minute-based plan allocation, and manual objectives as separate follow-up slices.**
+- [ ] **Step 5: Register only approved clean background and atomic sprites, then run unit, parser, locale, production lint, disposable in-game, and actual live visual smoke checks.**
+
+Current implementation checkpoint: the first model/view slice is merged as commits `24ba04a` and `ff0f526`. The live panel now has persistent six-tab routing, History filtering, reserve/replan/instant-switch controls, a 30-second switch cap, a five-minute forecast setting cap, a minute-based plan-horizon setting seam, and runtime-to-depletion that includes committed in-transit science with explicit infinity when supply does not deplete. Delivery ETA/route reachability, the actual bounded Reserve-for-type allocator, and minute-based plan allocation remain explicitly unimplemented follow-up work.
+
+### Parallel implementation contract
+
+- **Devin worktree:** `model/research_policy.lua`, `model/queue.lua`, and focused model tests. No view, control, locale, or data-stage edits.
+- **Codex checkout:** `view/gui/builder.lua`, `view/gui/components.lua`, `control.lua`, locale files, and focused GUI tests. No model edits until the model slice is reviewed.
+- **Cross-review:** Codex reviews Devin's model diff and reruns model tests; Devin reviews Codex's GUI diff read-only against the frozen seams. Any seam change is resolved before merging.

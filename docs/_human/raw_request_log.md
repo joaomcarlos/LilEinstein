@@ -206,3 +206,6 @@ should be
 
 **Megabase**
 Infinite focused research, accounted for logistics
+
+## My request:
+identify gaps in functionality needed to support functionality in this new design
