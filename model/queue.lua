@@ -23,6 +23,9 @@ local diagnostic_meaningful_gap_fraction = 0.05
 local diagnostic_minimum_lost_spm = 1
 local diagnostic_minimum_samples = 2
 local science_reserve_per_lab = 6
+local emergency_raw_scan_budget = 256
+local emergency_candidate_scan_budget = 64
+local emergency_candidate_retry_ticks = 300
 -- score factor applied to techs only reachable through prerequisites
 local unavailable_score_factor = 0.5
 -- a candidate must out-score the current research by this relative margin to interrupt it
@@ -237,11 +240,13 @@ end
 
 local get_science_counts
 local get_virtual_queue_source
-local get_emergency_candidate_source
+local get_bounded_emergency_candidate
 local set_runtime_research_queue
 local get_runtime_candidate_average_cost
 local get_inactive_science_demand_spm
-local inactive_science_demand_cache = {}
+local science_demand_cache = {}
+local research_capacity_cache = {}
+local emergency_candidate_jobs = {}
 
 queue.apply_planning_pause = function(f)
     if not f then
@@ -254,19 +259,90 @@ queue.apply_planning_pause = function(f)
     set_runtime_research_queue(f, paused_queue)
 end
 
-local science_depletion_is_attributable = function(availability, science)
+local build_cluster_supply_scopes = function(availability)
+    local scopes_by_science = {}
     if not availability.__cluster_mode then
-        return true
+        return scopes_by_science
     end
-    -- Production statistics are force-wide across all loaded surfaces. In cluster mode
-    -- they can only be attributed safely when exactly one cluster consumes this science.
-    local consuming_clusters = 0
     for _, cluster in pairs(availability.__clusters or {}) do
-        if ((cluster.lab_input_counts and cluster.lab_input_counts[science]) or 0) > 0 then
-            consuming_clusters = consuming_clusters + 1
+        for science, lab_count in pairs(cluster.lab_input_counts or {}) do
+            if lab_count > 0 then
+                local key = cluster.key or tostring(cluster)
+                local surface_index = key:match("^(.-):lab:")
+                if surface_index then
+                    key = surface_index .. ":direct"
+                end
+                local consuming_scopes = scopes_by_science[science]
+                if not consuming_scopes then
+                    consuming_scopes = {}
+                    scopes_by_science[science] = consuming_scopes
+                end
+                local scope = consuming_scopes[key]
+                if not scope then
+                    scope = {stock = 0}
+                    consuming_scopes[key] = scope
+                end
+                scope.stock = scope.stock + ((cluster.counts and cluster.counts[science]) or 0)
+            end
         end
     end
-    return consuming_clusters == 1
+    return scopes_by_science
+end
+
+local science_depletion_is_attributable = function(availability, science, cluster_supply_scopes)
+    if not availability.__cluster_mode then
+        return true, nil
+    end
+    -- Production statistics are force-wide across all loaded surfaces. In cluster mode
+    -- they can only be attributed safely when exactly one consuming scope exists.
+    local scopes = cluster_supply_scopes or build_cluster_supply_scopes(availability)
+    local consuming_scopes = scopes[science] or {}
+    local scope_count = 0
+    local attributable_stock
+    for _, scope in pairs(consuming_scopes) do
+        scope_count = scope_count + 1
+        attributable_stock = scope.stock
+    end
+    if scope_count == 1 then
+        return true, attributable_stock or 0
+    end
+    return false, nil
+end
+
+local get_estimated_research_capacity_per_minute = function(xcur, force_index)
+    if not xcur or not xcur.technology then
+        return nil
+    end
+
+    local technology = xcur.technology
+    local force_capacity = research_capacity_cache[force_index]
+    local cached_capacity = force_capacity and force_capacity[technology.name]
+    if cached_capacity and cached_capacity > 0 then
+        return cached_capacity
+    end
+
+    local f = game.forces[force_index]
+    local active = f and f.current_research
+    local active_capacity = active and force_capacity and force_capacity[active.name]
+    local target_energy = technology.research_unit_energy or 0
+    if active_capacity and active_capacity > 0 then
+        local active_energy = active.research_unit_energy or 0
+        if active_energy > 0 and target_energy > 0 then
+            return active_capacity * active_energy / target_energy
+        end
+    end
+
+    local measured_speed = queue.get_research_speed(force_index)
+    if not measured_speed or measured_speed <= 0 then
+        return nil
+    end
+    if active then
+        local active_energy = active.research_unit_energy or 0
+        if active_energy > 0 and target_energy > 0 then
+            measured_speed = measured_speed * active_energy / target_energy
+        end
+    end
+    return measured_speed * 60
 end
 
 local get_depletion_horizon_seconds = function(xcur, force_index, forecast_seconds)
@@ -274,7 +350,8 @@ local get_depletion_horizon_seconds = function(xcur, force_index, forecast_secon
     -- research completes before packs run out, the supply is sufficient.
     local horizon = forecast_seconds
     local f = game.forces[force_index]
-    local speed = queue.get_research_speed(force_index)
+    local capacity_per_minute = get_estimated_research_capacity_per_minute(xcur, force_index)
+    local speed = capacity_per_minute and capacity_per_minute / 60 or nil
     if f and xcur.technology and speed and speed > 0 then
         local unit_count = xcur.technology.research_unit_count or 1
         local remaining_units = unit_count
@@ -289,7 +366,13 @@ local get_depletion_horizon_seconds = function(xcur, force_index, forecast_secon
     return horizon
 end
 
-local science_supply_is_sufficient = function(xcur, force_index)
+local science_supply_is_sufficient = function(
+    xcur,
+    force_index,
+    supplied_availability,
+    supplied_forecast,
+    supplied_cluster_scopes
+)
     if not xcur or not xcur.meta or not force_index then
         return false
     end
@@ -307,8 +390,10 @@ local science_supply_is_sufficient = function(xcur, force_index)
         return not live_bottleneck or not next(live_bottleneck)
     end
 
-    local availability = queue.get_science_availability(force_index)
-    local forecast = queue.get_science_forecast and queue.get_science_forecast(force_index) or {}
+    local availability = supplied_availability or queue.get_science_availability(force_index)
+    local forecast = supplied_forecast or
+        (queue.get_science_forecast and queue.get_science_forecast(force_index)) or {}
+    local cluster_supply_scopes = supplied_cluster_scopes or build_cluster_supply_scopes(availability)
     local forecast_seconds = policy.get_setting(force_index, "forecast_seconds") or 0
     if not queue.science_is_available(xcur, availability) then
         return false
@@ -320,17 +405,32 @@ local science_supply_is_sufficient = function(xcur, force_index)
         for _, science in pairs(sciences) do
             local science_forecast = forecast[science]
             local demand_per_minute = inactive_demand[science] or 0
-            if science_forecast and demand_per_minute > 0 and horizon > 0 then
-                local stock = math.max(0, science_forecast.stock or 0)
-                local production_per_minute = math.max(0, science_forecast.production_per_minute or 0)
+            local attributable, attributable_stock = science_depletion_is_attributable(
+                availability,
+                science,
+                cluster_supply_scopes
+            )
+            if attributable and science_forecast and demand_per_minute > 0 and horizon > 0 then
+                local stock = availability.__cluster_mode and
+                    math.max(0, attributable_stock or 0) or
+                    math.max(0, science_forecast.stock or 0)
+                local production_per_minute
+                if availability.__cluster_mode then
+                    -- Force production includes remote surfaces and packs that may still
+                    -- be in transit. Require enough stock already reachable by these labs
+                    -- for the recovery horizon instead of extrapolating a delivery burst.
+                    production_per_minute = 0
+                else
+                    production_per_minute = math.max(0, science_forecast.production_per_minute or 0)
+                end
                 local projected_supply = stock + production_per_minute * horizon / 60
                 local projected_demand = demand_per_minute * horizon / 60
                 if projected_supply + 0.001 < projected_demand then
                     return false
                 end
-            elseif science_forecast and science_forecast.depletion_seconds and
-                science_forecast.depletion_seconds < horizon and
-                science_depletion_is_attributable(availability, science) then
+            elseif attributable and not availability.__cluster_mode and science_forecast and
+                science_forecast.depletion_seconds and
+                science_forecast.depletion_seconds < horizon then
                 return false
             end
         end
@@ -545,6 +645,99 @@ local find_runtime_candidate = function(force_index, tech_name, tsx, lsci, sfsci
         mark_missing_science(sfsci, tech_name)
     end
     return nil, fallback
+end
+
+-- Search outside the explicit queue only in a fixed-size slice. This path runs
+-- from force maintenance while research is materially pack-bound, so it must
+-- never score and sort the entire technology graph in one tick.
+get_bounded_emergency_candidate = function(force_index, current_name, pinned, queued_names, tsx, lsci, sfsci)
+    local job = emergency_candidate_jobs[force_index]
+    if not job or job.current_name ~= current_name or job.tech_states ~= tsx or
+        (job.retry_tick and game.tick >= job.retry_tick) then
+        job = {
+            current_name = current_name,
+            tech_states = tsx,
+            scan_key = nil,
+            retry_tick = nil
+        }
+        emergency_candidate_jobs[force_index] = job
+    elseif job.retry_tick then
+        return nil
+    end
+
+    local best_candidate
+    local best_score
+    local seen_candidates = {}
+    local raw_scanned = 0
+    local candidates_scanned = 0
+    local forecast
+    local cluster_supply_scopes
+    while raw_scanned < emergency_raw_scan_budget and
+        candidates_scanned < emergency_candidate_scan_budget do
+        local technology_name = next(tsx, job.scan_key)
+        job.scan_key = technology_name
+        if not technology_name then
+            job.retry_tick = game.tick + emergency_candidate_retry_ticks
+            break
+        end
+        raw_scanned = raw_scanned + 1
+        if technology_name ~= current_name and technology_name ~= pinned and
+            not queued_names[technology_name] then
+            local xcur = tsx[technology_name]
+            if not tech_can_be_runtime_candidate(force_index, xcur) then
+                goto continue_emergency_candidate
+            end
+            candidates_scanned = candidates_scanned + 1
+            local candidate = find_runtime_candidate(force_index, technology_name, tsx, lsci, sfsci)
+            if candidate and candidate ~= current_name and candidate ~= pinned and
+                not queued_names[candidate] and not seen_candidates[candidate] then
+                seen_candidates[candidate] = true
+                local xcandidate = tsx[candidate]
+                if xcandidate and not cluster_supply_scopes then
+                    forecast = queue.get_science_forecast and queue.get_science_forecast(force_index) or {}
+                    cluster_supply_scopes = build_cluster_supply_scopes(lsci)
+                end
+                if xcandidate and science_supply_is_sufficient(
+                    xcandidate,
+                    force_index,
+                    lsci,
+                    forecast,
+                    cluster_supply_scopes
+                ) then
+                    local stored_ub = queue.get_tech_ub(force_index, candidate)
+                    local score = queue.score_tech_detailed(
+                        xcandidate,
+                        xcandidate.technology.level,
+                        stored_ub,
+                        nil,
+                        force_index
+                    ).total
+                    if not best_candidate or score > best_score or
+                        (score == best_score and candidate < best_candidate) then
+                        best_candidate = candidate
+                        best_score = score
+                    end
+                end
+            end
+        end
+        ::continue_emergency_candidate::
+    end
+
+    if best_candidate then
+        emergency_candidate_jobs[force_index] = nil
+    end
+    return best_candidate
+end
+
+local activate_temp_research = function(f, sq, target, current_name, candidate, tsx, lsci, minimum_switch_ticks)
+    emergency_candidate_jobs[f.index] = nil
+    local target_name = target or current_name
+    sq[keys.target_tech] = target_name
+    sq[keys.temp_tech] = candidate
+    sq[keys.temp_tech_timeout] = game.tick + minimum_switch_ticks
+    sq[keys.last_switch_tick] = game.tick
+    notify_switch(f, current_name, candidate, tsx, lsci)
+    state.request_next_research(f)
 end
 
 local get_first_next_tech = function(f)
@@ -922,6 +1115,7 @@ queue.check_and_switch_temp_research = function(f)
     -- If current tech has sufficient packs, only interrupt it for a higher-priority
     -- science policy, or for a same-priority candidate with a much better score.
     if current_is_sufficient then
+        emergency_candidate_jobs[f.index] = nil
         local temp_name = sq[keys.temp_tech]
         -- Temp finished and we're back on target; clean up
         if target and not temp_name and cur_name == target then
@@ -995,12 +1189,7 @@ queue.check_and_switch_temp_research = function(f)
     if pinned and pinned ~= cur_name then
         local candidate, _ = find_runtime_candidate(f.index, pinned, tsx, lsci, sfsci)
         if candidate and candidate ~= cur_name then
-            sq[keys.target_tech] = target or cur_name
-            sq[keys.temp_tech] = candidate
-            sq[keys.temp_tech_timeout] = game.tick + minimum_switch_ticks
-            sq[keys.last_switch_tick] = game.tick
-            notify_switch(f, cur_name, candidate, tsx, lsci)
-            state.request_next_research(f)
+            activate_temp_research(f, sq, target, cur_name, candidate, tsx, lsci, minimum_switch_ticks)
             return
         end
     end
@@ -1012,12 +1201,7 @@ queue.check_and_switch_temp_research = function(f)
         if q ~= cur_name and q ~= pinned then
             local candidate, _ = find_runtime_candidate(f.index, q, tsx, lsci, sfsci)
             if candidate and candidate ~= cur_name then
-                sq[keys.target_tech] = target or cur_name
-                sq[keys.temp_tech] = candidate
-                sq[keys.temp_tech_timeout] = game.tick + minimum_switch_ticks
-                sq[keys.last_switch_tick] = game.tick
-                notify_switch(f, cur_name, candidate, tsx, lsci)
-                state.request_next_research(f)
+                activate_temp_research(f, sq, target, cur_name, candidate, tsx, lsci, minimum_switch_ticks)
                 return
             end
         end
@@ -1026,23 +1210,17 @@ queue.check_and_switch_temp_research = function(f)
     -- The explicit queue remains authoritative during normal selection. When it
     -- has no runnable substitute for a materially pack-bound technology, widen
     -- only this temporary search so useful lab capacity does not sit idle.
-    local emergency_source = get_emergency_candidate_source and
-        get_emergency_candidate_source(f.index, tsx) or {}
-    for _, q in ipairs(emergency_source) do
-        if q ~= cur_name and q ~= pinned and not queued_names[q] then
-            local candidate, _ = find_runtime_candidate(f.index, q, tsx, lsci, sfsci)
-            local xcandidate = candidate and tsx[candidate] or nil
-            if candidate and candidate ~= cur_name and xcandidate and
-                queue.science_is_sufficient(xcandidate, f.index) then
-                sq[keys.target_tech] = target or cur_name
-                sq[keys.temp_tech] = candidate
-                sq[keys.temp_tech_timeout] = game.tick + minimum_switch_ticks
-                sq[keys.last_switch_tick] = game.tick
-                notify_switch(f, cur_name, candidate, tsx, lsci)
-                state.request_next_research(f)
-                return
-            end
-        end
+    local candidate = get_bounded_emergency_candidate(
+        f.index,
+        cur_name,
+        pinned,
+        queued_names,
+        tsx,
+        lsci,
+        sfsci
+    )
+    if candidate then
+        activate_temp_research(f, sq, target, cur_name, candidate, tsx, lsci, minimum_switch_ticks)
     end
 end
 ---------------------------------------------------------------------------
@@ -1740,6 +1918,7 @@ local lab_observation_cache = {}
 local lab_network_cache = {}
 local lab_input_cache = {}
 local active_bottleneck_cache = {}
+local inactive_science_demand_cache = {}
 local science_pack_insight_cache = {}
 local research_health_snapshots = {}
 local research_health_jobs = {}
@@ -2056,7 +2235,9 @@ queue.invalidate_science_cache = function(force_index)
     lab_observation_cache[force_index] = nil
     lab_network_cache[force_index] = nil
     active_bottleneck_cache[force_index] = nil
-    inactive_science_demand_cache[force_index] = nil
+    science_demand_cache[force_index] = nil
+    research_capacity_cache[force_index] = nil
+    emergency_candidate_jobs[force_index] = nil
     science_pack_insight_cache[force_index] = nil
     -- Keep the last completed report visible while the replacement is measured.
     -- tick_research_health_snapshot swaps in the new complete snapshot atomically.
@@ -2137,27 +2318,32 @@ get_inactive_science_demand_spm = function(xcur, force_index)
         return {}
     end
 
-    local force_cache = inactive_science_demand_cache[force_index]
-    if not force_cache or force_cache.tick ~= game.tick then
-        force_cache = {tick = game.tick, technologies = {}}
-        inactive_science_demand_cache[force_index] = force_cache
-    end
-    local cached = force_cache.technologies[current.name]
+    local cached = science_demand_cache[force_index] and
+        science_demand_cache[force_index][current.name]
     if cached then
         return cached
     end
 
-    local res = {}
-    for _, lcur in pairs(lab.get_runtime_lab_content(force_index) or {}) do
-        local lab_entity = lcur and lcur.lab
-        if lab_entity and lab_entity.valid and lab_accepts_research(lab_entity, current) then
-            for _, ingredient in pairs(current.research_unit_ingredients or {}) do
-                res[ingredient.name] = (res[ingredient.name] or 0) +
-                    get_lab_science_consumption_spm(lab_entity, current, ingredient.amount)
-            end
-        end
+    -- A technology that was active immediately before a temporary switch has
+    -- an exact physical-demand cache populated by the live bottleneck pass. For
+    -- another inactive candidate, reuse the active technology's full compatible-
+    -- lab capacity and scale it by unit energy. Falling back to measured speed
+    -- would size the candidate for the few labs still working during starvation.
+    local progress_units_per_minute = get_estimated_research_capacity_per_minute(xcur, force_index)
+    if not progress_units_per_minute or progress_units_per_minute <= 0 then
+        return {}
     end
-    force_cache.technologies[current.name] = res
+
+    local f = game.forces[force_index]
+    local productivity_multiplier = math.max(
+        1,
+        1 + ((f and f.laboratory_productivity_bonus) or 0)
+    )
+    local physical_units_per_minute = progress_units_per_minute / productivity_multiplier
+    local res = {}
+    for _, ingredient in pairs(current.research_unit_ingredients or {}) do
+        res[ingredient.name] = physical_units_per_minute * math.max(0, ingredient.amount or 1)
+    end
     return res
 end
 
@@ -3283,8 +3469,11 @@ local get_runtime_name = function(object, fallback)
     if type(object) == "string" then
         return object
     end
-    if object and object.name then
-        return tostring(object.name)
+    if object then
+        local ok_name, name = pcall(function() return object.name end)
+        if ok_name and name then
+            return tostring(name)
+        end
     end
     return fallback or "unknown"
 end
@@ -3328,7 +3517,10 @@ local get_planet_stock = function(force_index, science)
 
     for key, planet in pairs(game.planets or {}) do
         local name = get_runtime_name(planet, key)
-        local surface = planet and planet.surface
+        local ok_surface, surface = pcall(function() return planet and planet.surface end)
+        if not ok_surface then
+            surface = nil
+        end
         rows_by_name[name] = {
             name = name,
             surface = is_valid_runtime_object(surface) and surface or nil,
@@ -3377,20 +3569,22 @@ local get_transit_routes = function(force_index, science)
     local routes = {}
     local total = 0
     for key, platform in pairs(f and f.platforms or {}) do
-        local connection = platform and platform.space_connection
-        if is_valid_runtime_object(platform) and connection then
-            local count = get_transit_item_count(platform.hub, science)
-            if count > 0 then
-                local from = get_runtime_name(connection.from, "unknown")
-                local to = get_runtime_name(connection.to, "unknown")
-                table.insert(routes, {
-                    platform = get_runtime_name(platform, key),
-                    from = from,
-                    to = to,
-                    stock = count,
-                    progress = type(platform.distance) == "number" and platform.distance or nil
-                })
-                total = total + count
+        if is_valid_runtime_object(platform) then
+            local ok_connection, connection = pcall(function() return platform.space_connection end)
+            if ok_connection and connection then
+                local count = get_transit_item_count(platform.hub, science)
+                if count > 0 then
+                    local from = get_runtime_name(connection.from, "unknown")
+                    local to = get_runtime_name(connection.to, "unknown")
+                    table.insert(routes, {
+                        platform = get_runtime_name(platform, key),
+                        from = from,
+                        to = to,
+                        stock = count,
+                        progress = type(platform.distance) == "number" and platform.distance or nil
+                    })
+                    total = total + count
+                end
             end
         end
     end
@@ -3555,6 +3749,7 @@ queue.get_active_missing_science_bottleneck = function(force_index, xcur)
     local expected_spm = 0
     local sampled_spm = 0
     local missing_spm = 0
+    local physical_demand = {}
     local res = {}
     local now = game.tick
     for _, lcur in pairs(lab.get_runtime_lab_content(force_index)) do
@@ -3562,6 +3757,10 @@ queue.get_active_missing_science_bottleneck = function(force_index, xcur)
         if lab_entity and lab_entity.valid and lab_accepts_research(lab_entity, current) then
             local capacity_spm = get_lab_capacity_spm(lab_entity, current)
             expected_spm = expected_spm + capacity_spm
+            for _, ingredient in pairs(current.research_unit_ingredients or {}) do
+                physical_demand[ingredient.name] = (physical_demand[ingredient.name] or 0) +
+                    get_lab_science_consumption_spm(lab_entity, current, ingredient.amount)
+            end
             if lcur.latest_tick and now - lcur.latest_tick <= 900 then
                 sampled_spm = sampled_spm + capacity_spm
                 if lcur.latest_status == defines.entity_status.missing_science_packs then
@@ -3573,6 +3772,11 @@ queue.get_active_missing_science_bottleneck = function(force_index, xcur)
             end
         end
     end
+
+    science_demand_cache[force_index] = science_demand_cache[force_index] or {}
+    science_demand_cache[force_index][current.name] = physical_demand
+    research_capacity_cache[force_index] = research_capacity_cache[force_index] or {}
+    research_capacity_cache[force_index][current.name] = expected_spm
 
     -- Wait for one near-complete staggered pass after load or large lab changes.
     if expected_spm <= 0 or sampled_spm < expected_spm * 0.80 then
@@ -3593,6 +3797,20 @@ end
 
 queue.science_is_sufficient = function(xcur, force_index)
     return science_supply_is_sufficient(xcur, force_index)
+end
+
+queue.get_research_recovery_evidence = function(force_index, technology_name)
+    local xcur = tech.get_single_tech_state_ext(force_index, technology_name)
+    if not xcur or not xcur.technology then
+        return {}
+    end
+    local forecast_seconds = policy.get_setting(force_index, "forecast_seconds") or 0
+    return {
+        horizon_seconds = get_depletion_horizon_seconds(xcur, force_index, forecast_seconds),
+        physical_demand_per_minute = get_inactive_science_demand_spm(xcur, force_index),
+        cached_capacity_per_minute = research_capacity_cache[force_index] and
+            research_capacity_cache[force_index][technology_name] or nil
+    }
 end
 
 queue.get_science_availability = function(force_index)
@@ -3786,7 +4004,16 @@ end
 local get_scored_queue_source = function(force_index, tsx, source)
     local scored = {}
     local seen = {}
-    local avg_cost = get_runtime_candidate_average_cost(force_index, tsx)
+    local total_cost = 0
+    local candidate_count = 0
+    for _, tech_name in ipairs(source or {}) do
+        local xcur = tsx and tsx[tech_name]
+        if tech_can_be_runtime_candidate(force_index, xcur) then
+            total_cost = total_cost + get_research_unit_count(xcur)
+            candidate_count = candidate_count + 1
+        end
+    end
+    local avg_cost = candidate_count > 0 and (total_cost / candidate_count) or nil
     local pinned = queue.get_pinned_tech(force_index)
 
     for i, tech_name in ipairs(source or {}) do
@@ -3831,10 +4058,6 @@ get_virtual_queue_source = function(force_index, tsx)
         return {}
     end
 
-    return get_scored_queue_source(force_index, tsx, get_all_runtime_candidate_names(force_index, tsx))
-end
-
-get_emergency_candidate_source = function(force_index, tsx)
     return get_scored_queue_source(force_index, tsx, get_all_runtime_candidate_names(force_index, tsx))
 end
 

@@ -177,15 +177,31 @@ gui.toggle_research_details = function(player_index)
 end
 
 gui.toggle_science_pack_details = function(player_index, science)
+    local player = game.get_player(player_index)
     local anchor = gui.get(player_index)
-    if not anchor or type(science) ~= "string" then
+    if not player or not anchor or type(science) ~= "string" then
         return
     end
     local panel = gutil.get_child(anchor, "science_pack_panel")
     local science_bottom = gutil.get_child(anchor, "science_bottom")
     local policy_panel = gutil.get_child(anchor, "policy_panel")
     local details_panel = gutil.get_child(anchor, "research_details_panel")
+    local content_flow = gutil.get_child(anchor, "content_flow")
     if not panel or not science_bottom or not policy_panel or not details_panel then
+        -- A GUI built by an older mod revision can remain on screen after a
+        -- script update. Rebuild it before dispatching the inspector action so
+        -- an old button never becomes a dead click target.
+        close(player_index, anchor)
+        open(player_index, player.gui[target])
+        anchor = gui.get(player_index)
+        panel = gutil.get_child(anchor, "science_pack_panel")
+        science_bottom = gutil.get_child(anchor, "science_bottom")
+        policy_panel = gutil.get_child(anchor, "policy_panel")
+        details_panel = gutil.get_child(anchor, "research_details_panel")
+        content_flow = gutil.get_child(anchor, "content_flow")
+    end
+    if not anchor or not panel or not science_bottom or not policy_panel or not details_panel or
+        not content_flow then
         return
     end
 
@@ -194,6 +210,7 @@ gui.toggle_science_pack_details = function(player_index, science)
     if show_panel then
         panel.visible = true
         science_bottom.visible = false
+        content_flow.visible = true
         policy_panel.visible = false
         details_panel.visible = false
         state.set_player_setting(player_index, "science_pack_panel_open", true)

@@ -35,6 +35,7 @@ GUI layer for the LilEinstein mod: window lifecycle, layout construction, and pr
 - Initial component population receives the built `lil_einstein_gui` window, matching the anchor used by later refresh and tick jobs
 - Research-history graph jobs paint the newest samples first and finish their bounded 200-column redraw within five render passes
 - Science inventory and per-minute rates use the shared compact SI formatter (`K`, `M`, `G`, and higher prefixes) with at most one decimal place
+- Science-pack icons open a right-side replacement inspector instead of changing technology filters; the inspector keeps Upcoming visible, shows Nauvis-only lab evidence, lists stock by planet including zero-stock rows, lists moving platform/cargo-pod transit, and refreshes only while open with a visible countdown
 - Upcoming rows mirror effective research order and state the science-supply reason when an entry is not selectable
 - New Upcoming LocalisedStrings include literal fallbacks so control-stage reloads cannot render `Unknown key` text
 - The Research Health header exposes a copy-debug-report action; because Factorio mods cannot write arbitrary text to the OS clipboard, the action opens a focused, read-only text box with the full report selected for Ctrl+C

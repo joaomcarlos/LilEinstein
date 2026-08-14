@@ -16,8 +16,8 @@ Disposable Factorio test mod used to exercise LilEinstein's production runtime i
 - Assertions must observe public LilEinstein module behavior or initialized storage.
 - Research-switch acceptance observes Factorio's read-only `LuaForce.current_research`; internal temporary-queue state alone is not sufficient.
 - Research-switch acceptance keeps the alternate out of the explicit queue and proves the starved technology made low but nonzero progress before the switch.
-- A read-only production bridge is permitted only when gated on the active test
-  mod and must be absent from normal saves.
+- The scenario continues beyond the minimum temporary-research dwell and asserts the low-stock target is not restored during recovery checks; production elsewhere or packs still in transit are not recovery evidence until enough lab/network-reachable stock exists for the recovery window.
+- A production test bridge is permitted only when gated on the active test mod; it may seed LilEinstein's stored queue for scenario setup and expose read-only snapshots, and it must be absent from normal saves.
 
 ## Work Guidance
 

@@ -75,7 +75,7 @@
 
 - [x] **Step 1: Verify all declared files exist and all dimensions match `asset-plan.json`.**
 - [x] **Step 2: Run the demo’s interaction smoke checks and inspect the final screenshot at 100% scale.**
-- [x] **Step 3: Run `lua52 .\\tests\\run_all.lua` to confirm the existing mod behavior remains green.**
+- [ ] **Step 3: Run `lua52 .\\tests\\run_all.lua` to confirm the existing mod behavior remains green.** Initial baseline passed with 226 tests; the final rerun is blocked by unrelated concurrent `tests.queue_core_spec` failure (`checks=804`).
 - [x] **Step 4: Record remaining live-integration work without claiming the Factorio panel is wired yet.**
 
 ### Task 5: After user feedback, integrate into Factorio

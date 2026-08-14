@@ -10,7 +10,9 @@ local supplied_technology_name = "lil-einstein-test-supplied"
 local scenario_lab_count = 275
 local scenario_working_lab_count = 5
 local observe_before_switch_tick = 240
-local verify_switch_tick = 900
+local observe_after_switch_tick = 900
+local observe_before_recovery_tick = 1440
+local verify_switch_tick = 2400
 
 local function check(name, condition, detail)
     local item = {
@@ -99,8 +101,11 @@ local function setup_switch_scenario()
         initial_research = nil,
         initial_progress = nil,
         initial_queue_size = nil,
+        initial_stored_queue = {},
         before_switch_research = nil,
         before_switch_progress = nil,
+        after_switch_research = nil,
+        before_recovery_snapshot = nil,
         timeline = {},
         completed = false
     }
@@ -133,6 +138,12 @@ local function run_checks()
         check("lab storage initialized", runtime.lab_initialized == true)
         check("policy default strategy is balanced", runtime.strategy == "balanced")
         check("queue getter result shape", runtime.queue_type == "table")
+        check("production stored queue remains the starved singleton",
+            #runtime.stored_queue == 1 and runtime.stored_queue[1] == starved_technology_name,
+            "stored queue was [" .. table.concat(runtime.stored_queue or {}, ",") .. "]")
+        check("production snapshot observes the supplied live research",
+            runtime.live_current_research == supplied_technology_name,
+            "snapshot current research was " .. tostring(runtime.live_current_research))
         check("pinned technology starts empty", runtime.pinned_is_nil == true)
         check("research history getter returns a table", runtime.history_type == "table")
         check("environment sciences getter returns a table", runtime.sciences_type == "table")
@@ -166,6 +177,10 @@ local function run_checks()
     check("the explicit research queue contained only the starved technology",
         scenario.initial_queue_size == 1,
         "initial queue size was " .. tostring(scenario.initial_queue_size))
+    check("LilEinstein's stored queue contained only the starved technology",
+        #scenario.initial_stored_queue == 1 and
+            scenario.initial_stored_queue[1] == starved_technology_name,
+        "stored queue was [" .. table.concat(scenario.initial_stored_queue or {}, ",") .. "]")
     check("starved research started first", scenario.initial_research == starved_technology_name,
         "initial research was " .. tostring(scenario.initial_research))
     check("starved research remained active before the switch interval",
@@ -178,7 +193,24 @@ local function run_checks()
             scenario.before_switch_progress > scenario.initial_progress,
         "progress changed from " .. tostring(scenario.initial_progress) .. " to " ..
             tostring(scenario.before_switch_progress))
-    check("live research switched to the supplied alternate",
+    check("live research switched to the supplied alternate by tick 900",
+        scenario.after_switch_research == supplied_technology_name,
+        "research at tick " .. tostring(observe_after_switch_tick) .. " was " ..
+            tostring(scenario.after_switch_research) .. "; timeline: " .. timeline)
+    local recovery = scenario.before_recovery_snapshot or {}
+    check("target remains insufficient before its first recovery check",
+        recovery.test_target_science_sufficient == false,
+        "target sufficient=" .. tostring(recovery.test_target_science_sufficient) ..
+            ", stock=" .. tostring(recovery.test_target_pack_stock) ..
+            ", production/min=" .. tostring(recovery.test_target_pack_production_per_minute) ..
+            ", consumption/min=" .. tostring(recovery.test_target_pack_consumption_per_minute) ..
+            ", demand/min=" .. tostring(recovery.test_target_demand_per_minute) ..
+            ", capacity/min=" .. tostring(recovery.test_target_capacity_per_minute) ..
+            ", horizon=" .. tostring(recovery.test_target_horizon_seconds) ..
+            ", live=" .. tostring(recovery.live_current_research) ..
+            ", target=" .. tostring(recovery.research_control and recovery.research_control.target_tech) ..
+            ", temp=" .. tostring(recovery.research_control and recovery.research_control.temp_tech))
+    check("live research stayed on the supplied alternate through target recovery checks",
         current_name == supplied_technology_name,
         "current research at tick " .. tostring(game.tick) .. " was " .. tostring(current_name) ..
             "; timeline: " .. timeline)
@@ -194,6 +226,12 @@ script.on_event(defines.events.on_tick, function(event)
     end
     if not scenario.queue_started and event.tick >= 1 then
         local force = game.forces.player
+        scenario.initial_stored_queue = remote.call(
+            "lil_einstein_test",
+            "configure_queue",
+            force.index,
+            {starved_technology_name}
+        )
         force.research_queue = {starved_technology_name}
         scenario.initial_research = force.current_research and force.current_research.name or nil
         scenario.initial_progress = force.research_progress
@@ -207,6 +245,17 @@ script.on_event(defines.events.on_tick, function(event)
         local force = game.forces.player
         scenario.before_switch_research = force.current_research and force.current_research.name or nil
         scenario.before_switch_progress = force.research_progress
+    end
+    if not scenario.after_switch_research and event.tick >= observe_after_switch_tick then
+        local force = game.forces.player
+        scenario.after_switch_research = force.current_research and force.current_research.name or nil
+    end
+    if not scenario.before_recovery_snapshot and event.tick >= observe_before_recovery_tick then
+        scenario.before_recovery_snapshot = remote.call(
+            "lil_einstein_test",
+            "snapshot",
+            game.forces.player.index
+        )
     end
     if event.tick >= verify_switch_tick then
         scenario.completed = true

@@ -159,6 +159,19 @@ local tests = {
         t.assert_nil(settings.science_pack_panel_science)
         t.assert_false(settings.science_pack_panel_open)
     end},
+    {"makes the inspector visible when another panel hid the content flow", function()
+        reset()
+        gui.toggle(1)
+        local anchor = player.gui.screen.lil_einstein_gui
+        anchor.content_flow.visible = false
+        anchor.research_details_panel.visible = true
+
+        gui.toggle_science_pack_details(1, "science_a")
+
+        t.assert_true(anchor.content_flow.visible)
+        t.assert_true(anchor.science_pack_panel.visible)
+        t.assert_false(anchor.research_details_panel.visible)
+    end},
     {"focuses, defocuses, and updates the search field", function()
         reset()
         gui.toggle(1)

@@ -2076,7 +2076,8 @@ local populate_science_filters = function(player_index, anchor)
     for _, s in pairs(sci) do
         local container = scitbl.add({
             type = "flow",
-            direction = "vertical"
+            direction = "vertical",
+            tags = {ignore_enable = true}
         })
         container.style.width = 46
         container.style.horizontal_align = "center"
@@ -2094,7 +2095,8 @@ local populate_science_filters = function(player_index, anchor)
             tags = {
                 lil_einstein_on_click = true,
                 handler = "open_science_pack_details",
-                science = s
+                science = s,
+                ignore_force_enable = true
             }
         }
         local btn = container.add(sprop)
@@ -2759,6 +2761,9 @@ content.repopulate_dynamic = function(player_index, anchor)
         return
     elseif science_pack_panel_is_visible(anchor) then
         refresh_science_pack_panel(player_index, anchor)
+        gcupcoming.populate(player_index, anchor)
+        refresh_research_status(player_index, anchor)
+        set_master_enable(player_index, anchor)
         return
     end
     gctech.populate(player_index, anchor)

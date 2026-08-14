@@ -357,10 +357,12 @@ local allowed_science = {
                     ignore_force_enable = true
                 }
             }, {
-                type = "button",
+                type = "sprite-button",
                 name = "research_health_copy_debug_button",
-                style = "lil_einstein_research_health_details_button",
-                caption = {"lil_einstein-debug.copy-report"},
+                style = "lil_einstein_research_health_copy_button",
+                sprite = "utility/copy",
+                hovered_sprite = "utility/copy",
+                clicked_sprite = "utility/copy",
                 tooltip = {"lil_einstein-debug.copy-report-tooltip"},
                 tags = {
                     lil_einstein_on_click = true,
@@ -794,7 +796,7 @@ local science_pack_panel = {
                 caption = {"lil_einstein-science-pack.back"},
                 tags = {
                     lil_einstein_on_click = true,
-                    handler = "toggle_science_pack_details",
+                    handler = "close_science_pack_details",
                     ignore_force_enable = true
                 }
             }}

@@ -386,21 +386,15 @@ end
 analyzer.get_filtered_technologies_player = function(player_index)
     -- Static filter array
     local filter = {
-        allowed_sciences = {}, -- Populate dynamically
+        -- Science-pack icons open their inspector; they no longer filter this
+        -- technology list. Keep the field for the shared filter implementation
+        -- and older callers that still provide an explicit filter.
+        allowed_sciences = {},
         hide_tech = {}, -- Populate dynamically
         show_tech = state.get_player_setting(player_index, "show_tech_filter_category",
             const.default_settings.player.show_tech.selected),
         search_text = state.get_player_setting(player_index, "search_text")
     }
-
-    -- Populate show sciences from sciences
-    local sci = util.get_all_sciences()
-    for _, s in pairs(sci) do
-        -- filter.sciences[s] = state.get_player_setting(player_index, "allowed_" .. s, false)
-        if state.get_player_setting(player_index, "allowed_" .. s, false) then
-            table.insert(filter.allowed_sciences, s)
-        end
-    end
 
     -- Populate hide tech from const
     for k, v in pairs(const.default_settings.player.hide_tech) do

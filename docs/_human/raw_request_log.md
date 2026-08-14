@@ -125,6 +125,10 @@ Implement number 3. This design only works if you correctly use sprites. So, pla
 Do number 3. You need to be aware that theres really only labs in one planet (Nauvis).
 
 For planet stock it would make sense for the "most contrained planets" list to actually be just a sock per planet list (show on the list if there is stock). On the top right where it says live while open, add a refresh timer so i know when its going to refresh
+
+## 2026-08-14
+
+the debug buttons are styed correctly but still out of place, outside the window, etc, heres a picture
 Codex could not read the local image at `/C:/Users/silent/.codex/generated_images/019fff98-6dc6-70a2-afc6-d9ecfb737d5a/exec-c2a71aab-f0f3-4879-a132-bfeb906a1c92.png`: The filename, directory name, or volume label syntax is incorrect. (os error 123)
 
 ## 2026-08-14
@@ -136,3 +140,49 @@ Codex could not read the local image at `/C:/Users/silent/.codex/generated_image
 ## My request:
 do number 2, this only works if you do sprites design correctly. So, plan ahead for cutting the prites and create a demo outside of the game first, present it to me for approval
 Codex could not read the local image at `/C:/Users/silent/.codex/generated_images/019fff9b-3fe8-7961-aaec-20ebdd484c8a/exec-7d98ae5f-a78a-47a6-97be-8bc33630875c.png`: The filename, directory name, or volume label syntax is incorrect. (os error 123)
+
+## 2026-08-14
+
+AutoSwitchTechs is on but disabled. Ignore it.
+
+## 2026-08-14
+
+ensure you save this fact to ob1 too, so you remember it next i guess
+
+## 2026-08-14
+
+# Files mentioned by the user:
+
+## codex-clipboard-295fe426-b797-4dc3-9d5b-25d3f39af3e7.png: C:/Users/silent/AppData/Local/Temp/codex-clipboard-295fe426-b797-4dc3-9d5b-25d3f39af3e7.png
+
+## My request:
+the background for the red science pack warning is off, maybe remove it from the background image itself, and keep it on the component background.
+
+Otherwise looks good
+<image name=[Image #1] path="C:\Users\silent\AppData\Local\Temp\codex-clipboard-295fe426-b797-4dc3-9d5b-25d3f39af3e7.png">[image content omitted]</image>
+
+## My request:
+on the demo, the sprites are all correct, can you check? Also, you didnt do the other tabs
+
+## My request:
+min switch time should follow the code, i think its in seconds, forecast in up to 5 minutes i think as well. Parallel slots exists? Recalculate interval shjould be in seconds as well, check the code.
+
+In evidence snapshot, theres a forecast of 12m, what does that mean? Shouldnt it be runtime? as in the time until depletion accounting for productivity + deliveries? If shouldnt run out then put the infinite sign
+
+in recent changes, remove the "(multiplayer history)"
+
+in plan budget, the safety first should be "reserve for type" and should basically prio something else (example mining productivity which uses more common types of science packs) if we are running low on cryogenic packs but about to receive promethium science packs, so that it "reserves" those cryogenic packs for the impending delivery of promethium packs so that we can satisfy straight away the more prioritized research productivity science. This way when the promethium packs arrive, there isnt a lack of other packs and it can resume straight away.
+
+This needs to be done with proper tact so that we dont accidentally "save" too much and end up losing on research that could have been done in the meantime.
+
+This should be clearly stated in a "history" tab as well, so that decisions like these are recorded and can be reviewed.
+
+Safety first should be the default, since it will ensure a better alignment to the priority we want.
+
+The plan horizon should be in minutes, recheck interval (replan?) 2 mins is fine unless theres no active plan or the settings for the plan change, in which case it should be done asap.
+
+The plan presets should also include a megabase plan which prioritizes high yield research targets, keeping things balanced so that some science doesnt stay behind (we already do this with the priorities logic) and focus on "safety first" (what i describe above)
+
+"Multiplayer history" tab should just be "History" and keep the filters, love that. Merge the History filtes and Collaboration controls panels into one, putting the history filters on the right side on the collabiration controls tab but above collaboration controls
+
+For switch time, 3m switch time is too big. Needs to be like 30 seconds max and instant if plan demands it

@@ -53,6 +53,18 @@ local function make_element(fail_first, fail_name)
     return element
 end
 
+local function find_named(element, wanted)
+    if element.name == wanted then
+        return element
+    end
+    for _, child in ipairs(element.children or {}) do
+        local found = find_named(child, wanted)
+        if found then
+            return found
+        end
+    end
+end
+
 local tests = {
     {"does nothing when the player has disappeared", function()
         _G.game = {get_player = function() return nil end}
@@ -71,6 +83,11 @@ local tests = {
         testlib.assert_equal(player.opened, main)
         testlib.assert_true(main.footer_frame ~= nil, "footer frame")
         testlib.assert_true(main.footer_frame.research_status_bar ~= nil, "research status bar")
+        local details_button = find_named(main, "research_health_details_button")
+        local copy_debug_button = find_named(main, "research_health_copy_debug_button")
+        testlib.assert_equal(details_button.type, "button")
+        testlib.assert_equal(copy_debug_button.type, "sprite-button")
+        testlib.assert_equal(copy_debug_button.sprite, "utility/copy")
         testlib.assert_true(anchor.brand_header == nil, "brand header belongs below main frame")
     end},
     {"retries an element without style after the first add fails", function()

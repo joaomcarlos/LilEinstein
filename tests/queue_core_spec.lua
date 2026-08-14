@@ -340,7 +340,11 @@ local tests = {
                 }}
             }
         end
-        local candidate = xcur("candidate", {sciences = {"pack"}, research_unit_count = 100})
+        local candidate = xcur("candidate", {
+            sciences = {"pack"},
+            research_unit_count = 100,
+            research_unit_ingredients = {{name = "pack", amount = 1}}
+        })
         t.assert_false(queue.science_is_sufficient(candidate, 1))
         queue.get_science_availability = function()
             return {
@@ -522,7 +526,7 @@ local tests = {
     {"uses a supplied unqueued fallback when the only queued technology is pack-bound", function()
         local force = reset_runtime()
         game.tick = 31000
-        science_names = {"unique-starved-pack", "available-pack"}
+        science_names = {"unique-starved-pack", "available-pack", "thin-pack", "short-pack"}
         defines = {
             entity_status = {
                 working = "working",
@@ -533,9 +537,17 @@ local tests = {
 
         local old_availability = queue.get_science_availability
         local old_forecast = queue.get_science_forecast
+        local old_speed = queue.get_research_speed
+        local availability_calls = 0
         policy_settings.forecast_seconds = 120
         queue.get_science_availability = function()
-            return {['unique-starved-pack'] = true, ['available-pack'] = true}
+            availability_calls = availability_calls + 1
+            return {
+                ['unique-starved-pack'] = true,
+                ['available-pack'] = true,
+                ['thin-pack'] = true,
+                ['short-pack'] = true
+            }
         end
         queue.get_science_forecast = function()
             return {
@@ -550,9 +562,22 @@ local tests = {
                     production_per_minute = 100000,
                     consumption_per_minute = 0,
                     net_per_minute = 100000
+                },
+                ['thin-pack'] = {
+                    stock = 500,
+                    production_per_minute = 0,
+                    consumption_per_minute = 0,
+                    net_per_minute = 0
+                },
+                ['short-pack'] = {
+                    stock = 100,
+                    production_per_minute = 0,
+                    consumption_per_minute = 0,
+                    net_per_minute = 0
                 }
             }
         end
+        queue.get_research_speed = function() return 1 end
 
         local current = xcur("current", {
             sciences = {"unique-starved-pack"},
@@ -565,7 +590,36 @@ local tests = {
             research_unit_ingredients = {{name = "available-pack", amount = 1}}
         })
         alternate.technology.research_unit_energy = 60
-        tech_state = {current = current, alternate = alternate}
+        local thin_alternate = xcur("thin-alternate", {
+            sciences = {"thin-pack"},
+            research_unit_count = 100000,
+            research_unit_ingredients = {{name = "thin-pack", amount = 1}}
+        })
+        thin_alternate.technology.research_unit_energy = 60
+        science_priorities["thin-alternate"] = 100
+        local short_alternate = xcur("short-alternate", {
+            sciences = {"short-pack"},
+            research_unit_count = 100,
+            research_unit_ingredients = {{name = "short-pack", amount = 1}}
+        })
+        short_alternate.technology.research_unit_energy = 60
+        science_priorities["short-alternate"] = 90
+        tech_state = {
+            current = current,
+            alternate = alternate,
+            ["thin-alternate"] = thin_alternate,
+            ["short-alternate"] = short_alternate
+        }
+        for index = 1, 200 do
+            local name = string.format("disabled-filler-%03d", index)
+            local filler = xcur(name, {
+                enabled = false,
+                sciences = {"available-pack"},
+                research_unit_ingredients = {{name = "available-pack", amount = 1}}
+            })
+            tech_state[name] = filler
+            force.technologies[name] = filler.technology
+        end
         storage.forces[1].queue.queue = {"current"}
         force.current_research = current.technology
 
@@ -599,18 +653,23 @@ local tests = {
         queue.check_and_switch_temp_research(force)
         local selected = storage.forces[1].queue.temp_tech
         local requested = requests
+        local availability_calls_after_switch = availability_calls
         queue.start_next_research(force, true)
         local runtime_first = force.research_queue[1]
         runtime_first = runtime_first and runtime_first.name or runtime_first
         queue.get_science_availability = old_availability
         queue.get_science_forecast = old_forecast
+        queue.get_research_speed = old_speed
 
         t.assert_equal(bottleneck["unique-starved-pack"], true,
             "the low-but-nonzero current research must expose its unique missing pack")
-        t.assert_equal(selected, "alternate",
-            "hard starvation must use a supplied runtime fallback outside the explicit queue")
+        t.assert_equal(selected, "short-alternate",
+            "hard starvation must skip a forecast-starved alternate and accept one stocked to completion")
         t.assert_equal(requested, 1, "the emergency fallback must request active reselection")
-        t.assert_equal(runtime_first, "alternate",
+        t.assert_true(availability_calls_after_switch <= 2,
+            "one emergency slice must reuse science availability; calls=" ..
+                tostring(availability_calls_after_switch))
+        t.assert_equal(runtime_first, "short-alternate",
             "forced reselection must put the emergency fallback first in Factorio's queue")
     end},
     {"bounds the emergency fallback candidate scan", function()
@@ -783,6 +842,197 @@ local tests = {
             "the supplied alternate must receive another recovery window")
         t.assert_equal(requested, 0,
             "retaining the already-active alternate must not request redundant reselection")
+    end},
+    {"uses the target's own capacity for its recovery horizon", function()
+        local force = reset_runtime()
+        game.tick = 32500
+        science_names = {"target-pack", "alternate-pack"}
+        policy_settings.forecast_seconds = 120
+        defines = {
+            entity_status = {
+                working = "working",
+                missing_science_packs = "missing-science-packs"
+            },
+            inventory = {lab_input = 1}
+        }
+
+        local old_availability = queue.get_science_availability
+        local old_forecast = queue.get_science_forecast
+        local old_speed = queue.get_research_speed
+        queue.get_science_availability = function()
+            return {['target-pack'] = true, ['alternate-pack'] = true}
+        end
+        queue.get_science_forecast = function()
+            return {
+                ['target-pack'] = {
+                    stock = 500,
+                    production_per_minute = 0,
+                    consumption_per_minute = 0,
+                    net_per_minute = 0
+                },
+                ['alternate-pack'] = {
+                    stock = 100000,
+                    production_per_minute = 100000,
+                    consumption_per_minute = 0,
+                    net_per_minute = 100000
+                }
+            }
+        end
+        queue.get_research_speed = function() return 100 end
+
+        local target = xcur("target", {
+            sciences = {"target-pack"},
+            research_unit_count = 1000,
+            research_unit_ingredients = {{name = "target-pack", amount = 1}}
+        })
+        target.technology.research_unit_energy = 600
+        target.queued = true
+        local alternate = xcur("alternate", {
+            sciences = {"alternate-pack"},
+            research_unit_count = 100000,
+            research_unit_ingredients = {{name = "alternate-pack", amount = 1}}
+        })
+        alternate.technology.research_unit_energy = 60
+        tech_state = {target = target, alternate = alternate}
+        storage.forces[1].queue.queue = {"target"}
+
+        local lab_entity = {
+            valid = true,
+            unit_number = 1,
+            speed_bonus = 99,
+            productivity_bonus = 0,
+            prototype = {
+                name = "different-energy-lab",
+                lab_inputs = {"target-pack", "alternate-pack"},
+                science_pack_drain_rate_percent = 100,
+                get_researching_speed = function() return 1 end
+            }
+        }
+        runtime_lab_content[1] = {
+            lab = lab_entity,
+            latest_tick = game.tick,
+            latest_status = defines.entity_status.missing_science_packs,
+            latest_contents = {}
+        }
+        force.current_research = target.technology
+        queue.get_active_missing_science_bottleneck(1, target)
+
+        storage.forces[1].queue.target_tech = "target"
+        storage.forces[1].queue.temp_tech = "alternate"
+        storage.forces[1].queue.temp_tech_timeout = game.tick - 1
+        storage.forces[1].queue.last_switch_tick = game.tick - 2000
+        force.current_research = alternate.technology
+        runtime_lab_content[1].latest_status = defines.entity_status.working
+        runtime_lab_content[1].latest_contents = {{name = "alternate-pack", count = 100000}}
+
+        local target_is_sufficient = queue.science_is_sufficient(target, 1)
+        queue.check_and_switch_temp_research(force)
+        local retained_temp = storage.forces[1].queue.temp_tech
+        local requested = requests
+        queue.get_science_availability = old_availability
+        queue.get_science_forecast = old_forecast
+        queue.get_research_speed = old_speed
+
+        t.assert_false(target_is_sufficient,
+            "the fast temporary technology must not shorten the slower target's recovery horizon")
+        t.assert_equal(retained_temp, "alternate",
+            "the slower target must remain deferred until its own demand can be sustained")
+        t.assert_equal(requested, 0,
+            "retaining the temporary technology must not request redundant reselection")
+    end},
+    {"does not apply force-wide demand projection across isolated lab clusters", function()
+        local force = reset_runtime()
+        game.tick = 32700
+        science_names = {"target-pack", "alternate-pack"}
+        policy_settings.forecast_seconds = 120
+        defines = {inventory = {lab_input = 1}}
+
+        local old_availability = queue.get_science_availability
+        local old_forecast = queue.get_science_forecast
+        local old_speed = queue.get_research_speed
+        local cluster_availability = {
+            ['target-pack'] = true,
+            ['alternate-pack'] = true,
+            __cluster_mode = true,
+            __clusters = {
+                {
+                    key = "1:network:1",
+                    lab_input_counts = {['target-pack'] = 1},
+                    lab_input_sets = {{['target-pack'] = true}},
+                    available_sciences = {['target-pack'] = true},
+                    counts = {['target-pack'] = 5}
+                },
+                {
+                    key = "2:network:2",
+                    lab_input_counts = {['target-pack'] = 1},
+                    lab_input_sets = {{['target-pack'] = true}},
+                    available_sciences = {},
+                    counts = {['target-pack'] = 5}
+                },
+                {
+                    key = "3:network:3",
+                    lab_input_counts = {['alternate-pack'] = 1},
+                    lab_input_sets = {{['alternate-pack'] = true}},
+                    available_sciences = {['alternate-pack'] = true},
+                    counts = {['target-pack'] = 100000}
+                }
+            }
+        }
+        local target_forecast = {
+            stock = 100010,
+            production_per_minute = 0,
+            consumption_per_minute = 0,
+            net_per_minute = 0
+        }
+        queue.get_science_availability = function()
+            return cluster_availability
+        end
+        queue.get_science_forecast = function()
+            return {['target-pack'] = target_forecast}
+        end
+        queue.get_research_speed = function() return 100 end
+
+        local target = xcur("cluster-target", {
+            sciences = {"target-pack"},
+            research_unit_count = 100000,
+            research_unit_ingredients = {{name = "target-pack", amount = 1}}
+        })
+        target.technology.research_unit_energy = 60
+        local alternate = xcur("alternate", {sciences = {"alternate-pack"}})
+        alternate.technology.research_unit_energy = 60
+        tech_state = {["cluster-target"] = target, alternate = alternate}
+        force.current_research = alternate.technology
+
+        local sufficient = queue.science_is_sufficient(target, 1)
+        cluster_availability.__clusters[1].key = "1:lab:1"
+        cluster_availability.__clusters[2].key = "1:lab:2"
+        target_forecast.production_per_minute = 100000
+        local direct_surface_sufficient = queue.science_is_sufficient(target, 1)
+        game.tick = game.tick + 600
+        cluster_availability.__clusters[1].counts['target-pack'] = 500
+        cluster_availability.__clusters[2].counts['target-pack'] = 500
+        target_forecast.stock = 101000
+        local burst_supply_sufficient = queue.science_is_sufficient(target, 1)
+        local burst_evidence = queue.get_research_recovery_evidence(1, "cluster-target")
+        game.tick = game.tick + 600
+        cluster_availability.__clusters[1].counts['target-pack'] = 50005
+        cluster_availability.__clusters[2].counts['target-pack'] = 50005
+        target_forecast.stock = 200010
+        local arrived_supply_sufficient = queue.science_is_sufficient(target, 1)
+        queue.get_science_availability = old_availability
+        queue.get_science_forecast = old_forecast
+        queue.get_research_speed = old_speed
+
+        t.assert_true(sufficient,
+            "force-wide flow cannot reject a candidate when multiple isolated clusters consume its pack")
+        t.assert_false(direct_surface_sufficient,
+            "remote force production must not satisfy direct-fed recovery until reachable stock grows")
+        t.assert_false(burst_supply_sufficient,
+            "one partial delivery must not be extrapolated as sustained target supply; demand=" ..
+                tostring(burst_evidence.physical_demand_per_minute["target-pack"]) ..
+                ", horizon=" .. tostring(burst_evidence.horizon_seconds))
+        t.assert_true(arrived_supply_sufficient,
+            "enough stock already reachable by the labs must permit target recovery")
     end},
     {"restores a supplied target when the temporary research becomes pack-bound", function()
         local force = reset_runtime()

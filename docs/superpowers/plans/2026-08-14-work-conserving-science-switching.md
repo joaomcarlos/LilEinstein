@@ -4,7 +4,7 @@
 
 **Goal:** Keep research capacity productive by temporarily selecting any safe supplied technology when the chosen queue is pack-bound, and do not restore the chosen target until its incoming supply can sustain a meaningful research window.
 
-**Architecture:** Preserve the explicit queue as the normal source. The starvation path scans it first, then performs a scored all-technology emergency fallback only when the queue has no supplied substitute. Inactive candidates and stored targets are evaluated against their own physical pack demand over the configured forecast horizon, using existing bounded lab observations and force science-flow forecasts.
+**Architecture:** Preserve the explicit queue as the normal source. The starvation path scans it first, then advances through fixed-size scored slices of eligible technologies only when the queue has no supplied substitute. Inactive candidates and stored targets share a cached full-capacity estimate for physical demand and completion horizon. Cluster-mode recovery uses stock only from the sole compatible consuming scope, while one availability/forecast/scope snapshot is reused across each bounded slice.
 
 **Tech Stack:** Factorio 2.0.77 runtime API, modified Lua 5.2, existing `model.queue`, Lua public-seam tests, disposable headless Factorio harness.
 
@@ -40,7 +40,7 @@
 
 - [x] **Step 3: Implement the emergency fallback**
 
-  Forward-declare a starvation fallback source near the existing queue helpers. Define it beside `get_virtual_queue_source` so it can reuse the scored all-runtime-candidate list. In `check_and_switch_temp_research`, preserve pinned/explicit order first; only after that source yields nothing, scan the emergency source, skip duplicates/current, require the candidate's own supply projection, and store the original target unchanged.
+  Forward-declare a starvation fallback helper near the existing queue helpers. In `check_and_switch_temp_research`, preserve pinned/explicit order first; only after that source yields nothing, advance a persistent fixed-size technology cursor, score the runnable candidates in that slice, and store the original target unchanged.
 
 - [x] **Step 4: Run the focused test and verify GREEN**
 
@@ -48,7 +48,7 @@
 
   Expected: the new alternate is selected and applied first.
 
-### Task 2: Demand-aware restoration and fallback filtering
+### Task 2: Demand-aware restoration
 
 **Files:**
 - Modify: `model/queue.lua`
@@ -56,7 +56,7 @@
 
 **Interfaces:**
 - Consumes: bounded `lab.get_runtime_lab_content(force_index)`, `get_lab_science_consumption_spm`, `queue.get_science_forecast`, and `forecast_seconds`.
-- Produces: per-science physical demand for an inactive technology and a projected stock sufficiency decision over its own research horizon.
+- Produces: cached per-science physical demand and research capacity for the active target, plus a projected recovery decision over that target's own horizon.
 
 - [x] **Step 1: Write the failing timeout regression**
 
@@ -70,13 +70,17 @@
 
 - [x] **Step 3: Add the target-demand projection**
 
-  Sum required physical pack rates across valid compatible runtime labs. For inactive technology supply, require `stock + production_per_minute * horizon / 60` to cover `demand_per_minute * horizon / 60`, with the horizon capped by configured forecast time and estimated research completion. Keep the active technology on live missing-pack evidence.
+  Cache required physical pack rates and expected capacity from valid compatible runtime labs. For inactive technology supply, require `stock + production_per_minute * horizon / 60` to cover `demand_per_minute * horizon / 60`, using the same full-capacity estimate to cap the horizon at research completion. Keep the active technology on live missing-pack evidence.
 
-- [x] **Step 4: Apply the same strict predicate to emergency candidates**
+- [x] **Step 4: Keep emergency candidate work bounded**
 
-  A nominally stocked alternate that cannot sustain its projected demand must be skipped so the switcher does not trade one starvation loop for another.
+  Inspect a fixed-size scored technology slice per starvation check. Reuse one cluster-aware availability snapshot, forecast, and precomputed compatible-scope stock map while requiring each candidate's forecast sufficiency; once active, normal live PACK-BOUND evidence can replace an unsuitable temporary technology.
 
-- [x] **Step 5: Run focused tests and verify GREEN**
+- [x] **Step 5: Require reachable stock in cluster mode**
+
+  During recovery, require current stock in the sole compatible consuming scope to cover the target's forecast window. Do not count incompatible remote stock, force-wide production, packs still in transit, or one partial delivery as sustained ready lab supply.
+
+- [x] **Step 6: Run focused tests and verify GREEN**
 
   Run: `lua52 .\tests\queue_core_spec.lua`
 
@@ -95,13 +99,13 @@
 
 - [x] **Step 1: Convert the disposable scenario to the reported transition**
 
-  Queue only the starved technology. Keep its unique pack in 5 of 275 labs and keep the alternate pack in all labs, so current progress is nonzero but about 1.8% of capacity. Do not pre-queue the alternate.
+  Seed both LilEinstein's stored queue and Factorio's live queue with only the starved technology. Keep its unique pack in 5 of 275 labs and keep the alternate pack in all labs, so current progress is nonzero but about 1.8% of capacity. Do not pre-queue the alternate.
 
 - [x] **Step 2: Assert the real scheduler result**
 
-  Confirm the starved technology begins and makes nonzero progress, then assert `LuaForce.current_research.name` becomes the supplied alternate after the normal sampler, switch, and reselection cadences.
+  Confirm the starved technology begins and makes nonzero progress, assert `LuaForce.current_research.name` becomes the supplied alternate after the normal sampler, switch, and reselection cadences, then continue beyond the minimum dwell and prove the low-stock target is not restored.
 
-- [ ] **Step 3: Run all verification gates**
+- [x] **Step 3: Run all verification gates**
 
   Run:
 
@@ -111,6 +115,6 @@
   - `luac52 -p` across Lua sources
   - `git diff --check`
 
-- [ ] **Step 4: Complete the DOX and independent review pass**
+- [x] **Step 4: Complete the DOX and independent review pass**
 
   Record the starvation-only fallback and demand-aware recovery contracts, verify no new unbounded scheduler work, and review Factorio API use, function ordering, nil guards, and unrelated dirty files.

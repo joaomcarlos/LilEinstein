@@ -11,13 +11,47 @@ local const = require("lib.const")
 local util = require("lib.util")
 local gui_schedule = require("lib.gui_schedule")
 
--- Development-only read-only snapshot for the disposable Factorio test mod.
+-- Development-only bridge for the disposable Factorio test mod.
 -- The interface is absent from normal saves because the test mod is not active.
 if script.active_mods and script.active_mods["lil-einstein-test"] then
+    local get_test_stored_queue = function(force_index)
+        local names = {}
+        for _, technology_name in ipairs(queue.get_queue(force_index) or {}) do
+            table.insert(names, technology_name)
+        end
+        return names
+    end
     remote.add_interface("lil_einstein_test", {
+        configure_queue = function(force_index, queue_names)
+            local f = game.forces[force_index or "player"]
+            if not f or type(queue_names) ~= "table" then
+                return {}
+            end
+            local stored_queue = queue.get_queue(f.index)
+            for index = #(stored_queue or {}), 1, -1 do
+                queue.remove(f, stored_queue[index], true)
+            end
+            for _, technology_name in ipairs(queue_names) do
+                if type(technology_name) == "string" then
+                    queue.add(f, technology_name, nil, true)
+                end
+            end
+            return get_test_stored_queue(f.index)
+        end,
         snapshot = function(force_index)
             local f = game.forces[force_index or "player"]
             local sf = f and storage and storage.forces and storage.forces[f.index] or nil
+            local test_target = f and tech.get_single_tech_state_ext(
+                f.index,
+                "lil-einstein-test-starved"
+            ) or nil
+            local test_forecast = f and queue.get_science_forecast(f.index) or {}
+            local target_pack_forecast = test_forecast["automation-science-pack"] or {}
+            local recovery_evidence = f and queue.get_research_recovery_evidence(
+                f.index,
+                "lil-einstein-test-starved"
+            ) or {}
+            local recovery_demand = recovery_evidence.physical_demand_per_minute or {}
             local safe_type = function(callback)
                 local ok, value = pcall(callback)
                 return ok and type(value) or "error"
@@ -30,6 +64,17 @@ if script.active_mods and script.active_mods["lil-einstein-test"] then
                 lab_initialized = sf ~= nil and sf.lab ~= nil,
                 strategy = f and policy.get_setting(f.index, "strategy") or nil,
                 queue_type = f and type(queue.get_queue(f.index)) or "nil",
+                stored_queue = f and get_test_stored_queue(f.index) or {},
+                live_current_research = f and f.current_research and f.current_research.name or nil,
+                test_target_science_sufficient = test_target and
+                    queue.science_is_sufficient(test_target, f.index) or false,
+                test_target_pack_stock = target_pack_forecast.stock or 0,
+                test_target_pack_production_per_minute = target_pack_forecast.production_per_minute or 0,
+                test_target_pack_consumption_per_minute = target_pack_forecast.consumption_per_minute or 0,
+                test_target_demand_per_minute = recovery_demand["automation-science-pack"] or 0,
+                test_target_capacity_per_minute = recovery_evidence.cached_capacity_per_minute or 0,
+                test_target_horizon_seconds = recovery_evidence.horizon_seconds or 0,
+                research_control = f and queue.get_research_control_state(f.index) or {},
                 pinned_is_nil = f and queue.get_pinned_tech(f.index) == nil or false,
                 history_type = f and type(queue.get_research_history(f.index, 5)) or "nil",
                 sciences_type = type(env.get_all_sciences()),
@@ -478,14 +523,30 @@ local mutable_gui_handlers = {
     import_plan = true
 }
 
+local science_button_prefix = "allowed_science_btn_"
+
 script.on_event(defines.events.on_gui_click, function(e)
-    -- Early exit if the gui element doesnt have our on_click tag
-    if not e.element.tags or not e.element.tags["lil_einstein_on_click"] then
+    local t = e.element.tags
+    local h = t and t["lil_einstein_on_click"] and t.handler
+    local element_name = e.element.name
+    if type(element_name) == "string" and
+        string.sub(element_name, 1, #science_button_prefix) == science_button_prefix then
+        -- Also accept the stable element name. This lets a GUI opened before a
+        -- mod update recover even if its serialized tags use the old handler.
+        local science = string.sub(element_name, #science_button_prefix + 1)
+        if science ~= "" then
+            t = {
+                lil_einstein_on_click = true,
+                handler = "open_science_pack_details",
+                science = science
+            }
+            h = t.handler
+        end
+    end
+    if not h then
         return
     end
 
-    local t = e.element.tags
-    local h = t.handler
     local p = game.get_player(e.player_index)
     if not p then
         return
@@ -601,6 +662,12 @@ script.on_event(defines.events.on_gui_click, function(e)
         repopulate = false
     elseif h == "toggle_research_details" then
         gui.toggle_research_details(p.index)
+        repopulate = false
+    elseif h == "close_science_pack_details" then
+        local science = state.get_player_setting(p.index, "science_pack_panel_science")
+        if science then
+            gui.toggle_science_pack_details(p.index, science)
+        end
         repopulate = false
     elseif h == "open_debug_report" then
         gui.open_debug_report(p.index)

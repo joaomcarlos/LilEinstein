@@ -268,7 +268,7 @@ local tests = {
         local filtered = analyzer.get_filtered_technologies_player(1)
         testlib.assert_equal(#filtered, 2)
     end},
-    {"applies exact science, infinite, and prototype category filters", function()
+    {"keeps science-pack inspector state out of the technology list filter", function()
         const.categories.military = {research_effects = {"ammo-damage"}}
         local science = make_tech("science", {available = true, sciences = {"automation-science"}})
         local no_science = make_tech("no-science", {available = true, sciences = {"other-science"}})
@@ -286,8 +286,7 @@ local tests = {
         settings = {allowed_automation_science = true, ["allowed_automation-science"] = true,
             show_tech_filter_category = "all"}
         local science_filtered = analyzer.get_filtered_technologies_player(1)
-        testlib.assert_equal(#science_filtered, 1)
-        testlib.assert_equal(science_filtered[1].technology.name, "science")
+        testlib.assert_equal(#science_filtered, 4)
 
         settings["allowed_automation-science"] = false
         settings.show_tech_filter_category = "infinite"
