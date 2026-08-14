@@ -79,6 +79,17 @@ local function load_queue()
                     return "balanced"
                 end
                 return false
+            end,
+            copy_table = function(value)
+                if type(value) ~= "table" then return value end
+                local res = {}
+                for k, v in pairs(value) do
+                    res[k] = v
+                end
+                return res
+            end,
+            export_settings = function()
+                return {settings = {}, sciences = {}, repeat_rules = {}}
             end
         }
     end
@@ -190,14 +201,40 @@ local function test_stale_current_cache_reconciles_live_research()
         "a stale cached technology must not suppress live research reconciliation")
 end
 
+local function test_plan_snapshot_wraps_version_one_plan_with_stable_metadata()
+    local queue = load_queue()
+    make_force("worker-robots-speed-7", {"research-productivity", "logistics"})
+    game.tick = 4242
+
+    local snapshot = queue.get_plan_snapshot(1)
+
+    assert_equal(snapshot ~= nil, true, "get_plan_snapshot must return a wrapper for a valid force")
+    assert_equal(snapshot.revision, 1, "the wrapper must carry a stable revision")
+    assert_equal(snapshot.tick, 4242, "the wrapper must carry the current game tick")
+    assert_equal(snapshot.plan.version, 1, "the inner plan must remain version 1 for import compatibility")
+    assert_equal(snapshot.plan.queue[1], "research-productivity", "the inner plan must preserve queue order")
+    assert_equal(snapshot.plan.queue[2], "logistics", "the inner plan must preserve queue order")
+    assert_equal(type(snapshot.plan.policy), "table", "the inner plan must carry policy export")
+end
+
+local function test_plan_snapshot_is_nil_safe_for_missing_force()
+    local queue = load_queue()
+    storage = {forces = {}}
+    game = {tick = 1, forces = {}, surfaces = {}}
+    assert_equal(queue.get_plan_snapshot(99), nil,
+        "get_plan_snapshot must return nil when the force store is missing")
+end
+
 test_idle_force_rebuilds_after_research_was_cancelled()
 test_active_force_keeps_current_research_guard()
 test_forced_reselection_updates_active_research_queue()
 test_stale_current_cache_reconciles_live_research()
+test_plan_snapshot_wraps_version_one_plan_with_stable_metadata()
+test_plan_snapshot_is_nil_safe_for_missing_force()
 
 reset_modules()
 for _, name in ipairs(preload_names) do
     package.preload[name] = original_preloads[name]
 end
-print("queue_spec: 4 passed")
-return 4
+print("queue_spec: 6 passed")
+return 6

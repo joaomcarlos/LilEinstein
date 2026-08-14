@@ -1017,8 +1017,24 @@ queue.check_and_switch_temp_research = function(f)
     local sq = sf.queue
     local minimum_switch_ticks = 60 * (policy.get_setting(f.index, "min_switch_seconds") or 20)
     local last_switch_tick = sq[keys.last_switch_tick]
-    if last_switch_tick and game.tick - last_switch_tick < minimum_switch_ticks then
-        return
+    local blocked_by_interval = last_switch_tick and game.tick - last_switch_tick < minimum_switch_ticks
+    if blocked_by_interval then
+        -- The normal minimum switch interval stays enforced unless an explicit
+        -- plan-demand override was requested and is permitted by policy.
+        local override_used, override_reason
+        if policy.consume_instant_switch then
+            override_used, override_reason = policy.consume_instant_switch(f.index)
+        end
+        if not override_used then
+            return
+        end
+        if policy.record_action then
+            policy.record_action(f.index, nil, "instant_switch", {
+                category = "switch",
+                reason = override_reason,
+                trigger = "override"
+            })
+        end
     end
 
     -- If temp tech is active and timeout hasn't expired, don't disturb it
@@ -5019,6 +5035,21 @@ queue.import_plan = function(force_index, exchange_string)
         return false, "invalid-json"
     end
     return apply_plan_snapshot(force_index, snapshot)
+end
+
+-- Public plan snapshot with stable revision/tick metadata. The inner `plan`
+-- retains version = 1 so existing import/export compatibility is preserved;
+-- the wrapper only adds non-breaking metadata for the Research Control Center.
+queue.get_plan_snapshot = function(force_index)
+    local plan = build_plan_snapshot(force_index)
+    if not plan then
+        return nil
+    end
+    return {
+        revision = 1,
+        tick = game and game.tick or 0,
+        plan = plan
+    }
 end
 
 ------------------------------------------------------------------------------

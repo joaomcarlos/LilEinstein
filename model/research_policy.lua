@@ -11,11 +11,19 @@ policy.strategy_order = {
     "space",
     "spoilable",
     "productivity",
-    "focused"
+    "focused",
+    "megabase"
 }
 
 policy.science_priority_order = {"avoid", "normal", "preferred", "urgent"}
 policy.repeat_mode_order = {"default", "never", "once", "continuous", "to_level"}
+policy.reserve_for_type_order = {"off", "safety_first", "balanced"}
+
+-- bounded action history retention (entries per force)
+local history_retention_limit = 40
+-- bounded replan interval (seconds); the planner re-runs at most this often
+local replan_interval_min_seconds = 30
+local replan_interval_max_seconds = 3600
 
 local default_settings = {
     strategy = "balanced",
@@ -28,7 +36,10 @@ local default_settings = {
     cluster_mode = true,
     multiplayer_lock = false,
     performance_mode = false,
-    parallel_slots = 5
+    parallel_slots = 5,
+    replan_interval_seconds = 120,
+    reserve_for_type = "safety_first",
+    instant_switch_override = true
 }
 
 local science_priority_weights = {
@@ -51,6 +62,11 @@ end
 local valid_strategies = {}
 for _, name in ipairs(policy.strategy_order) do
     valid_strategies[name] = true
+end
+
+local valid_reserve_for_types = {}
+for _, name in ipairs(policy.reserve_for_type_order) do
+    valid_reserve_for_types[name] = true
 end
 
 local copy_table
@@ -85,10 +101,14 @@ local sanitize_setting = function(key, value)
 
     if key == "strategy" then
         return value, type(value) == "string" and valid_strategies[value] == true
+    elseif key == "reserve_for_type" then
+        return value, type(value) == "string" and valid_reserve_for_types[value] == true
     elseif key == "min_switch_seconds" then
         return math.floor(clamp(value, 5, 600)), true
     elseif key == "forecast_seconds" then
         return math.floor(clamp(value, 0, 3600)), true
+    elseif key == "replan_interval_seconds" then
+        return math.floor(clamp(value, replan_interval_min_seconds, replan_interval_max_seconds)), true
     elseif key == "parallel_slots" then
         return math.floor(clamp(value, 2, 20)), true
     elseif key == "science_lower_threshold" or key == "science_upper_threshold" then
@@ -110,6 +130,8 @@ policy.init_force = function(force_index)
     store.presets = store.presets or {}
     store.science_available = store.science_available or {}
     store.cluster_science_available = store.cluster_science_available or {}
+    -- pending plan-demand instant switch override; save-safe (strings/numbers only)
+    store.pending_instant_switch = store.pending_instant_switch or nil
 
     for key, value in pairs(default_settings) do
         if store.settings[key] == nil then
@@ -258,6 +280,17 @@ policy.get_strategy_adjustment = function(force_index, xcur, cost)
                              "mining-drill-productivity-bonus"}) then
             return 60
         end
+    elseif strategy == "megabase" then
+        -- Infinite focused research, accounted for logistics. Bounded bonus
+        -- for infinite (high-yield) targets plus a smaller logistics-aware bump.
+        if xcur and xcur.meta and xcur.meta.is_infinite then
+            local bonus = 40
+            if has_effect(xcur, {"worker-robot-speed", "worker-robot-storage", "belt-stack-size-bonus",
+                                 "inserter-stack-size-bonus", "bulk-inserter-capacity-bonus", "vehicle-logistics"}) then
+                bonus = bonus + 20
+            end
+            return bonus
+        end
     end
     return 0
 end
@@ -333,26 +366,121 @@ policy.can_edit = function(player)
     return player.admin == true
 end
 
+-- Structured action history. `detail` may be a plain string (legacy callers,
+-- stored verbatim in `detail`) or a table carrying any of:
+--   category, reason, trigger, before, after, reserved, release_reason, detail
+-- All structured fields are optional; `category` defaults to `action`.
+-- `before`/`after`/`reserved` are copied save-safe (strings/numbers/tables).
 policy.record_action = function(force_index, player_index, action, detail)
     local store = get_store(force_index)
     if not store then
         return
     end
     local player = player_index and game.get_player(player_index) or nil
-    table.insert(store.history, 1, {
-        tick = game.tick,
+    local entry = {
+        tick = game and game.tick or 0,
         player = player and player.name or "system",
-        action = tostring(action or "update"),
-        detail = tostring(detail or "")
-    })
-    while #store.history > 40 do
+        action = tostring(action or "update")
+    }
+    if type(detail) == "table" then
+        entry.category = tostring(detail.category or entry.action)
+        entry.reason = detail.reason ~= nil and tostring(detail.reason) or nil
+        entry.trigger = detail.trigger ~= nil and tostring(detail.trigger) or nil
+        entry.before = detail.before ~= nil and copy_table(detail.before) or nil
+        entry.after = detail.after ~= nil and copy_table(detail.after) or nil
+        entry.reserved = detail.reserved ~= nil and copy_table(detail.reserved) or nil
+        entry.release_reason = detail.release_reason ~= nil and tostring(detail.release_reason) or nil
+        entry.detail = detail.detail ~= nil and tostring(detail.detail) or nil
+    else
+        entry.category = entry.action
+        entry.detail = tostring(detail or "")
+    end
+    table.insert(store.history, 1, entry)
+    while #store.history > history_retention_limit do
         table.remove(store.history)
     end
 end
 
-policy.get_history = function(force_index)
+-- Returns filtered history. `filters` is an optional table of equality
+-- predicates matched against entry fields (e.g. {category = "switch"}).
+-- Omitting `filters` (or passing a non-table) returns the full bounded history.
+policy.get_history = function(force_index, filters)
     local store = get_store(force_index)
-    return (store and store.history) or {}
+    local history = (store and store.history) or {}
+    if type(filters) ~= "table" then
+        return history
+    end
+    local res = {}
+    for _, entry in ipairs(history) do
+        local match = true
+        for key, expected in pairs(filters) do
+            if entry[key] ~= expected then
+                match = false
+                break
+            end
+        end
+        if match then
+            table.insert(res, entry)
+        end
+    end
+    return res
+end
+
+------------------------------------------------------------------------------
+-- Plan-demand instant switch override seam
+--
+-- The normal minimum switch interval stays enforced unless an explicit
+-- override is requested. `instant_switch_override` (default true) gates
+-- whether a pending request may be consumed. The pending request and its
+-- reason persist in save-safe state until consumed or cleared.
+------------------------------------------------------------------------------
+
+policy.request_instant_switch = function(force_index, reason)
+    local store = get_store(force_index)
+    if not store then
+        return false
+    end
+    store.pending_instant_switch = {
+        reason = reason ~= nil and tostring(reason) or "",
+        tick = game and game.tick or 0
+    }
+    return true
+end
+
+policy.has_instant_switch_request = function(force_index)
+    local store = get_store(force_index)
+    return (store and store.pending_instant_switch ~= nil) or false
+end
+
+policy.get_instant_switch_reason = function(force_index)
+    local store = get_store(force_index)
+    if not store or not store.pending_instant_switch then
+        return nil
+    end
+    return store.pending_instant_switch.reason
+end
+
+-- Consumes a pending override. Returns true, reason when an override is
+-- granted (pending request exists and the setting allows it); otherwise
+-- false, nil. The pending request is cleared only when actually granted.
+policy.consume_instant_switch = function(force_index)
+    local store = get_store(force_index)
+    if not store or not store.pending_instant_switch then
+        return false, nil
+    end
+    if not policy.get_setting(force_index, "instant_switch_override") then
+        return false, nil
+    end
+    local reason = store.pending_instant_switch.reason
+    store.pending_instant_switch = nil
+    return true, reason
+end
+
+policy.clear_instant_switch = function(force_index)
+    local store = get_store(force_index)
+    if store then
+        store.pending_instant_switch = nil
+    end
 end
 
 policy.get_presets = function(force_index)

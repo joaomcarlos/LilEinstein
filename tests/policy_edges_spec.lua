@@ -183,6 +183,48 @@ local tests = {
         t.assert_equal(policy.get_cluster_science_available_state(1, "cluster", "science", true), true)
         policy.record_action(99, nil, nil, nil)
     end}
+    ,{"covers megabase adjustment, new sanitizers, and structured history edges", function()
+        reset()
+        local sanitize_setting = find_private(policy.set_setting, "sanitize_setting")
+        t.assert_true(type(sanitize_setting) == "function")
+        local replan_value, replan_valid = sanitize_setting("replan_interval_seconds", "not-a-number")
+        t.assert_true(replan_valid)
+        t.assert_equal(replan_value, 30)
+        local reserve_value, reserve_valid = sanitize_setting("reserve_for_type", "safety_first")
+        t.assert_true(reserve_valid)
+        t.assert_equal(reserve_value, "safety_first")
+        local reserve_bad_value, reserve_bad_valid = sanitize_setting("reserve_for_type", "aggressive")
+        t.assert_false(reserve_bad_valid)
+        t.assert_equal(reserve_bad_value, "aggressive")
+        local override_value, override_valid = sanitize_setting("instant_switch_override", true)
+        t.assert_true(override_valid)
+        t.assert_true(override_value)
+        local override_bad_value, override_bad_valid = sanitize_setting("instant_switch_override", 1)
+        t.assert_false(override_bad_valid)
+        policy.set_setting(1, "strategy", "megabase")
+        local infinite_logistics = {meta = {is_infinite = true,
+            research_effects = {['inserter-stack-size-bonus'] = true, ['unlock-recipe'] = true}}}
+        t.assert_equal(policy.get_strategy_adjustment(1, infinite_logistics, 1), 60)
+        local infinite_plain = {meta = {is_infinite = true, research_effects = {}}}
+        t.assert_equal(policy.get_strategy_adjustment(1, infinite_plain, 5000), 40)
+        local finite = {meta = {is_infinite = false, research_effects = {['unlock-recipe'] = true}}}
+        t.assert_equal(policy.get_strategy_adjustment(1, finite, 1), 0)
+        policy.record_action(1, nil, "switch", {category = "switch", reason = "edge",
+            before = {tech = "a"}, after = {tech = "b"}, reserved = {"automation-science-pack"}})
+        local entry = policy.get_history(1)[1]
+        t.assert_equal(entry.before.tech, "a")
+        t.assert_equal(entry.after.tech, "b")
+        t.assert_equal(entry.reserved[1], "automation-science-pack")
+        t.assert_nil(entry.detail)
+        local filtered = policy.get_history(1, {reason = "edge"})
+        t.assert_equal(#filtered, 1)
+        t.assert_equal(#policy.get_history(1, {reason = "missing"}), 0)
+        policy.request_instant_switch(1, "edge-override")
+        t.assert_equal(policy.get_instant_switch_reason(1), "edge-override")
+        local used, reason = policy.consume_instant_switch(1)
+        t.assert_true(used)
+        t.assert_equal(reason, "edge-override")
+    end}
 }
 
 local passed = t.run("policy_edges_spec", tests)
