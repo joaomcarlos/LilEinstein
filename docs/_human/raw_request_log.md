@@ -95,3 +95,24 @@ perfect, implement it. use sub agents and [$devin-secretary-handoff](C:\\Users\\
 ## My request:
 
 <image name=[Image #1] path="C:\\Users\\silent\\AppData\\Local\\Temp\\codex-clipboard-b2bd4989-2a5d-40d9-bbe1-6abebd5311d6.png">
+
+## 2026-08-14
+
+Right, I think the algorithm for switching science is not aggressive enough or is not working correctly. For example, I'm seeing missing pack for media science, which literally means that there's only one science that has this. So if that pack is missing, there's no way that this science should still be selected, right? So either it's not really switching, which I think is what's going on, or actually it's not switching, but I think maybe like it's not the actual code that switches is not working or something, or it's not correctly identifying that it needs to switch. I know that it can identify that it's pack-bound and that it's missing stuff, because I'm seeing the notices on the bottom, right? But it's not actually switching the science. So for example, in our case, our factory can do about one million plus research a second, and we are currently stuck on under 20k research, right? Obviously this goes up and down, it's not constant as things get delivered. But it's stuck there, right? What I expect to see is as this goes down, it would switch to research something else, so that it can take the time while the packs for the other research come in, right, in transit, they can still research something. Right now it's not doing that. So please try and figure that out and fix it.
+
+## 2026-08-14
+
+The buttons to open the debug snapshot stuff, and the details one as well next to it, they're not really, they're not visually acceptable to the standards of the main window, right? Because if they were in a sub-window, then that would be fine, but because they're in the window, like the main window, which is using sprites, those are, they don't look correct. Can you fix that real quick, please? And in addition, the newly added text on the bottom of the screen is not really positioned correctly. I think it needs to be pushed down by maybe 20 pixels, and then to the left by maybe 50 pixels.
+
+## 2026-08-14
+
+# Files mentioned by the user:
+
+## exec-c2a71aab-f0f3-4879-a132-bfeb906a1c92.png: /C:/Users/silent/.codex/generated_images/019fff98-6dc6-70a2-afc6-d9ecfb737d5a/exec-c2a71aab-f0f3-4879-a132-bfeb906a1c92.png
+
+## My request:
+
+Do number 3. You need to be aware that theres really only labs in one planet (Nauvis).
+
+For planet stock it would make sense for the "most contrained planets" list to actually be just a sock per planet list (show on the list if there is stock). On the top right where it says live while open, add a refresh timer so i know when its going to refresh
+Codex could not read the local image at `/C:/Users/silent/.codex/generated_images/019fff98-6dc6-70a2-afc6-d9ecfb737d5a/exec-c2a71aab-f0f3-4879-a132-bfeb906a1c92.png`: The filename, directory name, or volume label syntax is incorrect. (os error 123)

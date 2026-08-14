@@ -32,6 +32,9 @@ local tests = {
         local styles = data.raw["gui-style"].default
         t.assert_true(styles.lil_einstein_main_frame ~= nil)
         t.assert_equal(styles.lil_einstein_main_frame.type, "frame_style")
+        t.assert_equal(styles.lil_einstein_research_health_details_button.parent, "lil_einstein_button")
+        t.assert_equal(styles.lil_einstein_research_status_bar.width, 1585)
+        t.assert_equal(styles.lil_einstein_research_status_bar.top_margin, 20)
         t.assert_true(find_extension(extensions, "custom-input", "lil_einstein_toggle_gui") ~= nil)
         t.assert_true(find_extension(extensions, "shortcut", "lil_einstein_shortcut") ~= nil)
         t.assert_true(find_extension(extensions, "virtual-signal", "lil_einstein-science-alert") ~= nil)
