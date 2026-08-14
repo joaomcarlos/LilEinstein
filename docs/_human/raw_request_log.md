@@ -212,3 +212,6 @@ identify gaps in functionality needed to support functionality in this new desig
 
 ## My request:
 it smissing a button to go back to the main screen
+
+## My request:
+review your changes for impact in the games UPS stability

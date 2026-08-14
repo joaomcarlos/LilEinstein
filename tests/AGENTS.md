@@ -24,6 +24,7 @@ runtime, data-stage, migration, queue, policy, lab, and GUI contracts.
 - Emergency fallback regressions cap per-check technology and availability work, reject a long available-but-forecast-insufficient alternate, accept a finite alternate stocked to completion, preserve compatible-scope cluster attribution, and prove that incompatible remote stock, force-wide production, and a one-time partial delivery cannot restore a target before enough local stock is reachable.
 - Throughput GUI/model regressions cover fixed-width cluster rows, deterministic lab descriptors, and the affected-lab inspection transition.
 - Science-pack inspector regressions cover lazy world scans, Nauvis-only lab rows, per-planet stock including zero values, in-transit platform stock, stable row refreshes, and the open-panel countdown seam.
+- Transit forecast regressions preserve per-pack cargo-pod totals while asserting that a bounded refresh scans cargo pods once per surface rather than once per science pack.
 - Debug-report tests cover deterministic report sections, the live GUI-details snapshot seam, and the copy-ready, selected text-box modal seam.
 - GUI crash regressions cover invalid report-text lifecycle access and label-only style writes on button elements.
 - Data-stage and migration tests execute against isolated `data`/`game` doubles.

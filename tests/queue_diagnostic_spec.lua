@@ -324,6 +324,50 @@ local tests = {
         t.assert_true(clustered.__cluster_mode)
         t.assert_true(clustered.__clusters ~= nil)
     end},
+    {"caches cargo-pod transit totals across science forecast entries", function()
+        local current = make_current()
+        local cargo_scans = 0
+        local pod = {
+            valid = true,
+            get_inventory = function(index)
+                t.assert_equal(index, defines.inventory.cargo_unit)
+                return {
+                    get_contents = function()
+                        return {
+                            {name = "automation-science-pack", count = 11},
+                            {name = "logistic-science-pack", count = 13}
+                        }
+                    end
+                }
+            end
+        }
+
+        reset({current = current, labs = {make_lab(80)}})
+        defines.inventory.cargo_unit = 2
+        game.surfaces = {
+            [1] = {
+                valid = true,
+                index = 1,
+                name = "nauvis",
+                find_entities_filtered = function(filters)
+                    if filters and filters.type == "cargo-pod" then
+                        cargo_scans = cargo_scans + 1
+                        return {pod}
+                    end
+                    return {}
+                end
+            }
+        }
+
+        local forecast = queue.get_science_forecast(1)
+        t.assert_equal(forecast["automation-science-pack"].in_transit, 11)
+        t.assert_equal(forecast["logistic-science-pack"].in_transit, 13)
+        t.assert_equal(cargo_scans, 1)
+
+        game.tick = game.tick + 1
+        queue.get_science_forecast(1)
+        t.assert_equal(cargo_scans, 1)
+    end},
     {"orders science networks and direct clusters deterministically on ties", function()
         local first_network = make_network(21, {['automation-science-pack'] = 1})
         local second_network = make_network(22, {['automation-science-pack'] = 1})
@@ -1451,8 +1495,8 @@ local tests = {
         }
 
         t.assert_true(finish_health_snapshot())
-        t.assert_equal(scan_counts.nauvis, 2)
-        t.assert_equal(scan_counts.vulcanus, 2)
+        t.assert_equal(scan_counts.nauvis, 1)
+        t.assert_equal(scan_counts.vulcanus, 1)
 
         local insight = queue.get_science_pack_insight(1, "automation-science-pack")
         t.assert_equal(insight.labs.surface_name, "nauvis")

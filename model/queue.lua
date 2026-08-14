@@ -1937,11 +1937,13 @@ local lab_input_cache = {}
 local active_bottleneck_cache = {}
 local inactive_science_demand_cache = {}
 local science_pack_insight_cache = {}
+local in_transit_science_cache = {}
 local research_health_snapshots = {}
 local research_health_jobs = {}
 local research_health_requests = {}
 local upcoming_display_jobs = {}
 local research_health_refresh_ticks = 300
+local in_transit_refresh_ticks = 300
 local research_health_lab_budget = 8
 local research_health_cluster_budget = 8
 local research_health_availability_budget = 32
@@ -2252,6 +2254,7 @@ queue.invalidate_science_cache = function(force_index)
     lab_observation_cache[force_index] = nil
     lab_network_cache[force_index] = nil
     active_bottleneck_cache[force_index] = nil
+    in_transit_science_cache[force_index] = nil
     science_demand_cache[force_index] = nil
     research_capacity_cache[force_index] = nil
     emergency_candidate_jobs[force_index] = nil
@@ -3264,34 +3267,79 @@ end
 -- incoming delivery extends the depletion runtime instead of showing a false
 -- imminent starvation.
 get_in_transit_science_total = function(force_index, science)
+    local cached = in_transit_science_cache[force_index]
+    if cached and cached.expires_tick > game.tick then
+        return cached.by_science[science] or 0
+    end
+
     local force = game.forces[force_index]
-    local total = 0
+    local by_science = {}
+    local all_sciences = env.get_all_sciences()
+    local known_sciences = {}
+    for _, science_name in pairs(all_sciences) do
+        known_sciences[science_name] = true
+        by_science[science_name] = 0
+    end
+
     for _, platform in pairs(force and force.platforms or {}) do
         local ok_platform, connection, hub = pcall(function()
             return platform and platform.valid and platform.space_connection, platform and platform.hub
         end)
         if ok_platform and connection and hub then
-            local ok_count, count = pcall(function() return hub.get_item_count(science) end)
-            if ok_count and type(count) == "number" then
-                total = total + math.max(0, count)
-            end
-        end
-    end
-    for _, surface in pairs(game.surfaces or {}) do
-        local ok_pods, pods = pcall(function()
-            return surface.find_entities_filtered({force = force_index, type = "cargo-pod",
-                                                   has_item_inside = science})
-        end)
-        if ok_pods and type(pods) == "table" then
-            for _, pod in pairs(pods) do
-                local ok_count, count = pcall(function() return pod.get_item_count(science) end)
+            for _, science_name in pairs(all_sciences) do
+                local ok_count, count = pcall(function() return hub.get_item_count(science_name) end)
                 if ok_count and type(count) == "number" then
-                    total = total + math.max(0, count)
+                    by_science[science_name] = by_science[science_name] + math.max(0, count)
                 end
             end
         end
     end
-    return total
+
+    -- One surface query per refresh, then read all science packs from each pod's
+    -- cargo inventory. The old per-science filter multiplied surface scans by the
+    -- number of installed science packs and allocated a result table for each scan.
+    for _, surface in pairs(game.surfaces or {}) do
+        local ok_pods, pods = pcall(function()
+            return surface.find_entities_filtered({force = force_index, type = "cargo-pod"})
+        end)
+        if ok_pods and type(pods) == "table" then
+            for _, pod in pairs(pods) do
+                if pod and pod.valid then
+                    local ok_inventory, inventory = pcall(function()
+                        return pod.get_inventory(defines.inventory.cargo_unit)
+                    end)
+                    local ok_contents, contents = false, nil
+                    if ok_inventory and inventory then
+                        ok_contents, contents = pcall(function() return inventory.get_contents() end)
+                    end
+                    if ok_contents and type(contents) == "table" then
+                        for _, item in pairs(contents) do
+                            if item and known_sciences[item.name] and type(item.count) == "number" then
+                                by_science[item.name] = by_science[item.name] + math.max(0, item.count)
+                            end
+                        end
+                    elseif pod.get_item_count then
+                        -- Defensive fallback for compatible cargo-pod implementations
+                        -- that do not expose cargo_unit through get_inventory.
+                        for _, science_name in pairs(all_sciences) do
+                            local ok_count, count = pcall(function()
+                                return pod.get_item_count(science_name)
+                            end)
+                            if ok_count and type(count) == "number" then
+                                by_science[science_name] = by_science[science_name] + math.max(0, count)
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    in_transit_science_cache[force_index] = {
+        expires_tick = game.tick + in_transit_refresh_ticks,
+        by_science = by_science
+    }
+    return by_science[science] or 0
 end
 
 local process_research_health_forecast = function(job, science)
