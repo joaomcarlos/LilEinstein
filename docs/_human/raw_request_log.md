@@ -232,3 +232,8 @@ what you implemented ingame does not use the gui we agreed to
 
 ## My request:
 did you fix it? if not, instruct devin to fix it
+
+## My request:
+get devin to fix it.
+
+And also check this one in the picture

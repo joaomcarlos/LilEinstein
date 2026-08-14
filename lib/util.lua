@@ -188,7 +188,6 @@ util.array_append_array_unique = function(left, right)
 end
 
 util.get_all_sciences = function()
-
     -- Get all the labs
     local prop = {
         filter = "type",

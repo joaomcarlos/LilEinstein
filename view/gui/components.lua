@@ -243,7 +243,7 @@ end
 
 local get_transit_progress_caption = function(progress)
     if type(progress) ~= "number" then
-        return {"lil_einstein-science-pack.moving"}
+        return ""
     end
     return tostring(math.floor(math.max(0, math.min(1, progress)) * 100 + 0.5)) .. "%"
 end
@@ -340,7 +340,7 @@ local refresh_science_pack_panel = function(player_index, anchor)
         set_table_rows(gutil.get_child(panel, "science_pack_panel_transit_rows"), transit_rows,
             rendered.transit, 4, function(row) return tostring(row.platform) .. ":" .. tostring(row.to) end,
             function(row)
-                return {tostring(row.from) .. " → " .. tostring(row.to), gutil.format_cost(row.stock or 0),
+                return {(row.from or "?") .. " → " .. (row.to or "?"), gutil.format_cost(row.stock or 0),
                     {"lil_einstein-science-pack.moving"}, get_transit_progress_caption(row.progress)}
             end)
 
@@ -1336,9 +1336,9 @@ local create_science_throughput_row = function(rows, index, item)
         caption = {"item-name." .. item.science}
     })
     add_throughput_row_label(table_element, "research_details_need_" .. index, "",
-                             research_details_throughput_columns.need)
+                             research_details_throughput_columns.capacity)
     add_throughput_row_label(table_element, "research_details_used_" .. index, "",
-                             research_details_throughput_columns.used)
+                             research_details_throughput_columns.active)
     add_throughput_row_label(table_element, "research_details_produced_" .. index, "",
                              research_details_throughput_columns.produced)
 
@@ -1349,6 +1349,12 @@ local create_science_throughput_row = function(rows, index, item)
         direction = "horizontal"
     })
     set_throughput_cell_width(gap_cell, research_details_throughput_columns.gap)
+    gap_cell.add({
+        type = "line",
+        name = "research_details_gap_zero_" .. index,
+        orientation = "vertical",
+        style = "lil_einstein_throughput_zero_line"
+    })
     gap_cell.add({
         type = "progressbar",
         name = "research_details_gap_meter_" .. index,
@@ -1361,6 +1367,8 @@ local create_science_throughput_row = function(rows, index, item)
         style = "lil_einstein_throughput_gap_label",
         caption = "0 / min"
     })
+    add_throughput_row_label(table_element, "research_details_runtime_" .. index, "",
+                             research_details_throughput_columns.runtime)
 
     local status_cell = table_element.add({
         type = "flow",
@@ -1392,6 +1400,8 @@ local research_details_throughput_row_names = function(index)
         need = "research_details_need_" .. index,
         used = "research_details_used_" .. index,
         produced = "research_details_produced_" .. index,
+        runtime = "research_details_runtime_" .. index,
+        zero = "research_details_gap_zero_" .. index,
         meter = "research_details_gap_meter_" .. index,
         gap = "research_details_gap_label_" .. index,
         status_icon = "research_details_status_icon_" .. index,
@@ -1399,56 +1409,104 @@ local research_details_throughput_row_names = function(index)
     }
 end
 
-local refresh_science_throughput_row = function(row, item, index)
+local refresh_science_throughput_row = function(row, item, index, state)
     if not row or not row.valid then
         return
     end
+    state = state or {}
     local names = research_details_throughput_row_names(index)
-    local science_icon = gutil.get_child(row, names.science_icon)
-    local science_name = gutil.get_child(row, names.science_name)
-    local need = gutil.get_child(row, names.need)
-    local used = gutil.get_child(row, names.used)
-    local produced = gutil.get_child(row, names.produced)
-    local meter = gutil.get_child(row, names.meter)
-    local gap = gutil.get_child(row, names.gap)
-    local status_icon = gutil.get_child(row, names.status_icon)
-    local status = gutil.get_child(row, names.status)
     local color = research_details_throughput_status_colors[item.status] or
         research_details_throughput_status_colors.balanced
-    if science_icon then
-        science_icon.sprite = "item/" .. item.science
+    local need_caption = format_throughput_rate(item.need)
+    local used_caption = format_throughput_rate(item.used)
+    local produced_caption = format_throughput_rate(item.produced)
+    local runtime_caption = format_throughput_runtime(item.depletion_seconds)
+    local stock_caption = format_throughput_rate(item.stock)
+    local in_transit_caption = format_throughput_rate(item.in_transit)
+    local gap_caption = format_throughput_gap(item.gap)
+    local status_caption = {throughput_prefix .. "status-" .. item.status}
+    local status_sprite = research_details_throughput_status_sprites[item.status] or
+        research_details_throughput_status_sprites.balanced
+
+    if state.science ~= item.science then
+        local science_icon = gutil.get_child(row, names.science_icon)
+        local science_name = gutil.get_child(row, names.science_name)
+        if science_icon then
+            science_icon.sprite = "item/" .. item.science
+        end
+        if science_name then
+            science_name.caption = {"item-name." .. item.science}
+        end
+        state.science = item.science
     end
-    if science_name then
-        science_name.caption = {"item-name." .. item.science}
+
+    if state.need ~= need_caption then
+        local need = gutil.get_child(row, names.need)
+        if need then
+            need.caption = need_caption
+        end
+        state.need = need_caption
     end
-    if need then
-        need.caption = format_throughput_rate(item.need)
+    if state.used ~= used_caption then
+        local used = gutil.get_child(row, names.used)
+        if used then
+            used.caption = used_caption
+        end
+        state.used = used_caption
     end
-    if used then
-        used.caption = format_throughput_rate(item.used)
+    if state.produced ~= produced_caption then
+        local produced = gutil.get_child(row, names.produced)
+        if produced then
+            produced.caption = produced_caption
+        end
+        state.produced = produced_caption
     end
-    if produced then
-        produced.caption = format_throughput_rate(item.produced)
+    if state.runtime ~= runtime_caption or state.stock ~= stock_caption or
+        state.in_transit ~= in_transit_caption then
+        local runtime = gutil.get_child(row, names.runtime)
+        if runtime then
+            runtime.caption = runtime_caption
+            runtime.tooltip = {throughput_prefix .. "runtime-tooltip", stock_caption, in_transit_caption}
+        end
+        state.runtime = runtime_caption
+        state.stock = stock_caption
+        state.in_transit = in_transit_caption
     end
-    if meter then
-        meter.value = item.gap_ratio
-        meter.style.color = color
+    if state.gap_ratio ~= item.gap_ratio or state.status ~= item.status then
+        local meter = gutil.get_child(row, names.meter)
+        if meter then
+            meter.value = item.gap_ratio
+            meter.style.color = color
+        end
+        state.gap_ratio = item.gap_ratio
     end
-    if gap then
-        gap.caption = format_throughput_gap(item.gap)
-        gap.style.font_color = color
+    if state.gap ~= gap_caption or state.status ~= item.status then
+        local gap = gutil.get_child(row, names.gap)
+        if gap then
+            gap.caption = gap_caption
+            gap.style.font_color = color
+        end
+        state.gap = gap_caption
     end
-    if status_icon then
-        status_icon.sprite = research_details_throughput_status_sprites[item.status] or
-            research_details_throughput_status_sprites.balanced
+    if state.status_sprite ~= status_sprite then
+        local status_icon = gutil.get_child(row, names.status_icon)
+        if status_icon then
+            status_icon.sprite = status_sprite
+        end
+        state.status_sprite = status_sprite
     end
-    if status then
-        status.caption = {throughput_prefix .. "status-" .. item.status}
-        status.style.font_color = color
+    if state.status ~= item.status then
+        local status = gutil.get_child(row, names.status)
+        if status then
+            status.caption = status_caption
+            status.style.font_color = color
+        end
+        state.status = item.status
     end
 end
 
-local refresh_science_throughput_warning = function(panel, rows)
+local refresh_science_throughput_warning = function(panel, rows, state, snapshot_age_seconds)
+    state = state or {}
     local primary
     for _, item in ipairs(rows) do
         if item.status == "starving" or item.status == "bottleneck" then
@@ -1456,9 +1514,23 @@ local refresh_science_throughput_warning = function(panel, rows)
             break
         end
     end
+    local warning_key = primary and table.concat({
+        primary.status,
+        primary.science,
+        format_throughput_rate(primary.need),
+        format_throughput_rate(primary.used),
+        format_throughput_rate(primary.produced),
+        format_throughput_runtime(primary.depletion_seconds),
+        format_throughput_runtime(snapshot_age_seconds or 0)
+    }, "\31") or "clear\31" .. format_throughput_runtime(snapshot_age_seconds or 0)
+    if state.warning_key == warning_key then
+        return
+    end
+    state.warning_key = warning_key
     local icon = gutil.get_child(panel, "research_details_warning_icon")
     local headline = gutil.get_child(panel, "research_details_warning_headline")
     local evidence = gutil.get_child(panel, "research_details_warning_evidence")
+    local checked = gutil.get_child(panel, "research_details_warning_checked")
     if primary then
         local color = research_details_throughput_status_colors[primary.status]
         if icon then
@@ -1471,7 +1543,10 @@ local refresh_science_throughput_warning = function(panel, rows)
         end
         if evidence then
             evidence.caption = {throughput_prefix .. "warning-evidence", format_throughput_rate(primary.need),
-                                format_throughput_rate(primary.used), format_throughput_rate(primary.produced)}
+                                format_throughput_rate(primary.used), format_throughput_rate(primary.produced),
+                                format_throughput_gap(primary.gap), format_throughput_runtime(primary.depletion_seconds)}
+            evidence.tooltip = {throughput_prefix .. "warning-evidence-tooltip",
+                                format_throughput_rate(primary.stock), format_throughput_rate(primary.in_transit)}
         end
     else
         if icon then
@@ -1483,7 +1558,12 @@ local refresh_science_throughput_warning = function(panel, rows)
         end
         if evidence then
             evidence.caption = {throughput_prefix .. "warning-evidence-none"}
+            evidence.tooltip = nil
         end
+    end
+    if checked then
+        checked.caption = {throughput_prefix .. "last-checked",
+                           format_throughput_runtime(snapshot_age_seconds or 0)}
     end
 end
 
@@ -1500,51 +1580,109 @@ local refresh_science_throughput_details = function(player_index, anchor, diagno
     end
     diagnostic = diagnostic or queue.get_research_display_diagnostic(p.force.index) or {}
     local forecast = queue.get_science_display_forecast(p.force.index) or {}
-    local items = build_science_throughput_rows(util.get_all_sciences(), diagnostic, forecast)
+    local horizon_seconds = policy.get_setting(p.force.index, "forecast_seconds") or
+        research_details_throughput_default_horizon_seconds
+    local items = build_science_throughput_rows(util.get_all_sciences(), diagnostic, forecast,
+                                                horizon_seconds)
     local current = p.force.current_research
-    local title = gutil.get_child(panel, "research_details_title")
-    local current_label = gutil.get_child(panel, "research_details_current_research")
-    if title then
-        title.caption = {throughput_prefix .. "details-title"}
+    local current_name = current and current.name or nil
+
+    local anchor_index = anchor.index
+    local rendered = throughput_render_cache[anchor_index]
+    if not rendered or not rendered.element.valid or rendered.element ~= anchor then
+        rendered = {element = anchor, layout_done = false, signature = nil, row_states = {}, warning = {},
+                    title_done = false, current_name = nil}
+        throughput_render_cache[anchor_index] = rendered
     end
-    if current_label then
-        current_label.caption = current and {throughput_prefix .. "current-research", technology_caption(current.name)} or
-            {throughput_prefix .. "current-research-none"}
+
+    if not rendered.title_done then
+        local title = gutil.get_child(panel, "research_details_title")
+        if title then
+            title.caption = {throughput_prefix .. "details-title"}
+        end
+        rendered.title_done = true
     end
-    refresh_science_throughput_warning(panel, items)
-    for _, column in ipairs(research_details_throughput_column_order) do
-        set_throughput_cell_width(gutil.get_child(header, "research_details_header_" .. column),
-                                  research_details_throughput_columns[column])
+    if rendered.current_name ~= current_name then
+        local current_label = gutil.get_child(panel, "research_details_current_research")
+        if current_label then
+            current_label.caption = current_name and {throughput_prefix .. "current-research", technology_caption(current_name)} or
+                {throughput_prefix .. "current-research-none"}
+        end
+        rendered.current_name = current_name
     end
-    header.style.width = 1578
-    local pane = gutil.get_child(panel, "research_details_scroll_pane")
-    if pane then
-        pane.style.width = 1578
-        pane.style.height = 630
-        pane.horizontal_scroll_policy = "never"
-        pane.vertical_scroll_policy = "auto"
+
+    local snapshot_tick = queue.get_research_health_snapshot_tick(p.force.index)
+    local snapshot_age_seconds = snapshot_tick and snapshot_tick >= 0 and
+        math.max(0, (game.tick - snapshot_tick) / 60) or 0
+    refresh_science_throughput_warning(panel, items, rendered.warning, snapshot_age_seconds)
+
+    if not rendered.layout_done then
+        for _, column in ipairs(research_details_throughput_column_order) do
+            set_throughput_cell_width(gutil.get_child(header, "research_details_header_" .. column),
+                                      research_details_throughput_columns[column])
+        end
+        header.style.width = 1578
+        local pane = gutil.get_child(panel, "research_details_scroll_pane")
+        if pane then
+            pane.style.width = 1578
+            pane.style.height = 630
+            pane.horizontal_scroll_policy = "never"
+            pane.vertical_scroll_policy = "auto"
+        end
+        rows.style.width = 1578
+        rendered.layout_done = true
     end
-    rows.style.width = 1578
-    if #rows.children ~= #items then
+
+    local signature_parts = {}
+    for _, item in ipairs(items) do
+        table.insert(signature_parts, item.science)
+    end
+    table.sort(signature_parts)
+    local signature = table.concat(signature_parts, "\31")
+    if rendered.signature ~= signature or #rows.children ~= #items then
         rows.clear()
         for index, item in ipairs(items) do
             create_science_throughput_row(rows, index, item)
         end
-    else
+        rendered.signature = signature
+        rendered.row_states = {}
+    end
+
+    if #rows.children == #items then
+        local invalid_row = false
         for index, item in ipairs(items) do
             local row = rows.children[index]
-            if not row or not row.valid or not row.tags or row.tags.science ~= item.science then
-                rows.clear()
-                for rebuild_index, rebuild_item in ipairs(items) do
-                    create_science_throughput_row(rows, rebuild_index, rebuild_item)
-                end
+            if not row or not row.valid or not row.tags then
+                invalid_row = true
                 break
             end
         end
+        if invalid_row then
+            rows.clear()
+            for rebuild_index, rebuild_item in ipairs(items) do
+                create_science_throughput_row(rows, rebuild_index, rebuild_item)
+            end
+            rendered.row_states = {}
+        else
+            for index, item in ipairs(items) do
+                local row = rows.children[index]
+                if row.tags.science ~= item.science then
+                    row.tags = {science = item.science}
+                    rendered.row_states[index] = nil
+                end
+            end
+        end
     end
+
     if #rows.children == #items then
         for index, item in ipairs(items) do
-            refresh_science_throughput_row(rows.children[index], item, index)
+            local row = rows.children[index]
+            local row_state = rendered.row_states[index]
+            if not row_state then
+                row_state = {}
+                rendered.row_states[index] = row_state
+            end
+            refresh_science_throughput_row(row, item, index, row_state)
         end
     end
     return true
@@ -3736,6 +3874,7 @@ content.clear_runtime_cache = function()
     graph_render_cache = {}
     science_render_cache = {}
     science_pack_panel_render_cache = {}
+    throughput_render_cache = {}
     graph_render_jobs = {}
     graph_hover_cache = {}
     research_status_cache = {}

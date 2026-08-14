@@ -1520,6 +1520,108 @@ local tests = {
         local refreshed = queue.get_science_pack_insight(1, "automation-science-pack")
         t.assert_true(refreshed ~= insight)
         t.assert_true(scan_counts.nauvis > 1)
+    end},
+    {"excludes drawing-board and cargo-flow pseudo planets from planet stock", function()
+        local current = make_current()
+        local make_surface = function(index, name, stock)
+            return {
+                valid = true,
+                index = index,
+                name = name,
+                planet = {name = name},
+                find_entities_filtered = function(filters)
+                    if filters and filters.type == "cargo-pod" then
+                        return {}
+                    end
+                    if stock <= 0 then
+                        return {}
+                    end
+                    return {{
+                        valid = true,
+                        get_item_count = function() return stock end
+                    }}
+                end
+            }
+        end
+
+        reset({current = current, tick = 100, labs = {make_lab(70)}})
+        local nauvis = make_surface(1, "nauvis", 50)
+        local drawing_board = make_surface(2, "drawing-board_player", 99)
+        local graveyard = make_surface(3, "space-platform-graveyard", 99)
+        local cargo_flow = make_surface(4, "cargo-flow-12345", 99)
+        game.surfaces = {[1] = nauvis, [2] = drawing_board, [3] = graveyard, [4] = cargo_flow}
+        game.planets = {
+            nauvis = {name = "nauvis", surface = nauvis},
+            ["drawing-board_player"] = {name = "drawing-board_player", surface = drawing_board},
+            ["space-platform-graveyard"] = {name = "space-platform-graveyard", surface = graveyard},
+            ["cargo-flow-12345"] = {name = "cargo-flow-12345", surface = cargo_flow}
+        }
+
+        t.assert_true(finish_health_snapshot())
+        local insight = queue.get_science_pack_insight(1, "automation-science-pack")
+        local names = {}
+        for _, row in ipairs(insight.planet_stock_rows) do
+            table.insert(names, row.name)
+        end
+        t.assert_equal(#names, 1, "only Nauvis must appear; pseudo planets must be excluded")
+        t.assert_equal(names[1], "nauvis")
+        t.assert_equal(insight.planet_stock.nauvis, 50)
+        t.assert_nil(insight.planet_stock["drawing-board_player"],
+                     "drawing-board_player must not appear in planet stock")
+        t.assert_nil(insight.planet_stock["space-platform-graveyard"],
+                     "space-platform-graveyard must not appear in planet stock")
+        t.assert_nil(insight.planet_stock["cargo-flow-12345"],
+                     "cargo-flow-* must not appear in planet stock")
+    end},
+    {"omits transit routes with unresolved destinations", function()
+        local current = make_current()
+        reset({current = current, tick = 100, labs = {make_lab(70)}})
+        game.surfaces = {[1] = {valid = true, index = 1, name = "nauvis",
+            find_entities_filtered = function() return {} end}}
+        game.planets = {nauvis = {name = "nauvis", surface = game.surfaces[1]}}
+        local force = game.forces[1]
+        force.platforms = {
+            platform_good = {
+                valid = true,
+                name = "platform-good",
+                hub = {valid = true, get_item_count = function() return 10 end},
+                space_connection = {
+                    from = {name = "nauvis"},
+                    to = {name = "vulcanus"}
+                },
+                distance = 0.5
+            },
+            platform_unknown_from = {
+                valid = true,
+                name = "platform-unknown-from",
+                hub = {valid = true, get_item_count = function() return 20 end},
+                space_connection = {
+                    from = {},
+                    to = {name = "vulcanus"}
+                },
+                distance = 0.3
+            },
+            platform_unknown_to = {
+                valid = true,
+                name = "platform-unknown-to",
+                hub = {valid = true, get_item_count = function() return 30 end},
+                space_connection = {
+                    from = {name = "nauvis"},
+                    to = {}
+                },
+                distance = 0.7
+            }
+        }
+
+        t.assert_true(finish_health_snapshot())
+        local insight = queue.get_science_pack_insight(1, "automation-science-pack")
+        t.assert_equal(insight.in_transit.total, 10,
+                       "only the resolved route must contribute to transit total")
+        t.assert_equal(#insight.in_transit.routes, 1,
+                       "unresolved routes must be omitted")
+        t.assert_equal(insight.in_transit.routes[1].platform, "platform-good")
+        t.assert_equal(insight.in_transit.routes[1].from, "nauvis")
+        t.assert_equal(insight.in_transit.routes[1].to, "vulcanus")
     end}
 }
 

@@ -560,9 +560,16 @@ local function make_science_pack_anchor()
         "science_pack_panel_icon", "science_pack_panel_name", "science_pack_panel_state",
         "science_pack_panel_current_stock", "science_pack_panel_timer",
         "science_pack_panel_labs_summary", "science_pack_panel_planet_stock_summary",
-        "science_pack_panel_transit_summary", "science_pack_panel_flow_balance"
+        "science_pack_panel_transit_summary"
     }) do
         add_named(panel, name, "label")
+    end
+    local flow_balance = add_named(panel, "science_pack_panel_flow_balance", "flow")
+    for _, name in ipairs({
+        "science_pack_panel_flow_production", "science_pack_panel_flow_transit",
+        "science_pack_panel_flow_consumption", "science_pack_panel_flow_net"
+    }) do
+        add_named(flow_balance, name, "label")
     end
     local labs = add_named(panel, "science_pack_panel_labs", "frame")
     add_named(labs, "science_pack_panel_labs_rows", "table")
@@ -610,6 +617,40 @@ local function make_details_anchor()
     end
     add_named(demand, "research_details_pack_demand_rows", "table")
     add_named(demand, "research_details_pack_demand_empty", "label")
+    add_named(anchor, "research_graph_spm_value", "label")
+    add_named(anchor, "research_health_panel", "frame")
+    add_named(anchor, "research_health_state", "label")
+    add_named(anchor, "research_health_reason", "label")
+    add_named(anchor, "research_graph_remaining_value", "label")
+    add_named(anchor, "research_status_bar", "label")
+    return anchor
+end
+
+local function make_throughput_anchor()
+    local anchor = make_element("anchor")
+    local panel = add_named(anchor, "research_details_panel")
+    panel.visible = true
+    add_named(panel, "research_details_title", "label")
+    add_named(panel, "research_details_current_research", "label")
+    local warning = add_named(panel, "research_details_warning", "frame")
+    add_named(warning, "research_details_warning_icon", "sprite")
+    local warning_text = add_named(warning, "research_details_warning_text", "flow")
+    add_named(warning_text, "research_details_warning_headline", "label")
+    add_named(warning_text, "research_details_warning_evidence", "label")
+    add_named(warning_text, "research_details_warning_checked", "label")
+    add_named(panel, "research_details_analyze_button", "button")
+    local analysis = add_named(panel, "research_details_analysis", "frame")
+    analysis.visible = false
+    add_named(analysis, "research_details_analysis_text", "label")
+    local header = add_named(panel, "research_details_table_header", "table")
+    header.style = {}
+    for _, name in ipairs({"science", "capacity", "active", "produced", "gap", "runtime", "status"}) do
+        add_named(header, "research_details_header_" .. name, "label")
+    end
+    local pane = add_named(panel, "research_details_scroll_pane", "scroll-pane")
+    pane.style = {}
+    add_named(pane, "research_details_rows")
+    add_named(panel, "research_details_footer", "label")
     add_named(anchor, "research_graph_spm_value", "label")
     add_named(anchor, "research_health_panel", "frame")
     add_named(anchor, "research_health_state", "label")
@@ -824,6 +865,60 @@ local tests = {
         t.assert_equal(calls, 0)
         queue.get_science_pack_insight = old_insight
     end},
+    {"flow balance labels are separated and not concatenated", function()
+        reset_fixture()
+        local anchor = make_science_pack_anchor()
+        components.clear_runtime_cache()
+
+        components.refresh_science_pack_panel(1, anchor)
+        local panel = find_element(anchor, "science_pack_panel")
+        local flow = find_element(panel, "science_pack_panel_flow_balance")
+        t.assert_true(flow ~= nil, "flow balance container must exist")
+        local production = find_element(flow, "science_pack_panel_flow_production")
+        local transit = find_element(flow, "science_pack_panel_flow_transit")
+        local consumption = find_element(flow, "science_pack_panel_flow_consumption")
+        local net = find_element(flow, "science_pack_panel_flow_net")
+        t.assert_true(production ~= nil, "flow production label must exist")
+        t.assert_true(transit ~= nil, "flow transit label must exist")
+        t.assert_true(consumption ~= nil, "flow consumption label must exist")
+        t.assert_true(net ~= nil, "flow net label must exist")
+        t.assert_equal(caption_head(production.caption), "lil_einstein-science-pack.flow-production")
+        t.assert_equal(caption_head(consumption.caption), "lil_einstein-science-pack.flow-consumption")
+        t.assert_equal(caption_head(net.caption), "lil_einstein-science-pack.flow-net")
+        t.assert_equal(production.caption[2], "1200")
+        t.assert_equal(consumption.caption[2], "8")
+        t.assert_equal(net.caption[2], "1192")
+    end},
+    {"transit rows show one status value and empty progress for cargo pods", function()
+        reset_fixture()
+        science_pack_insight.in_transit = {
+            total = 15,
+            routes = {
+                {platform = "platform-1", from = "nauvis", to = "vulcanus", stock = 12, progress = 0.25},
+                {platform = "Cargo pod", from = "nauvis", to = "fulgora", stock = 3, progress = nil}
+            }
+        }
+        local anchor = make_science_pack_anchor()
+        components.clear_runtime_cache()
+
+        components.refresh_science_pack_panel(1, anchor)
+        local panel = find_element(anchor, "science_pack_panel")
+        local rows = find_element(panel, "science_pack_panel_transit_rows")
+        t.assert_equal(#rows.children, 8, "two transit rows times four columns")
+
+        local row1_status = rows.children[3].caption
+        t.assert_equal(caption_head(row1_status), "lil_einstein-science-pack.moving",
+                       "status column must show Moving")
+        local row1_progress = rows.children[4].caption
+        t.assert_equal(row1_progress, "25%", "progress column must show percentage")
+
+        local row2_status = rows.children[7].caption
+        t.assert_equal(caption_head(row2_status), "lil_einstein-science-pack.moving",
+                       "cargo pod status column must show Moving")
+        local row2_progress = rows.children[8].caption
+        t.assert_equal(row2_progress, "",
+                       "cargo pod progress column must be empty, not duplicated Moving")
+    end},
     {"renders rich research health metrics and throughput detail rows", function()
         reset_fixture()
         local anchor = make_details_anchor()
@@ -940,24 +1035,31 @@ local tests = {
         research_diagnostic.causes = many_causes
         components.refresh_research_metrics(1, anchor)
     end},
-    {"classifies throughput rows by need, use, production, and gap", function()
+    {"classifies throughput rows by capacity, active use, production, and depletion risk", function()
         local diagnostic = {
             science_pack_rates = {
                 {science = "science_a", maximum_per_minute = 100, working_per_minute = 100},
                 {science = "science_b", maximum_per_minute = 100, working_per_minute = 40},
                 {science = "science_c", maximum_per_minute = 100, working_per_minute = 100},
-                {science = "science_d", maximum_per_minute = 0, working_per_minute = 0}
+                {science = "science_d", maximum_per_minute = 0, working_per_minute = 0},
+                {science = "science_e", maximum_per_minute = 100, working_per_minute = 40}
             },
             dominant_missing_science = {science = "science_b"}
         }
         local forecast = {
-            science_a = {production_per_minute = 70},
-            science_b = {production_per_minute = 40},
-            science_c = {production_per_minute = 140},
-            science_d = {production_per_minute = 0}
+            science_a = {production_per_minute = 70, stock = 1000, in_transit = 0,
+                         net_per_minute = -30, depletion_seconds = 2000},
+            science_b = {production_per_minute = 40, stock = 1000, in_transit = 500,
+                         net_per_minute = 0, depletion_seconds = math.huge},
+            science_c = {production_per_minute = 140, stock = 0, in_transit = 0,
+                         net_per_minute = 140, depletion_seconds = math.huge},
+            science_d = {production_per_minute = 0, stock = 0, in_transit = 0,
+                         net_per_minute = 0, depletion_seconds = math.huge},
+            science_e = {production_per_minute = 10, stock = 20, in_transit = 0,
+                         net_per_minute = -10, depletion_seconds = 120}
         }
         local rows = components.build_science_throughput_rows(
-            {"science_a", "science_b", "science_c", "science_d"}, diagnostic, forecast)
+            {"science_a", "science_b", "science_c", "science_d", "science_e"}, diagnostic, forecast)
         local by_science = {}
         for _, row in ipairs(rows) do
             by_science[row.science] = row
@@ -968,9 +1070,128 @@ local tests = {
         t.assert_equal(by_science.science_a.used, 100)
         t.assert_equal(by_science.science_a.produced, 70)
         t.assert_equal(by_science.science_a.gap, -30)
-        t.assert_equal(by_science.science_b.status, "starving")
+        t.assert_equal(by_science.science_a.stock, 1000)
+        t.assert_equal(by_science.science_a.in_transit, 0)
+        t.assert_equal(by_science.science_a.depletion_seconds, 2000)
+        t.assert_equal(by_science.science_b.status, "capacity_limited")
+        t.assert_true(by_science.science_b.depletion_seconds == math.huge)
         t.assert_equal(by_science.science_c.status, "overproducing")
         t.assert_equal(by_science.science_d.status, "balanced")
+        t.assert_equal(by_science.science_e.status, "starving")
+    end},
+    {"throughput panel does not recreate rows when the science set is unchanged", function()
+        reset_fixture()
+        components.clear_runtime_cache()
+        local anchor = make_throughput_anchor()
+        components.refresh_research_details(1, anchor)
+        local rows = find_element(anchor, "research_details_rows")
+        local first_children = #rows.children
+        t.assert_true(first_children > 0, "first refresh must create rows")
+        local clear_count_after_first = rows.clear_count
+        components.refresh_research_details(1, anchor)
+        t.assert_equal(rows.clear_count, clear_count_after_first,
+            "second refresh must not clear rows when science set is unchanged")
+        t.assert_equal(#rows.children, first_children, "row count must be stable across unchanged refreshes")
+    end},
+    {"throughput panel reuses rows when status ordering changes", function()
+        reset_fixture()
+        components.clear_runtime_cache()
+        research_diagnostic.dominant_missing_science = nil
+        research_diagnostic.science_pack_rates = {
+            {science = "science_a", maximum_per_minute = 100, working_per_minute = 100},
+            {science = "science_b", maximum_per_minute = 100, working_per_minute = 100}
+        }
+        science_forecast = {
+            science_a = {production_per_minute = 50},
+            science_b = {production_per_minute = 100}
+        }
+        local anchor = make_throughput_anchor()
+        components.refresh_research_details(1, anchor)
+        local rows = find_element(anchor, "research_details_rows")
+        local clear_count = rows.clear_count
+        t.assert_equal(rows.children[1].tags.science, "science_a")
+        t.assert_equal(rows.children[2].tags.science, "science_b")
+
+        science_forecast = {
+            science_a = {production_per_minute = 100},
+            science_b = {production_per_minute = 50}
+        }
+        components.refresh_research_details(1, anchor)
+
+        t.assert_equal(rows.clear_count, clear_count,
+            "status-driven reorder must not clear and recreate the throughput rows")
+        t.assert_equal(rows.children[1].tags.science, "science_b")
+        t.assert_equal(rows.children[2].tags.science, "science_a")
+    end},
+    {"throughput panel repairs missing rows when the science set is unchanged", function()
+        reset_fixture()
+        components.clear_runtime_cache()
+        local anchor = make_throughput_anchor()
+        components.refresh_research_details(1, anchor)
+        local rows = find_element(anchor, "research_details_rows")
+        rows.clear()
+        local clear_count = rows.clear_count
+
+        components.refresh_research_details(1, anchor)
+
+        t.assert_equal(#rows.children, 2, "refresh must repair a missing row container")
+        t.assert_true(rows.clear_count > clear_count, "repair must rebuild the missing rows")
+    end},
+    {"throughput panel skips unchanged value writes on repeated refreshes", function()
+        reset_fixture()
+        components.clear_runtime_cache()
+        local anchor = make_throughput_anchor()
+        components.refresh_research_details(1, anchor)
+        local rows = find_element(anchor, "research_details_rows")
+        local first_row = rows.children[1]
+        t.assert_true(first_row ~= nil, "first refresh must create at least one row")
+        local need_label = find_element(first_row, "research_details_need_1")
+        local original_need_caption = need_label.caption
+        components.refresh_research_details(1, anchor)
+        local need_label_after = find_element(rows.children[1], "research_details_need_1")
+        t.assert_equal(need_label_after.caption, original_need_caption,
+            "unchanged need caption must remain the same value")
+    end},
+    {"throughput warning refreshes evidence when rates change within one status", function()
+        reset_fixture()
+        components.clear_runtime_cache()
+        research_diagnostic.dominant_missing_science = {science = "science_a"}
+        research_diagnostic.science_pack_rates = {
+            {science = "science_a", maximum_per_minute = 100, working_per_minute = 100}
+        }
+        science_forecast = {science_a = {production_per_minute = 50}}
+        local anchor = make_throughput_anchor()
+        components.refresh_research_details(1, anchor)
+        local evidence = find_element(anchor, "research_details_warning_evidence")
+        local first_produced = evidence.caption[4]
+
+        science_forecast = {science_a = {production_per_minute = 40}}
+        components.refresh_research_details(1, anchor)
+
+        t.assert_true(evidence.caption[4] ~= first_produced,
+            "warning evidence must update when production changes without a status change")
+    end},
+    {"throughput panel writes layout only once across refreshes", function()
+        reset_fixture()
+        components.clear_runtime_cache()
+        local anchor = make_throughput_anchor()
+        components.refresh_research_details(1, anchor)
+        local header = find_element(anchor, "research_details_table_header")
+        local original_style = header.style
+        local width_writes = 0
+        header.style = setmetatable({}, {
+            __index = function(_, key) return original_style[key] end,
+            __newindex = function(_, key, value)
+                if key == "width" then
+                    width_writes = width_writes + 1
+                end
+                original_style[key] = value
+            end
+        })
+        -- Second refresh should skip layout writes since layout_done is cached
+        components.refresh_research_details(1, anchor)
+        t.assert_equal(width_writes, 0,
+            "second refresh must not re-write header style.width")
     end},
     {"does not apply label-only style properties to the inspect button", function()
         reset_fixture()

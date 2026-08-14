@@ -3606,7 +3606,7 @@ local get_runtime_name = function(object, fallback)
             return tostring(name)
         end
     end
-    return fallback or "unknown"
+    return fallback
 end
 
 local get_surface_planet_name = function(surface)
@@ -3642,27 +3642,43 @@ local count_surface_science = function(surface, force_index, science)
     return total
 end
 
+local is_excluded_planet_name = function(name)
+    if type(name) ~= "string" or name == "" then
+        return true
+    end
+    local lower = name:lower()
+    if lower == "drawing-board_player" or lower == "space-platform-graveyard" then
+        return true
+    end
+    if lower:sub(1, 11) == "cargo-flow-" then
+        return true
+    end
+    return false
+end
+
 local get_planet_stock = function(force_index, science)
     local rows_by_name = {}
     local surfaces = game.surfaces or {}
 
     for key, planet in pairs(game.planets or {}) do
         local name = get_runtime_name(planet, key)
-        local ok_surface, surface = pcall(function() return planet and planet.surface end)
-        if not ok_surface then
-            surface = nil
+        if not is_excluded_planet_name(name) then
+            local ok_surface, surface = pcall(function() return planet and planet.surface end)
+            if not ok_surface then
+                surface = nil
+            end
+            rows_by_name[name] = {
+                name = name,
+                surface = is_valid_runtime_object(surface) and surface or nil,
+                stock = 0
+            }
         end
-        rows_by_name[name] = {
-            name = name,
-            surface = is_valid_runtime_object(surface) and surface or nil,
-            stock = 0
-        }
     end
 
     for _, surface in pairs(surfaces) do
         if is_valid_runtime_object(surface) and not surface.platform then
             local name = get_surface_planet_name(surface)
-            if name then
+            if name and not is_excluded_planet_name(name) then
                 local row = rows_by_name[name]
                 if not row then
                     row = {name = name, surface = surface, stock = 0}
@@ -3705,16 +3721,18 @@ local get_transit_routes = function(force_index, science)
             if ok_connection and connection then
                 local count = get_transit_item_count(platform.hub, science)
                 if count > 0 then
-                    local from = get_runtime_name(connection.from, "unknown")
-                    local to = get_runtime_name(connection.to, "unknown")
-                    table.insert(routes, {
-                        platform = get_runtime_name(platform, key),
-                        from = from,
-                        to = to,
-                        stock = count,
-                        progress = type(platform.distance) == "number" and platform.distance or nil
-                    })
-                    total = total + count
+                    local from = get_runtime_name(connection.from, nil)
+                    local to = get_runtime_name(connection.to, nil)
+                    if from and to then
+                        table.insert(routes, {
+                            platform = get_runtime_name(platform, key),
+                            from = from,
+                            to = to,
+                            stock = count,
+                            progress = type(platform.distance) == "number" and platform.distance or nil
+                        })
+                        total = total + count
+                    end
                 end
             end
         end
@@ -3730,14 +3748,18 @@ local get_transit_routes = function(force_index, science)
                 for _, pod in pairs(pods) do
                     local count = get_transit_item_count(pod, science)
                     if count > 0 then
-                        table.insert(routes, {
-                            platform = "Cargo pod",
-                            from = get_runtime_name(pod.cargo_pod_origin, "unknown"),
-                            to = get_runtime_name(pod.cargo_pod_destination, "unknown"),
-                            stock = count,
-                            progress = nil
-                        })
-                        total = total + count
+                        local from = get_runtime_name(pod.cargo_pod_origin, nil)
+                        local to = get_runtime_name(pod.cargo_pod_destination, nil)
+                        if from and to then
+                            table.insert(routes, {
+                                platform = "Cargo pod",
+                                from = from,
+                                to = to,
+                                stock = count,
+                                progress = nil
+                            })
+                            total = total + count
+                        end
                     end
                 end
             end

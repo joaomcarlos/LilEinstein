@@ -135,6 +135,26 @@ local tests = {
         testlib.assert_true(find_named(panel, "science_pack_panel_header") ~= nil)
         testlib.assert_true(find_named(panel, "science_pack_panel_planet_stock_rows") ~= nil)
     end},
+    {"science-pack inspector back button and flow balance labels are built with styles", function()
+        local player = {opened = nil}
+        local anchor = make_element(false)
+        _G.game = {get_player = function() return player end}
+        builder.build(1, anchor)
+        local panel = anchor.lil_einstein_gui.science_pack_panel
+        local back = find_named(panel, "science_pack_panel_back")
+        testlib.assert_true(back ~= nil, "back button must exist")
+        testlib.assert_equal(back.type, "button", "back must be a button element")
+        local flow = find_named(panel, "science_pack_panel_flow_balance")
+        testlib.assert_true(flow ~= nil, "flow balance container must exist")
+        local production = find_named(flow, "science_pack_panel_flow_production")
+        testlib.assert_true(production ~= nil, "flow production label must exist")
+        local transit = find_named(flow, "science_pack_panel_flow_transit")
+        testlib.assert_true(transit ~= nil, "flow transit label must exist")
+        local consumption = find_named(flow, "science_pack_panel_flow_consumption")
+        testlib.assert_true(consumption ~= nil, "flow consumption label must exist")
+        local net = find_named(flow, "science_pack_panel_flow_net")
+        testlib.assert_true(net ~= nil, "flow net label must exist")
+    end},
     {"retries an element without style after the first add fails", function()
         errors = {}
         local player = {opened = nil}

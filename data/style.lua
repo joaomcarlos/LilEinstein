@@ -182,6 +182,7 @@ data.raw["gui-style"].default["lil_einstein_science_pack_sprite_section"] = {
     parent = "inside_shallow_frame",
     width = 485,
     padding = 8,
+    vertical_spacing = 6,
     graphical_set = {}
 }
 data.raw["gui-style"].default["lil_einstein_science_pack_sprite_table"] = {
@@ -586,7 +587,16 @@ data.raw["gui-style"].default["lil_einstein_science_pack_flow_balance"] = {
     parent = "lil_einstein_horizontal_flow_nospacing",
     width = 1578,
     height = 42,
+    horizontal_spacing = 24,
+    top_margin = 8,
     vertical_align = "center"
+}
+data.raw["gui-style"].default["lil_einstein_science_pack_flow_balance_label"] = {
+    type = "label_style",
+    parent = "label",
+    single_line = true,
+    minimal_width = 0,
+    maximal_width = 380
 }
 data.raw["gui-style"].default["lil_einstein_throughput_title_flow"] = {
     type = "horizontal_flow_style",
@@ -640,7 +650,7 @@ data.raw["gui-style"].default["lil_einstein_throughput_warning_text"] = {
     type = "vertical_flow_style",
     parent = "lil_einstein_vertical_flow_nospacing",
     width = 1140,
-    height = 70,
+    height = 76,
     vertical_align = "center",
     vertical_spacing = 2
 }
@@ -656,6 +666,15 @@ data.raw["gui-style"].default["lil_einstein_throughput_warning_evidence"] = {
     parent = "label",
     width = 1140,
     height = 28,
+    single_line = true
+}
+data.raw["gui-style"].default["lil_einstein_throughput_warning_checked"] = {
+    type = "label_style",
+    parent = "label",
+    width = 1140,
+    height = 18,
+    font = "default-small",
+    font_color = {0.65, 0.65, 0.65},
     single_line = true
 }
 data.raw["gui-style"].default["lil_einstein_throughput_warning_icon"] = {
@@ -722,7 +741,7 @@ data.raw["gui-style"].default["lil_einstein_throughput_cell"] = {
 data.raw["gui-style"].default["lil_einstein_throughput_science_cell"] = {
     type = "horizontal_flow_style",
     parent = "lil_einstein_horizontal_flow_nospacing",
-    width = 350,
+    width = 300,
     height = 44,
     vertical_align = "center"
 }
@@ -737,16 +756,16 @@ data.raw["gui-style"].default["lil_einstein_throughput_science_icon"] = {
 data.raw["gui-style"].default["lil_einstein_throughput_gap_cell"] = {
     type = "horizontal_flow_style",
     parent = "lil_einstein_horizontal_flow_nospacing",
-    width = 275,
+    width = 220,
     height = 44,
     vertical_align = "center"
 }
 data.raw["gui-style"].default["lil_einstein_throughput_meter"] = {
     type = "progressbar_style",
     parent = "progressbar",
-    width = 175,
+    width = 132,
     height = 14,
-    bar_width = 175,
+    bar_width = 132,
     color = {r = 0.45, g = 0.85, b = 0.22},
     padding = 0,
     margin = 0,
@@ -755,17 +774,30 @@ data.raw["gui-style"].default["lil_einstein_throughput_meter"] = {
 data.raw["gui-style"].default["lil_einstein_throughput_gap_label"] = {
     type = "label_style",
     parent = "label",
-    width = 92,
+    width = 78,
     height = 28,
-    left_margin = 8,
+    left_margin = 6,
     vertical_align = "center",
     single_line = true,
     horizontal_align = "right"
 }
+data.raw["gui-style"].default["lil_einstein_throughput_zero_line"] = {
+    type = "line_style",
+    parent = "line",
+    width = 1,
+    height = 16,
+    color = {0.85, 0.85, 0.85},
+    vertical_align = "center"
+}
+data.raw["gui-style"].default["lil_einstein_throughput_runtime_cell"] = {
+    type = "label_style",
+    parent = "lil_einstein_throughput_cell",
+    width = 150
+}
 data.raw["gui-style"].default["lil_einstein_throughput_status_cell"] = {
     type = "horizontal_flow_style",
     parent = "lil_einstein_horizontal_flow_nospacing",
-    width = 335,
+    width = 330,
     height = 44,
     vertical_align = "center"
 }
