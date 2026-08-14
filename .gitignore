@@ -2,3 +2,5 @@
 coverage-unit-lines.tsv
 coverage-latest.txt
 luac.out
+output
+diagnostics

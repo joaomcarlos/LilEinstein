@@ -745,6 +745,226 @@ local research_details_panel = {
     }}
 }
 
+local science_pack_panel = {
+    type = "frame",
+    name = "science_pack_panel",
+    style = "inside_shallow_frame",
+    direction = "vertical",
+    visible = false,
+    tags = {ignore_force_enable = true},
+    children = {{
+        type = "flow",
+        name = "science_pack_panel_header",
+        direction = "horizontal",
+        children = {{
+            type = "flow",
+            direction = "horizontal",
+            children = {{
+                type = "sprite",
+                name = "science_pack_panel_icon",
+                sprite = "item/iron-plate"
+            }, {
+                type = "flow",
+                direction = "vertical",
+                children = {{
+                    type = "label",
+                    name = "science_pack_panel_name",
+                    style = "heading_1_label",
+                    caption = "Science pack"
+                }, {
+                    type = "label",
+                    name = "science_pack_panel_state",
+                    caption = ""
+                }}
+            }}
+        }, {
+            type = "flow",
+            style = "lil_einstein_horizontal_flow_right",
+            children = {{
+                type = "label",
+                name = "science_pack_panel_live",
+                caption = {"lil_einstein-science-pack.live-while-open"}
+            }, {
+                type = "label",
+                name = "science_pack_panel_timer",
+                caption = {"lil_einstein-science-pack.refreshes-in", 0}
+            }, {
+                type = "button",
+                name = "science_pack_panel_back",
+                caption = {"lil_einstein-science-pack.back"},
+                tags = {
+                    lil_einstein_on_click = true,
+                    handler = "toggle_science_pack_details",
+                    ignore_force_enable = true
+                }
+            }}
+        }}
+    }, {
+        type = "flow",
+        name = "science_pack_panel_summary",
+        direction = "horizontal",
+        children = {{
+            type = "label",
+            name = "science_pack_panel_current_stock",
+            caption = ""
+        }, {
+            type = "label",
+            name = "science_pack_panel_flow_summary",
+            caption = ""
+        }}
+    }, {
+        type = "scroll-pane",
+        name = "science_pack_panel_scroll_pane",
+        style = "lil_einstein_vertical_scroll_pane",
+        direction = "vertical",
+        children = {{
+            type = "flow",
+            name = "science_pack_panel_body",
+            direction = "vertical",
+            children = {{
+                type = "flow",
+                name = "science_pack_panel_evidence",
+                direction = "horizontal",
+                children = {{
+                    type = "frame",
+                    name = "science_pack_panel_labs",
+                    style = "lil_einstein_science_pack_section",
+                    direction = "vertical",
+                    children = {{
+                        type = "label",
+                        style = "heading_2_label",
+                        caption = {"lil_einstein-science-pack.labs-title"}
+                    }, {
+                        type = "label",
+                        name = "science_pack_panel_labs_summary",
+                        caption = ""
+                    }, {
+                        type = "table",
+                        name = "science_pack_panel_labs_header",
+                        style = "lil_einstein_science_pack_table",
+                        column_count = 4,
+                        children = {{
+                            type = "label", style = "bold_label",
+                            caption = {"lil_einstein-science-pack.cluster"}
+                        }, {
+                            type = "label", style = "bold_label",
+                            caption = {"lil_einstein-science-pack.supplied"}
+                        }, {
+                            type = "label", style = "bold_label",
+                            caption = {"lil_einstein-science-pack.starved"}
+                        }, {
+                            type = "label", style = "bold_label",
+                            caption = {"lil_einstein-science-pack.demand"}
+                        }}
+                    }, {
+                        type = "label",
+                        name = "science_pack_panel_labs_empty",
+                        caption = {"lil_einstein-science-pack.no-labs"},
+                        visible = false
+                    }, {
+                        type = "table",
+                        name = "science_pack_panel_labs_rows",
+                        style = "lil_einstein_science_pack_table",
+                        column_count = 4
+                    }}
+                }, {
+                    type = "frame",
+                    name = "science_pack_panel_planet_stock",
+                    style = "lil_einstein_science_pack_section",
+                    direction = "vertical",
+                    children = {{
+                        type = "label", style = "heading_2_label",
+                        caption = {"lil_einstein-science-pack.planet-stock-title"}
+                    }, {
+                        type = "label",
+                        name = "science_pack_panel_planet_stock_summary",
+                        caption = ""
+                    }, {
+                        type = "table",
+                        name = "science_pack_panel_planet_stock_header",
+                        style = "lil_einstein_science_pack_table",
+                        column_count = 2,
+                        children = {{
+                            type = "label", style = "bold_label",
+                            caption = {"lil_einstein-science-pack.planet"}
+                        }, {
+                            type = "label", style = "bold_label",
+                            caption = {"lil_einstein-science-pack.stock"}
+                        }}
+                    }, {
+                        type = "label",
+                        name = "science_pack_panel_planet_stock_empty",
+                        caption = {"lil_einstein-science-pack.no-planets"},
+                        visible = false
+                    }, {
+                        type = "table",
+                        name = "science_pack_panel_planet_stock_rows",
+                        style = "lil_einstein_science_pack_table",
+                        column_count = 2
+                    }}
+                }, {
+                    type = "frame",
+                    name = "science_pack_panel_transit",
+                    style = "lil_einstein_science_pack_section",
+                    direction = "vertical",
+                    children = {{
+                        type = "label", style = "heading_2_label",
+                        caption = {"lil_einstein-science-pack.transit-title"}
+                    }, {
+                        type = "label",
+                        name = "science_pack_panel_transit_summary",
+                        caption = ""
+                    }, {
+                        type = "table",
+                        name = "science_pack_panel_transit_header",
+                        style = "lil_einstein_science_pack_table",
+                        column_count = 4,
+                        children = {{
+                            type = "label", style = "bold_label",
+                            caption = {"lil_einstein-science-pack.route"}
+                        }, {
+                            type = "label", style = "bold_label",
+                            caption = {"lil_einstein-science-pack.stock"}
+                        }, {
+                            type = "label", style = "bold_label",
+                            caption = {"lil_einstein-science-pack.status"}
+                        }, {
+                            type = "label", style = "bold_label",
+                            caption = {"lil_einstein-science-pack.progress"}
+                        }}
+                    }, {
+                        type = "label",
+                        name = "science_pack_panel_transit_empty",
+                        caption = {"lil_einstein-science-pack.no-transit"},
+                        visible = false
+                    }, {
+                        type = "table",
+                        name = "science_pack_panel_transit_rows",
+                        style = "lil_einstein_science_pack_table",
+                        column_count = 4
+                    }}
+                }}
+            }, {
+                type = "flow",
+                name = "science_pack_panel_flow_balance",
+                direction = "horizontal",
+                children = {{
+                    type = "label", style = "bold_label",
+                    caption = {"lil_einstein-science-pack.flow-balance"}
+                }, {
+                    type = "label", name = "science_pack_panel_flow_production", caption = ""
+                }, {
+                    type = "label", name = "science_pack_panel_flow_transit", caption = ""
+                }, {
+                    type = "label", name = "science_pack_panel_flow_consumption", caption = ""
+                }, {
+                    type = "label", name = "science_pack_panel_flow_net", caption = ""
+                }}
+            }}
+        }}
+    }}
+}
+
 ---------------------------------------------------------------------------------------------------
 --- Master structure
 ---------------------------------------------------------------------------------------------------
@@ -804,7 +1024,7 @@ local structure = {
                 name = "science_bottom",
                 direction = "horizontal",
                 children = {science_filter, science_pane}
-            }}
+            }, science_pack_panel}
         }}
     }, research_details_panel, policy_panel, footer}
 }

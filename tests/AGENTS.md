@@ -20,13 +20,14 @@ runtime, data-stage, migration, queue, policy, lab, and GUI contracts.
   implementation details are not imported solely to make assertions possible.
 - Tests must distinguish an idle force from an actively researching force.
 - Active science-switch regressions exercise `queue.check_and_switch_temp_research` with a live current technology, lab starvation evidence, and a supplied alternate candidate; do not test only the lower-level science predicate.
+- Starvation fallback regressions keep the explicit queue at one pack-bound technology and place the supplied alternate outside it; recovery regressions prove a small idle buffer cannot satisfy a high-demand target.
 - Throughput GUI/model regressions cover fixed-width cluster rows, deterministic lab descriptors, and the affected-lab inspection transition.
 - Debug-report tests cover deterministic report sections, the live GUI-details snapshot seam, and the copy-ready, selected text-box modal seam.
 - GUI crash regressions cover invalid report-text lifecycle access and label-only style writes on button elements.
 - Data-stage and migration tests execute against isolated `data`/`game` doubles.
 - In-game checks must use the disposable runner and must not open or mutate a
   player save.
-- The disposable runner advances its isolated save on a loopback-only ephemeral server with auto-pause disabled and asserts `LuaForce.current_research` switches from a pack-bound technology to a supplied alternate after bounded sampling of 275 labs.
+- The disposable runner advances its isolated save on a loopback-only ephemeral server with auto-pause disabled and asserts `LuaForce.current_research` switches from a singleton-queued pack-bound technology to an unqueued supplied alternate after bounded sampling of 275 labs, while 5 supplied labs prove the original research still made low but nonzero progress.
 - A regression test may remain red while it documents an unfixed player-visible bug; report that state explicitly.
 
 ## Work Guidance

@@ -15,7 +15,11 @@ end
 
 local calls = {}
 local force_settings = {}
-local player_settings = {allowed_science_a = true, show_tech_filter_category = "military"}
+local player_settings = {
+    allowed_science_a = true,
+    science_pack_panel_science = "science_a",
+    show_tech_filter_category = "military"
+}
 local research_summary
 local research_history = {}
 local next_element_index = 0

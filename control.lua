@@ -197,6 +197,7 @@ local run_open_view_updates = function()
             open_force_indices[p.force.index] = true
             gui.tick_repopulate(p.index)
             gui.tick_science_counts(p.index)
+            gui.tick_science_pack_panel(p.index)
             gui.tick_research_graph(p.index)
         end
     end
@@ -495,7 +496,7 @@ script.on_event(defines.events.on_gui_click, function(e)
         p.print({"lil_einstein-msg.multiplayer-locked"})
         return
     end
-    if h == "toggle_allowed_science" and e.button == defines.mouse_button_type.right and not policy.can_edit(p) then
+    if h == "open_science_pack_details" and e.button == defines.mouse_button_type.right and not policy.can_edit(p) then
         p.print({"lil_einstein-msg.multiplayer-locked"})
         return
     end
@@ -547,13 +548,14 @@ script.on_event(defines.events.on_gui_click, function(e)
         -- game.print("[LilEinstein DEBUG] move_tech_down: tech=" .. tostring(t.technology) .. " force=" .. tostring(f.index) .. " UB=" .. tostring(before) .. "->" .. tostring(after))
     elseif h == "remove_from_queue" then
         queue.remove(f, t.technology)
-    elseif h == "toggle_allowed_science" then
+    elseif h == "open_science_pack_details" then
         if e.button == defines.mouse_button_type.right then
             local priority = policy.cycle_science_priority(f.index, t.science)
             policy.record_action(f.index, p.index, "science_priority", t.science .. "=" .. priority)
             state.request_next_research(f)
         else
-            state.toggle_player_setting(p.index, "allowed_" .. t.science)
+            gui.toggle_science_pack_details(p.index, t.science)
+            repopulate = false
         end
     elseif h == "promote_research" then
         queue.promote(f, t.tech_name, steps)

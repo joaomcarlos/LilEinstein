@@ -8,6 +8,7 @@ local test_lab_name = "lil-einstein-test-lab"
 local starved_technology_name = "lil-einstein-test-starved"
 local supplied_technology_name = "lil-einstein-test-supplied"
 local scenario_lab_count = 275
+local scenario_working_lab_count = 5
 local observe_before_switch_tick = 240
 local verify_switch_tick = 900
 
@@ -53,7 +54,13 @@ local function setup_switch_scenario()
     surface.request_to_generate_chunks({0, 0}, 5)
     surface.force_generate_chunk_requests()
 
+    for technology_name, technology in pairs(force.technologies) do
+        technology.enabled = technology_name == starved_technology_name or
+            technology_name == supplied_technology_name
+    end
+
     local created_labs = 0
+    local working_labs = 0
     for index = 1, scenario_lab_count do
         local column = (index - 1) % 25
         local row = math.floor((index - 1) / 25)
@@ -70,7 +77,13 @@ local function setup_switch_scenario()
             if lab_entity then
                 local inventory = lab_entity.get_inventory(defines.inventory.lab_input)
                 if inventory then
-                    inventory.insert({name = "logistic-science-pack", count = 100})
+                    inventory.insert({name = "logistic-science-pack", count = 1000})
+                    if index <= scenario_working_lab_count then
+                        local inserted = inventory.insert({name = "automation-science-pack", count = 1000})
+                        if inserted > 0 then
+                            working_labs = working_labs + 1
+                        end
+                    end
                 end
                 created_labs = created_labs + 1
             end
@@ -81,9 +94,13 @@ local function setup_switch_scenario()
     force.technologies[supplied_technology_name].researched = false
     storage.switch_scenario = {
         created_labs = created_labs,
+        working_labs = working_labs,
         queue_started = false,
         initial_research = nil,
+        initial_progress = nil,
+        initial_queue_size = nil,
         before_switch_research = nil,
+        before_switch_progress = nil,
         timeline = {},
         completed = false
     }
@@ -143,12 +160,24 @@ local function run_checks()
     local timeline = table.concat(scenario.timeline or {}, "; ")
     check("created all 275 disposable labs", scenario.created_labs == scenario_lab_count,
         "created " .. tostring(scenario.created_labs) .. " labs")
+    check("only 5 labs can consume the starved technology's pack",
+        scenario.working_labs == scenario_working_lab_count,
+        "supplied " .. tostring(scenario.working_labs) .. " labs")
+    check("the explicit research queue contained only the starved technology",
+        scenario.initial_queue_size == 1,
+        "initial queue size was " .. tostring(scenario.initial_queue_size))
     check("starved research started first", scenario.initial_research == starved_technology_name,
         "initial research was " .. tostring(scenario.initial_research))
     check("starved research remained active before the switch interval",
         scenario.before_switch_research == starved_technology_name,
         "research at tick " .. tostring(observe_before_switch_tick) .. " was " ..
             tostring(scenario.before_switch_research) .. "; timeline: " .. timeline)
+    check("starved research made low but nonzero progress before switching",
+        type(scenario.initial_progress) == "number" and
+            type(scenario.before_switch_progress) == "number" and
+            scenario.before_switch_progress > scenario.initial_progress,
+        "progress changed from " .. tostring(scenario.initial_progress) .. " to " ..
+            tostring(scenario.before_switch_progress))
     check("live research switched to the supplied alternate",
         current_name == supplied_technology_name,
         "current research at tick " .. tostring(game.tick) .. " was " .. tostring(current_name) ..
@@ -165,8 +194,10 @@ script.on_event(defines.events.on_tick, function(event)
     end
     if not scenario.queue_started and event.tick >= 1 then
         local force = game.forces.player
-        force.research_queue = {starved_technology_name, supplied_technology_name}
+        force.research_queue = {starved_technology_name}
         scenario.initial_research = force.current_research and force.current_research.name or nil
+        scenario.initial_progress = force.research_progress
+        scenario.initial_queue_size = #(force.research_queue or {})
         scenario.queue_started = true
     end
     if event.tick == 1 or event.tick % 30 == 0 then
@@ -175,6 +206,7 @@ script.on_event(defines.events.on_tick, function(event)
     if not scenario.before_switch_research and event.tick >= observe_before_switch_tick then
         local force = game.forces.player
         scenario.before_switch_research = force.current_research and force.current_research.name or nil
+        scenario.before_switch_progress = force.research_progress
     end
     if event.tick >= verify_switch_tick then
         scenario.completed = true

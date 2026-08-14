@@ -177,6 +177,20 @@ data.raw["gui-style"].default["lil_einstein_throughput_demand_table"] = {
     parent = "lil_einstein_throughput_table",
     vertical_spacing = 2
 }
+data.raw["gui-style"].default["lil_einstein_science_pack_section"] = {
+    type = "frame_style",
+    parent = "inside_shallow_frame",
+    width = 485,
+    padding = 8,
+    graphical_set = {}
+}
+data.raw["gui-style"].default["lil_einstein_science_pack_table"] = {
+    type = "table_style",
+    parent = "table",
+    width = 465,
+    horizontal_spacing = 4,
+    vertical_spacing = 4
+}
 data.raw["gui-style"].default["lil_einstein_throughput_pack_cell"] = {
     type = "vertical_flow_style",
     parent = "vertical_flow",

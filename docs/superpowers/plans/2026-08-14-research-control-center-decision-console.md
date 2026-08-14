@@ -30,9 +30,9 @@
 - `asset-plan.json` records the source path, target size, clean rectangles, sprite crop rectangles, and intended consumer for each asset.
 - `README.md` explains the demo command, the sprite/background layering contract, and the live-integration boundary.
 
-- [ ] **Step 1: Record the exact 1672x941 source and mark dynamic regions.** Keep the header/chrome art, clear the live summary controls, stage controls, tab labels, evidence/history rows, and footer status text.
-- [ ] **Step 2: Record atomic crops only where the crop contains no sample data.** Reuse existing registered Factorio UI sprites for toggles, checkboxes, radios, steppers, and science/technology icons where possible; do not register contaminated crops from the generated screenshot.
-- [ ] **Step 3: Review the plan for overlaps, stale paths, and width contracts before generating assets.**
+- [x] **Step 1: Record the exact 1672x941 source and mark dynamic regions.** Keep the header/chrome art, clear the live summary controls, stage controls, tab labels, evidence/history rows, and footer status text.
+- [x] **Step 2: Record atomic crops only where the crop contains no sample data.** Reuse existing registered Factorio UI sprites for toggles, checkboxes, radios, steppers, and science/technology icons where possible; do not register contaminated crops from the generated screenshot.
+- [x] **Step 3: Review the plan for overlaps, stale paths, and width contracts before generating assets.**
 
 ### Task 2: Generate deterministic cleaned background and sprite crops
 
@@ -46,9 +46,9 @@
 - `scripts/clean_decision_console_assets.py` accepts the selected reference path and `asset-plan.json`, writes only the declared PNG outputs, and fails on missing source or invalid rectangles.
 - The cleaned background preserves the industrial window chrome while removing baked dynamic text, controls, science icons, sample technology rows, and history entries.
 
-- [ ] **Step 1: Implement the deterministic cleanup/crop script with Pillow and explicit rectangles.** Do not use generative editing or CSS/drawing substitutes for image assets.
-- [ ] **Step 2: Run the script and verify every output has the planned dimensions and a valid PNG header.**
-- [ ] **Step 3: Inspect the generated images visually and correct any halos, leftover text, clipped borders, or contaminated sprite crops.**
+- [x] **Step 1: Implement the deterministic cleanup/crop script with Pillow and explicit rectangles.** Do not use generative editing or CSS/drawing substitutes for image assets.
+- [x] **Step 2: Run the script and verify every output has the planned dimensions and a valid PNG header.**
+- [x] **Step 3: Inspect the generated images visually and correct any halos, leftover text, clipped borders, or contaminated sprite crops.**
 
 ### Task 3: Assemble the interactive standalone demo
 
@@ -63,20 +63,20 @@
 - The demo renders one 1672x941 Decision Console frame without browser chrome or a second concept.
 - Tabs switch the focused lower content; radio buttons, checkboxes, steppers, and Back to research provide visible state changes; the demo remains offline and requires no dependency install.
 
-- [ ] **Step 1: Build the page shell over the cleaned background at the exact reference dimensions.** Use real image assets for the background and icons; do not replace sprites with emoji, inline SVG, gradients, or CSS drawings.
-- [ ] **Step 2: Add the top summary strip, three numbered decision stages, tab row, and Automation content using the measured geometry.**
-- [ ] **Step 3: Wire the core interactions and visible states without adding unrelated product features.**
-- [ ] **Step 4: Open the demo locally, capture a 1672x941 screenshot, and compare it directly with the selected reference.**
+- [x] **Step 1: Build the page shell over the cleaned background at the exact reference dimensions.** Use real image assets for the background and icons; do not replace sprites with emoji, inline SVG, gradients, or CSS drawings.
+- [x] **Step 2: Add the top summary strip, three numbered decision stages, tab row, and Automation content using the measured geometry.**
+- [x] **Step 3: Wire the core interactions and visible states without adding unrelated product features.**
+- [x] **Step 4: Open the demo locally, capture a 1672x941 screenshot, and compare it directly with the selected reference.**
 
 ### Task 4: Asset and demo verification checkpoint
 
 **Files:**
 - Create: `output/research-control-center-demo/verification.md`
 
-- [ ] **Step 1: Verify all declared files exist and all dimensions match `asset-plan.json`.**
-- [ ] **Step 2: Run the demo’s interaction smoke checks and inspect the final screenshot at 100% scale.**
-- [ ] **Step 3: Run `lua52 .\\tests\\run_all.lua` to confirm the existing mod behavior remains green.**
-- [ ] **Step 4: Record remaining live-integration work without claiming the Factorio panel is wired yet.**
+- [x] **Step 1: Verify all declared files exist and all dimensions match `asset-plan.json`.**
+- [x] **Step 2: Run the demo’s interaction smoke checks and inspect the final screenshot at 100% scale.**
+- [x] **Step 3: Run `lua52 .\\tests\\run_all.lua` to confirm the existing mod behavior remains green.**
+- [x] **Step 4: Record remaining live-integration work without claiming the Factorio panel is wired yet.**
 
 ### Task 5: After user feedback, integrate into Factorio
 

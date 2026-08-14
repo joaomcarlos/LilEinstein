@@ -237,8 +237,11 @@ end
 
 local get_science_counts
 local get_virtual_queue_source
+local get_emergency_candidate_source
 local set_runtime_research_queue
 local get_runtime_candidate_average_cost
+local get_inactive_science_demand_spm
+local inactive_science_demand_cache = {}
 
 queue.apply_planning_pause = function(f)
     if not f then
@@ -312,9 +315,20 @@ local science_supply_is_sufficient = function(xcur, force_index)
     end
     if forecast_seconds > 0 then
         local horizon = get_depletion_horizon_seconds(xcur, force_index, forecast_seconds)
+        local inactive_demand = get_inactive_science_demand_spm and
+            get_inactive_science_demand_spm(xcur, force_index) or {}
         for _, science in pairs(sciences) do
             local science_forecast = forecast[science]
-            if science_forecast and science_forecast.depletion_seconds and
+            local demand_per_minute = inactive_demand[science] or 0
+            if science_forecast and demand_per_minute > 0 and horizon > 0 then
+                local stock = math.max(0, science_forecast.stock or 0)
+                local production_per_minute = math.max(0, science_forecast.production_per_minute or 0)
+                local projected_supply = stock + production_per_minute * horizon / 60
+                local projected_demand = demand_per_minute * horizon / 60
+                if projected_supply + 0.001 < projected_demand then
+                    return false
+                end
+            elseif science_forecast and science_forecast.depletion_seconds and
                 science_forecast.depletion_seconds < horizon and
                 science_depletion_is_attributable(availability, science) then
                 return false
@@ -992,10 +1006,34 @@ queue.check_and_switch_temp_research = function(f)
     end
 
     -- Try queue order
+    local queued_names = {}
     for _, q in ipairs(sfq or {}) do
+        queued_names[q] = true
         if q ~= cur_name and q ~= pinned then
             local candidate, _ = find_runtime_candidate(f.index, q, tsx, lsci, sfsci)
             if candidate and candidate ~= cur_name then
+                sq[keys.target_tech] = target or cur_name
+                sq[keys.temp_tech] = candidate
+                sq[keys.temp_tech_timeout] = game.tick + minimum_switch_ticks
+                sq[keys.last_switch_tick] = game.tick
+                notify_switch(f, cur_name, candidate, tsx, lsci)
+                state.request_next_research(f)
+                return
+            end
+        end
+    end
+
+    -- The explicit queue remains authoritative during normal selection. When it
+    -- has no runnable substitute for a materially pack-bound technology, widen
+    -- only this temporary search so useful lab capacity does not sit idle.
+    local emergency_source = get_emergency_candidate_source and
+        get_emergency_candidate_source(f.index, tsx) or {}
+    for _, q in ipairs(emergency_source) do
+        if q ~= cur_name and q ~= pinned and not queued_names[q] then
+            local candidate, _ = find_runtime_candidate(f.index, q, tsx, lsci, sfsci)
+            local xcandidate = candidate and tsx[candidate] or nil
+            if candidate and candidate ~= cur_name and xcandidate and
+                queue.science_is_sufficient(xcandidate, f.index) then
                 sq[keys.target_tech] = target or cur_name
                 sq[keys.temp_tech] = candidate
                 sq[keys.temp_tech_timeout] = game.tick + minimum_switch_ticks
@@ -1702,6 +1740,7 @@ local lab_observation_cache = {}
 local lab_network_cache = {}
 local lab_input_cache = {}
 local active_bottleneck_cache = {}
+local science_pack_insight_cache = {}
 local research_health_snapshots = {}
 local research_health_jobs = {}
 local research_health_requests = {}
@@ -2017,6 +2056,8 @@ queue.invalidate_science_cache = function(force_index)
     lab_observation_cache[force_index] = nil
     lab_network_cache[force_index] = nil
     active_bottleneck_cache[force_index] = nil
+    inactive_science_demand_cache[force_index] = nil
+    science_pack_insight_cache[force_index] = nil
     -- Keep the last completed report visible while the replacement is measured.
     -- tick_research_health_snapshot swaps in the new complete snapshot atomically.
     research_health_jobs[force_index] = nil
@@ -2088,6 +2129,36 @@ local get_lab_science_consumption_spm = function(lab_entity, current, amount)
     -- prototype/quality drain is the separate factor that changes pack demand.
     return get_lab_research_unit_spm(lab_entity, current) *
         get_lab_science_pack_drain_multiplier(lab_entity) * math.max(0, amount or 1)
+end
+
+get_inactive_science_demand_spm = function(xcur, force_index)
+    local current = xcur and xcur.technology
+    if not current or not force_index then
+        return {}
+    end
+
+    local force_cache = inactive_science_demand_cache[force_index]
+    if not force_cache or force_cache.tick ~= game.tick then
+        force_cache = {tick = game.tick, technologies = {}}
+        inactive_science_demand_cache[force_index] = force_cache
+    end
+    local cached = force_cache.technologies[current.name]
+    if cached then
+        return cached
+    end
+
+    local res = {}
+    for _, lcur in pairs(lab.get_runtime_lab_content(force_index) or {}) do
+        local lab_entity = lcur and lcur.lab
+        if lab_entity and lab_entity.valid and lab_accepts_research(lab_entity, current) then
+            for _, ingredient in pairs(current.research_unit_ingredients or {}) do
+                res[ingredient.name] = (res[ingredient.name] or 0) +
+                    get_lab_science_consumption_spm(lab_entity, current, ingredient.amount)
+            end
+        end
+    end
+    force_cache.technologies[current.name] = res
+    return res
 end
 
 local get_missing_lab_sciences = function(current, contents)
@@ -3204,6 +3275,259 @@ queue.get_research_display_diagnostic = function(force_index)
     return new_display_diagnostic(force_index, f and f.current_research).result
 end
 
+local is_valid_runtime_object = function(object)
+    return object and object.valid ~= false
+end
+
+local get_runtime_name = function(object, fallback)
+    if type(object) == "string" then
+        return object
+    end
+    if object and object.name then
+        return tostring(object.name)
+    end
+    return fallback or "unknown"
+end
+
+local get_surface_planet_name = function(surface)
+    if not is_valid_runtime_object(surface) then
+        return nil
+    end
+    local planet = surface.planet
+    return get_runtime_name(planet, surface.name)
+end
+
+local count_surface_science = function(surface, force_index, science)
+    if not is_valid_runtime_object(surface) or not surface.find_entities_filtered then
+        return 0
+    end
+    local ok_entities, entities = pcall(function()
+        return surface.find_entities_filtered({force = force_index, has_item_inside = science})
+    end)
+    if not ok_entities or type(entities) ~= "table" then
+        return 0
+    end
+
+    local total = 0
+    for _, entity in pairs(entities) do
+        if is_valid_runtime_object(entity) and entity.type ~= "cargo-pod" and entity.get_item_count then
+            local ok_count, count = pcall(function()
+                return entity.get_item_count(science)
+            end)
+            if ok_count and type(count) == "number" then
+                total = total + math.max(0, count)
+            end
+        end
+    end
+    return total
+end
+
+local get_planet_stock = function(force_index, science)
+    local rows_by_name = {}
+    local surfaces = game.surfaces or {}
+
+    for key, planet in pairs(game.planets or {}) do
+        local name = get_runtime_name(planet, key)
+        local surface = planet and planet.surface
+        rows_by_name[name] = {
+            name = name,
+            surface = is_valid_runtime_object(surface) and surface or nil,
+            stock = 0
+        }
+    end
+
+    for _, surface in pairs(surfaces) do
+        if is_valid_runtime_object(surface) and not surface.platform then
+            local name = get_surface_planet_name(surface)
+            if name then
+                local row = rows_by_name[name]
+                if not row then
+                    row = {name = name, surface = surface, stock = 0}
+                    rows_by_name[name] = row
+                elseif not row.surface then
+                    row.surface = surface
+                end
+            end
+        end
+    end
+
+    local rows = {}
+    local stock_by_name = {}
+    for name, row in pairs(rows_by_name) do
+        row.stock = count_surface_science(row.surface, force_index, science)
+        stock_by_name[name] = row.stock
+        table.insert(rows, {name = row.name, stock = row.stock})
+    end
+    table.sort(rows, function(a, b) return a.name < b.name end)
+    return rows, stock_by_name
+end
+
+local get_transit_item_count = function(object, science)
+    if not is_valid_runtime_object(object) or not object.get_item_count then
+        return 0
+    end
+    local ok_count, count = pcall(function()
+        return object.get_item_count(science)
+    end)
+    return ok_count and type(count) == "number" and math.max(0, count) or 0
+end
+
+local get_transit_routes = function(force_index, science)
+    local f = game.forces[force_index]
+    local routes = {}
+    local total = 0
+    for key, platform in pairs(f and f.platforms or {}) do
+        local connection = platform and platform.space_connection
+        if is_valid_runtime_object(platform) and connection then
+            local count = get_transit_item_count(platform.hub, science)
+            if count > 0 then
+                local from = get_runtime_name(connection.from, "unknown")
+                local to = get_runtime_name(connection.to, "unknown")
+                table.insert(routes, {
+                    platform = get_runtime_name(platform, key),
+                    from = from,
+                    to = to,
+                    stock = count,
+                    progress = type(platform.distance) == "number" and platform.distance or nil
+                })
+                total = total + count
+            end
+        end
+    end
+
+    for _, surface in pairs(game.surfaces or {}) do
+        if is_valid_runtime_object(surface) and surface.find_entities_filtered then
+            local ok_pods, pods = pcall(function()
+                return surface.find_entities_filtered({force = force_index, type = "cargo-pod",
+                                                       has_item_inside = science})
+            end)
+            if ok_pods and type(pods) == "table" then
+                for _, pod in pairs(pods) do
+                    local count = get_transit_item_count(pod, science)
+                    if count > 0 then
+                        table.insert(routes, {
+                            platform = "Cargo pod",
+                            from = get_runtime_name(pod.cargo_pod_origin, "unknown"),
+                            to = get_runtime_name(pod.cargo_pod_destination, "unknown"),
+                            stock = count,
+                            progress = nil
+                        })
+                        total = total + count
+                    end
+                end
+            end
+        end
+    end
+
+    table.sort(routes, function(a, b)
+        if a.stock == b.stock then
+            if a.platform == b.platform then
+                return a.to < b.to
+            end
+            return a.platform < b.platform
+        end
+        return a.stock > b.stock
+    end)
+    return {total = total, routes = routes}
+end
+
+local is_nauvis_cluster = function(cluster)
+    return tostring(cluster and cluster.surface_name or ""):lower() == "nauvis"
+end
+
+local get_cluster_pack_rate = function(cluster, science)
+    for _, item in pairs(cluster and cluster.science_pack_rates or {}) do
+        if item.science == science then
+            return item
+        end
+    end
+    return {maximum_per_minute = 0, working_per_minute = 0}
+end
+
+local get_cluster_missing_labs = function(cluster, science)
+    for _, item in pairs(cluster and cluster.missing_sciences or {}) do
+        if item.science == science then
+            return item.labs or 0
+        end
+    end
+    return 0
+end
+
+queue.get_science_pack_insight = function(force_index, science)
+    if type(science) ~= "string" then
+        return nil
+    end
+    local force_cache = science_pack_insight_cache[force_index]
+    if not force_cache then
+        force_cache = {}
+        science_pack_insight_cache[force_index] = force_cache
+    end
+    local cached = force_cache[science]
+    local refresh_ticks = (const.runtime_intervals and const.runtime_intervals.science_pack_panel_ticks) or 300
+    if cached and game.tick < cached.next_refresh_tick then
+        return cached.value
+    end
+
+    local forecast = queue.get_science_display_forecast(force_index)[science] or {}
+    local diagnostic = queue.get_research_display_diagnostic(force_index) or {}
+    local planet_rows, planet_stock = get_planet_stock(force_index, science)
+    local transit = get_transit_routes(force_index, science)
+    local labs = {
+        surface_name = "nauvis",
+        stock = queue.get_science_display_breakdown(force_index, science).lab_count or 0,
+        compatible_labs = 0,
+        supplied_labs = 0,
+        starved_labs = 0,
+        maximum_per_minute = 0,
+        working_per_minute = 0,
+        clusters = {}
+    }
+    for _, cluster in pairs(diagnostic.clusters or {}) do
+        if is_nauvis_cluster(cluster) then
+            local rate = get_cluster_pack_rate(cluster, science)
+            local cluster_row = {
+                key = cluster.key,
+                label = cluster.label or cluster.surface_name or "Nauvis",
+                surface_name = cluster.surface_name,
+                total_labs = cluster.total_labs or 0,
+                compatible_labs = cluster.compatible_labs or 0,
+                supplied_labs = cluster.working_labs or 0,
+                starved_labs = get_cluster_missing_labs(cluster, science),
+                maximum_per_minute = rate.maximum_per_minute or 0,
+                working_per_minute = rate.working_per_minute or 0
+            }
+            table.insert(labs.clusters, cluster_row)
+            labs.compatible_labs = labs.compatible_labs + cluster_row.compatible_labs
+            labs.supplied_labs = labs.supplied_labs + cluster_row.supplied_labs
+            labs.starved_labs = labs.starved_labs + cluster_row.starved_labs
+            labs.maximum_per_minute = labs.maximum_per_minute + cluster_row.maximum_per_minute
+            labs.working_per_minute = labs.working_per_minute + cluster_row.working_per_minute
+        end
+    end
+    table.sort(labs.clusters, function(a, b) return a.label < b.label end)
+
+    local value = {
+        science = science,
+        current_stock = forecast.stock or 0,
+        production_per_minute = forecast.production_per_minute or 0,
+        consumption_per_minute = forecast.consumption_per_minute or 0,
+        net_per_minute = forecast.net_per_minute or 0,
+        depletion_seconds = forecast.depletion_seconds,
+        recovery_seconds = forecast.recovery_seconds,
+        labs = labs,
+        planet_stock = planet_stock,
+        planet_stock_rows = planet_rows,
+        in_transit = transit,
+        generated_tick = game.tick
+    }
+    force_cache[science] = {
+        value = value,
+        next_refresh_tick = game.tick + refresh_ticks
+    }
+    value.next_refresh_tick = game.tick + refresh_ticks
+    return value
+end
+
 -- Use the staggered lab snapshots for the background switcher. This preserves
 -- the diagnostic's missing-pack thresholds without rebuilding its full cluster
 -- model in one scheduler tick.
@@ -3507,6 +3831,10 @@ get_virtual_queue_source = function(force_index, tsx)
         return {}
     end
 
+    return get_scored_queue_source(force_index, tsx, get_all_runtime_candidate_names(force_index, tsx))
+end
+
+get_emergency_candidate_source = function(force_index, tsx)
     return get_scored_queue_source(force_index, tsx, get_all_runtime_candidate_names(force_index, tsx))
 end
 

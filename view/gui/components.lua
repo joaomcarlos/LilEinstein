@@ -21,6 +21,7 @@ local research_graph_hover_dot_height = 3
 local research_graph_hover_column_setting = "research_graph_hover_column"
 local graph_render_cache = {}
 local science_render_cache = {}
+local science_pack_panel_render_cache = {}
 local graph_render_jobs = {}
 local graph_hover_cache = {}
 local research_status_cache = {}
@@ -66,7 +67,7 @@ local get_science_tooltip = function(player_index, force_index, science, total_c
     elseif forecast.recovery_seconds then
         tt = tt .. "\nEstimated recovery: " .. tostring(math.floor(forecast.recovery_seconds + 0.5)) .. "s"
     end
-    tt = tt .. "\nLeft-click: filter technology\nRight-click: cycle automation priority"
+    tt = tt .. "\nLeft-click: inspect science pack\nRight-click: cycle automation priority"
 
     if #networks > 0 then
         tt = tt .. "\n\n"
@@ -124,6 +125,10 @@ local refresh_science_counts = function(player_index, anchor, budget)
             btn.tooltip = tooltip
             science_rendered.tooltip = tooltip
         end
+        local selected = state.get_player_setting(player_index, "science_pack_panel_science") == science
+        if btn and btn.toggled ~= selected then
+            btn.toggled = selected
+        end
 
         local label_name = "allowed_science_count_" .. science
         local count_label = gutil.get_child(anchor, label_name)
@@ -173,6 +178,168 @@ local format_time = function(seconds)
         return tostring(minutes) .. "m" .. string.format("%02ds", secs)
     end
     return tostring(secs) .. "s"
+end
+
+local set_caption = function(element, caption)
+    if element then
+        element.caption = caption
+    end
+end
+
+local set_table_rows = function(table_element, rows, rendered, column_count, key_fn, caption_fn)
+    if not table_element then
+        return
+    end
+    local signature_parts = {}
+    for _, row in ipairs(rows or {}) do
+        table.insert(signature_parts, tostring(key_fn(row)))
+    end
+    local signature = table.concat(signature_parts, "\31")
+    if rendered.signature ~= signature then
+        table_element.clear()
+        for _ = 1, (#rows or 0) * column_count do
+            table_element.add({type = "label", caption = "", ignored_by_interaction = true})
+        end
+        rendered.signature = signature
+    end
+
+    for row_index, row in ipairs(rows or {}) do
+        local captions = caption_fn(row)
+        local offset = (row_index - 1) * column_count
+        for column = 1, column_count do
+            local cell = table_element.children[offset + column]
+            if cell then
+                cell.caption = captions[column] or ""
+            end
+        end
+    end
+end
+
+local get_science_pack_status = function(insight)
+    local labs = insight.labs or {}
+    if (insight.current_stock or 0) <= 0 or
+        ((labs.compatible_labs or 0) > 0 and (labs.starved_labs or 0) >= (labs.compatible_labs or 0)) then
+        return "starved"
+    end
+    if (insight.net_per_minute or 0) < 0 then
+        return "at-risk"
+    end
+    return "healthy"
+end
+
+local get_transit_progress_caption = function(progress)
+    if type(progress) ~= "number" then
+        return {"lil_einstein-science-pack.moving"}
+    end
+    return tostring(math.floor(math.max(0, math.min(1, progress)) * 100 + 0.5)) .. "%"
+end
+
+local refresh_science_pack_panel = function(player_index, anchor)
+    local panel = gutil.get_child(anchor, "science_pack_panel")
+    if not panel or not panel.visible then
+        return
+    end
+    local p = game.get_player(player_index)
+    if not p then
+        return
+    end
+    local science = state.get_player_setting(player_index, "science_pack_panel_science")
+    if type(science) ~= "string" then
+        return
+    end
+
+    -- This is the only view path that asks for the world-scanning insight. The
+    -- model keeps the result cached until the next open-panel refresh boundary.
+    local insight = queue.get_science_pack_insight(p.force.index, science)
+    if not insight then
+        return
+    end
+    local rendered = science_pack_panel_render_cache[anchor.index]
+    if not rendered or not rendered.element.valid or rendered.element ~= anchor then
+        rendered = {element = anchor, generated_tick = nil, labs = {}, planets = {}, transit = {}}
+        science_pack_panel_render_cache[anchor.index] = rendered
+    end
+
+    local item_name = state.get_translation(player_index, "item", science, "localised_name") or science
+    local status = get_science_pack_status(insight)
+    local status_caption = {"lil_einstein-science-pack.status-" .. status}
+    local status_label = gutil.get_child(panel, "science_pack_panel_state")
+    local icon = gutil.get_child(panel, "science_pack_panel_icon")
+    set_caption(gutil.get_child(panel, "science_pack_panel_name"), item_name)
+    set_caption(status_label, status_caption)
+    if icon then
+        icon.sprite = "item/" .. science
+    end
+    if status_label then
+        status_label.style.font_color = status == "starved" and {1.0, 0.35, 0.25} or
+            (status == "at-risk" and {1.0, 0.75, 0.25} or {0.45, 1.0, 0.55})
+    end
+
+    local seconds = math.max(0, math.ceil(((insight.next_refresh_tick or game.tick) - game.tick) / 60))
+    set_caption(gutil.get_child(panel, "science_pack_panel_timer"),
+        {"lil_einstein-science-pack.refreshes-in", seconds})
+
+    local generated_tick = insight.generated_tick
+    if generated_tick == nil or rendered.generated_tick ~= generated_tick then
+        rendered.generated_tick = generated_tick
+        set_caption(gutil.get_child(panel, "science_pack_panel_current_stock"),
+            {"lil_einstein-science-pack.current-stock", gutil.format_cost(insight.current_stock or 0)})
+        set_caption(gutil.get_child(panel, "science_pack_panel_flow_summary"),
+            {"lil_einstein-science-pack.flow-summary", gutil.format_si(insight.production_per_minute or 0),
+             gutil.format_si(insight.consumption_per_minute or 0), gutil.format_si(insight.net_per_minute or 0)})
+
+        local labs = insight.labs or {}
+        set_caption(gutil.get_child(panel, "science_pack_panel_labs_summary"),
+            {"lil_einstein-science-pack.labs-summary", labs.compatible_labs or 0,
+             labs.supplied_labs or 0, labs.starved_labs or 0})
+        local lab_rows = labs.clusters or {}
+        set_caption(gutil.get_child(panel, "science_pack_panel_labs_empty"),
+            {"lil_einstein-science-pack.no-labs"})
+        local lab_empty = gutil.get_child(panel, "science_pack_panel_labs_empty")
+        if lab_empty then lab_empty.visible = #lab_rows == 0 end
+        set_table_rows(gutil.get_child(panel, "science_pack_panel_labs_rows"), lab_rows, rendered.labs, 4,
+            function(row) return row.key or row.label end,
+            function(row)
+                return {row.label or row.surface_name or "Nauvis", row.supplied_labs or 0,
+                    row.starved_labs or 0, gutil.format_si(row.maximum_per_minute or 0)}
+            end)
+
+        local planet_rows = insight.planet_stock_rows or {}
+        set_caption(gutil.get_child(panel, "science_pack_panel_planet_stock_summary"),
+            {"lil_einstein-science-pack.planet-stock-summary", #planet_rows})
+        local planet_empty = gutil.get_child(panel, "science_pack_panel_planet_stock_empty")
+        if planet_empty then planet_empty.visible = #planet_rows == 0 end
+        set_table_rows(gutil.get_child(panel, "science_pack_panel_planet_stock_rows"), planet_rows,
+            rendered.planets, 2, function(row) return row.name end,
+            function(row)
+                return {row.name, (row.stock or 0) > 0 and gutil.format_cost(row.stock) or
+                    {"lil_einstein-science-pack.no-stock"}}
+            end)
+
+        local transit = insight.in_transit or {}
+        local transit_rows = transit.routes or {}
+        set_caption(gutil.get_child(panel, "science_pack_panel_transit_summary"),
+            {"lil_einstein-science-pack.transit-summary", gutil.format_cost(transit.total or 0),
+             #transit_rows})
+        local transit_empty = gutil.get_child(panel, "science_pack_panel_transit_empty")
+        if transit_empty then transit_empty.visible = #transit_rows == 0 end
+        set_table_rows(gutil.get_child(panel, "science_pack_panel_transit_rows"), transit_rows,
+            rendered.transit, 4, function(row) return tostring(row.platform) .. ":" .. tostring(row.to) end,
+            function(row)
+                return {tostring(row.from) .. " → " .. tostring(row.to), gutil.format_cost(row.stock or 0),
+                    {"lil_einstein-science-pack.moving"}, get_transit_progress_caption(row.progress)}
+            end)
+
+        local flow = gutil.get_child(panel, "science_pack_panel_flow_balance")
+        set_caption(gutil.get_child(flow, "science_pack_panel_flow_production"),
+            {"lil_einstein-science-pack.flow-production", gutil.format_si(insight.production_per_minute or 0)})
+        set_caption(gutil.get_child(flow, "science_pack_panel_flow_transit"),
+            {"lil_einstein-science-pack.flow-transit", gutil.format_cost((insight.in_transit or {}).total or 0)})
+        set_caption(gutil.get_child(flow, "science_pack_panel_flow_consumption"),
+            {"lil_einstein-science-pack.flow-consumption", gutil.format_si(insight.consumption_per_minute or 0)})
+        set_caption(gutil.get_child(flow, "science_pack_panel_flow_net"),
+            {"lil_einstein-science-pack.flow-net", gutil.format_si(insight.net_per_minute or 0)})
+    end
 end
 
 local format_status_si = function(value)
@@ -1922,11 +2089,11 @@ local populate_science_filters = function(player_index, anchor)
             sprite = "item/" .. s,
             hovered_sprite = "item/" .. s,
             clicked_sprite = "item/" .. s,
-            toggled = state.get_player_setting(player_index, "allowed_" .. s, false),
+            toggled = state.get_player_setting(player_index, "science_pack_panel_science") == s,
             tooltip = get_science_tooltip(player_index, force_index, s, count),
             tags = {
                 lil_einstein_on_click = true,
-                handler = "toggle_allowed_science",
+                handler = "open_science_pack_details",
                 science = s
             }
         }
@@ -2561,12 +2728,20 @@ local research_details_panel_is_visible = function(anchor)
     return panel and panel.visible == true
 end
 
+local science_pack_panel_is_visible = function(anchor)
+    local panel = gutil.get_child(anchor, "science_pack_panel")
+    return panel and panel.visible == true
+end
+
 content.repopulate_static = function(player_index, anchor)
     if policy_panel_is_visible(anchor) then
         populate_policy_panel(player_index, anchor)
         return
     elseif research_details_panel_is_visible(anchor) then
         refresh_research_details(player_index, anchor)
+        return
+    elseif science_pack_panel_is_visible(anchor) then
+        refresh_science_pack_panel(player_index, anchor)
         return
     end
     populate_force_settings(player_index, anchor)
@@ -2581,6 +2756,9 @@ content.repopulate_dynamic = function(player_index, anchor)
         return
     elseif research_details_panel_is_visible(anchor) then
         refresh_research_details(player_index, anchor)
+        return
+    elseif science_pack_panel_is_visible(anchor) then
+        refresh_science_pack_panel(player_index, anchor)
         return
     end
     gctech.populate(player_index, anchor)
@@ -2634,6 +2812,10 @@ content.refresh_science_counts = function(player_index, anchor)
         return
     end
     refresh_science_counts(player_index, anchor, 1)
+end
+
+content.refresh_science_pack_panel = function(player_index, anchor)
+    refresh_science_pack_panel(player_index, anchor)
 end
 
 content.refresh_research_status = function(player_index, anchor)
@@ -2711,6 +2893,7 @@ end
 content.clear_runtime_cache = function()
     graph_render_cache = {}
     science_render_cache = {}
+    science_pack_panel_render_cache = {}
     graph_render_jobs = {}
     graph_hover_cache = {}
     research_status_cache = {}

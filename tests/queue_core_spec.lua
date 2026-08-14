@@ -613,6 +613,82 @@ local tests = {
         t.assert_equal(runtime_first, "alternate",
             "forced reselection must put the emergency fallback first in Factorio's queue")
     end},
+    {"bounds the emergency fallback candidate scan", function()
+        local force = reset_runtime()
+        game.tick = 31500
+        science_names = {"unique-starved-pack", "blocked-pack"}
+        defines = {
+            entity_status = {
+                working = "working",
+                missing_science_packs = "missing-science-packs"
+            },
+            inventory = {lab_input = 1}
+        }
+
+        local old_availability = queue.get_science_availability
+        local old_get_tech_enabled = queue.get_tech_enabled
+        local enabled_checks = 0
+        queue.get_science_availability = function()
+            return {['unique-starved-pack'] = true, ['blocked-pack'] = false}
+        end
+        queue.get_tech_enabled = function(force_index, technology_name)
+            enabled_checks = enabled_checks + 1
+            return old_get_tech_enabled(force_index, technology_name)
+        end
+
+        local current = xcur("current", {
+            sciences = {"unique-starved-pack"},
+            research_unit_ingredients = {{name = "unique-starved-pack", amount = 1}}
+        })
+        current.technology.research_unit_energy = 60
+        current.queued = true
+        tech_state = {current = current}
+        for index = 1, 200 do
+            local name = string.format("blocked-%03d", index)
+            local candidate = xcur(name, {
+                sciences = {"blocked-pack"},
+                research_unit_ingredients = {{name = "blocked-pack", amount = 1}}
+            })
+            candidate.technology.research_unit_energy = 60
+            tech_state[name] = candidate
+            force.technologies[name] = candidate.technology
+        end
+        storage.forces[1].queue.queue = {"current"}
+        force.current_research = current.technology
+
+        local function add_lab(unit_number, speed, status, contents)
+            local lab_entity = {
+                valid = true,
+                unit_number = unit_number,
+                speed_bonus = speed - 1,
+                productivity_bonus = 0,
+                prototype = {
+                    name = "bounded-fallback-lab-" .. tostring(unit_number),
+                    lab_inputs = {"unique-starved-pack", "blocked-pack"},
+                    get_researching_speed = function() return 1 end
+                }
+            }
+            runtime_lab_content[unit_number] = {
+                lab = lab_entity,
+                latest_tick = game.tick,
+                latest_status = status,
+                latest_contents = contents
+            }
+        end
+        add_lab(1, 49, defines.entity_status.missing_science_packs, {})
+        add_lab(2, 1, defines.entity_status.working,
+            {{name = "unique-starved-pack", count = 100000}})
+
+        queue.check_and_switch_temp_research(force)
+        queue.get_science_availability = old_availability
+        queue.get_tech_enabled = old_get_tech_enabled
+
+        t.assert_true(enabled_checks <= 150,
+            "one starvation check must inspect only a bounded technology slice; checks=" ..
+                tostring(enabled_checks))
+        t.assert_equal(storage.forces[1].queue.temp_tech, nil,
+            "blocked technologies must not become emergency research")
+    end},
     {"does not restore a high-demand target for a tiny idle stock buffer", function()
         local force = reset_runtime()
         game.tick = 32000

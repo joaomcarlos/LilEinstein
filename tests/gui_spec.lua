@@ -13,7 +13,8 @@ local calls = {}
 local components = {}
 for _, name in ipairs({
     "clear_runtime_cache", "repopulate_all", "repopulate_policy", "refresh_research_details",
-    "refresh_upcoming", "refresh_upcoming_times", "refresh_science_counts", "tick_research_graph",
+    "refresh_upcoming", "refresh_upcoming_times", "refresh_science_counts", "refresh_science_pack_panel",
+    "tick_science_pack_panel", "tick_research_graph",
     "refresh_research_status", "refresh_research_progress", "refresh_research_metrics",
     "refresh_research_graph", "refresh_research_status_bar", "repopulate_tech", "show_research_graph_hover", "hide_research_graph_hover"
 }) do
@@ -40,11 +41,15 @@ local function make_anchor(screen)
         content_flow = child("content_flow"),
         policy_panel = child("policy_panel"),
         research_details_panel = child("research_details_panel"),
+        science_pack_panel = child("science_pack_panel"),
+        science_bottom = child("science_bottom"),
         search_textfield = child("search_textfield"),
         search_button = child("search_button")
     }
     anchor.policy_panel.visible = false
     anchor.research_details_panel.visible = false
+    anchor.science_pack_panel.visible = false
+    anchor.science_bottom.visible = true
     function anchor.destroy()
         screen.lil_einstein_gui = nil
         anchor.valid = false
@@ -134,6 +139,25 @@ local tests = {
         t.assert_false(anchor.policy_panel.visible)
         gui.toggle_research_details(1)
         t.assert_true(anchor.content_flow.visible)
+    end},
+    {"opens the selected science-pack inspector in the science pane", function()
+        reset()
+        gui.toggle(1)
+        local anchor = player.gui.screen.lil_einstein_gui
+        gui.toggle_science_pack_details(1, "science_a")
+        t.assert_true(anchor.science_pack_panel.visible)
+        t.assert_false(anchor.science_bottom.visible)
+        t.assert_true(anchor.content_flow.visible)
+        t.assert_false(anchor.policy_panel.visible)
+        t.assert_false(anchor.research_details_panel.visible)
+        t.assert_true(settings.science_pack_panel_open)
+        t.assert_equal(settings.science_pack_panel_science, "science_a")
+
+        gui.toggle_science_pack_details(1, "science_a")
+        t.assert_false(anchor.science_pack_panel.visible)
+        t.assert_true(anchor.science_bottom.visible)
+        t.assert_nil(settings.science_pack_panel_science)
+        t.assert_false(settings.science_pack_panel_open)
     end},
     {"focuses, defocuses, and updates the search field", function()
         reset()

@@ -36,6 +36,11 @@ local open = function(player_index, parent)
         gui.toggle_policy_panel(player_index)
     elseif state.get_player_setting(player_index, "research_details_open", false) then
         gui.toggle_research_details(player_index)
+    elseif state.get_player_setting(player_index, "science_pack_panel_open", false) then
+        local science = state.get_player_setting(player_index, "science_pack_panel_science")
+        if science then
+            gui.toggle_science_pack_details(player_index, science)
+        end
     end
     gui.refresh_research_status_bar(player_index)
 end
@@ -51,6 +56,8 @@ local close = function(player_index, anchor)
     state.clear_player_setting(player_index, "search_text")
     state.clear_player_setting(player_index, "research_graph_hover_column")
     state.clear_player_setting(player_index, "research_lab_cluster_key")
+    state.clear_player_setting(player_index, "science_pack_panel_open")
+    state.clear_player_setting(player_index, "science_pack_panel_science")
 end
 
 gui.init_player = function(player_index)
@@ -99,6 +106,8 @@ gui.toggle_policy_panel = function(player_index)
     end
     local content_flow = gutil.get_child(anchor, "content_flow")
     local policy_panel = gutil.get_child(anchor, "policy_panel")
+    local science_pack_panel = gutil.get_child(anchor, "science_pack_panel")
+    local science_bottom = gutil.get_child(anchor, "science_bottom")
     if not content_flow or not policy_panel then
         return
     end
@@ -109,8 +118,16 @@ gui.toggle_policy_panel = function(player_index)
     if research_details_panel then
         research_details_panel.visible = false
     end
+    if science_pack_panel then
+        science_pack_panel.visible = false
+    end
+    if science_bottom then
+        science_bottom.visible = true
+    end
     state.set_player_setting(player_index, "research_details_open", false)
     state.set_player_setting(player_index, "policy_panel_open", show_policy)
+    state.set_player_setting(player_index, "science_pack_panel_open", false)
+    state.clear_player_setting(player_index, "science_pack_panel_science")
     if show_policy then
         gutil.clear_child_cache()
         components.repopulate_policy(player_index, anchor)
@@ -127,6 +144,8 @@ gui.toggle_research_details = function(player_index)
     local content_flow = gutil.get_child(anchor, "content_flow")
     local policy_panel = gutil.get_child(anchor, "policy_panel")
     local details_panel = gutil.get_child(anchor, "research_details_panel")
+    local science_pack_panel = gutil.get_child(anchor, "science_pack_panel")
+    local science_bottom = gutil.get_child(anchor, "science_bottom")
     if not content_flow or not policy_panel or not details_panel then
         return
     end
@@ -135,8 +154,16 @@ gui.toggle_research_details = function(player_index)
     details_panel.visible = show_details
     content_flow.visible = not show_details
     policy_panel.visible = false
+    if science_pack_panel then
+        science_pack_panel.visible = false
+    end
+    if science_bottom then
+        science_bottom.visible = true
+    end
     state.set_player_setting(player_index, "research_details_open", show_details)
     state.set_player_setting(player_index, "policy_panel_open", false)
+    state.set_player_setting(player_index, "science_pack_panel_open", false)
+    state.clear_player_setting(player_index, "science_pack_panel_science")
     if show_details then
         components.refresh_research_details(player_index, anchor)
         local cluster_key = state.get_player_setting(player_index, "research_lab_cluster_key")
@@ -145,6 +172,41 @@ gui.toggle_research_details = function(player_index)
         end
     else
         state.clear_player_setting(player_index, "research_lab_cluster_key")
+        components.repopulate_all(player_index, anchor)
+    end
+end
+
+gui.toggle_science_pack_details = function(player_index, science)
+    local anchor = gui.get(player_index)
+    if not anchor or type(science) ~= "string" then
+        return
+    end
+    local panel = gutil.get_child(anchor, "science_pack_panel")
+    local science_bottom = gutil.get_child(anchor, "science_bottom")
+    local policy_panel = gutil.get_child(anchor, "policy_panel")
+    local details_panel = gutil.get_child(anchor, "research_details_panel")
+    if not panel or not science_bottom or not policy_panel or not details_panel then
+        return
+    end
+
+    local selected = state.get_player_setting(player_index, "science_pack_panel_science")
+    local show_panel = not panel.visible or selected ~= science
+    if show_panel then
+        panel.visible = true
+        science_bottom.visible = false
+        policy_panel.visible = false
+        details_panel.visible = false
+        state.set_player_setting(player_index, "science_pack_panel_open", true)
+        state.set_player_setting(player_index, "science_pack_panel_science", science)
+        state.set_player_setting(player_index, "policy_panel_open", false)
+        state.set_player_setting(player_index, "research_details_open", false)
+        gutil.clear_child_cache()
+        components.refresh_science_pack_panel(player_index, anchor)
+    else
+        panel.visible = false
+        science_bottom.visible = true
+        state.set_player_setting(player_index, "science_pack_panel_open", false)
+        state.clear_player_setting(player_index, "science_pack_panel_science")
         components.repopulate_all(player_index, anchor)
     end
 end
@@ -390,6 +452,20 @@ gui.refresh_research_metrics = function(player_index)
     local anchor = gui.get(player_index)
     if anchor then
         components.refresh_research_metrics(player_index, anchor)
+    end
+end
+
+gui.refresh_science_pack_panel = function(player_index)
+    local anchor = gui.get(player_index)
+    if anchor then
+        components.refresh_science_pack_panel(player_index, anchor)
+    end
+end
+
+gui.tick_science_pack_panel = function(player_index)
+    local anchor = gui.get(player_index)
+    if anchor then
+        components.refresh_science_pack_panel(player_index, anchor)
     end
 end
 

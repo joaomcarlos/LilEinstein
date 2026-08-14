@@ -22,6 +22,7 @@ local policy_settings = {}
 local science_counts = {}
 local science_breakdown = {}
 local science_forecast = {}
+local science_pack_insight
 local research_summary
 local research_diagnostic
 local research_history = {}
@@ -158,6 +159,7 @@ end
 local function reset_fixture()
     player_settings = {
         allowed_science_a = true,
+        science_pack_panel_science = "science_a",
         hide_tech = true,
         show_tech_filter_category = "military",
         plan_preset_name = "night-plan"
@@ -195,6 +197,42 @@ local function reset_fixture()
     science_forecast = {
         science_a = {production_per_minute = 1200, consumption_per_minute = 8, depletion_seconds = 41.6},
         science_b = {production_per_minute = 0, consumption_per_minute = 0, recovery_seconds = 12.4}
+    }
+    science_pack_insight = {
+        science = "science_a",
+        current_stock = 12345,
+        production_per_minute = 1200,
+        consumption_per_minute = 8,
+        net_per_minute = 1192,
+        next_refresh_tick = 7440,
+        labs = {
+            surface_name = "nauvis",
+            stock = 24,
+            compatible_labs = 12,
+            supplied_labs = 9,
+            starved_labs = 3,
+            maximum_per_minute = 240,
+            working_per_minute = 180,
+            clusters = {{
+                key = "nauvis-main",
+                label = "Main lab network",
+                surface_name = "nauvis",
+                total_labs = 12,
+                compatible_labs = 12,
+                supplied_labs = 9,
+                starved_labs = 3,
+                maximum_per_minute = 240,
+                working_per_minute = 180
+            }}
+        },
+        planet_stock_rows = {
+            {name = "Nauvis", stock = 37},
+            {name = "Vulcanus", stock = 0}
+        },
+        in_transit = {
+            total = 12,
+            routes = {{platform = "platform-1", from = "nauvis", to = "vulcanus", stock = 12}}
+        }
     }
     research_summary = {done = 1234, total = 5678, spm = 1234, remaining_seconds = 125}
     research_diagnostic = {
@@ -355,6 +393,9 @@ local queue = {
     get_science_display_forecast = function()
         return science_forecast
     end,
+    get_science_pack_insight = function()
+        return science_pack_insight
+    end,
     get_research_health_snapshot_tick = function()
         return 3
     end,
@@ -510,6 +551,30 @@ local function make_static_anchor()
     return anchor
 end
 
+local function make_science_pack_anchor()
+    local anchor = make_static_anchor()
+    local panel = add_named(anchor, "science_pack_panel", "frame")
+    panel.visible = true
+    for _, name in ipairs({
+        "science_pack_panel_icon", "science_pack_panel_name", "science_pack_panel_state",
+        "science_pack_panel_current_stock", "science_pack_panel_timer",
+        "science_pack_panel_labs_summary", "science_pack_panel_planet_stock_summary",
+        "science_pack_panel_transit_summary", "science_pack_panel_flow_balance"
+    }) do
+        add_named(panel, name, "label")
+    end
+    local labs = add_named(panel, "science_pack_panel_labs", "frame")
+    add_named(labs, "science_pack_panel_labs_rows", "table")
+    add_named(labs, "science_pack_panel_labs_empty", "label")
+    local planets = add_named(panel, "science_pack_panel_planet_stock", "frame")
+    add_named(planets, "science_pack_panel_planet_stock_rows", "table")
+    add_named(planets, "science_pack_panel_planet_stock_empty", "label")
+    local transit = add_named(panel, "science_pack_panel_transit", "frame")
+    add_named(transit, "science_pack_panel_transit_rows", "table")
+    add_named(transit, "science_pack_panel_transit_empty", "label")
+    return anchor
+end
+
 local function make_details_anchor()
     local anchor = make_element("anchor")
     local panel = add_named(anchor, "research_details_panel")
@@ -652,7 +717,7 @@ local tests = {
         t.assert_equal(#science_table.children, 2)
         local science_a = find_element(science_table, "allowed_science_btn_science_a")
         t.assert_true(science_a.toggled)
-        t.assert_equal(science_a.tags.handler, "toggle_allowed_science")
+        t.assert_equal(science_a.tags.handler, "open_science_pack_details")
         t.assert_nil(find_element(science_table, "allowed_science_count_science_a"))
 
         local hidden = find_element(anchor, "hide_tech")
@@ -702,6 +767,42 @@ local tests = {
         components.refresh_science_counts(1, anchor)
         t.assert_nil(find_element(anchor, "allowed_science_count_science_a"))
         components.refresh_science_counts(1, anchor)
+    end},
+    {"refreshes the open science-pack panel without rebuilding its root", function()
+        reset_fixture()
+        local anchor = make_science_pack_anchor()
+        components.clear_runtime_cache()
+
+        components.refresh_science_pack_panel(1, anchor)
+        local panel = find_element(anchor, "science_pack_panel")
+        t.assert_equal(find_element(panel, "science_pack_panel_name").caption,
+                       "Localized item science_a")
+        t.assert_equal(find_element(panel, "science_pack_panel_labs_summary").caption[1],
+                       "lil_einstein-science-pack.labs-summary")
+        t.assert_equal(find_element(panel, "science_pack_panel_planet_stock_rows").clear_count, 1)
+        t.assert_equal(#find_element(panel, "science_pack_panel_planet_stock_rows").children, 4)
+        t.assert_equal(#find_element(panel, "science_pack_panel_transit_rows").children, 4)
+        t.assert_equal(find_element(panel, "science_pack_panel_timer").caption[1],
+                       "lil_einstein-science-pack.refreshes-in")
+
+        local planet_rows = find_element(panel, "science_pack_panel_planet_stock_rows")
+        local first_planet_caption = planet_rows.children[1].caption
+        science_pack_insight.planet_stock_rows[1].stock = 99
+        components.refresh_science_pack_panel(1, anchor)
+        t.assert_equal(planet_rows.clear_count, 1)
+        t.assert_equal(first_planet_caption, "Nauvis")
+        t.assert_equal(planet_rows.children[2].caption, "99")
+
+        panel.visible = false
+        local calls = 0
+        local old_insight = queue.get_science_pack_insight
+        queue.get_science_pack_insight = function()
+            calls = calls + 1
+            return science_pack_insight
+        end
+        components.refresh_science_pack_panel(1, anchor)
+        t.assert_equal(calls, 0)
+        queue.get_science_pack_insight = old_insight
     end},
     {"renders rich research health metrics and throughput detail rows", function()
         reset_fixture()

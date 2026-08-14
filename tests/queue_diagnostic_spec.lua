@@ -27,6 +27,7 @@ local flow_output = 2
 
 t.install_module("lib.util", {})
 t.install_module("lib.const", {
+    runtime_intervals = {science_pack_panel_ticks = 300},
     default_settings = {
         force = {settings = {auto_research = true, requeue_infinite_tech = true}}
     }
@@ -1397,6 +1398,84 @@ local tests = {
         t.assert_false(queue.tick_research_health_snapshot(1))
         local display_context = new_job(1)
         t.assert_true(display_context ~= nil)
+    end},
+    {"builds a lazy science-pack insight with Nauvis labs, planet stock, and transit", function()
+        local current = make_current()
+        local scan_counts = {nauvis = 0, vulcanus = 0}
+        local make_surface = function(index, name, stock)
+            return {
+                valid = true,
+                index = index,
+                name = name,
+                planet = {name = name},
+                find_entities_filtered = function(filters)
+                    scan_counts[name] = scan_counts[name] + 1
+                    if filters and filters.type == "cargo-pod" then
+                        return {}
+                    end
+                    if stock <= 0 then
+                        return {}
+                    end
+                    return {{
+                        valid = true,
+                        get_item_count = function() return stock end
+                    }}
+                end
+            }
+        end
+
+        reset({current = current, tick = 100, labs = {make_lab(70)}})
+        local nauvis = make_surface(1, "nauvis", 37)
+        local vulcanus = make_surface(2, "vulcanus", 0)
+        game.surfaces = {[1] = nauvis, [2] = vulcanus}
+        game.planets = {
+            nauvis = {name = "nauvis", surface = nauvis},
+            vulcanus = {name = "vulcanus", surface = vulcanus}
+        }
+        local force = game.forces[1]
+        force.platforms = {
+            platform_1 = {
+                valid = true,
+                name = "platform-1",
+                hub = {
+                    valid = true,
+                    get_item_count = function() return 12 end
+                },
+                space_connection = {
+                    from = {name = "nauvis"},
+                    to = {name = "vulcanus"}
+                },
+                distance = 0.25,
+                speed = 1
+            }
+        }
+
+        t.assert_true(finish_health_snapshot())
+        t.assert_equal(scan_counts.nauvis, 0)
+        t.assert_equal(scan_counts.vulcanus, 0)
+
+        local insight = queue.get_science_pack_insight(1, "automation-science-pack")
+        t.assert_equal(insight.labs.surface_name, "nauvis")
+        t.assert_true(#insight.labs.clusters >= 1)
+        for _, cluster in ipairs(insight.labs.clusters) do
+            t.assert_equal(cluster.surface_name, "nauvis")
+        end
+        t.assert_equal(insight.planet_stock.nauvis, 37)
+        t.assert_equal(insight.planet_stock.vulcanus, 0)
+        t.assert_equal(insight.in_transit.total, 12)
+        t.assert_equal(insight.in_transit.routes[1].platform, "platform-1")
+        t.assert_equal(insight.next_refresh_tick, 400)
+        t.assert_true(scan_counts.nauvis > 0)
+        t.assert_true(scan_counts.vulcanus > 0)
+
+        local scans_after_first = scan_counts.nauvis
+        local cached = queue.get_science_pack_insight(1, "automation-science-pack")
+        t.assert_equal(cached, insight)
+        t.assert_equal(scan_counts.nauvis, scans_after_first)
+        game.tick = 400
+        local refreshed = queue.get_science_pack_insight(1, "automation-science-pack")
+        t.assert_true(refreshed ~= insight)
+        t.assert_true(scan_counts.nauvis > 1)
     end}
 }
 

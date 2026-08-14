@@ -3,6 +3,7 @@ local const = {}
 
 const.runtime_intervals = {
     open_view_ticks = 6,
+    science_pack_panel_ticks = 300,
     status_bar_ticks = 600,
     force_maintenance_ticks = 30,
     idle_research_check_ticks = 180

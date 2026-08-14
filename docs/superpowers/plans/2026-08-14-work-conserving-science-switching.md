@@ -38,11 +38,11 @@
 
   Expected: FAIL because `temp_tech` is `nil` while the bottleneck is present.
 
-- [ ] **Step 3: Implement the emergency fallback**
+- [x] **Step 3: Implement the emergency fallback**
 
   Forward-declare a starvation fallback source near the existing queue helpers. Define it beside `get_virtual_queue_source` so it can reuse the scored all-runtime-candidate list. In `check_and_switch_temp_research`, preserve pinned/explicit order first; only after that source yields nothing, scan the emergency source, skip duplicates/current, require the candidate's own supply projection, and store the original target unchanged.
 
-- [ ] **Step 4: Run the focused test and verify GREEN**
+- [x] **Step 4: Run the focused test and verify GREEN**
 
   Run: `lua52 .\tests\queue_core_spec.lua`
 
@@ -68,15 +68,15 @@
 
   Expected: FAIL because the inactive target is currently considered sufficient from coarse inventory state.
 
-- [ ] **Step 3: Add the target-demand projection**
+- [x] **Step 3: Add the target-demand projection**
 
   Sum required physical pack rates across valid compatible runtime labs. For inactive technology supply, require `stock + production_per_minute * horizon / 60` to cover `demand_per_minute * horizon / 60`, with the horizon capped by configured forecast time and estimated research completion. Keep the active technology on live missing-pack evidence.
 
-- [ ] **Step 4: Apply the same strict predicate to emergency candidates**
+- [x] **Step 4: Apply the same strict predicate to emergency candidates**
 
   A nominally stocked alternate that cannot sustain its projected demand must be skipped so the switcher does not trade one starvation loop for another.
 
-- [ ] **Step 5: Run focused tests and verify GREEN**
+- [x] **Step 5: Run focused tests and verify GREEN**
 
   Run: `lua52 .\tests\queue_core_spec.lua`
 
@@ -93,11 +93,11 @@
 - Consumes: the production cadence and public test-only snapshot bridge.
 - Produces: an authoritative live switch from a singleton pack-bound queue at low-but-nonzero progress.
 
-- [ ] **Step 1: Convert the disposable scenario to the reported transition**
+- [x] **Step 1: Convert the disposable scenario to the reported transition**
 
   Queue only the starved technology. Keep its unique pack in 5 of 275 labs and keep the alternate pack in all labs, so current progress is nonzero but about 1.8% of capacity. Do not pre-queue the alternate.
 
-- [ ] **Step 2: Assert the real scheduler result**
+- [x] **Step 2: Assert the real scheduler result**
 
   Confirm the starved technology begins and makes nonzero progress, then assert `LuaForce.current_research.name` becomes the supplied alternate after the normal sampler, switch, and reselection cadences.
 

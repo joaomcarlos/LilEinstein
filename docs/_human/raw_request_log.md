@@ -108,6 +108,16 @@ The buttons to open the debug snapshot stuff, and the details one as well next t
 
 # Files mentioned by the user:
 
+## exec-d46d5d20-8ace-4d11-9edb-7225d12aef23.png: /C:/Users/silent/.codex/generated_images/019fff97-c95c-7750-a938-6b07dd24292d/exec-d46d5d20-8ace-4d11-9edb-7225d12aef23.png
+
+# My request:
+
+Implement number 3. This design only works if you correctly use sprites. So, plan ahead for that first. Cut things properly, assemble a demo outside of the game, make it perfect, then present it to me so i can give feedback
+
+## 2026-08-14
+
+# Files mentioned by the user:
+
 ## exec-c2a71aab-f0f3-4879-a132-bfeb906a1c92.png: /C:/Users/silent/.codex/generated_images/019fff98-6dc6-70a2-afc6-d9ecfb737d5a/exec-c2a71aab-f0f3-4879-a132-bfeb906a1c92.png
 
 ## My request:
@@ -116,3 +126,13 @@ Do number 3. You need to be aware that theres really only labs in one planet (Na
 
 For planet stock it would make sense for the "most contrained planets" list to actually be just a sock per planet list (show on the list if there is stock). On the top right where it says live while open, add a refresh timer so i know when its going to refresh
 Codex could not read the local image at `/C:/Users/silent/.codex/generated_images/019fff98-6dc6-70a2-afc6-d9ecfb737d5a/exec-c2a71aab-f0f3-4879-a132-bfeb906a1c92.png`: The filename, directory name, or volume label syntax is incorrect. (os error 123)
+
+## 2026-08-14
+
+# Files mentioned by the user:
+
+## exec-7d98ae5f-a78a-47a6-97be-8bc33630875c.png: /C:/Users/silent/.codex/generated_images/019fff9b-3fe8-7961-aaec-20ebdd484c8a/exec-7d98ae5f-a78a-47a6-97be-8bc33630875c.png
+
+## My request:
+do number 2, this only works if you do sprites design correctly. So, plan ahead for cutting the prites and create a demo outside of the game first, present it to me for approval
+Codex could not read the local image at `/C:/Users/silent/.codex/generated_images/019fff9b-3fe8-7961-aaec-20ebdd484c8a/exec-7d98ae5f-a78a-47a6-97be-8bc33630875c.png`: The filename, directory name, or volume label syntax is incorrect. (os error 123)

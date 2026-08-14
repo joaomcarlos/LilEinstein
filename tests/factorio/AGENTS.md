@@ -7,7 +7,7 @@ Disposable Factorio test mod used to exercise LilEinstein's production runtime i
 ## Ownership
 
 - `lil-einstein-test_0.1.0/data.lua` — test-only void-powered lab plus starved/supplied technology prototypes.
-- `lil-einstein-test_0.1.0/control.lua` — delayed runtime assertions, including the authoritative live-research switch after a 275-lab staggered pass.
+- `lil-einstein-test_0.1.0/control.lua` — delayed runtime assertions, including the authoritative live-research switch from a singleton queue after a 275-lab staggered pass with only 5 labs able to consume the current technology's unique pack.
 
 ## Local Contracts
 
@@ -15,6 +15,7 @@ Disposable Factorio test mod used to exercise LilEinstein's production runtime i
 - Runtime output is written only through Factorio's `helpers.write_file` into the runner-owned `script-output` directory.
 - Assertions must observe public LilEinstein module behavior or initialized storage.
 - Research-switch acceptance observes Factorio's read-only `LuaForce.current_research`; internal temporary-queue state alone is not sufficient.
+- Research-switch acceptance keeps the alternate out of the explicit queue and proves the starved technology made low but nonzero progress before the switch.
 - A read-only production bridge is permitted only when gated on the active test
   mod and must be absent from normal saves.
 

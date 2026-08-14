@@ -101,8 +101,9 @@ Root-owned (no child doc):
 - `docs/_human/raw_request_log.md` — append-only verbatim record of user requests and project decisions
 - `audit/` — GUI mockup reference assets; `scripts/import_ui_slices.ps1` regenerates `lib/ui_slices.lua` from them
 - `scripts/run_tests.ps1` — canonical unit plus disposable Factorio runner; creates an isolated save, waits for creator shutdown, then advances the save in a hidden loopback-only headless server with an ephemeral port and auto-pause disabled
+- `scripts/clean_decision_console_assets.py` — deterministic cleanup/crop tool for the selected sprite-backed Research control center demo; it does not register runtime sprites or alter the live GUI
 - `graphics/` — mod icons and UI sprite assets
-- `output/` — generated output folder (currently `output/imagegen/`)
+- `output/` — generated output folder (`output/imagegen/` plus throwaway visual prototypes such as `output/science-throughput-demo/` and `output/research-control-center-demo/`)
 - `website/` — mod landing-page assets (`index.html`, `styles.css`, `script.js`, `assets/`)
 
 ## Child DOX Index
