@@ -46,6 +46,13 @@ local yes_no = function(value)
     return value and "YES" or "NO"
 end
 
+local switch_sufficiency = function(xcur, force_index)
+    if not xcur or not queue.science_is_sufficient then
+        return false
+    end
+    return queue.science_is_sufficient(xcur, force_index) == true
+end
+
 local format_seconds = function(value)
     if value == nil then
         return "-"
@@ -78,6 +85,81 @@ local format_list = function(values)
         table.insert(res, safe_string(value))
     end
     return #res > 0 and table.concat(res, ",") or "-"
+end
+
+local find_gui_child
+find_gui_child = function(parent, wanted)
+    if not parent or parent.valid == false then
+        return nil
+    end
+    if parent.name == wanted then
+        return parent
+    end
+    for _, child in pairs(parent.children or {}) do
+        local result = find_gui_child(child, wanted)
+        if result then
+            return result
+        end
+    end
+    return nil
+end
+
+local gui_caption_summary = function(element)
+    if not element or element.valid == false then
+        return "MISSING"
+    end
+    local caption = element.caption
+    if type(caption) == "table" then
+        return "localized:" .. safe_string(caption[1])
+    end
+    return "text:" .. safe_string(caption)
+end
+
+local gui_element_summary = function(element)
+    if not element or element.valid == false then
+        return "MISSING"
+    end
+    return (element.visible == false and "hidden" or "visible") .. ":" .. gui_caption_summary(element)
+end
+
+local add_gui_details = function(lines, player)
+    append(lines, "GUI DETAILS")
+    local screen = player.gui and player.gui.screen
+    local main = screen and screen["lil_einstein_gui"]
+    if not main or main.valid == false then
+        table.insert(lines, "main=MISSING")
+        table.insert(lines, "")
+        return
+    end
+
+    local panel = find_gui_child(main, "research_details_panel")
+    local rows = panel and find_gui_child(panel, "research_details_rows")
+    append(lines, "main=%s | panel=%s | rows=%s", gui_element_summary(main),
+        gui_element_summary(panel), rows and tostring(#(rows.children or {})) or "MISSING")
+    if not rows then
+        table.insert(lines, "")
+        return
+    end
+
+    for index, row in ipairs(rows.children or {}) do
+        local prefix = "research_details_"
+        local location = find_gui_child(row, prefix .. "location_" .. index)
+        local missing = find_gui_child(row, prefix .. "missing_" .. index)
+        local labs = find_gui_child(row, prefix .. "labs_" .. index)
+        local capacity = find_gui_child(row, prefix .. "capacity_" .. index)
+        local cause = find_gui_child(row, prefix .. "cause_" .. index)
+        local action_cell = find_gui_child(row, prefix .. "action_cell_" .. index)
+        local inspect = find_gui_child(row, prefix .. "inspect_labs_" .. index)
+        local action = find_gui_child(row, prefix .. "action_" .. index)
+        local action_detail = find_gui_child(row, prefix .. "action_detail_" .. index)
+        local pack_table = action_cell and find_gui_child(action_cell, prefix .. "pack_table_" .. index)
+        append(lines, "row=%d|key=%s|location=%s|missing=%s|labs=%s|capacity=%s|cause=%s|inspect=%s|action=%s|action_detail=%s|pack_children=%s",
+            index, safe_string(row.tags and row.tags.cluster_key), gui_element_summary(location),
+            gui_element_summary(missing), gui_element_summary(labs), gui_element_summary(capacity),
+            gui_element_summary(cause), gui_element_summary(inspect), gui_element_summary(action),
+            gui_element_summary(action_detail), pack_table and tostring(#(pack_table.children or {})) or "MISSING")
+    end
+    table.insert(lines, "")
 end
 
 local get_sciences = function(xcur)
@@ -156,7 +238,8 @@ local get_scored_available_technologies = function(player_index, force_index, av
                 tech_name = tech_name,
                 xcur = xcur,
                 score = score,
-                packs_ok = queue.science_is_available(xcur, availability) == true
+                packs_ok = queue.science_is_available(xcur, availability) == true,
+                switch_ok = switch_sufficiency(xcur, force_index)
             })
         end
     end
@@ -186,13 +269,14 @@ end
 local add_upcoming = function(lines, force, force_index, availability, entries)
     entries = entries or queue.get_upcoming_research_display(force_index, max_upcoming_entries) or {}
     append(lines, "UPCOMING RESEARCH (%d entries returned)", #entries)
-    table.insert(lines, "rank|technology|level|progress|time_left|wait|packs_sufficient|reason|missing_packs|cost")
+    table.insert(lines, "rank|technology|level|progress|time_left|wait|packs_available|switch_sufficient|reason|missing_packs|cost")
     for rank, entry in ipairs(entries) do
         local progress = get_current_progress(force, entry.tech_name)
         local missing = entry.missing_sciences or get_missing_sciences(entry.xcur, availability)
-        append(lines, "%d|%s|%s|%.2f%%|%s|%s|%s|%s|%s|%s", rank, safe_string(entry.tech_name),
+        append(lines, "%d|%s|%s|%.2f%%|%s|%s|%s|%s|%s|%s|%s", rank, safe_string(entry.tech_name),
             safe_string(entry.level), progress * 100, format_seconds(entry.duration), format_seconds(entry.wait_time),
-            yes_no(entry.has_science), safe_string(entry.availability_reason), format_list(missing),
+            yes_no(entry.has_science), yes_no(switch_sufficiency(entry.xcur, force_index)),
+            safe_string(entry.availability_reason), format_list(missing),
             compact_number(entry.cost))
     end
     table.insert(lines, "")
@@ -203,15 +287,16 @@ local add_available_technologies = function(lines, player_index, force_index, av
     local count = #entries
     append(lines, "AVAILABLE TECHNOLOGIES (%d entries%s)", count,
         count > max_available_technologies and ", report truncated" or "")
-    table.insert(lines, "rank|technology|level|available|enabled|packs_sufficient|missing_packs|cost|IW|LB|UB|SP|ST|total|sciences|infinite|suspended|queued")
+    table.insert(lines, "rank|technology|level|available|enabled|packs_available|switch_sufficient|missing_packs|cost|IW|LB|UB|SP|ST|total|sciences|infinite|suspended|queued")
     for rank = 1, math.min(count, max_available_technologies) do
         local entry = entries[rank]
         local xcur = entry.xcur
         local score = entry.score or {}
         local technology_name = entry.tech_name
-        append(lines, "%d|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s", rank,
+        append(lines, "%d|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s", rank,
             safe_string(technology_name), safe_string(xcur.technology.level), yes_no(xcur.available),
             yes_no(queue.get_tech_enabled(force_index, technology_name)), yes_no(entry.packs_ok),
+            yes_no(entry.switch_ok),
             format_list(get_missing_sciences(xcur, availability)), compact_number(xcur.technology.research_unit_count),
             exact_number(score.importance), exact_number(score.level_boost), exact_number(score.user_boost),
             exact_number(score.science_priority), exact_number(score.strategy_boost), exact_number(score.total),
@@ -351,7 +436,7 @@ debug_report.generate = function(player_index)
     local speed = queue.get_research_speed(force_index)
     local lines = {
         "LilEinstein debug report",
-        "schema=2 | generated_tick=" .. safe_string(game.tick) .. " | force_index=" .. safe_string(force_index) ..
+        "schema=3 | generated_tick=" .. safe_string(game.tick) .. " | force_index=" .. safe_string(force_index) ..
             " | force_name=" .. safe_string(force.name),
         "note=This report is generated from the live force/model state. The in-game report box selects all text; press Ctrl+C.",
         ""
@@ -375,6 +460,7 @@ debug_report.generate = function(player_index)
     add_available_technologies(lines, player_index, force_index, availability)
     add_graph(lines, force_index, summary)
     add_science(lines, force_index, sciences, counts, forecast, availability)
+    add_gui_details(lines, player)
     add_warnings(lines, force_index, force, diagnostic, upcoming, availability, control, sciences, flow_history)
     return table.concat(lines, "\n") .. "\n"
 end

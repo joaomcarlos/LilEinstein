@@ -201,8 +201,6 @@ local policy = {
             return false
         elseif setting_name == "min_switch_seconds" then
             return 30
-        elseif setting_name == "finish_current_threshold" then
-            return 0.8
         elseif setting_name == "forecast_seconds" then
             return 60
         elseif setting_name == "parallel_slots" then

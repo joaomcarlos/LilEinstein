@@ -160,9 +160,15 @@ lab.tick_update = function()
             current_lab_idx = 0
         end
 
-        -- Early exit if we ran through everything before we hit the rate limit
-        if current_force_idx == 0 then return end
+        -- Early exit if we ran through everything before we hit the rate limit.
+        if current_force_idx == 0 then
+            setglob(globkeys.current_force_idx, current_force_idx)
+            setglob(globkeys.current_lab_idx, current_lab_idx)
+            return
+        end
     end
+    setglob(globkeys.current_force_idx, current_force_idx)
+    setglob(globkeys.current_lab_idx, current_lab_idx)
 end
 
 -- lab.get_labs_fill_rate = function(force_index)

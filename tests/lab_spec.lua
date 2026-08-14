@@ -145,6 +145,34 @@ tests[#tests + 1] = {"staggeredly records live lab inventory and status", functi
     t.assert_equal(content[42]["automation-science-pack"], 12)
 end}
 
+tests[#tests + 1] = {"resumes bounded lab sampling across scheduler calls", function()
+    reset_lab()
+    science_list = {}
+    for index = 1, 7 do
+        science_list[index] = "science-" .. tostring(index)
+    end
+    for unit_number = 1, 75 do
+        local entity = make_entity(1, unit_number, {})
+        entity.status = "missing-science-packs"
+        lab.register(entity)
+    end
+    storage.lab.all_forces = {1}
+    storage.lab.current_force_idx = 0
+    storage.lab.current_lab_idx = 0
+
+    game.tick = 42
+    lab.tick_update()
+    t.assert_nil(storage.forces[1].lab.lab_content[1].latest_tick,
+        "the first 74-lab batch must remain bounded")
+
+    game.tick = 84
+    lab.tick_update()
+    t.assert_equal(storage.forces[1].lab.lab_content[1].latest_tick, 84,
+        "the next scheduler call must resume at the unsampled lab")
+
+    science_list = {"automation-science-pack", "logistic-science-pack"}
+end}
+
 tests[#tests + 1] = {"skips labs without an inventory and expires old snapshots", function()
     reset_lab()
     local entity = make_entity(1, 10, {})

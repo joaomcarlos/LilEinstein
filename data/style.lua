@@ -501,6 +501,20 @@ data.raw["gui-style"].default["lil_einstein_footer_frame"] = {
     graphical_set = {}
 }
 
+data.raw["gui-style"].default["lil_einstein_research_status_bar"] = {
+    type = "label_style",
+    parent = "label",
+    width = 1635,
+    height = 40,
+    font = "default-small",
+    font_color = {0.82, 0.80, 0.72},
+    horizontal_align = "right",
+    vertical_align = "center",
+    single_line = true,
+    padding = 0,
+    margin = 0
+}
+
 data.raw["gui-style"].default["lil_einstein_footer_panel"] = {
     type = "image_style",
     parent = "image",

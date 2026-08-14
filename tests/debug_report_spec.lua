@@ -50,7 +50,40 @@ local force = {
     },
     research_queue = {{name = "alpha"}, {name = "beta"}}
 }
-local player = {index = 1, force = force}
+local function gui_element(name, children, properties)
+    local element = properties or {}
+    element.name = name
+    element.valid = true
+    element.visible = element.visible ~= false
+    element.children = children or {}
+    return element
+end
+
+local details_row = gui_element("research_details_row_1", {
+    gui_element("research_details_cells_1"),
+    gui_element("research_details_location_1", nil, {caption = {"location-network"}}),
+    gui_element("research_details_missing_1", nil, {caption = {"missing-pack-summary"}}),
+    gui_element("research_details_labs_1", nil, {caption = {"labs-cell"}}),
+    gui_element("research_details_capacity_1", nil, {caption = {"capacity-cell"}}),
+    gui_element("research_details_cause_1", nil, {caption = {"cause-evidence"}}),
+    gui_element("research_details_action_cell_1", {
+        gui_element("research_details_pack_table_1", {
+            gui_element("pack-header"), gui_element("pack-row")
+        }),
+        gui_element("research_details_inspect_labs_1", nil, {caption = {"inspect-labs", 3}}),
+        gui_element("research_details_action_1", nil, {caption = {"action-restock"}}),
+        gui_element("research_details_action_detail_1", nil, {caption = {"action-missing-pack"}})
+    })
+}, {tags = {cluster_key = "network-main"}})
+local player = {
+    index = 1,
+    force = force,
+    gui = {screen = {lil_einstein_gui = gui_element("lil_einstein_gui", {
+        gui_element("research_details_panel", {
+            gui_element("research_details_rows", {details_row})
+        })
+    })}}
+}
 
 _G.game = {
     tick = 1200,
@@ -97,6 +130,7 @@ local queue = {
         }
     end,
     science_is_available = function(xcur) return xcur == alpha end,
+    science_is_sufficient = function(xcur) return xcur == beta end,
     get_tech_enabled = function() return true end,
     get_research_summary = function()
         return {progress = 0.25, done = 25, total = 100, spm = 12.5, remaining_seconds = 90}
@@ -193,10 +227,11 @@ local debug_report = require("view.gui.debug_report")
 local tests = {
     {"includes the queue, score, graph, science, and warning sections", function()
         local report = debug_report.generate(1)
-        t.assert_true(report:find("schema=2", 1, true) ~= nil)
+        t.assert_true(report:find("schema=3", 1, true) ~= nil)
         t.assert_true(report:find("CURRENT RESEARCH", 1, true) ~= nil)
         t.assert_true(report:find("UPCOMING RESEARCH", 1, true) ~= nil)
-        t.assert_true(report:find("beta|2|0.00%|3m 00s|1m 30s|NO", 1, true) ~= nil)
+        t.assert_true(report:find("switch_sufficient", 1, true) ~= nil)
+        t.assert_true(report:find("alpha|1|25.00%|1m 30s|-|YES|NO", 1, true) ~= nil)
         t.assert_true(report:find("IW|LB|UB|SP|ST", 1, true) ~= nil)
         t.assert_true(report:find("RESEARCH GRAPH", 1, true) ~= nil)
         t.assert_true(report:find("0|40.000", 1, true) ~= nil)
@@ -206,6 +241,10 @@ local tests = {
         t.assert_true(report:find("pack_bound", 1, true) ~= nil)
         t.assert_true(report:find("current_cache_mismatch", 1, true) ~= nil)
         t.assert_true(report:find("health_snapshot_mismatch", 1, true) ~= nil)
+        t.assert_true(report:find("GUI DETAILS", 1, true) ~= nil)
+        t.assert_true(report:find("row=1|key=network-main", 1, true) ~= nil)
+        t.assert_true(report:find("location=visible:localized:location-network", 1, true) ~= nil)
+        t.assert_true(report:find("pack_children=2", 1, true) ~= nil)
     end}
 }
 

@@ -65,7 +65,7 @@ local tests = {
         storage = saved
         t.assert_true(policy.set_setting(1, "planning_paused", true))
         t.assert_false(policy.set_setting(1, "planning_paused", "yes"))
-        t.assert_true(policy.set_setting(1, "finish_current_threshold", 0.75))
+        t.assert_false(policy.set_setting(1, "finish_current_threshold", 0.75))
         t.assert_true(policy.set_setting(1, "science_lower_threshold", 1.5))
         t.assert_true(policy.set_setting(1, "science_upper_threshold", 1.5))
         t.assert_true(policy.set_setting(1, "parallel_slots", 5.9))

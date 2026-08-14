@@ -519,6 +519,150 @@ local tests = {
         queue.get_science_availability = old_availability
         queue.get_research_speed = old_speed
     end},
+    {"restores a supplied target when the temporary research becomes pack-bound", function()
+        local force = reset_runtime()
+        science_names = {"available-pack"}
+        game.tick = 2000
+
+        local old_availability = queue.get_science_availability
+        local old_sufficient = queue.science_is_sufficient
+        queue.get_science_availability = function()
+            return {['available-pack'] = true}
+        end
+        queue.science_is_sufficient = function(xcur)
+            return xcur and xcur.technology and xcur.technology.name == "target"
+        end
+
+        local target = xcur("target", {sciences = {"available-pack"}})
+        local temporary = xcur("temporary", {sciences = {"starved-pack"}})
+        target.queued = true
+        temporary.queued = true
+        tech_state = {target = target, temporary = temporary}
+        storage.forces[1].queue.queue = {"target", "temporary"}
+        storage.forces[1].queue.target_tech = "target"
+        storage.forces[1].queue.temp_tech = "temporary"
+        storage.forces[1].queue.temp_tech_timeout = game.tick - 1
+        storage.forces[1].queue.last_switch_tick = game.tick - 2000
+        force.current_research = {name = "temporary"}
+
+        queue.check_and_switch_temp_research(force)
+        t.assert_equal(storage.forces[1].queue.temp_tech, nil,
+            "a pack-bound temporary research must stop holding the supplied target")
+        t.assert_equal(storage.forces[1].queue.temp_tech_timeout, nil,
+            "restoring the target must clear the temporary timeout")
+        t.assert_equal(requests, 1, "restoring the target must request active research reselection")
+
+        queue.get_science_availability = old_availability
+        queue.science_is_sufficient = old_sufficient
+    end},
+    {"replaces pack-bound Research productivity 62 with a supplied third technology", function()
+        local force = reset_runtime()
+        game.tick = 4000
+        science_names = {"target-starved-pack", "agricultural-science-pack", "available-pack"}
+        defines = {
+            entity_status = {missing_science_packs = "missing-science-packs"},
+            inventory = {lab_input = 1},
+            flow_precision_index = {one_minute = 1}
+        }
+
+        local old_availability = queue.get_science_availability
+        queue.get_science_availability = function()
+            return {
+                ["target-starved-pack"] = false,
+                ["agricultural-science-pack"] = true,
+                ["available-pack"] = true
+            }
+        end
+
+        local original_target = xcur("original-target", {sciences = {"target-starved-pack"}})
+        local research_productivity = xcur("research-productivity", {
+            level = 62,
+            sciences = {"agricultural-science-pack"},
+            research_unit_ingredients = {{name = "agricultural-science-pack", amount = 1}}
+        })
+        research_productivity.technology.research_unit_energy = 100
+        local supplied_alternate = xcur("supplied-alternate", {sciences = {"available-pack"}})
+        original_target.queued = true
+        research_productivity.queued = true
+        supplied_alternate.queued = true
+        tech_state = {
+            ["original-target"] = original_target,
+            ["research-productivity"] = research_productivity,
+            ["supplied-alternate"] = supplied_alternate
+        }
+        storage.forces[1].queue.queue = {
+            "original-target", "research-productivity", "supplied-alternate"
+        }
+        storage.forces[1].queue.target_tech = "original-target"
+        storage.forces[1].queue.temp_tech = "research-productivity"
+        storage.forces[1].queue.temp_tech_timeout = game.tick - 1
+        storage.forces[1].queue.last_switch_tick = game.tick - 2000
+        force.current_research = research_productivity.technology
+
+        local lab_entity = {
+            valid = true,
+            unit_number = 62,
+            speed_bonus = 0,
+            productivity_bonus = 0,
+            prototype = {
+                name = "research-productivity-lab",
+                lab_inputs = {
+                    "target-starved-pack", "agricultural-science-pack", "available-pack"
+                },
+                get_researching_speed = function() return 1 end
+            }
+        }
+        runtime_lab_content[lab_entity.unit_number] = {
+            lab = lab_entity,
+            latest_tick = game.tick,
+            latest_status = defines.entity_status.missing_science_packs,
+            latest_contents = {{name = "available-pack", count = 1}}
+        }
+
+        t.assert_equal(
+            queue.get_active_missing_science_bottleneck(1, research_productivity)["agricultural-science-pack"],
+            true,
+            "the active level-62 research fixture must be materially pack-bound"
+        )
+        queue.check_and_switch_temp_research(force)
+        t.assert_equal(storage.forces[1].queue.target_tech, "original-target",
+            "replacing a starved temporary technology must preserve its original target")
+        t.assert_equal(storage.forces[1].queue.temp_tech, "supplied-alternate",
+            "a starved temporary technology must yield to a supplied third candidate")
+        t.assert_equal(requests, 1, "the replacement must request active research reselection")
+
+        queue.get_science_availability = old_availability
+    end},
+    {"does not protect near-finished research from a higher-priority switch", function()
+        local force = reset_runtime()
+        science_names = {"available-pack"}
+        science_priorities.current = 0
+        science_priorities.alternate = 1
+        force.research_progress = 0.99
+
+        local old_availability = queue.get_science_availability
+        local old_sufficient = queue.science_is_sufficient
+        queue.get_science_availability = function()
+            return {['available-pack'] = true}
+        end
+        queue.science_is_sufficient = function() return true end
+
+        local current = xcur("current", {sciences = {"available-pack"}})
+        local alternate = xcur("alternate", {sciences = {"available-pack"}})
+        current.queued = true
+        alternate.queued = true
+        tech_state = {current = current, alternate = alternate}
+        storage.forces[1].queue.queue = {"current", "alternate"}
+        force.current_research = {name = "current"}
+
+        queue.check_and_switch_temp_research(force)
+        t.assert_equal(storage.forces[1].queue.temp_tech, "alternate",
+            "near-finished research must still yield to a higher-priority alternate")
+        t.assert_equal(requests, 1, "a higher-priority switch must request active research reselection")
+
+        queue.get_science_availability = old_availability
+        queue.science_is_sufficient = old_sufficient
+    end},
     {"adds, removes, reorders, and clears queue entries", function()
         local force = reset_runtime()
         queue.add(force, "d", 2, false)

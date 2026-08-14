@@ -37,6 +37,7 @@ local open = function(player_index, parent)
     elseif state.get_player_setting(player_index, "research_details_open", false) then
         gui.toggle_research_details(player_index)
     end
+    gui.refresh_research_status_bar(player_index)
 end
 
 local close = function(player_index, anchor)
@@ -389,6 +390,13 @@ gui.refresh_research_metrics = function(player_index)
     local anchor = gui.get(player_index)
     if anchor then
         components.refresh_research_metrics(player_index, anchor)
+    end
+end
+
+gui.refresh_research_status_bar = function(player_index, advance)
+    local anchor = gui.get(player_index)
+    if anchor then
+        components.refresh_research_status_bar(player_index, anchor, advance)
     end
 end
 

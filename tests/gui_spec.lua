@@ -15,7 +15,7 @@ for _, name in ipairs({
     "clear_runtime_cache", "repopulate_all", "repopulate_policy", "refresh_research_details",
     "refresh_upcoming", "refresh_upcoming_times", "refresh_science_counts", "tick_research_graph",
     "refresh_research_status", "refresh_research_progress", "refresh_research_metrics",
-    "refresh_research_graph", "repopulate_tech", "show_research_graph_hover", "hide_research_graph_hover"
+    "refresh_research_graph", "refresh_research_status_bar", "repopulate_tech", "show_research_graph_hover", "hide_research_graph_hover"
 }) do
     components[name] = function(...) calls[#calls + 1] = name end
 end
@@ -186,6 +186,7 @@ local tests = {
         gui.refresh_research_status(1)
         gui.refresh_research_progress(1)
         gui.refresh_research_metrics(1)
+        gui.refresh_research_status_bar(1)
         gui.refresh_research_graph(1)
         gui.show_research_graph_hover(1, 4)
         gui.hide_research_graph_hover(1)

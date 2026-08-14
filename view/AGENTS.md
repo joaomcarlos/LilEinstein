@@ -18,7 +18,7 @@ GUI layer for the LilEinstein mod: window lifecycle, layout construction, and pr
 - View sits at the bottom of the module order (`standard.md`): may require `lib` and `model`, must not be required by model modules (exception: `model/cmd.lua`)
 - GUI style prototypes live in `data/style.lua`, not here; reference styles by name
 - Player GUI state persists under `storage.players[player_index]` via `state`/`gui.init_player`
-- The science-throughput drilldown preserves the root window, keeps headers outside its single vertical scroll pane, and refreshes stable rows in place while cluster membership/order is unchanged
+- The science-throughput drilldown preserves the root window, keeps headers outside its single vertical scroll pane, and refreshes stable rows in place while cluster membership/order is unchanged; incomplete rows from an older GUI shape are rebuilt before refresh
 - Throughput cluster rows present working/maximum capacity, every current-research pack's local demand/stock, and missing-pack evidence; force-wide measured SPM is never labeled as cluster output and overlapping missing-pack impacts are not summed
 - Throughput details render force-wide demand and per-cluster pack evidence as aligned native tables; missing science is shown as physical packs per minute with the associated negative SPM in parentheses, using normal quality for the pack-count conversion
 - The throughput location table is shortage-first: its missing-pack/SPM column leads the capacity evidence, and the Fix first column owns the nested per-pack stock, demand, working, and missing table
@@ -27,6 +27,7 @@ GUI layer for the LilEinstein mod: window lifecycle, layout construction, and pr
 - Research Health and throughput details keep the last completed report visible during bounded measurement and replace the complete report atomically only after the new snapshot finishes
 - Dynamic multi-row LocalisedStrings are composed in chunks of at most Factorio's 20-parameter limit
 - Recurring value refreshes reuse validated runtime-only GUI element references and skip unchanged property writes; LuaGuiElement references never enter persistent storage
+- The footer research status bar renders a cached, rotating insight immediately on open and only advances every 600 ticks for connected players whose main UI is open; it uses the `lil_einstein-status` locale section and never performs a synchronous model scan
 - Available technologies rebuild synchronously only after direct player actions or filter changes; automatic queue/research refreshes do not rescore or repaint that list
 - Upcoming background refreshes leave the current list visible, update rows in place when identity/order is unchanged, and replace a changed list completely in one render pass after bounded model calculation
 - Background refresh requests coalesce while a repopulation job is active; a queued follow-up starts after the current bounded refresh finishes instead of resetting its calculation state
@@ -38,6 +39,9 @@ GUI layer for the LilEinstein mod: window lifecycle, layout construction, and pr
 - New Upcoming LocalisedStrings include literal fallbacks so control-stage reloads cannot render `Unknown key` text
 - The Research Health header exposes a copy-debug-report action; because Factorio mods cannot write arbitrary text to the OS clipboard, the action opens a focused, read-only text box with the full report selected for Ctrl+C
 - Debug reports include live/current queue state, score components, pack-sufficiency decisions, the last 2 minutes of graph samples, bounded science-flow samples, and all current diagnostic warnings
+- Debug reports also include the live Research Health details subtree: outer row caption states, inspect-button visibility, and nested pack-table child counts
+- Debug-report technology tables distinguish globally present packs (`packs_available`) from the switcher's live/forecast decision (`switch_sufficient`)
+- Debug-report focus and selection calls must guard the element's validity inside the protected call; research-detail row controls may only receive properties supported by their native element style type
 
 ## Work Guidance
 

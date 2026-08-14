@@ -31,6 +31,7 @@ local trigger_objectives = {}
 local preset_names = {}
 local policy_history = {}
 local state_writes = {}
+local reject_button_single_line = false
 
 local function make_element(name, parent)
     next_element_index = next_element_index + 1
@@ -60,7 +61,18 @@ local function make_element(name, parent)
                 child[key] = value
             end
         end
+        child.initial_caption = prop.caption
         child.type = prop.type
+        if prop.type == "button" and reject_button_single_line then
+            child.style = setmetatable({}, {
+                __newindex = function(style, key, value)
+                    if key == "single_line" then
+                        error("Expected Label style type but was Button")
+                    end
+                    rawset(style, key, value)
+                end
+            })
+        end
         table.insert(element.children, child)
         if prop.name then
             element[prop.name] = child
@@ -163,7 +175,6 @@ local function reset_fixture()
         cluster_mode = true,
         performance_mode = false,
         min_switch_seconds = 35,
-        finish_current_threshold = 0.65,
         forecast_seconds = 120,
         parallel_slots = 3,
         multiplayer_lock = true
@@ -538,6 +549,7 @@ local function make_details_anchor()
     add_named(anchor, "research_health_state", "label")
     add_named(anchor, "research_health_reason", "label")
     add_named(anchor, "research_graph_remaining_value", "label")
+    add_named(anchor, "research_status_bar", "label")
     return anchor
 end
 
@@ -555,6 +567,68 @@ local function make_policy_anchor()
 end
 
 local tests = {
+    {"builds rotating research insights from cached health data", function()
+        reset_fixture()
+
+        local insights = components.build_research_status_insights({
+            available = true,
+            state = "pack_bound",
+            material_loss_spm = 198800,
+            compatible_labs = 502,
+            working_labs = 40,
+            missing_sciences = {
+                {science = "agricultural-science-pack", labs = 247, lost_spm = 106400},
+                {science = "cryogenic-science-pack", labs = 217, lost_spm = 93000}
+            }
+        }, {
+            is_researching = true,
+            progress = 0.8843,
+            remaining_seconds = 780,
+            spm = 28319
+        }, {
+            live_current_tech = "research-productivity",
+            target_tech = "mining-productivity-3",
+            temp_tech = "research-productivity"
+        }, {
+            promethium = {depletion_seconds = 68}
+        })
+
+        t.assert_equal(insights[1].kind, "pack_bound")
+        t.assert_equal(insights[1].loss_spm, 198800)
+        t.assert_equal(insights[1].labs, 462)
+        t.assert_equal(insights[2].kind, "missing_pack")
+        t.assert_equal(insights[2].science, "agricultural-science-pack")
+        t.assert_equal(insights[3].science, "cryogenic-science-pack")
+        t.assert_equal(insights[4].kind, "temporary")
+        t.assert_equal(insights[5].kind, "science_risk")
+        t.assert_equal(insights[6].kind, "progress")
+    end},
+    {"falls back to a neutral research insight when no research is active", function()
+        reset_fixture()
+
+        local insights = components.build_research_status_insights({
+            available = false,
+            state = "idle"
+        }, {
+            is_researching = false,
+            spm = 0
+        }, {}, {})
+
+        t.assert_equal(#insights, 1)
+        t.assert_equal(insights[1].kind, "idle")
+    end},
+    {"refreshes the rotating status bar from cached data", function()
+        reset_fixture()
+        local anchor = make_details_anchor()
+        components.clear_runtime_cache()
+
+        components.refresh_research_status_bar(1, anchor, false)
+        t.assert_equal(caption_head(find_element(anchor, "research_status_bar").caption),
+                       "lil_einstein-status.pack-bound")
+        components.refresh_research_status_bar(1, anchor, true)
+        t.assert_equal(caption_head(find_element(anchor, "research_status_bar").caption),
+                       "lil_einstein-status.missing-pack")
+    end},
     {"renders force settings, science filters, category filters, and styles", function()
         reset_fixture()
         local anchor = make_static_anchor()
@@ -745,6 +819,52 @@ local tests = {
         research_diagnostic.causes = many_causes
         components.refresh_research_metrics(1, anchor)
     end},
+    {"does not apply label-only style properties to the inspect button", function()
+        reset_fixture()
+        local anchor = make_details_anchor()
+        reject_button_single_line = true
+        local ok, err = pcall(function()
+            components.refresh_research_details(1, anchor)
+        end)
+        reject_button_single_line = false
+        t.assert_true(ok, err)
+        local inspect_labs = find_element(anchor, "research_details_inspect_labs_1")
+        t.assert_equal(inspect_labs.style.width, 415)
+    end},
+    {"creates throughput row cells with their initial captions", function()
+        reset_fixture()
+        local anchor = make_details_anchor()
+
+        components.refresh_research_details(1, anchor)
+
+        local rows = find_element(anchor, "research_details_rows")
+        t.assert_equal(caption_head(find_element(rows, "research_details_location_1").initial_caption),
+                       "lil_einstein-throughput.location-network")
+        t.assert_equal(caption_head(find_element(rows, "research_details_missing_1").initial_caption),
+                       "lil_einstein-throughput.missing-pack-summary")
+        t.assert_equal(caption_head(find_element(rows, "research_details_labs_1").initial_caption),
+                       "lil_einstein-throughput.labs-cell")
+        t.assert_equal(caption_head(find_element(rows, "research_details_capacity_1").initial_caption),
+                       "lil_einstein-throughput.capacity-cell")
+    end},
+    {"rebuilds details rows that predate the lab inspection controls", function()
+        reset_fixture()
+        local anchor = make_details_anchor()
+        local rows = find_element(anchor, "research_details_rows")
+        rows.add({
+            type = "frame",
+            name = "research_details_row_1",
+            tags = {cluster_key = "network-main"}
+        })
+        components.clear_runtime_cache()
+
+        components.refresh_research_details(1, anchor)
+
+        local rebuilt = find_element(rows, "research_details_inspect_labs_1")
+        t.assert_true(rebuilt ~= nil)
+        t.assert_equal(caption_head(find_element(rows, "research_details_location_1").caption),
+                       "lil_einstein-throughput.location-network")
+    end},
     {"renders the research graph incrementally and updates hover markers", function()
         reset_fixture()
         research_summary.spm = 2000000
@@ -874,8 +994,7 @@ local tests = {
         t.assert_equal(strategy.items[2][1], "lil_einstein-strategy.throughput")
         local paused = find_by_tag(general, "setting_name", "planning_paused")
         t.assert_equal(paused.style_name, "lil_einstein_settings_checkbox_off")
-        local threshold = find_by_tag(general, "setting_name", "finish_current_threshold")
-        t.assert_equal(threshold.parent.children[3].caption, "65%")
+        t.assert_equal(find_by_tag(general, "setting_name", "finish_current_threshold"), nil)
 
         local science_flow = find_element(anchor, "policy_science_flow")
         t.assert_equal(#science_flow.children, 2)

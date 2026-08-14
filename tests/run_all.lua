@@ -30,7 +30,9 @@ local specs = {
     "tests.component_guard_spec",
     "tests.foundation_spec",
     "tests.data_migration_spec",
-    "tests.translate_spec"
+    "tests.translate_spec",
+    "tests.locale_spec",
+    "tests.control_spec"
 }
 
 local total = 0

@@ -100,6 +100,7 @@ Root-owned (no child doc):
 - `RESEARCH_AUTOPILOT_IMPLEMENTATION.md` — maintainer/tester notes for the research-autopilot branch
 - `docs/_human/raw_request_log.md` — append-only verbatim record of user requests and project decisions
 - `audit/` — GUI mockup reference assets; `scripts/import_ui_slices.ps1` regenerates `lib/ui_slices.lua` from them
+- `scripts/run_tests.ps1` — canonical unit plus disposable Factorio runner; creates an isolated save, waits for creator shutdown, then advances the save in a hidden loopback-only headless server with an ephemeral port and auto-pause disabled
 - `graphics/` — mod icons and UI sprite assets
 - `output/` — generated output folder (currently `output/imagegen/`)
 - `website/` — mod landing-page assets (`index.html`, `styles.css`, `script.js`, `assets/`)

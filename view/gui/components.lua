@@ -23,6 +23,7 @@ local graph_render_cache = {}
 local science_render_cache = {}
 local graph_render_jobs = {}
 local graph_hover_cache = {}
+local research_status_cache = {}
 local research_graph_render_budget = 40
 
 local get_graph_render_state = function(element)
@@ -172,6 +173,10 @@ local format_time = function(seconds)
         return tostring(minutes) .. "m" .. string.format("%02ds", secs)
     end
     return tostring(secs) .. "s"
+end
+
+local format_status_si = function(value)
+    return gutil.format_si(value or 0):gsub("K", "k")
 end
 
 local format_axis_value = function(value)
@@ -562,6 +567,143 @@ end
 
 local cause_caption = function(kind)
     return {throughput_prefix .. "cause-" .. tostring(kind or "other"):gsub("_", "-")}
+end
+
+local technology_caption = function(technology_name)
+    if not technology_name then
+        return {"lil_einstein-status.unknown-research"}
+    end
+    return {"", "[technology=", technology_name, "] ", {"technology-name." .. technology_name}}
+end
+
+local format_status_percent = function(value)
+    return string.format("%.2f", math.max(0, math.min(100, (value or 0) * 100)))
+end
+
+local copy_sorted_missing_sciences = function(missing_sciences)
+    local result = {}
+    for _, missing in ipairs(missing_sciences or {}) do
+        table.insert(result, missing)
+    end
+    table.sort(result, function(a, b)
+        if (a.lost_spm or 0) == (b.lost_spm or 0) then
+            return tostring(a.science or "") < tostring(b.science or "")
+        end
+        return (a.lost_spm or 0) > (b.lost_spm or 0)
+    end)
+    return result
+end
+
+local build_research_status_insights = function(diagnostic, summary, control_state, forecast)
+    local insights = {}
+    diagnostic = diagnostic or {}
+    summary = summary or {}
+    control_state = control_state or {}
+    forecast = forecast or {}
+
+    if diagnostic.state == "pack_bound" then
+        local missing = copy_sorted_missing_sciences(diagnostic.missing_sciences)
+        local pack_names = {}
+        for index = 1, math.min(2, #missing) do
+            if index > 1 then
+                table.insert(pack_names, " + ")
+            end
+            table.insert(pack_names, item_caption(missing[index].science))
+        end
+        local labs = math.max(0, (diagnostic.compatible_labs or 0) - (diagnostic.working_labs or 0))
+        table.insert(insights, {
+            kind = "pack_bound",
+            key = "pack_bound:" .. tostring(diagnostic.material_loss_spm or 0) .. ":" .. tostring(labs),
+            loss_spm = diagnostic.material_loss_spm or 0,
+            labs = labs,
+            caption = {"lil_einstein-status.pack-bound", format_status_si(diagnostic.material_loss_spm or 0),
+                       concat_localised_parts(pack_names), labs},
+            tooltip = {"lil_einstein-status.pack-bound-tooltip", format_status_si(diagnostic.material_loss_spm or 0),
+                       concat_localised_parts(pack_names), labs}
+        })
+        for _, missing_pack in ipairs(missing) do
+            table.insert(insights, {
+                kind = "missing_pack",
+                key = "missing_pack:" .. tostring(missing_pack.science or "") .. ":" ..
+                    tostring(missing_pack.labs or 0) .. ":" .. tostring(missing_pack.lost_spm or 0),
+                science = missing_pack.science,
+                caption = {"lil_einstein-status.missing-pack", item_caption(missing_pack.science),
+                           missing_pack.labs or 0, format_status_si(missing_pack.lost_spm or 0)},
+                tooltip = {"lil_einstein-status.missing-pack-tooltip", item_caption(missing_pack.science),
+                           missing_pack.labs or 0, format_status_si(missing_pack.lost_spm or 0)}
+            })
+        end
+    elseif diagnostic.state == "operational_fault" and diagnostic.dominant_cause then
+        local cause = diagnostic.dominant_cause
+        table.insert(insights, {
+            kind = "operational_fault",
+            key = "operational_fault:" .. tostring(cause.kind or "") .. ":" .. tostring(cause.labs or 0) .. ":" ..
+                tostring(cause.lost_spm or 0),
+            caption = {"lil_einstein-status.operational-fault", cause_caption(cause.kind), cause.labs or 0},
+            tooltip = {"lil_einstein-status.operational-fault-tooltip", cause_caption(cause.kind),
+                       cause.labs or 0, format_status_si(cause.lost_spm or 0)}
+        })
+    end
+
+    if control_state.temp_tech and control_state.target_tech then
+        table.insert(insights, {
+            kind = "temporary",
+            key = "temporary:" .. tostring(control_state.temp_tech) .. ":" .. tostring(control_state.target_tech),
+            caption = {"lil_einstein-status.temporary", technology_caption(control_state.temp_tech),
+                       technology_caption(control_state.target_tech)},
+            tooltip = {"lil_einstein-status.temporary-tooltip", technology_caption(control_state.temp_tech),
+                       technology_caption(control_state.target_tech)}
+        })
+    elseif control_state.target_tech then
+        table.insert(insights, {
+            kind = "switch_ready",
+            key = "switch_ready:" .. tostring(control_state.target_tech),
+            caption = {"lil_einstein-status.switch-ready", technology_caption(control_state.target_tech)},
+            tooltip = {"lil_einstein-status.switch-ready-tooltip", technology_caption(control_state.target_tech)}
+        })
+    end
+
+    local depletion
+    for science, item in pairs(forecast) do
+        if item and item.depletion_seconds and item.depletion_seconds > 0 and
+            (not depletion or item.depletion_seconds < depletion.seconds) then
+            depletion = {science = science, seconds = item.depletion_seconds}
+        end
+    end
+    if depletion then
+        table.insert(insights, {
+            kind = "science_risk",
+            key = "science_risk:" .. tostring(depletion.science) .. ":" .. tostring(depletion.seconds),
+            science = depletion.science,
+            caption = {"lil_einstein-status.science-risk", item_caption(depletion.science),
+                       format_time(depletion.seconds)},
+            tooltip = {"lil_einstein-status.science-risk-tooltip", item_caption(depletion.science),
+                       format_time(depletion.seconds)}
+        })
+    end
+
+    if summary.is_researching then
+        table.insert(insights, {
+            kind = "progress",
+            key = "progress:" .. tostring(control_state.live_current_tech) .. ":" .. tostring(summary.progress or 0) .. ":" ..
+                tostring(summary.remaining_seconds or ""),
+            caption = {"lil_einstein-status.progress", technology_caption(control_state.live_current_tech),
+                       format_status_percent(summary.progress), format_time(summary.remaining_seconds)},
+            tooltip = {"lil_einstein-status.progress-tooltip", technology_caption(control_state.live_current_tech),
+                       format_status_percent(summary.progress), format_time(summary.remaining_seconds),
+                       format_status_si(summary.spm or 0)}
+        })
+    end
+
+    if #insights == 0 then
+        table.insert(insights, {
+            kind = "idle",
+            key = "idle",
+            caption = {"lil_einstein-status.idle"},
+            tooltip = {"lil_einstein-status.idle-tooltip"}
+        })
+    end
+    return insights
 end
 
 local cluster_location_caption = function(cluster)
@@ -978,6 +1120,20 @@ local refresh_research_pack_table = function(pack_cell, cluster, index)
 end
 
 local create_research_details_row = function(rows, index, cluster)
+    local missing_pack = get_dominant_missing_pack(cluster)
+    local initial_captions = {
+        location = cluster_location_caption(cluster),
+        missing = format_missing_pack_summary(missing_pack, cluster.lost_spm),
+        labs = {"lil_einstein-throughput.labs-cell", cluster.working_labs or 0,
+                cluster.compatible_labs or 0, cluster.incompatible_labs or 0},
+        capacity = {"lil_einstein-throughput.capacity-cell",
+                    format_spaced_number(cluster.working_spm), format_spaced_number(cluster.expected_spm)},
+        cause = get_cluster_causes_caption(cluster),
+        action = get_diagnostic_action(nil, cluster),
+        action_detail = missing_pack and
+            {"lil_einstein-throughput.action-missing-pack", item_caption(missing_pack.science),
+             format_spaced_number(missing_pack.missing_per_minute or 0)} or ""
+    }
     local row = rows.add({
         type = "frame",
         name = "research_details_row_" .. index,
@@ -1021,18 +1177,21 @@ local create_research_details_row = function(rows, index, cluster)
                 }
             })
             inspect_labs.style.width = research_details_columns.action
-            inspect_labs.style.single_line = false
-            add_details_table_cell(action_cell, "research_details_action_" .. index, "",
+            add_details_table_cell(action_cell, "research_details_action_" .. index,
+                                   initial_captions.action,
                                    research_details_columns.action, false)
-            add_details_table_cell(action_cell, "research_details_action_detail_" .. index, "",
+            add_details_table_cell(action_cell, "research_details_action_detail_" .. index,
+                                   initial_captions.action_detail,
                                    research_details_columns.action, false,
                                    "lil_einstein_throughput_missing_label")
         elseif column == "missing" then
-            add_details_table_cell(cells, "research_details_missing_" .. index, "",
+            add_details_table_cell(cells, "research_details_missing_" .. index,
+                                   initial_captions.missing,
                                    research_details_columns.missing, false,
                                    "lil_einstein_throughput_missing_label")
         else
-            add_details_table_cell(cells, "research_details_" .. column .. "_" .. index, "",
+            add_details_table_cell(cells, "research_details_" .. column .. "_" .. index,
+                                   initial_captions[column],
                                    research_details_columns[column], false)
         end
     end
@@ -1173,6 +1332,22 @@ local research_details_rows_match = function(rows, clusters)
         local row = rows.children[index]
         if not row or not row.valid or not row.tags or row.tags.cluster_key ~= cluster.key then
             return false
+        end
+        for _, name in ipairs({
+            "research_details_cells_" .. index,
+            "research_details_location_" .. index,
+            "research_details_missing_" .. index,
+            "research_details_labs_" .. index,
+            "research_details_capacity_" .. index,
+            "research_details_cause_" .. index,
+            "research_details_action_cell_" .. index,
+            "research_details_inspect_labs_" .. index,
+            "research_details_action_" .. index,
+            "research_details_action_detail_" .. index
+        }) do
+            if not gutil.get_child(row, name) then
+                return false
+            end
         end
     end
     return true
@@ -1357,6 +1532,43 @@ local refresh_research_metrics = function(player_index, anchor)
     local remaining_value = gutil.get_child(anchor, "research_graph_remaining_value")
     if remaining_value then
         remaining_value.caption = format_time(summary.remaining_seconds)
+    end
+end
+
+local refresh_research_status_bar = function(player_index, anchor, advance)
+    local p = game.get_player(player_index)
+    local status_bar = gutil.get_child(anchor, "research_status_bar")
+    if not p or not status_bar or status_bar.valid == false then
+        return
+    end
+
+    local force_index = p.force.index
+    local insights = build_research_status_insights(
+        queue.get_research_display_diagnostic(force_index),
+        queue.get_research_summary(force_index),
+        queue.get_research_control_state and queue.get_research_control_state(force_index) or {},
+        queue.get_science_display_forecast(force_index))
+    local set_signature = {}
+    for _, insight in ipairs(insights) do
+        table.insert(set_signature, insight.kind .. ":" .. tostring(insight.science or ""))
+    end
+    set_signature = table.concat(set_signature, "|")
+
+    local cache = research_status_cache[anchor.index]
+    if not cache or cache.element ~= anchor or cache.element.valid == false or
+        cache.signature ~= set_signature then
+        cache = {element = anchor, signature = set_signature, index = 1}
+        research_status_cache[anchor.index] = cache
+    elseif advance then
+        cache.index = (cache.index % #insights) + 1
+    end
+
+    local insight = insights[cache.index] or insights[1]
+    local render_key = tostring(insight.key or insight.kind) .. ":" .. tostring(cache.index)
+    if cache.render_key ~= render_key then
+        status_bar.caption = insight.caption
+        status_bar.tooltip = insight.tooltip or insight.caption
+        cache.render_key = render_key
     end
 end
 
@@ -1930,12 +2142,7 @@ local add_policy_number = function(flow, force_index, setting_name, caption, ste
         }
     })
     local value = policy.get_setting(force_index, setting_name)
-    local formatted = value
-    if setting_name == "finish_current_threshold" then
-        formatted = tostring(math.floor((value or 0) * 100 + 0.5)) .. "%"
-    else
-        formatted = tostring(value) .. (suffix or "")
-    end
+    local formatted = tostring(value) .. (suffix or "")
     local value_label = row.add({type = "label", caption = formatted})
     value_label.style.width = 75
     value_label.style.horizontal_align = "center"
@@ -1995,7 +2202,6 @@ local populate_policy_general = function(player_index, anchor)
     add_policy_toggle(flow, p.force.index, "performance_mode", {"lil_einstein-policy.performance-mode"},
         {"lil_einstein-policy.performance-mode-description"})
     add_policy_number(flow, p.force.index, "min_switch_seconds", {"lil_einstein-policy.minimum-switch-time"}, 5, "s")
-    add_policy_number(flow, p.force.index, "finish_current_threshold", {"lil_einstein-policy.finish-threshold"}, 0.05)
     add_policy_number(flow, p.force.index, "forecast_seconds", {"lil_einstein-policy.forecast-horizon"}, 30, "s")
     add_policy_number(flow, p.force.index, "parallel_slots", {"lil_einstein-policy.parallel-slots"}, 1)
 end
@@ -2458,6 +2664,12 @@ content.refresh_research_metrics = function(player_index, anchor)
     refresh_research_metrics(player_index, anchor)
 end
 
+content.build_research_status_insights = build_research_status_insights
+
+content.refresh_research_status_bar = function(player_index, anchor, advance)
+    refresh_research_status_bar(player_index, anchor, advance)
+end
+
 content.refresh_research_details = function(player_index, anchor)
     refresh_research_details(player_index, anchor)
 end
@@ -2501,6 +2713,7 @@ content.clear_runtime_cache = function()
     science_render_cache = {}
     graph_render_jobs = {}
     graph_hover_cache = {}
+    research_status_cache = {}
     gcupcoming.clear_runtime_cache()
 end
 

@@ -22,7 +22,6 @@ local default_settings = {
     planning_paused = false,
     parallel_research = false,
     min_switch_seconds = 20,
-    finish_current_threshold = 0.90,
     forecast_seconds = 120,
     science_lower_threshold = 0.25,
     science_upper_threshold = 0.80,
@@ -88,8 +87,6 @@ local sanitize_setting = function(key, value)
         return value, type(value) == "string" and valid_strategies[value] == true
     elseif key == "min_switch_seconds" then
         return math.floor(clamp(value, 5, 600)), true
-    elseif key == "finish_current_threshold" then
-        return clamp(value, 0, 1), true
     elseif key == "forecast_seconds" then
         return math.floor(clamp(value, 0, 3600)), true
     elseif key == "parallel_slots" then

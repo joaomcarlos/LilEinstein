@@ -160,7 +160,15 @@ local footer = {
     type = "frame",
     name = "footer_frame",
     style = "lil_einstein_footer_frame",
-    direction = "horizontal"
+    direction = "horizontal",
+    children = {{
+        type = "label",
+        name = "research_status_bar",
+        style = "lil_einstein_research_status_bar",
+        caption = {"lil_einstein-status.idle"},
+        tooltip = {"lil_einstein-status.idle-tooltip"},
+        ignored_by_interaction = true
+    }}
 }
 
 local master_enable = {
@@ -913,8 +921,14 @@ builder.build_debug_report = function(player_index, anchor, report)
     text_box.style.width = 1160
     text_box.style.height = 700
     player.opened = text_box
-    pcall(text_box.focus, text_box)
-    pcall(text_box.select_all, text_box)
+    pcall(function()
+        if text_box.valid then
+            text_box:focus()
+            if text_box.valid then
+                text_box:select_all()
+            end
+        end
+    end)
     return frame
 end
 

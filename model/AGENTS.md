@@ -21,6 +21,7 @@ Runtime data model and research-autopilot logic for the LilEinstein Factorio mod
 - Data model follows `standard.md`: `storage.<module>.<key>`, `storage.forces[force_index].<module>.<key>`, `storage.players[player_index].<module>.<key>`
 - Module dependency order (must not be violated by new requires): env, state → tech → queue → cmd/lab; `cmd.lua` is the only model file allowed to require `view.gui`
 - Temp-tech switching respects pinned techs, science priority, and a symmetric score margin; unavailable techs are scored with a discount and never act as runtime candidates
+- There is no finish-current threshold override; near-complete research can still yield to a higher-priority or supplied alternate when the switching rules select it
 - Event/request-driven reselection passes an explicit force flag so active temporary switches and queue changes update `LuaForce.research_queue`; periodic maintenance compares the cached and live technology names, and bookkeeping follows the queue Factorio actually accepted
 - Runtime candidates exclude hidden, disabled, triggered, avoided, and finite/infinite capped technologies
 - Active science-supply checks use staggered live lab-starvation snapshots and the same material-loss threshold as the player-facing PACK-BOUND diagnostic; non-active candidate checks cap depletion forecasts at the remaining research time
@@ -31,6 +32,7 @@ Runtime data model and research-autopilot logic for the LilEinstein Factorio mod
 - Health snapshots finish the technology captured at job start; display consumers retain the last completed snapshot while a replacement is measured, then atomically swap in the new complete report so research rotation cannot repeatedly starve a bounded job
 - Upcoming display plans scan and score technologies in bounded slices before the view renders them; synchronous plan generation remains available for direct player actions
 - Lab membership is discovered once during force initialization and maintained from build, clone, and revive events; GUI refreshes must never rescan every surface
+- Bounded lab sampling persists its force/lab cursors across scheduler calls so factories larger than one batch receive fresh starvation observations without increasing per-call work
 - Lab inventory observations come from the staggered lab updater; count and diagnostic consumers share stable runtime-only descriptors, while logistic-network references remain short-lived module-local cache entries
 - Research diagnostic display clusters group logistic labs by surface/network and direct-fed labs by surface; cluster values are capacity and local-stock evidence, never inferred actual cluster throughput
 - Research diagnostic clusters include deterministic, save-safe lab descriptors for affected-lab inspection; descriptors contain identity, surface/position, status, compatibility, and missing-pack names only, never LuaEntity references

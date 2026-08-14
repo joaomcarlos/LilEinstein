@@ -41,6 +41,7 @@ $stage = Join-Path ([System.IO.Path]::GetTempPath()) ("LilEinstein-factorio-test
 $mods = Join-Path $stage "mods"
 $writeData = Join-Path $stage "write-data"
 $config = Join-Path $stage "config.ini"
+$serverSettings = Join-Path $stage "server-settings.json"
 $save = Join-Path $writeData "saves\lileinstein-smoke.zip"
 $production = Join-Path $mods "LilEinstein_1.4.0"
 $testMod = Join-Path $mods "lil-einstein-test_0.1.0"
@@ -62,24 +63,89 @@ try {
     }
     $testSource = Join-Path $root "tests\factorio\lil-einstein-test_0.1.0"
     Copy-Item -LiteralPath (Join-Path $testSource "info.json") -Destination $testMod -Force
+    Copy-Item -LiteralPath (Join-Path $testSource "data.lua") -Destination $testMod -Force
     Copy-Item -LiteralPath (Join-Path $testSource "control.lua") -Destination $testMod -Force
 
     $factorioRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $factorio))
     $readData = Join-Path $factorioRoot "data"
     $configText = "[path]`r`nread-data=$readData`r`nwrite-data=$writeData`r`n"
     Set-Content -LiteralPath $config -Value $configText -Encoding UTF8
+    $serverSettingsValue = Get-Content -Raw -LiteralPath (Join-Path $readData "server-settings.example.json") |
+        ConvertFrom-Json
+    $serverSettingsValue.auto_pause = $false
+    $serverSettingsValue.autosave_interval = 0
+    $serverSettingsValue.visibility.public = $false
+    $serverSettingsValue.visibility.lan = $false
+    $serverSettingsValue | ConvertTo-Json -Depth 10 | Set-Content -LiteralPath $serverSettings -Encoding UTF8
 
     Write-Host "Creating disposable Factorio save..."
-    & $factorio --config $config --mod-directory $mods --create $save --map-gen-seed 20260811 --no-log-rotation
-    if ($LASTEXITCODE -ne 0) {
-        throw "Factorio save creation failed with exit code $LASTEXITCODE"
+    $createArguments = @(
+        "--config", $config,
+        "--mod-directory", $mods,
+        "--create", $save,
+        "--map-gen-seed", "20260811",
+        "--no-log-rotation"
+    )
+    $createArgumentText = ($createArguments | ForEach-Object {
+        '"' + $_.Replace('"', '\"') + '"'
+    }) -join ' '
+    $createStdout = Join-Path $stage "factorio-create.stdout.log"
+    $createStderr = Join-Path $stage "factorio-create.stderr.log"
+    $creator = Start-Process -FilePath $factorio -ArgumentList $createArgumentText -PassThru -Wait -WindowStyle Hidden `
+        -RedirectStandardOutput $createStdout -RedirectStandardError $createStderr
+    if ($creator.ExitCode -ne 0) {
+        $createOutput = if (Test-Path -LiteralPath $createStdout) {
+            (Get-Content -Tail 80 -LiteralPath $createStdout) -join [Environment]::NewLine
+        } else { "Factorio create stdout was not written." }
+        $createError = if (Test-Path -LiteralPath $createStderr) {
+            (Get-Content -Tail 80 -LiteralPath $createStderr) -join [Environment]::NewLine
+        } else { "Factorio create stderr was not written." }
+        throw "Factorio save creation failed with exit code $($creator.ExitCode).`n" +
+            "STDOUT:`n$createOutput`nSTDERR:`n$createError"
     }
+
+    $lockPath = Join-Path $writeData ".lock"
+    $launchDeadline = (Get-Date).AddSeconds(15)
+    while ((Test-Path -LiteralPath $lockPath) -and (Get-Date) -lt $launchDeadline) {
+        Start-Sleep -Milliseconds 250
+    }
+    if (Test-Path -LiteralPath $lockPath) {
+        throw "Factorio write-data lock was not released after save creation"
+    }
+
+    Write-Host "Starting disposable Factorio save headlessly..."
+    $serverArguments = @(
+        "--config", $config,
+        "--mod-directory", $mods,
+        "--start-server", $save,
+        "--server-settings", $serverSettings,
+        "--bind", "127.0.0.1:0",
+        "--no-log-rotation"
+    )
+    $serverArgumentText = ($serverArguments | ForEach-Object {
+        '"' + $_.Replace('"', '\"') + '"'
+    }) -join ' '
+    $serverStdout = Join-Path $stage "factorio-server.stdout.log"
+    $serverStderr = Join-Path $stage "factorio-server.stderr.log"
+    $server = Start-Process -FilePath $factorio -ArgumentList $serverArgumentText -PassThru -WindowStyle Hidden `
+        -RedirectStandardOutput $serverStdout -RedirectStandardError $serverStderr
 
     Write-Host "Waiting for disposable in-game assertions..."
     $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
     while ((Get-Date) -lt $deadline) {
         if (Test-Path -LiteralPath $resultPath) {
             break
+        }
+        if ($server.HasExited) {
+            $server.Refresh()
+            $stdoutTail = if (Test-Path -LiteralPath $serverStdout) {
+                (Get-Content -Tail 80 -LiteralPath $serverStdout) -join [Environment]::NewLine
+            } else { "Factorio stdout was not created." }
+            $stderrTail = if (Test-Path -LiteralPath $serverStderr) {
+                (Get-Content -Tail 80 -LiteralPath $serverStderr) -join [Environment]::NewLine
+            } else { "Factorio stderr was not created." }
+            throw "Disposable Factorio server exited with code $($server.ExitCode) before writing results.`n" +
+                "STDOUT:`n$stdoutTail`nSTDERR:`n$stderrTail"
         }
         Start-Sleep -Seconds 1
     }

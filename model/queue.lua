@@ -867,12 +867,16 @@ queue.check_and_switch_temp_research = function(f)
             state.request_next_research(f)
             return
         end
-        -- Target still doesn't have packs; extend timeout so temp gets more air time
-        sq[keys.temp_tech_timeout] = game.tick + (60 * temp_tech_timeout_extend_seconds)
-        if not f.current_research or f.current_research.name ~= temp then
-            state.request_next_research(f)
+        if queue.science_is_sufficient(xtemp, f.index) then
+            -- Target still doesn't have packs, but the temporary research can run.
+            sq[keys.temp_tech_timeout] = game.tick + (60 * temp_tech_timeout_extend_seconds)
+            if not f.current_research or f.current_research.name ~= temp then
+                state.request_next_research(f)
+            end
+            return
         end
-        return
+        -- Both the target and temporary research are pack-bound. Fall through
+        -- so the normal candidate scan can replace the temporary technology.
     end
 
     -- Normal check: is current tech low on packs?
@@ -900,12 +904,6 @@ queue.check_and_switch_temp_research = function(f)
     end
 
     local current_is_sufficient = queue.science_is_sufficient(xcur, f.index)
-
-    -- Avoid switching away from a tech that is almost finished and still has packs.
-    local finish_threshold = policy.get_setting(f.index, "finish_current_threshold") or 0.90
-    if current_is_sufficient and (f.research_progress or 0) >= finish_threshold then
-        return
-    end
 
     -- If current tech has sufficient packs, only interrupt it for a higher-priority
     -- science policy, or for a same-priority candidate with a much better score.
@@ -983,7 +981,7 @@ queue.check_and_switch_temp_research = function(f)
     if pinned and pinned ~= cur_name then
         local candidate, _ = find_runtime_candidate(f.index, pinned, tsx, lsci, sfsci)
         if candidate and candidate ~= cur_name then
-            sq[keys.target_tech] = cur_name
+            sq[keys.target_tech] = target or cur_name
             sq[keys.temp_tech] = candidate
             sq[keys.temp_tech_timeout] = game.tick + minimum_switch_ticks
             sq[keys.last_switch_tick] = game.tick
@@ -998,7 +996,7 @@ queue.check_and_switch_temp_research = function(f)
         if q ~= cur_name and q ~= pinned then
             local candidate, _ = find_runtime_candidate(f.index, q, tsx, lsci, sfsci)
             if candidate and candidate ~= cur_name then
-                sq[keys.target_tech] = cur_name
+                sq[keys.target_tech] = target or cur_name
                 sq[keys.temp_tech] = candidate
                 sq[keys.temp_tech_timeout] = game.tick + minimum_switch_ticks
                 sq[keys.last_switch_tick] = game.tick

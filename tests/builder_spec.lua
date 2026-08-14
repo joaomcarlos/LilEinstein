@@ -69,6 +69,8 @@ local tests = {
         testlib.assert_true(main.auto_center)
         testlib.assert_equal(main.style.height, 941)
         testlib.assert_equal(player.opened, main)
+        testlib.assert_true(main.footer_frame ~= nil, "footer frame")
+        testlib.assert_true(main.footer_frame.research_status_bar ~= nil, "research status bar")
         testlib.assert_true(anchor.brand_header == nil, "brand header belongs below main frame")
     end},
     {"retries an element without style after the first add fails", function()
@@ -101,6 +103,33 @@ local tests = {
         testlib.assert_true(text_box.selectable)
         testlib.assert_false(text_box.word_wrap)
         testlib.assert_equal(player.opened, text_box)
+    end},
+    {"does not dereference report text after it becomes invalid on open", function()
+        local text_box
+        local player = setmetatable({}, {
+            __newindex = function(self, key, value)
+                if key == "opened" and value.name == "lil_einstein_debug_report_text" then
+                    text_box = value
+                    setmetatable(value, {
+                        __index = function(element, field)
+                            if field ~= "valid" and rawget(element, "valid") == false then
+                                error("LuaGuiElement API call when LuaGuiElement was invalid")
+                            end
+                            return rawget(element, field)
+                        end
+                    })
+                    value.valid = false
+                end
+                rawset(self, key, value)
+            end
+        })
+        local anchor = make_element(false)
+        _G.game = {get_player = function() return player end}
+        local ok, err = pcall(function()
+            builder.build_debug_report(1, anchor, "debug text")
+        end)
+        testlib.assert_true(ok, err)
+        testlib.assert_false(text_box.valid)
     end},
     {"covers private builder fallbacks, empty structures, and tab mappings", function()
         errors = {}

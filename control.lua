@@ -9,6 +9,7 @@ local gui = require("view.gui")
 local gutil = require("view.gui.gutil")
 local const = require("lib.const")
 local util = require("lib.util")
+local gui_schedule = require("lib.gui_schedule")
 
 -- Development-only read-only snapshot for the disposable Factorio test mod.
 -- The interface is absent from normal saves because the test mod is not active.
@@ -204,6 +205,14 @@ local run_open_view_updates = function()
     end
 end
 
+local run_status_bar_updates = function()
+    if not gui_schedule.is_due(game.tick, const.runtime_intervals.status_bar_ticks) then
+        return
+    end
+    gui_schedule.refresh_open_players(game.connected_players, gui.is_open,
+        gui.refresh_research_status_bar)
+end
+
 local run_force_maintenance = function()
     for _, f in pairs(game.forces) do
         local refresh_gui = false
@@ -252,6 +261,10 @@ end
 
 script.on_nth_tick(const.runtime_intervals.open_view_ticks, function(e)
     run_open_view_updates()
+end)
+
+script.on_nth_tick(const.runtime_intervals.status_bar_ticks, function(e)
+    run_status_bar_updates()
 end)
 
 script.on_nth_tick(const.runtime_intervals.force_maintenance_ticks, function(e)

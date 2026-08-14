@@ -13,6 +13,8 @@ Foundation utilities with no dependencies on `model/` or `view/`. First in the m
 
 ## Local Contracts
 
+- `gui_schedule.lua` provides dependency-free cadence and open-player dispatch helpers for periodic Control GUI refreshes.
+
 - `lib` modules must not require anything from `model/` or `view/`
 - New constants go in `const.lua`, not inline in consumers
 
