@@ -65,6 +65,30 @@ local function find_named(element, wanted)
     end
 end
 
+local function make_element_with_checkbox_state_contract()
+    local make_node
+    make_node = function()
+        local element = {children = {}, style = {}, valid = true}
+        element.add = function(prop)
+            if prop.type == "checkbox" and prop.state ~= nil then
+                error("Key \"state\" not found in property tree at ROOT")
+            end
+            local child = make_node()
+            child.name = prop.name
+            child.type = prop.type
+            for key, value in pairs(prop) do
+                if key ~= "style" then child[key] = value end
+            end
+            if prop.name then element[prop.name] = child end
+            table.insert(element.children, child)
+            return child
+        end
+        element.add_tab = function() end
+        return element
+    end
+    return make_node()
+end
+
 local tests = {
     {"does nothing when the player has disappeared", function()
         _G.game = {get_player = function() return nil end}
@@ -234,6 +258,22 @@ local tests = {
         testlib.assert_equal(#mapped.tabs, 1)
         testlib.assert_equal(mapped.tabs[1][1], mapped.left)
         testlib.assert_equal(mapped.tabs[1][2], mapped.right)
+    end},
+    {"assigns checkbox state after creation instead of passing it to add", function()
+        errors = {}
+        local build_recursive = get_upvalue(builder.build, "build_recursive")
+        local anchor = make_element_with_checkbox_state_contract()
+        testlib.assert_true(build_recursive(anchor, {
+            type = "flow",
+            name = "decision_choose_controls",
+            children = {{
+                type = "checkbox",
+                name = "decision_manual_override",
+                state = false
+            }}
+        }))
+        testlib.assert_equal(anchor.decision_choose_controls.decision_manual_override.state, false)
+        testlib.assert_equal(#errors, 0, "checkbox state must not reach LuaGuiElement.add")
     end}
 }
 

@@ -1506,6 +1506,9 @@ local tests = {
         end
         t.assert_equal(insight.planet_stock.nauvis, 37)
         t.assert_equal(insight.planet_stock.vulcanus, 0)
+        t.assert_equal(#insight.planet_stock_rows, 1,
+                       "planet stock rows must omit zero-stock planets")
+        t.assert_equal(insight.planet_stock_rows[1].name, "nauvis")
         t.assert_equal(insight.in_transit.total, 12)
         t.assert_equal(insight.in_transit.routes[1].platform, "platform-1")
         t.assert_equal(insight.next_refresh_tick, 400)
@@ -1610,6 +1613,16 @@ local tests = {
                     to = {}
                 },
                 distance = 0.7
+            },
+            platform_named_unknown = {
+                valid = true,
+                name = "platform-named-unknown",
+                hub = {valid = true, get_item_count = function() return 40 end},
+                space_connection = {
+                    from = {name = "unknown"},
+                    to = {name = "vulcanus"}
+                },
+                distance = 0.8
             }
         }
 

@@ -3647,7 +3647,8 @@ local is_excluded_planet_name = function(name)
         return true
     end
     local lower = name:lower()
-    if lower == "drawing-board_player" or lower == "space-platform-graveyard" then
+    if lower == "drawing-board_player" or lower == "space-platform-graveyard" or
+        lower == "unknown" then
         return true
     end
     if lower:sub(1, 11) == "cargo-flow-" then
@@ -3695,7 +3696,9 @@ local get_planet_stock = function(force_index, science)
     for name, row in pairs(rows_by_name) do
         row.stock = count_surface_science(row.surface, force_index, science)
         stock_by_name[name] = row.stock
-        table.insert(rows, {name = row.name, stock = row.stock})
+        if row.stock > 0 then
+            table.insert(rows, {name = row.name, stock = row.stock})
+        end
     end
     table.sort(rows, function(a, b) return a.name < b.name end)
     return rows, stock_by_name
@@ -3723,7 +3726,7 @@ local get_transit_routes = function(force_index, science)
                 if count > 0 then
                     local from = get_runtime_name(connection.from, nil)
                     local to = get_runtime_name(connection.to, nil)
-                    if from and to then
+                    if not is_excluded_planet_name(from) and not is_excluded_planet_name(to) then
                         table.insert(routes, {
                             platform = get_runtime_name(platform, key),
                             from = from,
@@ -3750,7 +3753,7 @@ local get_transit_routes = function(force_index, science)
                     if count > 0 then
                         local from = get_runtime_name(pod.cargo_pod_origin, nil)
                         local to = get_runtime_name(pod.cargo_pod_destination, nil)
-                        if from and to then
+                        if not is_excluded_planet_name(from) and not is_excluded_planet_name(to) then
                             table.insert(routes, {
                                 platform = "Cargo pod",
                                 from = from,

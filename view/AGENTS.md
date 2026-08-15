@@ -17,12 +17,13 @@ GUI layer for the LilEinstein mod: window lifecycle, layout construction, and pr
 
 - View sits at the bottom of the module order (`standard.md`): may require `lib` and `model`, must not be required by model modules (exception: `model/cmd.lua`)
 - GUI style prototypes live in `data/style.lua`, not here; reference styles by name
+- Checkbox and radiobutton `state` values are runtime properties: assign them after `LuaGuiElement.add` returns rather than including `state` in an add property tree
 - Player GUI state persists under `storage.players[player_index]` via `state`/`gui.init_player`
 - The science-throughput details view replaces the normal content chrome with the approved full-window sprite-backed panel so the 1672x941 background remains aligned to the live window bounds
 - The science-throughput details view exposes an explicit Back button in its title bar; it routes through the same toggle path as the Research Health entry point and restores the normal content chrome
 - The Research control center uses the approved full-window sprite-backed Decision Console surface: the live `policy_panel` owns the 1672x941 background, staged Choose/Check science/Switch workflow, six policy tabs, and dynamic model-backed values; static artwork must not bake runtime state
-- Throughput details render every lab-accepted science pack as one stable fixed-width row with live item sprites, need/used/produced rates, a signed supply-gap meter, and a native status indicator
-- Throughput status is shortage-first: the dominant missing pack is promoted to the warning strip, production shortfalls are separated from delivery bottlenecks, and positive gaps are labeled `OVERPRODUCING*`
+- Throughput details render every lab-accepted science pack as one stable fixed-width row with live item sprites, capacity/active/produced rates, stock-plus-transit runtime evidence, a signed supply-gap meter with a zero baseline, and a native status indicator
+- Throughput status is shortage-first: `STARVING` means near-term depletion within the configured horizon (or no supply), `CAPACITY-LIMITED` means under-capacity but non-depleting/recovering, production shortfalls remain separate bottlenecks, and positive gaps are labeled `OVERPRODUCING*`
 - The warning and optional analysis treatments are component backgrounds; the neutral full-window background must not bake in the red warning state
 - The Analyze bottleneck action is an explicit opt-in to the heavier science-pack insight heuristic and reports production shortfall versus delivery lag without blocking the normal panel refresh
 - Research Health and throughput details keep the last completed report visible during bounded measurement and replace the complete report atomically only after the new snapshot finishes
@@ -37,7 +38,7 @@ GUI layer for the LilEinstein mod: window lifecycle, layout construction, and pr
 - Initial component population receives the built `lil_einstein_gui` window, matching the anchor used by later refresh and tick jobs
 - Research-history graph jobs paint the newest samples first and finish their bounded 200-column redraw within five render passes
 - Science inventory and per-minute rates use the shared compact SI formatter (`K`, `M`, `G`, and higher prefixes) with at most one decimal place
-- Science-pack icons open a right-side replacement inspector instead of changing technology filters; the inspector keeps Upcoming visible, shows Nauvis-only lab evidence, lists stock by planet including zero-stock rows, lists moving platform/cargo-pod transit, and refreshes only while open with a visible countdown
+- Science-pack icons open a right-side replacement inspector instead of changing technology filters; the inspector keeps Upcoming visible, shows Nauvis-only lab evidence, lists only verified planets with positive stock, omits unresolved or pseudo-surface identifiers, lists moving platform/cargo-pod transit, and refreshes only while open with a visible countdown
 - Upcoming rows mirror effective research order and state the science-supply reason when an entry is not selectable
 - New Upcoming LocalisedStrings include literal fallbacks so control-stage reloads cannot render `Unknown key` text
 - The Research Health header exposes a copy-debug-report action; because Factorio mods cannot write arbitrary text to the OS clipboard, the action opens a focused, read-only text box with the full report selected for Ctrl+C
@@ -53,7 +54,8 @@ GUI layer for the LilEinstein mod: window lifecycle, layout construction, and pr
 
 ## Verification
 
-- No automated tests; verify in-game (open/close main window, check for script errors)
+- Run `lua52 .\tests\builder_spec.lua` and `lua52 .\tests\components_behavior_spec.lua` for GUI construction and refresh contracts
+- Run `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\run_tests.ps1 -RequireInGame` for disposable Factorio validation
 
 ## Child DOX Index
 

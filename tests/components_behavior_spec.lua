@@ -50,6 +50,9 @@ local function make_element(name, parent)
     }
 
     function element.add(prop)
+        if prop.type == "checkbox" and prop.state ~= nil then
+            error("Key \"state\" not found in property tree at ROOT")
+        end
         local child = make_element(prop.name, element)
         for key, value in pairs(prop) do
             if key == "style" then

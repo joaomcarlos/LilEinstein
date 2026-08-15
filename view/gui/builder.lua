@@ -4,9 +4,28 @@ local util = require('lib.util')
 local builder = {}
 
 local fallback_add = function(parent, prop)
+    local initial_state
+    if (prop.type == "checkbox" or prop.type == "radiobutton") and prop.state ~= nil then
+        initial_state = prop.state
+        local add_prop = {}
+        for key, value in pairs(prop) do
+            if key ~= "state" then
+                add_prop[key] = value
+            end
+        end
+        prop = add_prop
+    end
+
+    local apply_initial_state = function(new)
+        if new and initial_state ~= nil then
+            new.state = initial_state
+        end
+        return new
+    end
+
     local ok, new = pcall(parent.add, prop)
     if ok then
-        return new
+        return apply_initial_state(new)
     end
 
     local retry = {}
@@ -26,7 +45,7 @@ local fallback_add = function(parent, prop)
 
     ok, new = pcall(parent.add, retry)
     if ok then
-        return new
+        return apply_initial_state(new)
     end
 
     logger.error(nil, "Could not add GUI element " .. tostring(prop.name) .. ": " .. tostring(new))
@@ -1039,7 +1058,7 @@ local legacy_research_details_panel = {
             type = "label",
             name = "research_details_header_capacity",
             style = "bold_label",
-            caption = {"lil_einstein-throughput.column-capacity"}
+            caption = {"lil_einstein-throughput.column-capacity-detail"}
         }, {
             type = "label",
             name = "research_details_header_cause",

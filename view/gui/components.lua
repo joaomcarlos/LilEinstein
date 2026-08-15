@@ -699,32 +699,39 @@ local research_details_demand_columns = {
 }
 local research_details_demand_column_order = {"science", "maximum", "working", "produced"}
 local research_details_throughput_columns = {
-    science = 350,
-    need = 190,
-    used = 190,
-    produced = 210,
-    gap = 275,
-    status = 335
+    science = 300,
+    capacity = 170,
+    active = 170,
+    produced = 180,
+    gap = 220,
+    runtime = 150,
+    status = 330
 }
-local research_details_throughput_column_order = {"science", "need", "used", "produced", "gap", "status"}
+local research_details_throughput_column_order = {
+    "science", "capacity", "active", "produced", "gap", "runtime", "status"
+}
 local research_details_throughput_status_rank = {
-    bottleneck = 1,
-    starving = 2,
-    balanced = 3,
-    overproducing = 4
+    starving = 1,
+    bottleneck = 2,
+    capacity_limited = 3,
+    balanced = 4,
+    overproducing = 5
 }
 local research_details_throughput_status_colors = {
     bottleneck = {r = 1.00, g = 0.72, b = 0.18},
     starving = {r = 1.00, g = 0.20, b = 0.16},
+    capacity_limited = {r = 1.00, g = 0.72, b = 0.18},
     balanced = {r = 0.72, g = 0.72, b = 0.72},
     overproducing = {r = 0.46, g = 1.00, b = 0.20}
 }
 local research_details_throughput_status_sprites = {
     bottleneck = "utility/status_yellow",
     starving = "utility/status_not_working",
+    capacity_limited = "utility/status_yellow",
     balanced = "utility/status_inactive",
     overproducing = "utility/status_working"
 }
+local research_details_throughput_default_horizon_seconds = 300
 local research_lab_inspection_columns = {
     name = 385,
     location = 380,
@@ -1213,18 +1220,30 @@ local get_research_details_pack_rate = function(rates, science)
     return nil
 end
 
-local get_science_throughput_status = function(need, used, produced)
+local get_science_throughput_status = function(need, used, produced, forecast, horizon_seconds)
     if need <= 0.001 then
         return produced > 0.001 and "overproducing" or "balanced"
     elseif produced > need * 1.05 then
         return "overproducing"
+    elseif used + 0.001 < need then
+        if not forecast or forecast.depletion_seconds == nil then
+            return "starving"
+        end
+        horizon_seconds = horizon_seconds or research_details_throughput_default_horizon_seconds
+        local depletion_seconds = forecast.depletion_seconds
+        local no_supply = (forecast.stock or 0) <= 0.001 and
+            (forecast.in_transit or 0) <= 0.001 and produced <= 0.001
+        if no_supply or (depletion_seconds ~= math.huge and depletion_seconds <= horizon_seconds) then
+            return "starving"
+        end
+        return "capacity_limited"
     elseif produced + 0.001 < need then
-        return used + 0.001 < need and "starving" or "bottleneck"
+        return "bottleneck"
     end
     return "balanced"
 end
 
-local build_science_throughput_rows = function(sciences, diagnostic, forecast)
+local build_science_throughput_rows = function(sciences, diagnostic, forecast, horizon_seconds)
     local res = {}
     local seen = {}
     diagnostic = diagnostic or {}
@@ -1239,8 +1258,10 @@ local build_science_throughput_rows = function(sciences, diagnostic, forecast)
             local need = math.max(0, rate.maximum_per_minute or 0)
             local used = math.max(0, rate.working_per_minute or 0)
             local produced = math.max(0, production.production_per_minute or 0)
+            local in_transit = math.max(0, production.in_transit or 0)
+            local forecast_stock = math.max(0, production.stock or 0)
             local gap = produced - need
-            local status = get_science_throughput_status(need, used, produced)
+            local status = get_science_throughput_status(need, used, produced, production, horizon_seconds)
             table.insert(res, {
                 science = science,
                 need = need,
@@ -1248,6 +1269,9 @@ local build_science_throughput_rows = function(sciences, diagnostic, forecast)
                 produced = produced,
                 gap = gap,
                 gap_ratio = math.min(1, math.abs(gap) / math.max(need, produced, 1)),
+                stock = math.max(0, forecast_stock - in_transit),
+                in_transit = in_transit,
+                depletion_seconds = production.depletion_seconds,
                 status = status,
                 status_rank = research_details_throughput_status_rank[status] or 99,
                 primary = science == dominant_science
@@ -1275,6 +1299,19 @@ local format_throughput_gap = function(value)
         return "0 / min"
     end
     return (value > 0 and "+" or "") .. format_throughput_rate(value) .. " / min"
+end
+
+local format_throughput_runtime = function(seconds)
+    if seconds == nil then
+        return "--"
+    elseif seconds == math.huge then
+        return "∞"
+    elseif seconds < 60 then
+        return tostring(math.max(0, math.floor(seconds + 0.5))) .. "s"
+    elseif seconds < 3600 then
+        return tostring(math.floor(seconds / 60 + 0.5)) .. "m"
+    end
+    return tostring(math.floor(seconds / 3600 + 0.5)) .. "h"
 end
 
 local set_throughput_cell_width = function(element, width)
@@ -1514,12 +1551,22 @@ local refresh_science_throughput_warning = function(panel, rows, state, snapshot
             break
         end
     end
+    if not primary then
+        for _, item in ipairs(rows) do
+            if item.status == "capacity_limited" then
+                primary = item
+                break
+            end
+        end
+    end
     local warning_key = primary and table.concat({
         primary.status,
         primary.science,
         format_throughput_rate(primary.need),
         format_throughput_rate(primary.used),
         format_throughput_rate(primary.produced),
+        format_throughput_rate(primary.stock),
+        format_throughput_rate(primary.in_transit),
         format_throughput_runtime(primary.depletion_seconds),
         format_throughput_runtime(snapshot_age_seconds or 0)
     }, "\31") or "clear\31" .. format_throughput_runtime(snapshot_age_seconds or 0)
@@ -2555,14 +2602,14 @@ local populate_force_settings = function(player_index, anchor)
                 direction = "horizontal",
                 tooltip = tt
             })
-            ifl.add({
+            local checkbox = ifl.add({
                 type = "checkbox",
                 name = v,
                 caption = {"", {"mod-setting-name." .. v}},
-                state = state,
                 enabled = false,
                 tooltip = tt
             })
+            checkbox.state = state
             ifl.add({
                 type = "sprite",
                 sprite = "info",
@@ -2706,14 +2753,14 @@ local populate_hide_categories = function(player_index, anchor)
             type = "checkbox",
             name = k,
             caption = {"lil_einstein-hide-tech." .. k},
-            state = state,
             tags = {
                 lil_einstein_on_state_change = true,
                 handler = "toggle_checkbox_player",
                 setting_name = k
             }
         }
-        flow.add(prop)
+        local checkbox = flow.add(prop)
+        checkbox.state = state
     end
 end
 
