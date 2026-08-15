@@ -4,28 +4,9 @@ local util = require('lib.util')
 local builder = {}
 
 local fallback_add = function(parent, prop)
-    local initial_state
-    if (prop.type == "checkbox" or prop.type == "radiobutton") and prop.state ~= nil then
-        initial_state = prop.state
-        local add_prop = {}
-        for key, value in pairs(prop) do
-            if key ~= "state" then
-                add_prop[key] = value
-            end
-        end
-        prop = add_prop
-    end
-
-    local apply_initial_state = function(new)
-        if new and initial_state ~= nil then
-            new.state = initial_state
-        end
-        return new
-    end
-
     local ok, new = pcall(parent.add, prop)
     if ok then
-        return apply_initial_state(new)
+        return new
     end
 
     local retry = {}
@@ -45,7 +26,7 @@ local fallback_add = function(parent, prop)
 
     ok, new = pcall(parent.add, retry)
     if ok then
-        return apply_initial_state(new)
+        return new
     end
 
     logger.error(nil, "Could not add GUI element " .. tostring(prop.name) .. ": " .. tostring(new))
@@ -685,11 +666,13 @@ local policy_panel = {
                             type = "checkbox",
                             name = "decision_manual_override",
                             caption = "Allow instant plan-demand override",
+                            state = false,
                             tags = {lil_einstein_on_state_change = true, handler = "toggle_policy_setting", setting_name = "instant_switch_override"}
                         }, {
                             type = "checkbox",
                             name = "decision_lock_current",
                             caption = "Pause after current research",
+                            state = false,
                             tags = {lil_einstein_on_state_change = true, handler = "toggle_policy_setting", setting_name = "planning_paused"}
                         }}
                     }, {
@@ -1542,15 +1525,17 @@ local science_pack_panel = {
                     type = "label", name = "science_pack_panel_flow_production",
                     style = "lil_einstein_science_pack_flow_balance_label", caption = ""
                 }, {
-                    type = "label", name = "science_pack_panel_flow_transit",
-                    style = "lil_einstein_science_pack_flow_balance_label", caption = ""
-                }, {
                     type = "label", name = "science_pack_panel_flow_consumption",
                     style = "lil_einstein_science_pack_flow_balance_label", caption = ""
                 }, {
                     type = "label", name = "science_pack_panel_flow_net",
                     style = "lil_einstein_science_pack_flow_balance_label", caption = ""
                 }}
+            }, {
+                type = "label",
+                name = "science_pack_panel_outlook",
+                style = "lil_einstein_science_pack_flow_balance_label",
+                caption = ""
             }}
         }}
     }}

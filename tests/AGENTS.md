@@ -29,7 +29,7 @@ runtime, data-stage, migration, queue, policy, lab, and GUI contracts.
 - Transit forecast regressions preserve per-pack cargo-pod totals while asserting that a bounded refresh scans cargo pods once per surface rather than once per science pack.
 - Debug-report tests cover deterministic report sections, the live GUI-details snapshot seam, and the copy-ready, selected text-box modal seam.
 - GUI crash regressions cover invalid report-text lifecycle access and label-only style writes on button elements.
-- GUI construction stubs reject checkbox/radiobutton `state` in `add` property trees and require the state to be assigned after creation.
+- GUI construction stubs require checkbox/radiobutton `state` to be a boolean in `add` property trees and may separately verify live-state synchronization.
 - Data-stage and migration tests execute against isolated `data`/`game` doubles.
 - In-game checks must use the disposable runner and must not open or mutate a
   player save.

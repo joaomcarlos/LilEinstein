@@ -3609,12 +3609,23 @@ local get_runtime_name = function(object, fallback)
     return fallback
 end
 
+local get_runtime_unit_number = function(object)
+    if not object then
+        return nil
+    end
+    local ok_unit, unit_number = pcall(function() return object.unit_number end)
+    return ok_unit and type(unit_number) == "number" and unit_number or nil
+end
+
 local get_surface_planet_name = function(surface)
     if not is_valid_runtime_object(surface) then
         return nil
     end
     local planet = surface.planet
-    return get_runtime_name(planet, surface.name)
+    if not is_valid_runtime_object(planet) then
+        return nil
+    end
+    return get_runtime_name(planet, nil)
 end
 
 local count_surface_science = function(surface, force_index, science)
@@ -3681,10 +3692,7 @@ local get_planet_stock = function(force_index, science)
             local name = get_surface_planet_name(surface)
             if name and not is_excluded_planet_name(name) then
                 local row = rows_by_name[name]
-                if not row then
-                    row = {name = name, surface = surface, stock = 0}
-                    rows_by_name[name] = row
-                elseif not row.surface then
+                if row and not row.surface then
                     row.surface = surface
                 end
             end
@@ -3754,8 +3762,10 @@ local get_transit_routes = function(force_index, science)
                         local from = get_runtime_name(pod.cargo_pod_origin, nil)
                         local to = get_runtime_name(pod.cargo_pod_destination, nil)
                         if not is_excluded_planet_name(from) and not is_excluded_planet_name(to) then
+                            local pod_unit_number = get_runtime_unit_number(pod)
                             table.insert(routes, {
-                                platform = "Cargo pod",
+                                platform = pod_unit_number and ("Cargo pod #" .. tostring(pod_unit_number)) or
+                                    "Cargo pod",
                                 from = from,
                                 to = to,
                                 stock = count,

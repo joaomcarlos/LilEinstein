@@ -50,7 +50,7 @@ local function make_element(name, parent)
     }
 
     function element.add(prop)
-        if prop.type == "checkbox" and prop.state ~= nil then
+        if (prop.type == "checkbox" or prop.type == "radiobutton") and type(prop.state) ~= "boolean" then
             error("Key \"state\" not found in property tree at ROOT")
         end
         local child = make_element(prop.name, element)
@@ -562,6 +562,7 @@ local function make_science_pack_anchor()
     for _, name in ipairs({
         "science_pack_panel_icon", "science_pack_panel_name", "science_pack_panel_state",
         "science_pack_panel_current_stock", "science_pack_panel_timer",
+        "science_pack_panel_flow_summary", "science_pack_panel_outlook",
         "science_pack_panel_labs_summary", "science_pack_panel_planet_stock_summary",
         "science_pack_panel_transit_summary"
     }) do
@@ -569,7 +570,7 @@ local function make_science_pack_anchor()
     end
     local flow_balance = add_named(panel, "science_pack_panel_flow_balance", "flow")
     for _, name in ipairs({
-        "science_pack_panel_flow_production", "science_pack_panel_flow_transit",
+        "science_pack_panel_flow_production",
         "science_pack_panel_flow_consumption", "science_pack_panel_flow_net"
     }) do
         add_named(flow_balance, name, "label")
@@ -841,6 +842,8 @@ local tests = {
         local panel = find_element(anchor, "science_pack_panel")
         t.assert_equal(find_element(panel, "science_pack_panel_name").caption,
                        "Localized item science_a")
+        t.assert_equal(caption_head(find_element(panel, "science_pack_panel_state").caption),
+                       "lil_einstein-science-pack.status-at-risk")
         t.assert_equal(find_element(panel, "science_pack_panel_labs_summary").caption[1],
                        "lil_einstein-science-pack.labs-summary")
         t.assert_equal(find_element(panel, "science_pack_panel_planet_stock_rows").clear_count, 1)
@@ -878,11 +881,11 @@ local tests = {
         local flow = find_element(panel, "science_pack_panel_flow_balance")
         t.assert_true(flow ~= nil, "flow balance container must exist")
         local production = find_element(flow, "science_pack_panel_flow_production")
-        local transit = find_element(flow, "science_pack_panel_flow_transit")
         local consumption = find_element(flow, "science_pack_panel_flow_consumption")
         local net = find_element(flow, "science_pack_panel_flow_net")
         t.assert_true(production ~= nil, "flow production label must exist")
-        t.assert_true(transit ~= nil, "flow transit label must exist")
+        t.assert_nil(find_element(flow, "science_pack_panel_flow_transit"),
+                     "flow balance must not mix absolute transit stock with per-minute rates")
         t.assert_true(consumption ~= nil, "flow consumption label must exist")
         t.assert_true(net ~= nil, "flow net label must exist")
         t.assert_equal(caption_head(production.caption), "lil_einstein-science-pack.flow-production")
@@ -912,6 +915,8 @@ local tests = {
         local row1_status = rows.children[3].caption
         t.assert_equal(caption_head(row1_status), "lil_einstein-science-pack.moving",
                        "status column must show Moving")
+        t.assert_true(string.find(rows.children[1].caption, "platform-1", 1, true) ~= nil,
+                      "route cell must identify the platform")
         local row1_progress = rows.children[4].caption
         t.assert_equal(row1_progress, "25%", "progress column must show percentage")
 

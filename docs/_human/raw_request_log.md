@@ -263,3 +263,17 @@ stack traceback:
 	**LilEinstein**/view/gui.lua:45: in function 'open'
 	**LilEinstein**/view/gui.lua:109: in function 'toggle'
 	**LilEinstein**/control.lua:445: in function <**LilEinstein**/control.lua:444>
+
+The mod LilEinstein (1.4.0) caused a non-recoverable error.
+Please report this error to the mod author.
+
+Error while running event LilEinstein::lil_einstein_toggle_gui (ID 242)
+Key "state" not found in property tree at ROOT
+stack traceback:
+	[C]: in function 'add'
+	**LilEinstein**/view/gui/components.lua:2762: in function 'populate_hide_categories'
+	**LilEinstein**/view/gui/components.lua:3763: in function 'repopulate_static'
+	**LilEinstein**/view/gui/components.lua:3788: in function 'repopulate_all'
+	**LilEinstein**/view/gui.lua:45: in function 'open'
+	**LilEinstein**/view/gui.lua:109: in function 'toggle'
+	**LilEinstein**/control.lua:445: in function <**LilEinstein**/control.lua:444>

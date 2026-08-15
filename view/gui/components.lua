@@ -235,7 +235,7 @@ local get_science_pack_status = function(insight)
         ((labs.compatible_labs or 0) > 0 and (labs.starved_labs or 0) >= (labs.compatible_labs or 0)) then
         return "starved"
     end
-    if (insight.net_per_minute or 0) < 0 then
+    if (labs.starved_labs or 0) > 0 or (insight.net_per_minute or 0) < 0 then
         return "at-risk"
     end
     return "healthy"
@@ -246,6 +246,40 @@ local get_transit_progress_caption = function(progress)
         return ""
     end
     return tostring(math.floor(math.max(0, math.min(1, progress)) * 100 + 0.5)) .. "%"
+end
+
+local science_pack_table_layouts = {
+    labs = {
+        widths = {205, 65, 65, 110},
+        alignments = {"left", "right", "right", "right"}
+    },
+    planets = {
+        widths = {340, 105},
+        alignments = {"left", "right"}
+    },
+    transit = {
+        widths = {240, 75, 65, 70},
+        alignments = {"left", "right", "left", "right"}
+    }
+}
+
+local apply_science_pack_table_layout = function(table_element, layout)
+    if not table_element or not layout then
+        return
+    end
+    for index, cell in ipairs(table_element.children or {}) do
+        local column = ((index - 1) % #layout.widths) + 1
+        if cell and cell.style then
+            cell.style.width = layout.widths[column]
+            cell.style.horizontal_align = layout.alignments[column]
+        end
+    end
+end
+
+local get_transit_route_caption = function(row)
+    local route = (row.from or "?") .. " -> " .. (row.to or "?")
+    local platform = tostring(row.platform or "?")
+    return route .. " [" .. platform .. "]"
 end
 
 local refresh_science_pack_panel = function(player_index, anchor)
@@ -296,13 +330,17 @@ local refresh_science_pack_panel = function(player_index, anchor)
     local generated_tick = insight.generated_tick
     if generated_tick == nil or rendered.generated_tick ~= generated_tick then
         rendered.generated_tick = generated_tick
+        local transit_total = (insight.in_transit or {}).total or 0
         set_caption(gutil.get_child(panel, "science_pack_panel_current_stock"),
-            {"lil_einstein-science-pack.current-stock", gutil.format_cost(insight.current_stock or 0)})
+            {"lil_einstein-science-pack.research-stock", gutil.format_cost(insight.current_stock or 0)})
         set_caption(gutil.get_child(panel, "science_pack_panel_flow_summary"),
-            {"lil_einstein-science-pack.flow-summary", gutil.format_si(insight.production_per_minute or 0),
-             gutil.format_si(insight.consumption_per_minute or 0), gutil.format_si(insight.net_per_minute or 0)})
+            {"lil_einstein-science-pack.stock-breakdown",
+             gutil.format_cost(math.max(0, (insight.current_stock or 0) - transit_total)),
+             gutil.format_cost(transit_total)})
 
         local labs = insight.labs or {}
+        apply_science_pack_table_layout(
+            gutil.get_child(panel, "science_pack_panel_labs_header"), science_pack_table_layouts.labs)
         set_caption(gutil.get_child(panel, "science_pack_panel_labs_summary"),
             {"lil_einstein-science-pack.labs-summary", labs.compatible_labs or 0,
              labs.supplied_labs or 0, labs.starved_labs or 0})
@@ -317,8 +355,12 @@ local refresh_science_pack_panel = function(player_index, anchor)
                 return {row.label or row.surface_name or "Nauvis", row.supplied_labs or 0,
                     row.starved_labs or 0, gutil.format_si(row.maximum_per_minute or 0)}
             end)
+        apply_science_pack_table_layout(
+            gutil.get_child(panel, "science_pack_panel_labs_rows"), science_pack_table_layouts.labs)
 
         local planet_rows = insight.planet_stock_rows or {}
+        apply_science_pack_table_layout(
+            gutil.get_child(panel, "science_pack_panel_planet_stock_header"), science_pack_table_layouts.planets)
         set_caption(gutil.get_child(panel, "science_pack_panel_planet_stock_summary"),
             {"lil_einstein-science-pack.planet-stock-summary", #planet_rows})
         local planet_empty = gutil.get_child(panel, "science_pack_panel_planet_stock_empty")
@@ -329,30 +371,48 @@ local refresh_science_pack_panel = function(player_index, anchor)
                 return {row.name, (row.stock or 0) > 0 and gutil.format_cost(row.stock) or
                     {"lil_einstein-science-pack.no-stock"}}
             end)
+        apply_science_pack_table_layout(
+            gutil.get_child(panel, "science_pack_panel_planet_stock_rows"), science_pack_table_layouts.planets)
 
         local transit = insight.in_transit or {}
         local transit_rows = transit.routes or {}
+        apply_science_pack_table_layout(
+            gutil.get_child(panel, "science_pack_panel_transit_header"), science_pack_table_layouts.transit)
         set_caption(gutil.get_child(panel, "science_pack_panel_transit_summary"),
             {"lil_einstein-science-pack.transit-summary", gutil.format_cost(transit.total or 0),
              #transit_rows})
         local transit_empty = gutil.get_child(panel, "science_pack_panel_transit_empty")
         if transit_empty then transit_empty.visible = #transit_rows == 0 end
         set_table_rows(gutil.get_child(panel, "science_pack_panel_transit_rows"), transit_rows,
-            rendered.transit, 4, function(row) return tostring(row.platform) .. ":" .. tostring(row.to) end,
+            rendered.transit, 4, function(row)
+                return tostring(row.platform) .. ":" .. tostring(row.from) .. ":" .. tostring(row.to)
+            end,
             function(row)
-                return {(row.from or "?") .. " → " .. (row.to or "?"), gutil.format_cost(row.stock or 0),
+                return {get_transit_route_caption(row), gutil.format_cost(row.stock or 0),
                     {"lil_einstein-science-pack.moving"}, get_transit_progress_caption(row.progress)}
             end)
+        apply_science_pack_table_layout(
+            gutil.get_child(panel, "science_pack_panel_transit_rows"), science_pack_table_layouts.transit)
 
         local flow = gutil.get_child(panel, "science_pack_panel_flow_balance")
         set_caption(gutil.get_child(flow, "science_pack_panel_flow_production"),
             {"lil_einstein-science-pack.flow-production", gutil.format_si(insight.production_per_minute or 0)})
-        set_caption(gutil.get_child(flow, "science_pack_panel_flow_transit"),
-            {"lil_einstein-science-pack.flow-transit", gutil.format_cost((insight.in_transit or {}).total or 0)})
         set_caption(gutil.get_child(flow, "science_pack_panel_flow_consumption"),
             {"lil_einstein-science-pack.flow-consumption", gutil.format_si(insight.consumption_per_minute or 0)})
         set_caption(gutil.get_child(flow, "science_pack_panel_flow_net"),
             {"lil_einstein-science-pack.flow-net", gutil.format_si(insight.net_per_minute or 0)})
+
+        local outlook
+        if type(insight.recovery_seconds) == "number" and insight.recovery_seconds ~= math.huge then
+            outlook = {"lil_einstein-science-pack.outlook-recovery", format_time(insight.recovery_seconds)}
+        elseif insight.depletion_seconds == math.huge then
+            outlook = {"lil_einstein-science-pack.outlook-stable"}
+        elseif type(insight.depletion_seconds) == "number" then
+            outlook = {"lil_einstein-science-pack.outlook-depletion", format_time(insight.depletion_seconds)}
+        else
+            outlook = {"lil_einstein-science-pack.outlook-unknown"}
+        end
+        set_caption(gutil.get_child(panel, "science_pack_panel_outlook"), outlook)
     end
 end
 
@@ -2606,10 +2666,10 @@ local populate_force_settings = function(player_index, anchor)
                 type = "checkbox",
                 name = v,
                 caption = {"", {"mod-setting-name." .. v}},
+                state = state == true,
                 enabled = false,
                 tooltip = tt
             })
-            checkbox.state = state
             ifl.add({
                 type = "sprite",
                 sprite = "info",
@@ -2753,14 +2813,14 @@ local populate_hide_categories = function(player_index, anchor)
             type = "checkbox",
             name = k,
             caption = {"lil_einstein-hide-tech." .. k},
+            state = state == true,
             tags = {
                 lil_einstein_on_state_change = true,
                 handler = "toggle_checkbox_player",
                 setting_name = k
             }
         }
-        local checkbox = flow.add(prop)
-        checkbox.state = state
+        flow.add(prop)
     end
 end
 

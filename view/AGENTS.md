@@ -17,7 +17,7 @@ GUI layer for the LilEinstein mod: window lifecycle, layout construction, and pr
 
 - View sits at the bottom of the module order (`standard.md`): may require `lib` and `model`, must not be required by model modules (exception: `model/cmd.lua`)
 - GUI style prototypes live in `data/style.lua`, not here; reference styles by name
-- Checkbox and radiobutton `state` values are runtime properties: assign them after `LuaGuiElement.add` returns rather than including `state` in an add property tree
+- Checkbox and radiobutton `state` values are required boolean initial fields in the `LuaGuiElement.add` property tree; synchronize the live element afterward when model state is available
 - Player GUI state persists under `storage.players[player_index]` via `state`/`gui.init_player`
 - The science-throughput details view replaces the normal content chrome with the approved full-window sprite-backed panel so the 1672x941 background remains aligned to the live window bounds
 - The science-throughput details view exposes an explicit Back button in its title bar; it routes through the same toggle path as the Research Health entry point and restores the normal content chrome

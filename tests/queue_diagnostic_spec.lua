@@ -1552,7 +1552,12 @@ local tests = {
         local drawing_board = make_surface(2, "drawing-board_player", 99)
         local graveyard = make_surface(3, "space-platform-graveyard", 99)
         local cargo_flow = make_surface(4, "cargo-flow-12345", 99)
-        game.surfaces = {[1] = nauvis, [2] = drawing_board, [3] = graveyard, [4] = cargo_flow}
+        local unresolved = make_surface(5, "surface-without-planet", 99)
+        unresolved.planet = nil
+        game.surfaces = {
+            [1] = nauvis, [2] = drawing_board, [3] = graveyard, [4] = cargo_flow,
+            [5] = unresolved
+        }
         game.planets = {
             nauvis = {name = "nauvis", surface = nauvis},
             ["drawing-board_player"] = {name = "drawing-board_player", surface = drawing_board},
@@ -1575,6 +1580,8 @@ local tests = {
                      "space-platform-graveyard must not appear in planet stock")
         t.assert_nil(insight.planet_stock["cargo-flow-12345"],
                      "cargo-flow-* must not appear in planet stock")
+        t.assert_nil(insight.planet_stock["surface-without-planet"],
+                     "surfaces without a real planet must not appear in planet stock")
     end},
     {"omits transit routes with unresolved destinations", function()
         local current = make_current()
