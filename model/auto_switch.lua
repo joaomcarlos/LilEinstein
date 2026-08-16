@@ -89,29 +89,40 @@ auto_switch.get_availability = function(force_index, force_refresh, lab_content,
                     local get_inventory = lab_entity.get_inventory
                     if get_inventory then
                         local inv = lab_entity.get_inventory(defines.inventory.lab_input)
-                        if inv and inv.is_empty and not inv.is_empty() then
-                            -- Record which packs this lab currently holds
+                        if inv then
+                            -- Record which packs this lab currently holds. A lab
+                            -- with an empty inventory is still an accepting lab:
+                            -- it must count in the denominator (allowing) for
+                            -- every pack it accepts, so a completely starved lab
+                            -- lowers the availability fraction instead of being
+                            -- silently excluded. Only the `with` count requires
+                            -- the pack to be present.
                             local has_packs = {}
-                            local contents = inv.get_contents and inv.get_contents() or {}
-                            for _, item in pairs(contents) do
-                                if sci_data[item.name] ~= nil then
-                                    has_packs[item.name] = true
-                                end
-                            end
-                            if next(has_packs) ~= nil then
-                                -- Count allowing vs having for each pack the lab accepts
-                                local proto = lab_entity.prototype
-                                local lab_inputs = proto and proto.lab_inputs
-                                for _, pack_name in pairs(lab_inputs or {}) do
-                                    if sci_data[pack_name] then
-                                        sci_data[pack_name].allowing =
-                                            sci_data[pack_name].allowing + 1
-                                        if has_packs[pack_name] then
-                                            sci_data[pack_name].with =
-                                                sci_data[pack_name].with + 1
-                                        end
+                            if not inv.is_empty or not inv.is_empty() then
+                                local contents = inv.get_contents and inv.get_contents() or {}
+                                for _, item in pairs(contents) do
+                                    if sci_data[item.name] ~= nil then
+                                        has_packs[item.name] = true
                                     end
                                 end
+                            end
+                            -- Count this lab for every pack it accepts, even when
+                            -- its inventory is completely empty.
+                            local proto = lab_entity.prototype
+                            local lab_inputs = proto and proto.lab_inputs
+                            local accepts_any_science = false
+                            for _, pack_name in pairs(lab_inputs or {}) do
+                                if sci_data[pack_name] then
+                                    accepts_any_science = true
+                                    sci_data[pack_name].allowing =
+                                        sci_data[pack_name].allowing + 1
+                                    if has_packs[pack_name] then
+                                        sci_data[pack_name].with =
+                                            sci_data[pack_name].with + 1
+                                    end
+                                end
+                            end
+                            if accepts_any_science then
                                 lab_count = lab_count + 1
                             end
                         end

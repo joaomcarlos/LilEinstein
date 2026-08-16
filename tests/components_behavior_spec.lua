@@ -451,6 +451,20 @@ local policy = {
 local util = {
     get_all_sciences = function()
         return {"science_a", "science_b"}
+    end,
+    resolve_technology_name = function(technology_name)
+        if not technology_name then
+            return nil, nil, nil
+        end
+        local base_name = string.match(technology_name, "^(.+)-%d+$") or technology_name
+        local level = string.match(technology_name, "-(%d+)$")
+        local proto_name = technology_name
+        if prototypes and prototypes.technology then
+            if not prototypes.technology[technology_name] and prototypes.technology[base_name] then
+                proto_name = base_name
+            end
+        end
+        return base_name, level, proto_name
     end
 }
 

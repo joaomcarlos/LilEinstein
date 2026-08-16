@@ -848,7 +848,12 @@ local technology_caption = function(technology_name)
     if not technology_name then
         return {"lil_einstein-status.unknown-research"}
     end
-    return {"", "[technology=", technology_name, "] ", {"technology-name." .. technology_name}}
+    local base_name, level, proto_name = util.resolve_technology_name(technology_name)
+    if level then
+        return {"", "[technology=", proto_name, "] ",
+                {"technology-name." .. base_name}, " ", level}
+    end
+    return {"", "[technology=", proto_name, "] ", {"technology-name." .. base_name}}
 end
 
 local format_status_percent = function(value)
@@ -3479,15 +3484,32 @@ local get_decision_candidate = function(force_index)
     if not tech_name then
         return nil, nil, nil
     end
-    return tech_name, tech.get_single_tech_state_ext(force_index, tech_name), f.technologies[tech_name]
+    -- current_research.name may be level-suffixed (e.g. "mining-productivity-3")
+    -- while force.technologies and tech state are keyed by the base prototype
+    -- name.  Try the full name first, then fall back to the stripped base name.
+    local xcur = tech.get_single_tech_state_ext(force_index, tech_name)
+    local current = f.technologies[tech_name]
+    if not xcur or not current then
+        local base_name = util.resolve_technology_name(tech_name)
+        if base_name and base_name ~= tech_name then
+            xcur = xcur or tech.get_single_tech_state_ext(force_index, base_name)
+            current = current or f.technologies[base_name]
+        end
+    end
+    return tech_name, xcur, current
 end
 
 local get_decision_technology_caption = function(tech_name)
     if not tech_name then
         return "No planned research"
     end
-    local prototype = prototypes and prototypes.technology and prototypes.technology[tech_name]
-    return prototype and prototype.localised_name or tech_name
+    local base_name, level, proto_name = util.resolve_technology_name(tech_name)
+    local prototype = prototypes and prototypes.technology and prototypes.technology[proto_name]
+    local display = prototype and prototype.localised_name or base_name
+    if level then
+        return {"", display, " ", level}
+    end
+    return display
 end
 
 local populate_decision_console_header = function(player_index, anchor)
@@ -3530,8 +3552,9 @@ local populate_decision_console_header = function(player_index, anchor)
     local tech_name, xcur, current = get_decision_candidate(force_index)
     local tech_caption = get_decision_technology_caption(tech_name)
     if tech_name then
-        set_decision_sprite(anchor, "decision_candidate_icon", "technology/" .. tech_name)
-        set_decision_sprite(anchor, "decision_next_research_icon", "technology/" .. tech_name)
+        local _, _, proto_name = util.resolve_technology_name(tech_name)
+        set_decision_sprite(anchor, "decision_candidate_icon", "technology/" .. proto_name)
+        set_decision_sprite(anchor, "decision_next_research_icon", "technology/" .. proto_name)
     else
         set_decision_sprite(anchor, "decision_candidate_icon", "utility/technology")
         set_decision_sprite(anchor, "decision_next_research_icon", "utility/technology")

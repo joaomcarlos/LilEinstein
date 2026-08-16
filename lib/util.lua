@@ -208,4 +208,37 @@ util.get_all_sciences = function()
     return sci
 end
 
+-- Resolve a runtime technology name into the pieces needed for display and
+-- prototype/sprite lookups.
+--
+-- Problem: LuaForce.current_research.name and LuaTechnology.name for a leveled
+-- or infinite technology return a level-suffixed name, e.g. "mining-productivity-3".
+-- But Factorio's locale keys (technology-name.X), prototype table keys, and
+-- sprite paths (technology/X) are keyed off the BASE prototype name
+-- ("mining-productivity"). The TechnologyPrototype docs state: "If this name
+-- ends with -<number>, that number is ignored for localization purposes."
+-- Building a locale key or sprite path from the raw runtime name therefore
+-- produces "Unknown key" text or missing sprites for any leveled tech.
+--
+-- Returns:
+--   base_name  - name with any trailing "-<number>" stripped (for locale keys)
+--   level      - the trailing level number as a string, or nil if none
+--   proto_name - the name to use for prototypes.technology[...] and sprite
+--                paths: the full runtime name if a prototype exists for it,
+--                otherwise the stripped base name
+util.resolve_technology_name = function(technology_name)
+    if not technology_name then
+        return nil, nil, nil
+    end
+    local base_name = string.match(technology_name, "^(.+)-%d+$") or technology_name
+    local level = string.match(technology_name, "-(%d+)$")
+    local proto_name = technology_name
+    if prototypes and prototypes.technology then
+        if not prototypes.technology[technology_name] and prototypes.technology[base_name] then
+            proto_name = base_name
+        end
+    end
+    return base_name, level, proto_name
+end
+
 return util

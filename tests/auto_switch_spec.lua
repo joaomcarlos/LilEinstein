@@ -93,12 +93,15 @@ tests[#tests + 1] = {"skips disabled labs", function()
     t.assert_equal(avail.__lab_count, 0)
 end}
 
-tests[#tests + 1] = {"skips labs with empty inventory", function()
+tests[#tests + 1] = {"counts empty labs in the accepting denominator", function()
     reset()
     runtime_lab_content[1] = {lab = make_lab(1, {})}
     local avail = get_avail(1, true)
-    t.assert_equal(avail["automation-science-pack"].allowing, 0)
-    t.assert_equal(avail.__lab_count, 0)
+    t.assert_equal(avail["automation-science-pack"].allowing, 1,
+        "an empty lab that accepts the pack must count in the denominator")
+    t.assert_equal(avail["automation-science-pack"].with, 0)
+    t.assert_equal(avail["automation-science-pack"].fraction, 0)
+    t.assert_equal(avail.__lab_count, 1)
 end}
 
 tests[#tests + 1] = {"skips invalid labs", function()
@@ -209,7 +212,7 @@ tests[#tests + 1] = {"returns empty for invalid technology", function()
     t.assert_nil(next(missing))
 end}
 
-tests[#tests + 1] = {"does not flag a pack that is present in some labs", function()
+tests[#tests + 1] = {"flags a pack below the AutoSwitch threshold when some accepting labs are empty", function()
     reset()
     runtime_lab_content[1] = {lab = make_lab(1,
         {{name = "automation-science-pack", count = 10}})}
@@ -219,8 +222,8 @@ tests[#tests + 1] = {"does not flag a pack that is present in some labs", functi
         research_unit_ingredients = {{name = "automation-science-pack", amount = 1}}
     }
     local missing = get_missing(1, technology)
-    t.assert_nil(next(missing),
-        "a pack present in at least one accepting lab must not be flagged missing")
+    t.assert_equal(missing["automation-science-pack"], true,
+        "a pack held by only 50% of accepting labs is below the 0.80 threshold and must be flagged missing")
 end}
 
 tests[#tests + 1] = {"flags a low but nonzero pack fraction at the AutoSwitch threshold", function()
@@ -238,6 +241,38 @@ tests[#tests + 1] = {"flags a low but nonzero pack fraction at the AutoSwitch th
     local missing = get_missing(1, technology)
     t.assert_equal(missing["automation-science-pack"], true,
         "a 20% supplied pack fraction must be considered materially pack-bound")
+end}
+
+tests[#tests + 1] = {"counts a completely empty lab in the accepting denominator", function()
+    reset()
+    -- One lab holds the pack, one lab is completely starved (empty inventory).
+    -- The empty lab still accepts the pack, so it must count in `allowing`.
+    runtime_lab_content[1] = {lab = make_lab(1,
+        {{name = "automation-science-pack", count = 10}})}
+    runtime_lab_content[2] = {lab = make_lab(2, {})}
+    local avail = get_avail(1, true)
+    t.assert_equal(avail["automation-science-pack"].allowing, 2,
+        "an empty lab that accepts the pack must count in the denominator")
+    t.assert_equal(avail["automation-science-pack"].with, 1)
+    t.assert_equal(avail["automation-science-pack"].fraction, 0.5)
+    t.assert_equal(avail.__lab_count, 2,
+        "an empty lab that accepts science must count in lab_count")
+end}
+
+tests[#tests + 1] = {"flags a pack missing when all accepting labs are completely empty", function()
+    reset()
+    -- All labs are completely starved (empty inventories). The tech requires
+    -- a pack that no lab holds. This is genuine pack-bound starvation, not a
+    -- no-lab snapshot, so auto_switch must flag the pack missing.
+    runtime_lab_content[1] = {lab = make_lab(1, {})}
+    runtime_lab_content[2] = {lab = make_lab(2, {})}
+    local technology = {
+        valid = true,
+        research_unit_ingredients = {{name = "automation-science-pack", amount = 1}}
+    }
+    local missing = get_missing(1, technology)
+    t.assert_equal(missing["automation-science-pack"], true,
+        "a pack held by zero accepting labs must be flagged missing even when all labs are empty")
 end}
 
 local passed = t.run("auto_switch_spec", tests)
