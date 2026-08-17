@@ -3915,13 +3915,9 @@ local get_display_pack_bound_bottleneck = function(force_index, current)
     -- diagnostic for the same live technology is still authoritative while
     -- the replacement snapshot is building: the supply situation for an
     -- actively starving technology does not recover without intervention,
-    -- and the next completed snapshot will atomically replace this one.
-    -- Reject only snapshots from a different technology or a non-pack-bound
-    -- state when they are older than the freshness window.
-    if snapshot_tick < game.tick - 900 then
-        -- Stale but same-technology pack_bound: keep it. The diagnostic
-        -- technology and state checks above already gate this path.
-    end
+    -- and the next completed snapshot will atomically replace this one. The
+    -- technology and state checks above already gate this path, so a stale
+    -- same-technology pack_bound snapshot is honored without an age check.
 
     local result = {}
     for _, item in pairs(diagnostic.missing_sciences or {}) do
