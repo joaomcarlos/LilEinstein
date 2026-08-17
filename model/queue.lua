@@ -3900,7 +3900,6 @@ local get_display_pack_bound_bottleneck = function(force_index, current)
 
     local snapshot_tick = queue.get_research_health_snapshot_tick(force_index)
     if type(snapshot_tick) ~= "number" or snapshot_tick < 0 or
-        snapshot_tick < game.tick - 900 or
         snapshot_tick > game.tick then
         return {}
     end
@@ -3909,6 +3908,19 @@ local get_display_pack_bound_bottleneck = function(force_index, current)
     if not diagnostic or diagnostic.current_technology ~= current.name or
         diagnostic.state ~= "pack_bound" then
         return {}
+    end
+
+    -- For massive factories the bounded health-snapshot job can take longer
+    -- than the 900-tick (15 s) freshness window to rebuild. A PACK-BOUND
+    -- diagnostic for the same live technology is still authoritative while
+    -- the replacement snapshot is building: the supply situation for an
+    -- actively starving technology does not recover without intervention,
+    -- and the next completed snapshot will atomically replace this one.
+    -- Reject only snapshots from a different technology or a non-pack-bound
+    -- state when they are older than the freshness window.
+    if snapshot_tick < game.tick - 900 then
+        -- Stale but same-technology pack_bound: keep it. The diagnostic
+        -- technology and state checks above already gate this path.
     end
 
     local result = {}

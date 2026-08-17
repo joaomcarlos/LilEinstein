@@ -1912,6 +1912,7 @@ local tests = {
         queue.check_and_switch_temp_research(force)
         force.current_research = make_tech("current")
         queue.science_is_sufficient = function() return false end
+        local old_bottleneck_block = queue.get_active_missing_science_bottleneck
         queue.get_active_missing_science_bottleneck = function() return {pack = true} end
         queue.get_science_availability = function() return {pack = true} end
         storage.forces[1].queue.target_tech = nil
@@ -1921,7 +1922,7 @@ local tests = {
         queue.set_pinned_tech(1, nil)
         queue.check_and_switch_temp_research(force)
         queue.science_is_sufficient = old_sufficient
-        queue.get_active_missing_science_bottleneck = function() return {} end
+        queue.get_active_missing_science_bottleneck = old_bottleneck_block
         queue.get_science_availability = old_availability
 
         -- Explicitly exercise the unstarted and unknown-current stuck states.
@@ -2506,6 +2507,219 @@ local tests = {
         t.assert_equal(#force.research_queue, 2)
         policy_settings.parallel_research = false
         queue.rotate_parallel_research(force)
+    end},
+    {"auto_switch fallback switches when sampler and display are both stale with multiple missing sciences", function()
+        local force = reset_runtime()
+        game.tick = 34000
+        science_names = {"starved-pack-a", "starved-pack-b", "available-pack"}
+        defines = {
+            entity_status = {
+                working = "working",
+                missing_science_packs = "missing-science-packs"
+            },
+            inventory = {lab_input = 1}
+        }
+
+        local old_availability = queue.get_science_availability
+        local old_bottleneck = queue.get_active_missing_science_bottleneck
+        local old_forecast = queue.get_science_forecast
+        local old_speed = queue.get_research_speed
+        local old_snapshot_tick = queue.get_research_health_snapshot_tick
+        local old_diagnostic = queue.get_research_display_diagnostic
+        policy_settings.forecast_seconds = 0
+        queue.get_science_availability = function()
+            return {['starved-pack-a'] = true, ['starved-pack-b'] = true, ['available-pack'] = true}
+        end
+        queue.get_science_forecast = function() return {} end
+        queue.get_research_speed = function() return 1 end
+        -- Simulate BOTH the staggered sampler AND the display diagnostic being
+        -- stale/unavailable for a massive factory: the bottleneck path finds
+        -- nothing, and the display snapshot is too old. The auto_switch
+        -- direct-inventory fallback must confirm the pack-bound state.
+        queue.get_active_missing_science_bottleneck = function() return {} end
+        queue.get_research_health_snapshot_tick = function() return -1 end
+        queue.get_research_display_diagnostic = function() return nil end
+
+        local current = xcur("current", {
+            sciences = {"starved-pack-a", "starved-pack-b", "available-pack"},
+            research_unit_ingredients = {
+                {name = "starved-pack-a", amount = 1},
+                {name = "starved-pack-b", amount = 1},
+                {name = "available-pack", amount = 1}
+            }
+        })
+        current.technology.research_unit_energy = 60
+        current.queued = true
+        local alternate = xcur("alternate", {
+            sciences = {"available-pack"},
+            research_unit_ingredients = {{name = "available-pack", amount = 1}}
+        })
+        alternate.technology.research_unit_energy = 60
+        tech_state = {current = current, alternate = alternate}
+        storage.forces[1].queue.queue = {"current"}
+        force.current_research = current.technology
+
+        -- Labs accept all three packs but only hold available-pack; both
+        -- starved packs are present in zero accepting labs, so auto_switch
+        -- must flag them missing.
+        local function add_lab(unit_number, contents)
+            local lab_entity = {
+                valid = true,
+                unit_number = unit_number,
+                frozen = false,
+                electric_buffer_size = 0,
+                energy = 100,
+                disabled_by_script = false,
+                disabled_by_control_behavior = false,
+                prototype = {
+                    name = "multi-starve-lab-" .. tostring(unit_number),
+                    lab_inputs = {"starved-pack-a", "starved-pack-b", "available-pack"}
+                },
+                get_inventory = function()
+                    return {
+                        is_empty = function() return #contents == 0 end,
+                        get_contents = function() return contents end
+                    }
+                end
+            }
+            runtime_lab_content[unit_number] = {
+                lab = lab_entity,
+                latest_tick = game.tick,
+                latest_status = defines.entity_status.working,
+                latest_contents = contents
+            }
+        end
+        add_lab(1, {{name = "available-pack", count = 100}})
+        add_lab(2, {{name = "available-pack", count = 100}})
+
+        queue.check_and_switch_temp_research(force)
+        local selected = storage.forces[1].queue.temp_tech
+        local requested = requests
+
+        queue.get_science_availability = old_availability
+        queue.get_active_missing_science_bottleneck = old_bottleneck
+        queue.get_science_forecast = old_forecast
+        queue.get_research_speed = old_speed
+        queue.get_research_health_snapshot_tick = old_snapshot_tick
+        queue.get_research_display_diagnostic = old_diagnostic
+
+        t.assert_equal(selected, "alternate",
+            "the auto_switch fallback must switch a multi-pack-bound current tech to a supplied unqueued alternate when both sampler and display are stale")
+        t.assert_equal(requested, 1,
+            "the emergency switch must request active reselection")
+    end},
+    {"uses a stale pack_bound display snapshot when the technology still matches", function()
+        local force = reset_runtime()
+        game.tick = 50000
+        science_names = {"starved-pack", "available-pack"}
+        defines = {
+            entity_status = {
+                working = "working",
+                missing_science_packs = "missing-science-packs"
+            },
+            inventory = {lab_input = 1}
+        }
+
+        local old_availability = queue.get_science_availability
+        local old_bottleneck = queue.get_active_missing_science_bottleneck
+        local old_forecast = queue.get_science_forecast
+        local old_speed = queue.get_research_speed
+        local old_snapshot_tick = queue.get_research_health_snapshot_tick
+        local old_diagnostic = queue.get_research_display_diagnostic
+        policy_settings.forecast_seconds = 0
+        queue.get_science_availability = function()
+            return {['starved-pack'] = true, ['available-pack'] = true}
+        end
+        queue.get_science_forecast = function() return {} end
+        queue.get_research_speed = function() return 1 end
+        -- Simulate a massive factory: the staggered sampler has <80% coverage
+        -- (all lab latest_tick values are stale), and the display snapshot is
+        -- very old (2000 ticks = 33 s) but still says pack_bound for the same
+        -- technology. The switcher must honor the stale snapshot.
+        queue.get_research_health_snapshot_tick = function()
+            return game.tick - 2000
+        end
+        queue.get_research_display_diagnostic = function()
+            return {
+                state = "pack_bound",
+                current_technology = "current",
+                missing_sciences = {
+                    {science = "starved-pack", lost_spm = 100}
+                }
+            }
+        end
+
+        local current = xcur("current", {
+            sciences = {"starved-pack"},
+            research_unit_ingredients = {{name = "starved-pack", amount = 1}}
+        })
+        current.technology.research_unit_energy = 60
+        current.queued = true
+        local alternate = xcur("alternate", {
+            sciences = {"available-pack"},
+            research_unit_ingredients = {{name = "available-pack", amount = 1}}
+        })
+        alternate.technology.research_unit_energy = 60
+        tech_state = {current = current, alternate = alternate}
+        storage.forces[1].queue.queue = {"current"}
+        force.current_research = current.technology
+
+        -- All labs have stale latest_tick (sampled >900 ticks ago), so the
+        -- live sampler has 0% coverage. The display snapshot is 2000 ticks
+        -- old but matches the current technology and says pack_bound.
+        local function add_stale_lab(unit_number)
+            local lab_entity = {
+                valid = true,
+                unit_number = unit_number,
+                frozen = false,
+                electric_buffer_size = 0,
+                energy = 100,
+                disabled_by_script = false,
+                disabled_by_control_behavior = false,
+                prototype = {
+                    name = "stale-snapshot-lab-" .. tostring(unit_number),
+                    lab_inputs = {"starved-pack", "available-pack"},
+                    get_researching_speed = function() return 1 end
+                },
+                get_inventory = function()
+                    return {
+                        is_empty = function() return false end,
+                        get_contents = function()
+                            return {{name = "available-pack", count = 100}}
+                        end
+                    }
+                end
+            }
+            runtime_lab_content[unit_number] = {
+                lab = lab_entity,
+                latest_tick = game.tick - 1000,
+                latest_status = defines.entity_status.working,
+                latest_contents = {{name = "available-pack", count = 100}}
+            }
+        end
+        add_stale_lab(1)
+        add_stale_lab(2)
+
+        -- Verify the bottleneck is detected from the stale display snapshot
+        local bottleneck = queue.get_active_missing_science_bottleneck(1, current)
+        t.assert_equal(bottleneck["starved-pack"], true,
+            "a stale pack_bound display snapshot for the same technology must still inform the bottleneck")
+
+        queue.check_and_switch_temp_research(force)
+        local selected = storage.forces[1].queue.temp_tech
+        local requested = requests
+
+        queue.get_science_availability = old_availability
+        queue.get_active_missing_science_bottleneck = old_bottleneck
+        queue.get_science_forecast = old_forecast
+        queue.get_research_speed = old_speed
+        queue.get_research_health_snapshot_tick = old_snapshot_tick
+        queue.get_research_display_diagnostic = old_diagnostic
+
+        t.assert_equal(selected, "alternate",
+            "a stale pack_bound display snapshot must still trigger the alternate research switch")
+        t.assert_equal(requested, 1,
+            "the switch must request active research reselection")
     end}
 }
 
