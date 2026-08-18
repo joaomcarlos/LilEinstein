@@ -3919,17 +3919,27 @@ local get_display_pack_bound_bottleneck = function(force_index, current)
     -- technology and state checks above already gate this path, so a stale
     -- same-technology pack_bound snapshot is honored without an age check.
 
+    -- Only include sciences whose individual lost SPM exceeds the diagnostic's
+    -- material threshold. A science missing from a trivial number of labs
+    -- must not block switching to candidates that also use it.
+    local threshold = diagnostic.material_threshold_spm or diagnostic_minimum_lost_spm
     local result = {}
     for _, item in pairs(diagnostic.missing_sciences or {}) do
         local science = type(item) == "string" and item or item and item.science
         if science then
-            result[science] = true
+            local lost_spm = type(item) == "table" and item.lost_spm or threshold
+            if lost_spm >= threshold then
+                result[science] = true
+            end
         end
     end
     local dominant = diagnostic.dominant_missing_science
     local dominant_science = type(dominant) == "string" and dominant or dominant and dominant.science
     if dominant_science then
-        result[dominant_science] = true
+        local dominant_lost = type(dominant) == "table" and dominant.lost_spm or threshold
+        if dominant_lost >= threshold then
+            result[dominant_science] = true
+        end
     end
     return result
 end
@@ -3959,7 +3969,7 @@ queue.get_active_missing_science_bottleneck = function(force_index, xcur)
     local sampled_spm = 0
     local missing_spm = 0
     local physical_demand = {}
-    local res = {}
+    local per_science_lost_spm = {}
     local now = game.tick
     for _, lcur in pairs(lab.get_runtime_lab_content(force_index)) do
         local lab_entity = lcur and lcur.lab
@@ -3975,7 +3985,7 @@ queue.get_active_missing_science_bottleneck = function(force_index, xcur)
                 if lcur.latest_status == defines.entity_status.missing_science_packs then
                     missing_spm = missing_spm + capacity_spm
                     for _, science in pairs(get_missing_lab_sciences(current, lcur.latest_contents)) do
-                        res[science] = true
+                        per_science_lost_spm[science] = (per_science_lost_spm[science] or 0) + capacity_spm
                     end
                 end
             end
@@ -4005,6 +4015,17 @@ queue.get_active_missing_science_bottleneck = function(force_index, xcur)
     )
     if missing_spm < material_threshold_spm then
         return cache_result(display_bottleneck)
+    end
+    -- Only include sciences whose individual lost SPM exceeds the material
+    -- threshold. A science missing from a trivial number of labs (e.g. 1 of
+    -- 500) must not be flagged as a bottleneck, because it would block
+    -- switching to any candidate that also uses that science — even when the
+    -- science is being produced in surplus and the loss is negligible.
+    local res = {}
+    for science, lost_spm in pairs(per_science_lost_spm) do
+        if lost_spm >= material_threshold_spm then
+            res[science] = true
+        end
     end
     return cache_result(res)
 end

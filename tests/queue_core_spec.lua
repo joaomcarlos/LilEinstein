@@ -2720,6 +2720,147 @@ local tests = {
             "a stale pack_bound display snapshot must still trigger the alternate research switch")
         t.assert_equal(requested, 1,
             "the switch must request active research reselection")
+    end},
+    {"trivial per-science loss does not block switching to a candidate using that science", function()
+        local force = reset_runtime()
+        game.tick = 60000
+        science_names = {"heavy-starved-pack", "trivial-starved-pack", "available-pack"}
+        defines = {
+            entity_status = {
+                working = "working",
+                missing_science_packs = "missing-science-packs"
+            },
+            inventory = {lab_input = 1}
+        }
+
+        local old_availability = queue.get_science_availability
+        local old_forecast = queue.get_science_forecast
+        local old_speed = queue.get_research_speed
+        local old_snapshot_tick = queue.get_research_health_snapshot_tick
+        local old_diagnostic = queue.get_research_display_diagnostic
+        policy_settings.forecast_seconds = 0
+        queue.get_science_availability = function()
+            return {
+                ['heavy-starved-pack'] = true,
+                ['trivial-starved-pack'] = true,
+                ['available-pack'] = true
+            }
+        end
+        queue.get_science_forecast = function() return {} end
+        queue.get_research_speed = function() return 1 end
+        queue.get_research_health_snapshot_tick = function() return -1 end
+        queue.get_research_display_diagnostic = function() return nil end
+
+        local current = xcur("current", {
+            sciences = {"heavy-starved-pack", "trivial-starved-pack", "available-pack"},
+            research_unit_ingredients = {
+                {name = "heavy-starved-pack", amount = 1},
+                {name = "trivial-starved-pack", amount = 1},
+                {name = "available-pack", amount = 1}
+            }
+        })
+        current.technology.research_unit_energy = 60
+        current.queued = true
+        -- The alternate requires trivial-starved-pack (which is only missing
+        -- from 1 lab) and available-pack. It must NOT be blocked just because
+        -- trivial-starved-pack appears in the current tech's bottleneck.
+        local alternate = xcur("alternate", {
+            sciences = {"trivial-starved-pack", "available-pack"},
+            research_unit_ingredients = {
+                {name = "trivial-starved-pack", amount = 1},
+                {name = "available-pack", amount = 1}
+            }
+        })
+        alternate.technology.research_unit_energy = 60
+        tech_state = {current = current, alternate = alternate}
+        storage.forces[1].queue.queue = {"current"}
+        force.current_research = current.technology
+
+        -- 10 labs total. 9 labs are missing heavy-starved-pack (material loss).
+        -- Only 1 lab is missing trivial-starved-pack (trivial loss).
+        -- The material threshold is max(1, expected_spm * 0.05).
+        -- With 10 labs at 1 SPM each, expected_spm = 10, threshold = max(1, 0.5) = 1.
+        -- heavy-starved-pack lost_spm = 9 (>= 1, included).
+        -- trivial-starved-pack lost_spm = 1 (>= 1, included... but we need
+        -- to make it below threshold). Let's use 20 labs instead.
+        local function add_lab(unit_number, missing_heavy, missing_trivial)
+            local contents = {}
+            if not missing_heavy then
+                table.insert(contents, {name = "heavy-starved-pack", count = 100})
+            end
+            if not missing_trivial then
+                table.insert(contents, {name = "trivial-starved-pack", count = 100})
+            end
+            table.insert(contents, {name = "available-pack", count = 100})
+            local status = (missing_heavy or missing_trivial)
+                and defines.entity_status.missing_science_packs
+                or defines.entity_status.working
+            local lab_entity = {
+                valid = true,
+                unit_number = unit_number,
+                frozen = false,
+                electric_buffer_size = 0,
+                energy = 100,
+                disabled_by_script = false,
+                disabled_by_control_behavior = false,
+                speed_bonus = 0,
+                productivity_bonus = 0,
+                prototype = {
+                    name = "per-science-lab-" .. tostring(unit_number),
+                    lab_inputs = {"heavy-starved-pack", "trivial-starved-pack", "available-pack"},
+                    get_researching_speed = function() return 1 end
+                },
+                get_inventory = function()
+                    return {
+                        is_empty = function() return #contents == 0 end,
+                        get_contents = function() return contents end
+                    }
+                end
+            }
+            runtime_lab_content[unit_number] = {
+                lab = lab_entity,
+                latest_tick = game.tick,
+                latest_status = status,
+                latest_contents = contents
+            }
+        end
+        -- 20 labs: 19 missing heavy (material), 1 missing trivial (below threshold)
+        -- expected_spm = 20 * 1 * 3600/60 = 1200
+        -- threshold = max(1, 1200 * 0.05) = 60
+        -- heavy lost_spm = 19 * 60 = 1140 (>= 60, included)
+        -- trivial lost_spm = 1 * 60 = 60 (>= 60, included... hmm)
+        -- Need trivial to be below 60. Use 19 missing heavy, 1 missing trivial.
+        -- trivial lost_spm = 1 * 60 = 60. That's exactly the threshold.
+        -- Let's use 20 labs where 18 missing heavy, 1 missing trivial, 1 working.
+        -- expected_spm = 20 * 60 = 1200, threshold = 60
+        -- heavy lost = 18 * 60 = 1080 (>= 60, included)
+        -- trivial lost = 1 * 60 = 60 (>= 60, still included!)
+        -- Need more labs. 100 labs: 90 missing heavy, 1 missing trivial, 9 working.
+        -- expected_spm = 100 * 60 = 6000, threshold = max(1, 300) = 300
+        -- heavy lost = 90 * 60 = 5400 (>= 300, included)
+        -- trivial lost = 1 * 60 = 60 (< 300, excluded!)
+        for i = 1, 90 do
+            add_lab(i, true, false)
+        end
+        add_lab(91, false, true)  -- 1 lab missing only trivial
+        for i = 92, 100 do
+            add_lab(i, false, false)  -- 9 working labs
+        end
+
+        queue.check_and_switch_temp_research(force)
+        local selected = storage.forces[1].queue.temp_tech
+        local requested = requests
+
+        queue.get_science_availability = old_availability
+        queue.get_science_forecast = old_forecast
+        queue.get_research_speed = old_speed
+        queue.get_research_health_snapshot_tick = old_snapshot_tick
+        queue.get_research_display_diagnostic = old_diagnostic
+
+        t.assert_equal(selected, "alternate",
+            "a candidate using a trivially-starved science must not be blocked from switching when that science's per-pack loss is below the material threshold")
+        t.assert_equal(requested, 1,
+            "the switch must request active research reselection")
     end}
 }
 
