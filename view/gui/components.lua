@@ -1526,7 +1526,7 @@ local refresh_science_throughput_row = function(row, item, index, state)
     local stock_caption = format_throughput_rate(item.stock)
     local in_transit_caption = format_throughput_rate(item.in_transit)
     local gap_caption = format_throughput_gap(item.gap)
-    local status_caption = {throughput_prefix .. "status-" .. item.status}
+    local status_caption = {throughput_prefix .. "status-" .. item.status:gsub("_", "-")}
     local status_sprite = research_details_throughput_status_sprites[item.status] or
         research_details_throughput_status_sprites.balanced
 
@@ -1649,7 +1649,7 @@ local refresh_science_throughput_warning = function(panel, rows, state, snapshot
             icon.sprite = research_details_throughput_status_sprites[primary.status]
         end
         if headline then
-            headline.caption = {throughput_prefix .. "warning-" .. primary.status,
+            headline.caption = {throughput_prefix .. "warning-" .. primary.status:gsub("_", "-"),
                                 item_caption(primary.science)}
             headline.style.font_color = color
         end

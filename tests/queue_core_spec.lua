@@ -2861,6 +2861,215 @@ local tests = {
             "a candidate using a trivially-starved science must not be blocked from switching when that science's per-pack loss is below the material threshold")
         t.assert_equal(requested, 1,
             "the switch must request active research reselection")
+    end},
+    {"stale target from a previous switch is replaced by the current starving tech", function()
+        local force = reset_runtime()
+        game.tick = 70000
+        science_names = {"starved-pack", "available-pack", "unavailable-pack"}
+        defines = {
+            entity_status = {
+                working = "working",
+                missing_science_packs = "missing-science-packs"
+            },
+            inventory = {lab_input = 1}
+        }
+
+        local old_availability = queue.get_science_availability
+        local old_forecast = queue.get_science_forecast
+        local old_speed = queue.get_research_speed
+        local old_snapshot_tick = queue.get_research_health_snapshot_tick
+        local old_diagnostic = queue.get_research_display_diagnostic
+        policy_settings.forecast_seconds = 0
+        queue.get_science_availability = function()
+            return {['starved-pack'] = true, ['available-pack'] = true, ['unavailable-pack'] = false}
+        end
+        queue.get_science_forecast = function() return {} end
+        queue.get_research_speed = function() return 1 end
+        queue.get_research_health_snapshot_tick = function() return -1 end
+        queue.get_research_display_diagnostic = function() return nil end
+
+        local current = xcur("current", {
+            sciences = {"starved-pack"},
+            research_unit_ingredients = {{name = "starved-pack", amount = 1}}
+        })
+        current.technology.research_unit_energy = 60
+        current.queued = true
+        local alternate = xcur("alternate", {
+            sciences = {"available-pack"},
+            research_unit_ingredients = {{name = "available-pack", amount = 1}}
+        })
+        alternate.technology.research_unit_energy = 60
+        -- old_target is a tech from a previous switch cycle; it is queued but
+        -- requires a fully unavailable pack, so it cannot be restored.
+        local old_target = xcur("old-target", {
+            sciences = {"unavailable-pack"},
+            research_unit_ingredients = {{name = "unavailable-pack", amount = 1}}
+        })
+        old_target.technology.research_unit_energy = 60
+        old_target.queued = true
+        tech_state = {current = current, alternate = alternate, ["old-target"] = old_target}
+        storage.forces[1].queue.queue = {"old-target", "current"}
+        force.current_research = current.technology
+
+        -- Simulate stale state from a previous switch: target is old-target,
+        -- no temp is active. The current tech (current) is pack-bound.
+        storage.forces[1].queue.target_tech = "old-target"
+        storage.forces[1].queue.temp_tech = nil
+        storage.forces[1].queue.temp_tech_timeout = nil
+        storage.forces[1].queue.last_switch_tick = nil
+
+        local function add_lab(unit_number, contents)
+            local lab_entity = {
+                valid = true,
+                unit_number = unit_number,
+                frozen = false,
+                electric_buffer_size = 0,
+                energy = 100,
+                disabled_by_script = false,
+                disabled_by_control_behavior = false,
+                speed_bonus = 0,
+                productivity_bonus = 0,
+                prototype = {
+                    name = "stale-target-lab-" .. tostring(unit_number),
+                    lab_inputs = {"starved-pack", "available-pack"},
+                    get_researching_speed = function() return 1 end
+                },
+                get_inventory = function()
+                    return {
+                        is_empty = function() return #contents == 0 end,
+                        get_contents = function() return contents end
+                    }
+                end
+            }
+            runtime_lab_content[unit_number] = {
+                lab = lab_entity,
+                latest_tick = game.tick,
+                latest_status = defines.entity_status.missing_science_packs,
+                latest_contents = contents
+            }
+        end
+        -- 10 labs all missing starved-pack, holding only available-pack
+        for i = 1, 10 do
+            add_lab(i, {{name = "available-pack", count = 100}})
+        end
+
+        queue.check_and_switch_temp_research(force)
+        local selected = storage.forces[1].queue.temp_tech
+        local new_target = storage.forces[1].queue.target_tech
+
+        queue.get_science_availability = old_availability
+        queue.get_science_forecast = old_forecast
+        queue.get_research_speed = old_speed
+        queue.get_research_health_snapshot_tick = old_snapshot_tick
+        queue.get_research_display_diagnostic = old_diagnostic
+
+        t.assert_equal(selected, "alternate",
+            "the switch must select the supplied alternate")
+        t.assert_equal(new_target, "current",
+            "the target must be the current starving tech, not a stale target from a previous switch cycle")
+    end},
+    {"preserves the original target when the current tech is itself the temp tech", function()
+        local force = reset_runtime()
+        game.tick = 80000
+        science_names = {"starved-pack", "available-pack", "unavailable-pack"}
+        defines = {
+            entity_status = {
+                working = "working",
+                missing_science_packs = "missing-science-packs"
+            },
+            inventory = {lab_input = 1}
+        }
+
+        local old_availability = queue.get_science_availability
+        local old_forecast = queue.get_science_forecast
+        local old_speed = queue.get_research_speed
+        local old_snapshot_tick = queue.get_research_health_snapshot_tick
+        local old_diagnostic = queue.get_research_display_diagnostic
+        policy_settings.forecast_seconds = 0
+        queue.get_science_availability = function()
+            return {['starved-pack'] = true, ['available-pack'] = true, ['unavailable-pack'] = false}
+        end
+        queue.get_science_forecast = function() return {} end
+        queue.get_research_speed = function() return 1 end
+        queue.get_research_health_snapshot_tick = function() return -1 end
+        queue.get_research_display_diagnostic = function() return nil end
+
+        local original_target = xcur("original-target", {
+            sciences = {"unavailable-pack"},
+            research_unit_ingredients = {{name = "unavailable-pack", amount = 1}}
+        })
+        original_target.technology.research_unit_energy = 60
+        original_target.queued = true
+        local old_temp = xcur("old-temp", {
+            sciences = {"starved-pack"},
+            research_unit_ingredients = {{name = "starved-pack", amount = 1}}
+        })
+        old_temp.technology.research_unit_energy = 60
+        old_temp.queued = true
+        local replacement = xcur("replacement", {
+            sciences = {"available-pack"},
+            research_unit_ingredients = {{name = "available-pack", amount = 1}}
+        })
+        replacement.technology.research_unit_energy = 60
+        tech_state = {["original-target"] = original_target, ["old-temp"] = old_temp, replacement = replacement}
+        storage.forces[1].queue.queue = {"original-target", "old-temp"}
+        -- The current research is the old temp tech, which is now also pack-bound
+        force.current_research = old_temp.technology
+
+        -- Stale state from a previous switch: target is original-target, temp is old-temp
+        storage.forces[1].queue.target_tech = "original-target"
+        storage.forces[1].queue.temp_tech = "old-temp"
+        storage.forces[1].queue.temp_tech_timeout = game.tick - 1  -- expired
+        storage.forces[1].queue.last_switch_tick = nil
+
+        local function add_lab(unit_number, contents)
+            local lab_entity = {
+                valid = true,
+                unit_number = unit_number,
+                frozen = false,
+                electric_buffer_size = 0,
+                energy = 100,
+                disabled_by_script = false,
+                disabled_by_control_behavior = false,
+                speed_bonus = 0,
+                productivity_bonus = 0,
+                prototype = {
+                    name = "preserve-target-lab-" .. tostring(unit_number),
+                    lab_inputs = {"starved-pack", "available-pack"},
+                    get_researching_speed = function() return 1 end
+                },
+                get_inventory = function()
+                    return {
+                        is_empty = function() return #contents == 0 end,
+                        get_contents = function() return contents end
+                    }
+                end
+            }
+            runtime_lab_content[unit_number] = {
+                lab = lab_entity,
+                latest_tick = game.tick,
+                latest_status = defines.entity_status.missing_science_packs,
+                latest_contents = contents
+            }
+        end
+        for i = 1, 10 do
+            add_lab(i, {{name = "available-pack", count = 100}})
+        end
+
+        queue.check_and_switch_temp_research(force)
+        local selected = storage.forces[1].queue.temp_tech
+        local new_target = storage.forces[1].queue.target_tech
+
+        queue.get_science_availability = old_availability
+        queue.get_science_forecast = old_forecast
+        queue.get_research_speed = old_speed
+        queue.get_research_health_snapshot_tick = old_snapshot_tick
+        queue.get_research_display_diagnostic = old_diagnostic
+
+        t.assert_equal(selected, "replacement",
+            "the switch must select the replacement temp")
+        t.assert_equal(new_target, "original-target",
+            "the original target must be preserved when the current tech is itself the expired temp tech")
     end}
 }
 

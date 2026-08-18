@@ -747,7 +747,14 @@ end
 
 local activate_temp_research = function(f, sq, target, current_name, candidate, tsx, lsci, minimum_switch_ticks)
     emergency_candidate_jobs[f.index] = nil
-    local target_name = target or current_name
+    -- The target is the tech we want to return to once science is available
+    -- again. When the current tech is a regular queue tech that just went
+    -- pack-bound, it becomes the new target. When the current tech is itself
+    -- the temp tech from a previous switch (both target and temp are
+    -- pack-bound), keep the original target so we still try to return to it
+    -- after the replacement temp finishes.
+    local existing_temp = sq[keys.temp_tech]
+    local target_name = (existing_temp and current_name == existing_temp) and target or current_name
     sq[keys.target_tech] = target_name
     sq[keys.temp_tech] = candidate
     sq[keys.temp_tech_timeout] = game.tick + minimum_switch_ticks
