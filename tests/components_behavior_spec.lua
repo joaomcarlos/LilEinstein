@@ -1330,7 +1330,7 @@ local tests = {
         t.assert_equal(get_ratio(1, 0), 0)
         t.assert_equal(get_ratio(2, 1), 1)
         t.assert_equal(get_ratio(-1, 1), 0)
-        t.assert_equal(format_policy_time(60), "1.0m")
+        t.assert_equal(format_policy_time(60), "1:00")
         t.assert_equal(format_policy_time(math.huge), "∞")
         t.assert_true(type(refresh_science_counts) == "function")
 

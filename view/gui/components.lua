@@ -3104,7 +3104,10 @@ local format_policy_time = function(seconds)
         return string.format("%.1fh", seconds / 3600)
     end
     if seconds >= 60 then
-        return string.format("%.1fm", seconds / 60)
+        local total = math.floor(seconds + 0.5)
+        local minutes = math.floor(total / 60)
+        local secs = total % 60
+        return string.format("%d:%02d", minutes, secs)
     end
     return tostring(math.floor(seconds + 0.5)) .. "s"
 end
@@ -3465,7 +3468,11 @@ end
 
 local set_decision_sprite = function(anchor, name, sprite)
     local element = gutil.get_child(anchor, name)
-    if element and sprite then
+    -- builder.fallback_add silently converts an invalid-sprite element into an
+    -- empty-widget; assigning .sprite on a non-sprite element raises a
+    -- non-recoverable "Expected sprite button or sprite" error, so guard the
+    -- assignment by element type exactly as the Factorio GUI API does.
+    if element and sprite and (element.type == "sprite" or element.type == "sprite-button") then
         element.sprite = sprite
     end
     return element
@@ -3556,8 +3563,8 @@ local populate_decision_console_header = function(player_index, anchor)
         set_decision_sprite(anchor, "decision_candidate_icon", "technology/" .. proto_name)
         set_decision_sprite(anchor, "decision_next_research_icon", "technology/" .. proto_name)
     else
-        set_decision_sprite(anchor, "decision_candidate_icon", "utility/technology")
-        set_decision_sprite(anchor, "decision_next_research_icon", "utility/technology")
+        set_decision_sprite(anchor, "decision_candidate_icon", "utility/technology_white")
+        set_decision_sprite(anchor, "decision_next_research_icon", "utility/technology_white")
     end
     set_decision_caption(anchor, "decision_candidate_name", tech_caption)
     set_decision_caption(anchor, "decision_next_research_name", tech_caption)

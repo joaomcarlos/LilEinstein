@@ -600,7 +600,7 @@ local policy_panel = {
                     children = {{
                         type = "sprite",
                         name = "decision_next_research_icon",
-                        sprite = "utility/technology",
+                        sprite = "utility/technology_white",
                         ignored_by_interaction = true
                     }, {
                         type = "label",
@@ -688,7 +688,7 @@ local policy_panel = {
                             children = {{
                                 type = "sprite",
                                 name = "decision_candidate_icon",
-                                sprite = "utility/technology",
+                                sprite = "utility/technology_white",
                                 ignored_by_interaction = true
                             }, {
                                 type = "label",
