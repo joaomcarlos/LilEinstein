@@ -133,50 +133,64 @@ end
 
 gutil.get_tooltip_text = function(xcur, player_index, override_level, cost_override)
     -- local p = game.get_player(player_index)
-    local tt = "[font=heading-2]" .. gutil.get_tech_name(player_index, xcur, override_level) .. "[/font]\n"
+    local heading = "[font=heading-2]" .. gutil.get_tech_name(player_index, xcur, override_level) .. "[/font]\n"
+    local ttl = {"", heading}
 
+    -- Add the description (matches Factorio's native technology tooltip).
+    -- Use the resolved translation to detect missing locale keys; Factorio's
+    -- native GUI skips the description when the key is absent, so we do too.
+    -- When the translation exists, insert the raw LocalisedString to preserve
+    -- any rich-text tags in the description.
+    local desc_translated = state.get_translation(player_index, "technology", xcur.technology.name, "localised_description")
+    if desc_translated and desc_translated ~= "" then
+        table.insert(ttl, xcur.meta.prototype.localised_description)
+        table.insert(ttl, "\n\n")
+    end
+
+    -- Build the cost and recipe-effect section as a single rich-text string
+    local body = ""
     if xcur.meta.has_trigger then
-        tt = tt .. "[font=default-bold]Unlocked by trigger[/font]\n\n"
+        body = body .. "[font=default-bold]Unlocked by trigger[/font]\n\n"
     else
-        tt = tt .. "[font=default-bold]Cost[/font]\n"
-        tt = tt .. gutil.format_cost(cost_override or xcur.technology.research_unit_count) .. "x   "
+        body = body .. "[font=default-bold]Cost[/font]\n"
+        body = body .. gutil.format_cost(cost_override or xcur.technology.research_unit_count) .. "x   "
         for _, sci in pairs(xcur.meta.sciences or {}) do
-            tt = tt .. "[img=item." .. sci .. "]"
+            body = body .. "[img=item." .. sci .. "]"
         end
-        tt = tt .. "[img=virtual-signal.signal-clock]" .. ((xcur.technology.research_unit_energy or 0) / 60)
-        tt = tt .. "\n\n"
+        body = body .. "[img=virtual-signal.signal-clock]" .. ((xcur.technology.research_unit_energy or 0) / 60)
+        body = body .. "\n\n"
     end
 
     -- Add the effects
     local numrecipes = 0
     if #xcur.meta.prototype.effects > 0 then
-        tt = tt .. "[font=default-bold]Effects[/font]\n"
+        body = body .. "[font=default-bold]Effects[/font]\n"
         for _, eff in pairs(xcur.meta.prototype.effects) do
             -- First only the effects for which we can simply create a string
             if eff.type == "unlock-recipe" or eff.type == "give-item" then
                 -- Add the simple string
                 if eff.type == "unlock-recipe" and eff.recipe then
-                    tt = tt .. "[img=recipe." .. eff.recipe .. "] " ..
+                    body = body .. "[img=recipe." .. eff.recipe .. "] " ..
                              (state.get_translation(player_index, "recipe", eff.recipe, "localised_name") or eff.recipe) .. " (Recipe)"
                 elseif eff.type == "give-item" and eff.item then
-                    tt = tt .. tostring(eff.count or 1) .. "x [item=" .. eff.item
+                    body = body .. tostring(eff.count or 1) .. "x [item=" .. eff.item
                     if eff.quality then
-                        tt = tt .. ",quality=" .. eff.quality
+                        body = body .. ",quality=" .. eff.quality
                     end
-                    tt = tt .. "] " .. eff.item
+                    body = body .. "] " .. eff.item
                 end
 
                 -- Add newline if there are more effects to come
                 numrecipes = numrecipes + 1
                 if #xcur.meta.prototype.effects > numrecipes then
-                    tt = tt .. "\n"
+                    body = body .. "\n"
                 end
 
             end
         end
     end
 
-    local ttl = {"", tt}
+    table.insert(ttl, body)
 
     -- Add the non-recipe effects
     if #xcur.meta.prototype.effects - numrecipes > 0 then

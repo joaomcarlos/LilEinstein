@@ -40,6 +40,8 @@ GUI layer for the LilEinstein mod: window lifecycle, layout construction, and pr
 - Science inventory and per-minute rates use the shared compact SI formatter (`K`, `M`, `G`, and higher prefixes) with at most one decimal place
 - Science-pack icons open a right-side replacement inspector instead of changing technology filters; the inspector keeps Upcoming visible, shows Nauvis-only lab evidence, lists only verified planets with positive stock, omits unresolved or pseudo-surface identifiers, lists moving platform/cargo-pod transit, and refreshes only while open with a visible countdown
 - Upcoming rows mirror effective research order and state the science-supply reason when an entry is not selectable
+- Upcoming technology icons show the full technology tooltip (name, description, level, cost, effects) matching Factorio's native tech panel hover; the click-to-pin action remains but is no longer advertised in the icon tooltip
+- `gutil.get_tooltip_text` inserts the prototype `localised_description` between the heading and the cost section so all tech icon/label tooltips match Factorio's native technology tooltip layout
 - New Upcoming LocalisedStrings include literal fallbacks so control-stage reloads cannot render `Unknown key` text
 - The Research Health header exposes a copy-debug-report action; because Factorio mods cannot write arbitrary text to the OS clipboard, the action opens a focused, read-only text box with the full report selected for Ctrl+C
 - Debug reports include live/current queue state, score components, pack-sufficiency decisions, the last 2 minutes of graph samples, bounded science-flow samples, and all current diagnostic warnings

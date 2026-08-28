@@ -40,6 +40,21 @@ local function deep_contains(value, expected)
     return false
 end
 
+local function deep_find(value, fragment)
+    if type(value) == "string" then
+        return string.find(value, fragment, 1, true) ~= nil
+    end
+    if type(value) ~= "table" then
+        return false
+    end
+    for _, child in pairs(value) do
+        if deep_find(child, fragment) then
+            return true
+        end
+    end
+    return false
+end
+
 tests[#tests + 1] = {"formats cost, time, boundaries, and safe numeric fallbacks", function()
     t.assert_equal(gutil.format_cost, gutil.format_si)
     t.assert_equal(gutil.format_cost(1250), "1.3K")
@@ -150,18 +165,17 @@ tests[#tests + 1] = {"builds trigger and empty-effect tooltips with safe fallbac
     }
     local tooltip = gutil.get_tooltip_text(trigger, 4)
     t.assert_equal(tooltip[1], "")
-    assert_contains(tooltip[2], "[font=heading-2]rocket-silo[/font]")
-    assert_contains(tooltip[2], "Unlocked by trigger")
-    t.assert_true(tooltip[3] == nil)
+    t.assert_true(deep_find(tooltip, "[font=heading-2]rocket-silo[/font]"))
+    t.assert_true(deep_find(tooltip, "Unlocked by trigger"))
 
     local empty = {
         technology = {name = "empty-tech", level = 2, research_unit_count = nil, research_unit_energy = nil},
         meta = {is_infinite = false, has_trigger = false, sciences = nil, prototype = {effects = {}}}
     }
     local empty_tooltip = gutil.get_tooltip_text(empty, 4)
-    assert_contains(empty_tooltip[2], "[font=heading-2]empty-tech 2[/font]")
-    assert_contains(empty_tooltip[2], "0x")
-    assert_contains(empty_tooltip[2], "[img=virtual-signal.signal-clock]0")
+    t.assert_true(deep_find(empty_tooltip, "[font=heading-2]empty-tech 2[/font]"))
+    t.assert_true(deep_find(empty_tooltip, "0x"))
+    t.assert_true(deep_find(empty_tooltip, "[img=virtual-signal.signal-clock]0"))
 end}
 
 tests[#tests + 1] = {"builds cost, science, time, recipe, item, and modifier tooltip effects", function()
@@ -197,14 +211,14 @@ tests[#tests + 1] = {"builds cost, science, time, recipe, item, and modifier too
     }
 
     local tooltip = gutil.get_tooltip_text(xcur, 5, nil, 150)
-    assert_contains(tooltip[2], "[font=heading-2]rocket-silo 3[/font]")
-    assert_contains(tooltip[2], "[font=default-bold]Cost[/font]")
-    assert_contains(tooltip[2], "150x")
-    assert_contains(tooltip[2], "[img=item.automation-science-pack]")
-    assert_contains(tooltip[2], "[img=item.logistic-science-pack]")
-    assert_contains(tooltip[2], "[img=virtual-signal.signal-clock]2")
-    assert_contains(tooltip[2], "[img=recipe.rocket-part] Rocket part (Recipe)")
-    assert_contains(tooltip[2], "3x [item=space-science-pack,quality=epic] space-science-pack")
+    t.assert_true(deep_find(tooltip, "[font=heading-2]rocket-silo 3[/font]"))
+    t.assert_true(deep_find(tooltip, "[font=default-bold]Cost[/font]"))
+    t.assert_true(deep_find(tooltip, "150x"))
+    t.assert_true(deep_find(tooltip, "[img=item.automation-science-pack]"))
+    t.assert_true(deep_find(tooltip, "[img=item.logistic-science-pack]"))
+    t.assert_true(deep_find(tooltip, "[img=virtual-signal.signal-clock]2"))
+    t.assert_true(deep_find(tooltip, "[img=recipe.rocket-part] Rocket part (Recipe)"))
+    t.assert_true(deep_find(tooltip, "3x [item=space-science-pack,quality=epic] space-science-pack"))
     t.assert_true(deep_contains(tooltip, "modifier-description.change-recipe-productivity"))
     t.assert_true(deep_contains(tooltip, "modifier-description.bullet-damage-bonus"))
     t.assert_true(deep_contains(tooltip, "modifier-description.laser-shooting-speed-bonus"))
@@ -235,6 +249,60 @@ tests[#tests + 1] = {"limits very large modifier tooltip lists with a remainder 
     t.assert_true(deep_contains(tooltip, "modifier-description.unlisted-effect-1"))
     t.assert_true(deep_contains(tooltip, "modifier-description.unlisted-effect-18"))
     t.assert_false(deep_contains(tooltip, "modifier-description.unlisted-effect-19"))
+end}
+
+tests[#tests + 1] = {"includes localised_description between heading and cost", function()
+    translations[translation_key(7, "technology", "oil-processing", "localised_description")] =
+        "Refinery allows processing crude oil."
+    local xcur = {
+        technology = {name = "oil-processing", level = 1, research_unit_count = 30, research_unit_energy = 30},
+        meta = {
+            is_infinite = false,
+            has_trigger = false,
+            sciences = {"automation-science-pack"},
+            prototype = {
+                effects = {},
+                localised_description = {"technology-description.oil-processing"}
+            }
+        }
+    }
+    local tooltip = gutil.get_tooltip_text(xcur, 7)
+    t.assert_equal(tooltip[1], "")
+    t.assert_true(deep_find(tooltip, "[font=heading-2]oil-processing[/font]"))
+    t.assert_true(deep_contains(tooltip, "technology-description.oil-processing"))
+    t.assert_true(deep_find(tooltip, "[font=default-bold]Cost[/font]"))
+    -- Description must appear before the cost section in the array
+    local desc_idx
+    local cost_idx
+    for i, v in ipairs(tooltip) do
+        if type(v) == "table" and deep_contains(v, "technology-description.oil-processing") then
+            desc_idx = i
+        end
+        if type(v) == "string" and string.find(v, "Cost", 1, true) then
+            cost_idx = i
+        end
+    end
+    t.assert_true(desc_idx ~= nil and cost_idx ~= nil and desc_idx < cost_idx)
+end}
+
+tests[#tests + 1] = {"skips description when translation is missing", function()
+    local xcur = {
+        technology = {name = "no-desc-tech", level = 1, research_unit_count = 10, research_unit_energy = 30},
+        meta = {
+            is_infinite = false,
+            has_trigger = false,
+            sciences = {"automation-science-pack"},
+            prototype = {effects = {}, localised_description = {"technology-description.no-desc-tech"}}
+        }
+    }
+    local tooltip = gutil.get_tooltip_text(xcur, 8)
+    t.assert_equal(tooltip[1], "")
+    t.assert_true(deep_find(tooltip, "[font=heading-2]no-desc-tech[/font]"))
+    t.assert_true(deep_find(tooltip, "[font=default-bold]Cost[/font]"))
+    -- With no translation, the description LocalisedString must not be inserted
+    t.assert_false(deep_contains(tooltip, "technology-description.no-desc-tech"))
+    -- tooltip[2] is heading and tooltip[3] is the body (no description in between)
+    t.assert_equal(tooltip[2], "[font=heading-2]no-desc-tech[/font]\n")
 end}
 
 local passed, err = pcall(function()

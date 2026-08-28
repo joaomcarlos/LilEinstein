@@ -274,13 +274,7 @@ local add_upcoming_row = function(parent, rank, entry, player_index)
             handler = "pin_upcoming_tech",
             technology = entry.tech_name
         },
-        tooltip = is_pinned and localize_with_fallback(
-            "lil_einstein-upcoming.clear-high-priority",
-            "High priority - click to clear"
-        ) or localize_with_fallback(
-            "lil_einstein-upcoming.mark-high-priority",
-            "Click to mark high priority"
-        )
+        tooltip = tech_tooltip
     })
     tech_btn.style.width = upcoming_icon_size
     tech_btn.style.height = upcoming_icon_size
