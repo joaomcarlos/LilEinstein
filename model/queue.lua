@@ -3895,6 +3895,18 @@ queue.get_science_pack_insight = function(force_index, science)
     return value
 end
 
+-- Background tick for research health snapshots. Only processes an existing
+-- job or an explicit request; never auto-starts from snapshot expiry. This
+-- lets control.lua run it every force_maintenance tick for all forces without
+-- triggering a new 5-second-expiry rebuild on forces that have no pending
+-- 2-minute background request.
+queue.tick_background_research_health = function(force_index)
+    if not research_health_jobs[force_index] and not research_health_requests[force_index] then
+        return false
+    end
+    return queue.tick_research_health_snapshot(force_index)
+end
+
 -- Use the staggered lab snapshots for the background switcher. This preserves
 -- the diagnostic's missing-pack thresholds without rebuilding its full cluster
 -- model in one scheduler tick.

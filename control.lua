@@ -304,6 +304,17 @@ local run_force_maintenance = function()
             queue.record_research_progress(f.index)
             refresh_open_research_graph(f.index)
         end
+
+        -- Request a research health snapshot every 2 minutes so the throughput
+        -- problems panel stays warm even when no player has the UI open.
+        if game.tick % const.runtime_intervals.research_health_background_ticks == 0 then
+            queue.request_research_health_snapshot(f.index)
+        end
+
+        -- Process pending background research health jobs (started by the
+        -- 2-minute request above). The guarded tick is a no-op when there is
+        -- no job or request, so it never triggers the 5-second auto-expiry.
+        queue.tick_background_research_health(f.index)
     end
 end
 

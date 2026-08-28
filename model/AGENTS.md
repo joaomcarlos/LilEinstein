@@ -45,6 +45,7 @@ Runtime data model and research-autopilot logic for the LilEinstein Factorio mod
 - Upcoming research plans put the active technology first and prefer science-supplied candidates before science-blocked fallbacks
 - Science-flow history is bounded to the current two-minute window plus the current sample; it is sampled once per minute only for forces with an open LilEinstein view and remains save-safe
 - Science-pack insights are runtime-only and open-scoped: they combine retained research-health data with per-planet and in-transit stock scans only while a pack inspector is visible, cache for the five-second panel interval, and return only save-safe strings and numbers
+- Research health snapshots also refresh on a 2-minute background schedule (`research_health_background_ticks`) for every force via `queue.tick_background_research_health`, which only processes an existing job or explicit request and never auto-starts from the 5-second snapshot expiry; this keeps the throughput-problems panel warm when no player has the UI open
 - Read-only queue control-state access may expose live-vs-cached research names, temporary targets, stored queue names, and the runtime queue for diagnostics; it must not mutate queue state
 - `<module>.init` does not trigger `<module>.init_force`/`init_player`; `control.lua` calls those directly
 - Everything in `storage` must be save/load-safe (no LuaObject references persisted across saves except valid entity refs handled defensively)
