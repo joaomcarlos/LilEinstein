@@ -30,7 +30,7 @@ local emergency_candidate_retry_ticks = 300
 -- score factor applied to techs only reachable through prerequisites
 local unavailable_score_factor = 0.5
 -- a candidate must out-score the current research by this relative margin to interrupt it
-local score_interrupt_margin = 1.5
+local score_interrupt_margin = 1.15
 
 -- interrupt comparison: margin scales with |current| so negative scores don't get an easier threshold
 local score_would_interrupt = function(candidate_total, current_total)
@@ -248,6 +248,7 @@ local get_inactive_science_demand_spm
 local get_in_transit_science_total
 local science_demand_cache = {}
 local research_capacity_cache = {}
+local science_lost_spm_cache = {}
 local emergency_candidate_jobs = {}
 
 queue.apply_planning_pause = function(f)
@@ -1018,6 +1019,88 @@ local temp_should_persist = function(force_index, xtemp, xtarget, avg_cost)
     return score_would_interrupt(temp_sd.total, target_sd.total)
 end
 
+-- Count how many of a candidate's sciences are in the bottleneck set.
+-- A candidate with fewer bottleneck sciences will run at higher lab coverage
+-- than the current pack-bound technology.
+local count_bottleneck_sciences = function(sciences, bottleneck)
+    if not bottleneck or not next(bottleneck) then return 0 end
+    local count = 0
+    for _, science in pairs(sciences or {}) do
+        if bottleneck[science] then
+            count = count + 1
+        end
+    end
+    return count
+end
+
+-- Check that a candidate's non-bottlenecked sciences are physically available.
+-- Bottlenecked sciences are tolerated because the partial-supply path is
+-- specifically about finding a candidate that runs at higher (but not full)
+-- lab coverage.
+local candidate_non_bottleneck_sciences_available = function(xcur, lsci, bottleneck)
+    for _, science in pairs(xcur.meta.sciences or {}) do
+        if not bottleneck[science] then
+            if not lsci or not lsci[science] then
+                return false
+            end
+        end
+    end
+    return true
+end
+
+-- When no fully-sufficient candidate exists (every candidate uses at least one
+-- bottleneck science), find the candidate with the fewest bottleneck sciences.
+-- This prevents the autopilot from sitting idle on a pack-bound technology when
+-- a candidate that uses fewer starved sciences would run at much higher lab
+-- coverage. The candidate must use strictly fewer bottleneck sciences than the
+-- current technology to justify the switch.
+local find_partial_supply_candidate = function(
+    force_index, current_name, pinned, queued_names, tsx, original_lsci, bottleneck
+)
+    if not bottleneck or not next(bottleneck) then return nil end
+    local current_xcur = tsx and tsx[current_name]
+    if not current_xcur or not current_xcur.meta then return nil end
+    local current_bottleneck_count = count_bottleneck_sciences(
+        current_xcur.meta.sciences, bottleneck)
+    if current_bottleneck_count == 0 then return nil end
+
+    local best_candidate
+    local best_bottleneck_count = current_bottleneck_count
+    local best_score
+
+    local evaluate = function(name)
+        if not name or name == current_name then return end
+        local xc = tsx[name]
+        if not xc or not tech_can_be_runtime_candidate(force_index, xc) then return end
+        if not xc.available then return end
+        if not candidate_non_bottleneck_sciences_available(xc, original_lsci, bottleneck) then return end
+        local count = count_bottleneck_sciences(xc.meta.sciences, bottleneck)
+        if count >= best_bottleneck_count then return end
+        local ub = queue.get_tech_ub(force_index, name)
+        local score = queue.score_tech_detailed(
+            xc, xc.technology.level, ub, nil, force_index).total
+        if count < best_bottleneck_count or
+           (count == best_bottleneck_count and score > (best_score or -math.huge)) then
+            best_candidate = name
+            best_bottleneck_count = count
+            best_score = score
+        end
+    end
+
+    if pinned and pinned ~= current_name then
+        evaluate(pinned)
+    end
+
+    local sfq = get(force_index, keys.queue) or {}
+    for _, q in ipairs(sfq) do
+        if q ~= current_name and q ~= pinned then
+            evaluate(q)
+        end
+    end
+
+    return best_candidate
+end
+
 queue.check_and_switch_temp_research = function(f)
     if not f then
         return
@@ -1209,6 +1292,7 @@ queue.check_and_switch_temp_research = function(f)
 
     -- Current tech is low on packs. Find next suitable tech in order.
     local lsci = queue.get_science_availability(f.index)
+    local original_lsci = lsci
     local live_bottleneck = queue.get_active_missing_science_bottleneck(f.index, xcur)
     -- Emergency fallback: when the staggered sampler/display evidence is
     -- temporarily unavailable (no bottleneck detected), use the direct
@@ -1270,6 +1354,21 @@ queue.check_and_switch_temp_research = function(f)
     )
     if candidate then
         activate_temp_research(f, sq, target, cur_name, candidate, tsx, lsci, minimum_switch_ticks)
+        return
+    end
+
+    -- Partial-supply fallback: when no fully-sufficient candidate exists (every
+    -- candidate uses at least one bottleneck science), switch to the candidate
+    -- with the fewest bottleneck sciences. This prevents the autopilot from
+    -- sitting idle on a pack-bound technology when a candidate that uses fewer
+    -- starved sciences would run at much higher lab coverage.
+    if next(live_bottleneck) then
+        local partial_candidate = find_partial_supply_candidate(
+            f.index, cur_name, pinned, queued_names, tsx, original_lsci, live_bottleneck)
+        if partial_candidate then
+            activate_temp_research(
+                f, sq, target, cur_name, partial_candidate, tsx, original_lsci, minimum_switch_ticks)
+        end
     end
 end
 ---------------------------------------------------------------------------
@@ -2289,6 +2388,7 @@ queue.invalidate_science_cache = function(force_index)
     in_transit_science_cache[force_index] = nil
     science_demand_cache[force_index] = nil
     research_capacity_cache[force_index] = nil
+    science_lost_spm_cache[force_index] = nil
     emergency_candidate_jobs[force_index] = nil
     science_pack_insight_cache[force_index] = nil
     auto_switch.invalidate(force_index)
@@ -2395,9 +2495,30 @@ get_inactive_science_demand_spm = function(xcur, force_index)
         1 + ((f and f.laboratory_productivity_bonus) or 0)
     )
     local physical_units_per_minute = progress_units_per_minute / productivity_multiplier
+
+    -- Scale per-science demand by the working fraction when a bottleneck has
+    -- been measured: a candidate that uses a starved science will run at
+    -- reduced lab capacity, so its actual consumption is lower than the
+    -- full-capacity estimate. This prevents the forecast from rejecting
+    -- candidates that would deplete slower than predicted.
+    local active_name = f and f.current_research and f.current_research.name or nil
+    local lost_spm_map = science_lost_spm_cache[force_index]
+    local active_lost = active_name and lost_spm_map and lost_spm_map[active_name] or nil
+    local active_capacity = research_capacity_cache[force_index]
+    local active_expected = active_name and active_capacity and active_capacity[active_name] or nil
+
     local res = {}
     for _, ingredient in pairs(current.research_unit_ingredients or {}) do
-        res[ingredient.name] = physical_units_per_minute * math.max(0, ingredient.amount or 1)
+        local science = ingredient.name
+        local demand = physical_units_per_minute * math.max(0, ingredient.amount or 1)
+        if active_lost and active_expected and active_expected > 0 then
+            local lost = active_lost[science] or 0
+            if lost > 0 then
+                local working_fraction = math.max(0, 1 - lost / active_expected)
+                demand = demand * working_fraction
+            end
+        end
+        res[science] = demand
     end
     return res
 end
@@ -2671,6 +2792,7 @@ queue.get_research_diagnostic = function(force_index)
         expected_spm = 0,
         working_spm = 0,
         utilization = 0,
+        measured_utilization = 0,
         total_labs = 0,
         compatible_labs = 0,
         working_labs = 0,
@@ -2798,7 +2920,8 @@ queue.get_research_diagnostic = function(force_index)
     end
 
     if res.expected_spm > 0 then
-        res.utilization = math.max(0, math.min(1, res.actual_spm / res.expected_spm))
+        res.utilization = math.max(0, math.min(1, math.min(res.actual_spm, res.working_spm) / res.expected_spm))
+        res.measured_utilization = math.max(0, math.min(1, res.actual_spm / res.expected_spm))
     end
 
     res.causes = map_values(cause_data)
@@ -2894,6 +3017,7 @@ local new_display_diagnostic = function(force_index, current)
         expected_spm = 0,
         working_spm = 0,
         utilization = 0,
+        measured_utilization = 0,
         total_labs = 0,
         compatible_labs = 0,
         working_labs = 0,
@@ -3030,7 +3154,8 @@ local finish_display_diagnostic = function(context)
         return res
     end
     if res.expected_spm > 0 then
-        res.utilization = math.max(0, math.min(1, res.actual_spm / res.expected_spm))
+        res.utilization = math.max(0, math.min(1, math.min(res.actual_spm, res.working_spm) / res.expected_spm))
+        res.measured_utilization = math.max(0, math.min(1, res.actual_spm / res.expected_spm))
     end
 
     res.causes = map_values(context.cause_data)
@@ -4017,6 +4142,8 @@ queue.get_active_missing_science_bottleneck = function(force_index, xcur)
     science_demand_cache[force_index][current.name] = physical_demand
     research_capacity_cache[force_index] = research_capacity_cache[force_index] or {}
     research_capacity_cache[force_index][current.name] = expected_spm
+    science_lost_spm_cache[force_index] = science_lost_spm_cache[force_index] or {}
+    science_lost_spm_cache[force_index][current.name] = per_science_lost_spm
 
     -- Wait for one near-complete staggered pass after load or large lab changes.
     -- The completed health diagnostic uses the same lab observations but can
@@ -4427,7 +4554,7 @@ local get_virtual_research_entries = function(force_index, count, science_availa
             missing_sciences = missing_sciences
         })
         virtually_researched[tech_name] = true
-        if duration then
+        if duration and availability_reason == nil then
             cumulative_time = cumulative_time + duration
         end
     end
@@ -4775,7 +4902,7 @@ local add_upcoming_display_entry = function(job, tech_name, xcur)
         missing_sciences = missing_sciences
     })
     job.virtually_researched[tech_name] = true
-    if duration then
+    if duration and availability_reason == nil then
         job.cumulative_time = job.cumulative_time + duration
     end
 end

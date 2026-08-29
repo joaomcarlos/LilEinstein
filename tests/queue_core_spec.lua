@@ -3070,7 +3070,278 @@ local tests = {
             "the switch must select the replacement temp")
         t.assert_equal(new_target, "original-target",
             "the original target must be preserved when the current tech is itself the expired temp tech")
-    end}
+    end},
+    {"switches to a partial-supply candidate with fewer bottleneck sciences", function()
+        local force = reset_runtime()
+        game.tick = 32000
+        queue.invalidate_science_cache(1)
+        science_names = {"pack-a", "pack-b", "pack-c"}
+        defines = {
+            entity_status = {
+                working = "working",
+                missing_science_packs = "missing-science-packs"
+            },
+            inventory = {lab_input = 1}
+        }
+
+        local old_availability = queue.get_science_availability
+        local old_forecast = queue.get_science_forecast
+        local old_speed = queue.get_research_speed
+        policy_settings.forecast_seconds = 120
+        queue.get_science_availability = function()
+            return {['pack-a'] = true, ['pack-b'] = true, ['pack-c'] = true}
+        end
+        queue.get_science_forecast = function()
+            return {
+                ['pack-a'] = {stock = 100000, production_per_minute = 0, consumption_per_minute = 0, net_per_minute = 0},
+                ['pack-b'] = {stock = 100000, production_per_minute = 0, consumption_per_minute = 0, net_per_minute = 0},
+                ['pack-c'] = {stock = 100000, production_per_minute = 0, consumption_per_minute = 0, net_per_minute = 0}
+            }
+        end
+        queue.get_research_speed = function() return 1 end
+
+        local current = xcur("current", {
+            sciences = {"pack-a", "pack-b"},
+            research_unit_ingredients = {{name = "pack-a", amount = 1}, {name = "pack-b", amount = 1}}
+        })
+        current.technology.research_unit_energy = 60
+        current.queued = true
+        local partial = xcur("partial", {
+            sciences = {"pack-a"},
+            research_unit_ingredients = {{name = "pack-a", amount = 1}}
+        })
+        partial.technology.research_unit_energy = 60
+        tech_state = {current = current, partial = partial}
+        storage.forces[1].queue.queue = {"current", "partial"}
+        force.current_research = current.technology
+
+        local function add_lab(unit_number, speed, status, contents)
+            local lab_entity = {
+                valid = true,
+                unit_number = unit_number,
+                speed_bonus = speed - 1,
+                productivity_bonus = 0,
+                prototype = {
+                    name = "partial-lab-" .. tostring(unit_number),
+                    lab_inputs = {"pack-a", "pack-b"},
+                    get_researching_speed = function() return 1 end
+                }
+            }
+            runtime_lab_content[unit_number] = {
+                lab = lab_entity,
+                latest_tick = game.tick,
+                latest_status = status,
+                latest_contents = contents
+            }
+        end
+        add_lab(1, 49, defines.entity_status.missing_science_packs, {{name = "pack-a", count = 100000}})
+        add_lab(2, 1, defines.entity_status.working,
+            {{name = "pack-a", count = 100000}, {name = "pack-b", count = 100000}})
+
+        queue.check_and_switch_temp_research(force)
+        local selected = storage.forces[1].queue.temp_tech
+
+        queue.get_science_availability = old_availability
+        queue.get_science_forecast = old_forecast
+        queue.get_research_speed = old_speed
+
+        t.assert_equal(selected, "partial",
+            "a partial-supply candidate with fewer bottleneck sciences must be selected when no fully-sufficient candidate exists")
+    end},
+    {"does not switch to a partial-supply candidate with the same bottleneck count", function()
+        local force = reset_runtime()
+        game.tick = 32000
+        queue.invalidate_science_cache(1)
+        science_names = {"pack-a", "pack-b"}
+        defines = {
+            entity_status = {
+                working = "working",
+                missing_science_packs = "missing-science-packs"
+            },
+            inventory = {lab_input = 1}
+        }
+
+        local old_availability = queue.get_science_availability
+        local old_forecast = queue.get_science_forecast
+        local old_speed = queue.get_research_speed
+        policy_settings.forecast_seconds = 120
+        queue.get_science_availability = function()
+            return {['pack-a'] = true, ['pack-b'] = true}
+        end
+        queue.get_science_forecast = function()
+            return {
+                ['pack-a'] = {stock = 100000, production_per_minute = 0, consumption_per_minute = 0, net_per_minute = 0},
+                ['pack-b'] = {stock = 100000, production_per_minute = 0, consumption_per_minute = 0, net_per_minute = 0}
+            }
+        end
+        queue.get_research_speed = function() return 1 end
+
+        local current = xcur("current", {
+            sciences = {"pack-a"},
+            research_unit_ingredients = {{name = "pack-a", amount = 1}}
+        })
+        current.technology.research_unit_energy = 60
+        current.queued = true
+        local same_bottleneck = xcur("same-bottleneck", {
+            sciences = {"pack-a"},
+            research_unit_ingredients = {{name = "pack-a", amount = 1}}
+        })
+        same_bottleneck.technology.research_unit_energy = 60
+        tech_state = {current = current, ["same-bottleneck"] = same_bottleneck}
+        storage.forces[1].queue.queue = {"current", "same-bottleneck"}
+        force.current_research = current.technology
+
+        local function add_lab(unit_number, speed, status, contents)
+            local lab_entity = {
+                valid = true,
+                unit_number = unit_number,
+                speed_bonus = speed - 1,
+                productivity_bonus = 0,
+                prototype = {
+                    name = "same-bn-lab-" .. tostring(unit_number),
+                    lab_inputs = {"pack-a"},
+                    get_researching_speed = function() return 1 end
+                }
+            }
+            runtime_lab_content[unit_number] = {
+                lab = lab_entity,
+                latest_tick = game.tick,
+                latest_status = status,
+                latest_contents = contents
+            }
+        end
+        add_lab(1, 49, defines.entity_status.missing_science_packs, {})
+        add_lab(2, 1, defines.entity_status.working, {{name = "pack-a", count = 100000}})
+
+        queue.check_and_switch_temp_research(force)
+        local selected = storage.forces[1].queue.temp_tech
+
+        queue.get_science_availability = old_availability
+        queue.get_science_forecast = old_forecast
+        queue.get_research_speed = old_speed
+
+        t.assert_equal(selected, nil,
+            "a candidate with the same bottleneck count must not be selected as a partial-supply fallback")
+    end},
+    {"score_interrupt_margin allows score-based switching for a clearly better candidate", function()
+        local force = reset_runtime()
+        game.tick = 31000
+        queue.invalidate_science_cache(1)
+        science_names = {"pack-a"}
+        defines = {
+            entity_status = {
+                working = "working",
+                missing_science_packs = "missing-science-packs"
+            },
+            inventory = {lab_input = 1}
+        }
+
+        local old_availability = queue.get_science_availability
+        local old_sufficient = queue.science_is_sufficient
+        queue.get_science_availability = function() return {['pack-a'] = true} end
+        queue.science_is_sufficient = function() return true end
+
+        local current = xcur("current", {
+            sciences = {"pack-a"},
+            research_unit_ingredients = {{name = "pack-a", amount = 1}}
+        })
+        current.technology.research_unit_energy = 60
+        current.queued = true
+        local better = xcur("better", {
+            sciences = {"pack-a"},
+            research_unit_ingredients = {{name = "pack-a", amount = 1}}
+        })
+        better.technology.research_unit_energy = 60
+        science_priorities["better"] = 200
+        tech_state = {current = current, better = better}
+        storage.forces[1].queue.queue = {"current", "better"}
+        force.current_research = current.technology
+        force.research_progress = 0.5
+
+        local function add_lab(unit_number, speed, status, contents)
+            local lab_entity = {
+                valid = true,
+                unit_number = unit_number,
+                speed_bonus = speed - 1,
+                productivity_bonus = 0,
+                prototype = {
+                    name = "margin-lab-" .. tostring(unit_number),
+                    lab_inputs = {"pack-a"},
+                    get_researching_speed = function() return 1 end
+                }
+            }
+            runtime_lab_content[unit_number] = {
+                lab = lab_entity,
+                latest_tick = game.tick,
+                latest_status = status,
+                latest_contents = contents
+            }
+        end
+        add_lab(1, 10, defines.entity_status.working, {{name = "pack-a", count = 100000}})
+
+        queue.check_and_switch_temp_research(force)
+        local selected = storage.forces[1].queue.temp_tech
+
+        queue.get_science_availability = old_availability
+        queue.science_is_sufficient = old_sufficient
+        science_priorities["better"] = nil
+
+        t.assert_equal(selected, "better",
+            "a candidate with a much higher score must be able to interrupt a sufficient current research with the lower margin")
+    end},
+    {"upcoming wait_time does not accumulate blocked tech durations", function()
+        local force = reset_runtime()
+        science_names = {"pack-a", "pack-b"}
+        local old_availability = queue.get_science_availability
+        local old_speed = queue.get_research_speed
+        queue.get_science_availability = function()
+            return {['pack-a'] = true, ['pack-b'] = false}
+        end
+        queue.get_research_speed = function() return 1 end
+
+        local first = xcur("first", {
+            sciences = {"pack-a"},
+            research_unit_count = 60,
+            research_unit_ingredients = {{name = "pack-a", amount = 1}}
+        })
+        first.technology.research_unit_energy = 60
+        local blocked = xcur("blocked", {
+            sciences = {"pack-b"},
+            research_unit_count = 120,
+            research_unit_ingredients = {{name = "pack-b", amount = 1}}
+        })
+        blocked.technology.research_unit_energy = 60
+        local third = xcur("third", {
+            sciences = {"pack-a"},
+            research_unit_count = 30,
+            research_unit_ingredients = {{name = "pack-a", amount = 1}}
+        })
+        third.technology.research_unit_energy = 60
+        tech_state = {first = first, blocked = blocked, third = third}
+        storage.forces[1].queue.queue = {"first", "blocked", "third"}
+        force.current_research = first.technology
+
+        local entries = queue.get_upcoming_research(1, 3)
+        queue.get_science_availability = old_availability
+        queue.get_research_speed = old_speed
+
+        local by_name = {}
+        for _, entry in ipairs(entries) do
+            by_name[entry.tech_name] = entry
+        end
+
+        t.assert_equal(#entries, 3, "three entries must be returned")
+        t.assert_equal(by_name["first"].wait_time, 0,
+            "first tech (current) must have zero wait_time")
+        t.assert_true(by_name["blocked"].wait_time ~= nil,
+            "blocked tech must have a wait_time value")
+        t.assert_true(by_name["third"].wait_time ~= nil,
+            "third tech must have a wait_time value")
+        t.assert_equal(by_name["third"].wait_time, 60,
+            "third tech must wait only for the first tech's duration; the blocked tech must not add to cumulative time")
+        t.assert_equal(by_name["blocked"].wait_time, 90,
+            "blocked tech must wait for first + third durations; its own duration must not accumulate")
+    end},
 }
 
 local passed = t.run("queue_core_spec", tests)

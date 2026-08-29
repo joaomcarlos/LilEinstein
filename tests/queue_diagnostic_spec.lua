@@ -1402,10 +1402,10 @@ local tests = {
             actual_spm = 10, sampling_ready = false})
         t.assert_equal(finish_display(measuring).state, "measuring")
         local capacity = context_with({expected_spm = 100, total_labs = 1, compatible_labs = 1,
-            actual_spm = 100, sampling_ready = true})
+            actual_spm = 100, working_spm = 100, sampling_ready = true})
         t.assert_equal(finish_display(capacity).state, "at_capacity")
         local degraded = context_with({expected_spm = 100, total_labs = 1, compatible_labs = 1,
-            actual_spm = 10, sampling_ready = true})
+            actual_spm = 10, working_spm = 100, sampling_ready = true})
         t.assert_equal(finish_display(degraded).state, "degraded_unexplained")
 
         local ties = context_with({expected_spm = 100, total_labs = 2, compatible_labs = 2,
@@ -1416,6 +1416,40 @@ local tests = {
             other = {key = "other", lost_spm = 10, surface_name = "fulgora", causes = {}, missing_sciences = {}}
         }
         t.assert_equal(#finish_display(ties).clusters, 3)
+    end},
+    {"utilization uses min(actual, working) to avoid false at_capacity when labs are idle", function()
+        reset({current = make_current()})
+        local new_display = find_private(queue.tick_research_health_snapshot, "new_display_diagnostic")
+        local finish_display = find_private(queue.tick_research_health_snapshot, "finish_display_diagnostic")
+
+        local function context_with(result)
+            local context = new_display(1, make_current())
+            for key, value in pairs(result) do
+                context.result[key] = value
+            end
+            return context
+        end
+
+        local half_working = context_with({expected_spm = 100, total_labs = 10, compatible_labs = 10,
+            actual_spm = 120, working_spm = 50, sampling_ready = true})
+        local half_result = finish_display(half_working)
+        t.assert_equal(half_result.utilization, 0.5,
+            "utilization must reflect working fraction, not clamped actual_spm")
+        t.assert_equal(half_result.measured_utilization, 1,
+            "measured_utilization must still clamp actual_spm to 100%")
+
+        local working_but_slow = context_with({expected_spm = 100, total_labs = 1, compatible_labs = 1,
+            actual_spm = 10, working_spm = 100, sampling_ready = true})
+        local slow_result = finish_display(working_but_slow)
+        t.assert_equal(slow_result.utilization, 0.1,
+            "utilization must reflect actual throughput when working labs are slow")
+        t.assert_equal(slow_result.state, "degraded_unexplained",
+            "a working-but-slow lab must be degraded, not at_capacity")
+
+        local full_capacity = context_with({expected_spm = 100, total_labs = 1, compatible_labs = 1,
+            actual_spm = 100, working_spm = 100, sampling_ready = true})
+        t.assert_equal(finish_display(full_capacity).utilization, 1,
+            "full-capacity utilization must be 100%")
     end},
     {"covers defensive guards in staged health workers", function()
         local current = make_current()
