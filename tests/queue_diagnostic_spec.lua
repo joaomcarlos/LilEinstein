@@ -246,6 +246,15 @@ local function finish_health_snapshot()
 end
 
 local tests = {
+    {"includes force laboratory productivity in lab capacity", function()
+        local get_lab_capacity_spm = find_private(queue.tick_research_health_snapshot, "get_lab_capacity_spm")
+        t.assert_true(type(get_lab_capacity_spm) == "function")
+        local force = reset({current = make_current(), labs = {}})
+        force.laboratory_productivity_bonus = 1
+        local lab_entity = make_lab(300, {productivity_bonus = 0, research_speed = 1})
+        lab_entity.force = force
+        t.assert_equal(get_lab_capacity_spm(lab_entity, make_current()), 7200)
+    end},
     {"counts lab and network science, caches, and reports breakdowns", function()
         local network = make_network(7, {
             ["automation-science-pack"] = 30,

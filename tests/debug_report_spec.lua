@@ -3,11 +3,14 @@ package.path = ".\\?.lua;.\\?\\init.lua;" .. package.path
 local t = require("tests.testlib")
 local names = {
     "lib.util",
+    "lib.const",
+    "model.state",
     "model.tech",
     "model.queue",
     "view.gui.analyzer",
     "view.gui.gutil",
-    "view.gui.debug_report"
+    "view.gui.debug_report",
+    "model.research_policy"
 }
 local originals = {}
 for _, name in ipairs(names) do
@@ -159,7 +162,8 @@ local queue = {
     end,
     get_science_display_forecast = function()
         return {
-            ["automation-science-pack"] = {stock = 123, consumption_per_minute = 5, production_per_minute = 8, net_per_minute = 3},
+            ["automation-science-pack"] = {stock = 123, consumption_per_minute = 5, production_per_minute = 8,
+                net_per_minute = 3, depletion_seconds = math.huge},
             ["logistic-science-pack"] = {stock = 4, consumption_per_minute = 6, production_per_minute = 1, net_per_minute = -5, depletion_seconds = 48}
         }
     end,
@@ -203,6 +207,13 @@ local queue = {
             runtime_queue = {"alpha", "beta"}
         }
     end,
+    get_science_sufficiency_details = function(xcur)
+        if xcur == beta then
+            return {sufficient = false, reason = "forecast_insufficient",
+                failed_sciences = {"logistic-science-pack"}}
+        end
+        return {sufficient = false, reason = "forecast_insufficient", failed_sciences = {}}
+    end,
     get_tech_missing_science = function() return {beta = true} end,
     get_queue = function() return {"alpha", "beta"} end,
     get_current_researching = function() return "stale-alpha" end
@@ -216,12 +227,38 @@ local tech = {
 }
 local util = {get_all_sciences = function() return {"automation-science-pack", "logistic-science-pack"} end}
 local gutil = {format_si = function(value) return tostring(value or 0) end}
+local const = {default_settings = {force = {
+    master_enable = "right",
+    research_queue_cleanup_timeout = 1800,
+    research_progress_average_ticks = 30,
+    announcement_level = "updates_only",
+    settings = {auto_research = false},
+    queue_blocking_tech = {disabled_tech = true}
+}}}
+local state = {
+    get_force_setting = function(_, key, default)
+        return key == "auto_research" and true or default
+    end
+}
+local policy = {
+    export_settings = function()
+        return {
+            settings = {cluster_mode = true, forecast_seconds = 120},
+            sciences = { ["logistic-science-pack"] = {priority = "urgent", lower_threshold = 0.25,
+                upper_threshold = 0.80} },
+            repeat_rules = {}
+        }
+    end
+}
 
 t.install_module("lib.util", util)
+t.install_module("lib.const", const)
+t.install_module("model.state", state)
 t.install_module("model.tech", tech)
 t.install_module("model.queue", queue)
 t.install_module("view.gui.analyzer", analyzer)
 t.install_module("view.gui.gutil", gutil)
+t.install_module("model.research_policy", policy)
 local debug_report = require("view.gui.debug_report")
 
 local tests = {
@@ -231,12 +268,16 @@ local tests = {
         t.assert_true(report:find("CURRENT RESEARCH", 1, true) ~= nil)
         t.assert_true(report:find("UPCOMING RESEARCH", 1, true) ~= nil)
         t.assert_true(report:find("switch_sufficient", 1, true) ~= nil)
-        t.assert_true(report:find("alpha|1|25.00%|1m 30s|-|YES|NO", 1, true) ~= nil)
+        t.assert_true(report:find("alpha|1|25.00%|1m 30s|-|YES|NO|", 1, true) ~= nil)
+        t.assert_true(report:find("forecast_insufficient|logistic-science-pack", 1, true) ~= nil)
         t.assert_true(report:find("IW|LB|UB|SP|ST", 1, true) ~= nil)
         t.assert_true(report:find("RESEARCH GRAPH", 1, true) ~= nil)
         t.assert_true(report:find("0|40.000", 1, true) ~= nil)
         t.assert_true(report:find("SCIENCE PACKS", 1, true) ~= nil)
         t.assert_true(report:find("logistic-science-pack|4|6|5|6", 1, true) ~= nil)
+        t.assert_true(report:find("automation-science-pack|123|5|4|5|8|3|∞", 1, true) ~= nil)
+        t.assert_true(report:find("SETTINGS", 1, true) ~= nil)
+        t.assert_true(report:find("forecast_seconds=120", 1, true) ~= nil)
         t.assert_true(report:find("WARNINGS", 1, true) ~= nil)
         t.assert_true(report:find("pack_bound", 1, true) ~= nil)
         t.assert_true(report:find("current_cache_mismatch", 1, true) ~= nil)

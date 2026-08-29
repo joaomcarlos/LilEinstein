@@ -44,7 +44,7 @@ GUI layer for the LilEinstein mod: window lifecycle, layout construction, and pr
 - `gutil.get_tooltip_text` inserts the prototype `localised_description` between the heading and the cost section so all tech icon/label tooltips match Factorio's native technology tooltip layout
 - New Upcoming LocalisedStrings include literal fallbacks so control-stage reloads cannot render `Unknown key` text
 - The Research Health header exposes a copy-debug-report action; because Factorio mods cannot write arbitrary text to the OS clipboard, the action opens a focused, read-only text box with the full report selected for Ctrl+C
-- Debug reports include live/current queue state, score components, pack-sufficiency decisions, the last 2 minutes of graph samples, bounded science-flow samples, and all current diagnostic warnings
+- Debug reports include current force/autopilot settings, live/current queue state, score components, pack-sufficiency decisions with failed-pack reasons, the last 2 minutes of graph samples, bounded science-flow samples, and all current diagnostic warnings
 - Debug reports also include the live Research Health details subtree: outer row caption states, inspect-button visibility, and nested pack-table child counts
 - Debug-report technology tables distinguish globally present packs (`packs_available`) from the switcher's live/forecast decision (`switch_sufficient`)
 - Debug-report focus and selection calls must guard the element's validity inside the protected call; research-detail row controls may only receive properties supported by their native element style type

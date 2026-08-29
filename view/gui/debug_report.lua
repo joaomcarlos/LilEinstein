@@ -1,8 +1,11 @@
 local util = require("lib.util")
+local const = require("lib.const")
+local state = require("model.state")
 local tech = require("model.tech")
 local queue = require("model.queue")
 local analyzer = require("view.gui.analyzer")
 local gutil = require("view.gui.gutil")
+local policy = require("model.research_policy")
 
 local debug_report = {}
 
@@ -57,6 +60,9 @@ local format_seconds = function(value)
     if value == nil then
         return "-"
     end
+    if value == math.huge then
+        return "∞"
+    end
     local seconds = math.max(0, math.floor(number(value) + 0.5))
     local hours = math.floor(seconds / 3600)
     local minutes = math.floor((seconds % 3600) / 60)
@@ -74,6 +80,15 @@ local sorted_copy = function(values)
     local res = {}
     for _, value in pairs(values or {}) do
         table.insert(res, value)
+    end
+    table.sort(res, function(a, b) return tostring(a) < tostring(b) end)
+    return res
+end
+
+local sorted_keys = function(values)
+    local res = {}
+    for key in pairs(values or {}) do
+        table.insert(res, key)
     end
     table.sort(res, function(a, b) return tostring(a) < tostring(b) end)
     return res
@@ -176,6 +191,21 @@ local get_missing_sciences = function(xcur, availability)
     return missing
 end
 
+local get_switch_details = function(xcur, force_index, availability)
+    if queue.get_science_sufficiency_details then
+        return queue.get_science_sufficiency_details(xcur, force_index) or {
+            sufficient = false, reason = "unknown", failed_sciences = {}
+        }
+    end
+    local missing = get_missing_sciences(xcur, availability)
+    local sufficient = switch_sufficiency(xcur, force_index)
+    return {
+        sufficient = sufficient,
+        reason = sufficient and nil or (#missing > 0 and "missing_science" or "forecast_insufficient"),
+        failed_sciences = missing
+    }
+end
+
 local get_current_progress = function(force, technology_name)
     if force and force.current_research and force.current_research.name == technology_name then
         return math.max(0, math.min(1, number(force.research_progress)))
@@ -266,17 +296,51 @@ local add_control_state = function(lines, control)
     table.insert(lines, "")
 end
 
+local add_settings = function(lines, force_index)
+    local exported = policy.export_settings and policy.export_settings(force_index) or {}
+    append(lines, "SETTINGS")
+    if state.get_force_setting then
+        local force_defaults = const.default_settings and const.default_settings.force or {}
+        local function add_state_setting(key, default)
+            append(lines, "force.%s=%s", safe_string(key),
+                safe_string(state.get_force_setting(force_index, key, default)))
+        end
+        add_state_setting("master_enable", force_defaults.master_enable)
+        add_state_setting("research_queue_cleanup_timeout", force_defaults.research_queue_cleanup_timeout)
+        add_state_setting("research_progress_average_ticks", force_defaults.research_progress_average_ticks)
+        add_state_setting("announcement_level", force_defaults.announcement_level)
+        for _, key in ipairs(sorted_keys(force_defaults.settings)) do
+            add_state_setting(key, force_defaults.settings[key])
+        end
+    end
+    for _, key in ipairs(sorted_keys(exported.settings)) do
+        append(lines, "%s=%s", safe_string(key), safe_string(exported.settings[key]))
+    end
+    for _, science in ipairs(sorted_keys(exported.sciences)) do
+        local value = exported.sciences[science] or {}
+        append(lines, "science.%s|priority=%s|lower=%s|upper=%s", safe_string(science),
+            safe_string(value.priority), safe_string(value.lower_threshold), safe_string(value.upper_threshold))
+    end
+    for _, tech_name in ipairs(sorted_keys(exported.repeat_rules)) do
+        local value = exported.repeat_rules[tech_name] or {}
+        append(lines, "repeat.%s|mode=%s|max_level=%s|remaining=%s", safe_string(tech_name),
+            safe_string(value.mode), safe_string(value.max_level), safe_string(value.remaining))
+    end
+    table.insert(lines, "")
+end
+
 local add_upcoming = function(lines, force, force_index, availability, entries)
     entries = entries or queue.get_upcoming_research_display(force_index, max_upcoming_entries) or {}
     append(lines, "UPCOMING RESEARCH (%d entries returned)", #entries)
-    table.insert(lines, "rank|technology|level|progress|time_left|wait|packs_available|switch_sufficient|reason|missing_packs|cost")
+    table.insert(lines, "rank|technology|level|progress|time_left|wait|packs_available|switch_sufficient|reason|failed_packs|missing_packs|cost")
     for rank, entry in ipairs(entries) do
         local progress = get_current_progress(force, entry.tech_name)
         local missing = entry.missing_sciences or get_missing_sciences(entry.xcur, availability)
+        local switch = get_switch_details(entry.xcur, force_index, availability)
         append(lines, "%d|%s|%s|%.2f%%|%s|%s|%s|%s|%s|%s|%s", rank, safe_string(entry.tech_name),
             safe_string(entry.level), progress * 100, format_seconds(entry.duration), format_seconds(entry.wait_time),
-            yes_no(entry.has_science), yes_no(switch_sufficiency(entry.xcur, force_index)),
-            safe_string(entry.availability_reason), format_list(missing),
+            yes_no(entry.has_science), yes_no(switch.sufficient), safe_string(switch.reason or entry.availability_reason),
+            format_list(switch.failed_sciences), format_list(missing),
             compact_number(entry.cost))
     end
     table.insert(lines, "")
@@ -287,16 +351,17 @@ local add_available_technologies = function(lines, player_index, force_index, av
     local count = #entries
     append(lines, "AVAILABLE TECHNOLOGIES (%d entries%s)", count,
         count > max_available_technologies and ", report truncated" or "")
-    table.insert(lines, "rank|technology|level|available|enabled|packs_available|switch_sufficient|missing_packs|cost|IW|LB|UB|SP|ST|total|sciences|infinite|suspended|queued")
+    table.insert(lines, "rank|technology|level|available|enabled|packs_available|switch_sufficient|reason|failed_packs|missing_packs|cost|IW|LB|UB|SP|ST|total|sciences|infinite|suspended|queued")
     for rank = 1, math.min(count, max_available_technologies) do
         local entry = entries[rank]
         local xcur = entry.xcur
         local score = entry.score or {}
         local technology_name = entry.tech_name
+        local switch = get_switch_details(xcur, force_index, availability)
         append(lines, "%d|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s", rank,
             safe_string(technology_name), safe_string(xcur.technology.level), yes_no(xcur.available),
             yes_no(queue.get_tech_enabled(force_index, technology_name)), yes_no(entry.packs_ok),
-            yes_no(entry.switch_ok),
+            yes_no(entry.switch_ok), safe_string(switch.reason or "-"), format_list(switch.failed_sciences),
             format_list(get_missing_sciences(xcur, availability)), compact_number(xcur.technology.research_unit_count),
             exact_number(score.importance), exact_number(score.level_boost), exact_number(score.user_boost),
             exact_number(score.science_priority), exact_number(score.strategy_boost), exact_number(score.total),
@@ -456,6 +521,7 @@ debug_report.generate = function(player_index)
     table.insert(lines, "")
 
     add_control_state(lines, control)
+    add_settings(lines, force_index)
     add_upcoming(lines, force, force_index, availability, upcoming)
     add_available_technologies(lines, player_index, force_index, availability)
     add_graph(lines, force_index, summary)

@@ -2346,7 +2346,9 @@ end
 
 local get_lab_capacity_spm = function(lab_entity, current)
     local productivity_multiplier = math.max(0, 1 + (lab_entity.productivity_bonus or 0))
-    return get_lab_research_unit_spm(lab_entity, current) * productivity_multiplier
+    local f = lab_entity.force
+    local force_productivity_multiplier = math.max(0, 1 + ((f and f.laboratory_productivity_bonus) or 0))
+    return get_lab_research_unit_spm(lab_entity, current) * productivity_multiplier * force_productivity_multiplier
 end
 
 local get_lab_science_pack_drain_multiplier = function(lab_entity)
@@ -4051,6 +4053,54 @@ end
 
 queue.science_is_sufficient = function(xcur, force_index)
     return science_supply_is_sufficient(xcur, force_index)
+end
+
+-- Read-only explanation seam for diagnostics. Keep the boolean sufficiency
+-- decision authoritative in science_supply_is_sufficient, while identifying
+-- the first observable pack-level reason for a failed decision.
+queue.get_science_sufficiency_details = function(xcur, force_index)
+    local sufficient = science_supply_is_sufficient(xcur, force_index)
+    if sufficient then
+        return {sufficient = true, reason = nil, failed_sciences = {}}
+    end
+
+    local availability = queue.get_science_availability(force_index) or {}
+    local missing = {}
+    for _, science in pairs((xcur and xcur.meta and xcur.meta.sciences) or {}) do
+        if availability[science] ~= true then
+            table.insert(missing, science)
+        end
+    end
+    table.sort(missing)
+    if #missing > 0 then
+        return {sufficient = false, reason = "missing_science", failed_sciences = missing}
+    end
+
+    local f = game.forces[force_index]
+    if f and f.current_research and xcur and xcur.technology and
+        f.current_research.name == xcur.technology.name then
+        local bottleneck = queue.get_active_missing_science_bottleneck and
+            queue.get_active_missing_science_bottleneck(force_index, xcur) or {}
+        local failed = {}
+        for science in pairs(bottleneck) do
+            table.insert(failed, science)
+        end
+        table.sort(failed)
+        if #failed > 0 then
+            return {sufficient = false, reason = "pack_bound", failed_sciences = failed}
+        end
+        local emergency_missing = auto_switch.get_missing_sciences(
+            force_index, xcur.technology, lab.get_runtime_lab_content(force_index), env.get_all_sciences())
+        for science in pairs(emergency_missing or {}) do
+            table.insert(failed, science)
+        end
+        table.sort(failed)
+        if #failed > 0 then
+            return {sufficient = false, reason = "pack_bound", failed_sciences = failed}
+        end
+    end
+
+    return {sufficient = false, reason = "forecast_insufficient", failed_sciences = {}}
 end
 
 queue.get_research_recovery_evidence = function(force_index, technology_name)

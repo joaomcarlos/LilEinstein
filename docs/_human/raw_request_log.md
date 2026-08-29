@@ -277,3 +277,11 @@ stack traceback:
 	**LilEinstein**/view/gui.lua:45: in function 'open'
 	**LilEinstein**/view/gui.lua:109: in function 'toggle'
 	**LilEinstein**/control.lua:445: in function <**LilEinstein**/control.lua:444>
+
+---
+
+## My request:
+
+fix those, add the failed-pack reason to the report too
+
+yes, and also add the current settings to the log so its easier to debug
