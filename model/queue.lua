@@ -491,13 +491,20 @@ queue.score_tech_detailed = function(xcur, level, user_boost, avg_cost, force_in
     end
 
     local num_ingredients = 0
-    for _ in pairs(xcur.technology.research_unit_ingredients or {}) do
+    local pack_difficulty_sum = 0
+    for _, rui in pairs(xcur.technology.research_unit_ingredients or {}) do
         num_ingredients = num_ingredients + 1
+        pack_difficulty_sum = pack_difficulty_sum + (rw.pack_difficulty[rui.name] or 1.0)
     end
     if num_ingredients == 0 then
         num_ingredients = 1
+        pack_difficulty_sum = 1.0
     end
-    local total_cost = cost * num_ingredients
+    -- Weighted cost: ingredient count * average pack difficulty.
+    -- A 4-pack Nauvis tech (difficulty ~1.0) costs less than an 8-pack
+    -- promethium tech (difficulty ~2.5 avg) beyond just the count.
+    local avg_pack_difficulty = pack_difficulty_sum / num_ingredients
+    local total_cost = cost * num_ingredients * avg_pack_difficulty
 
     local science_priority = force_index and policy.get_tech_science_priority(force_index, xcur) or 0
     if science_priority <= -1000 then

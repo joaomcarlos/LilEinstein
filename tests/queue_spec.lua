@@ -70,7 +70,7 @@ local function load_queue()
     package.preload["model.lab"] = function() return {} end
     package.preload["model.env"] = function() return {} end
     package.preload["model.research_weights"] = function()
-        return {research_caps = {}}
+        return {research_caps = {}, pack_difficulty = {}}
     end
     package.preload["model.research_policy"] = function()
         return {

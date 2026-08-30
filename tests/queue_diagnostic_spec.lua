@@ -19,7 +19,7 @@ local policy_settings = {}
 local science_states = {}
 local cluster_states = {}
 local repeat_rules = {}
-local research_weights = {research_weights = {}, research_caps = {}}
+local research_weights = {research_weights = {}, research_caps = {}, pack_difficulty = {}}
 local queued_updates = {}
 local sanitize_valid = true
 local flow_input = 10

@@ -46,7 +46,7 @@ t.install_module("model.lab", {
 t.install_module("model.env", {
     get_all_sciences = function() return science_names end
 })
-t.install_module("model.research_weights", {research_weights = {}, research_caps = {}})
+t.install_module("model.research_weights", {research_weights = {}, research_caps = {}, pack_difficulty = {}})
 t.install_module("model.research_policy", {
     get_setting = function(_, key, default) return policy_settings[key] == nil and default or policy_settings[key] end,
     get_tech_science_priority = function(_, xcur_value)

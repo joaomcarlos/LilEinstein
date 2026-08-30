@@ -22,6 +22,9 @@
 -- CAPS:  If a tech reaches the level listed in research_caps,
 --        its weight becomes -1000 (ignored).
 --        This is useful for techs capped by the game at 300 % or level 10.
+--        Practical caps for infinite combat/logistics techs are based on
+--        abucnasty's breakpoint analysis (one-shot thresholds, exponential
+--        cost walls where research time exceeds human lifespans).
 --============================================================
 
 local M = {}
@@ -34,8 +37,8 @@ local M = {}
 --      /c for _,t in pairs(prototypes.technology) do game.print(t.name) end
 M.research_weights = {
     -- S-tier: game-changing ROI (prioritise these above almost everything)
-    ["research-productivity"] = 20,          -- Infinite, no 300% cap on research output
-    ["mining-productivity"] = 12,           -- Infinite, buffs all ore/oil; extremely strong long-term
+    ["research-productivity"] = 20,          -- Infinite, no 300% cap on research output; ESPM multiplier
+    ["mining-productivity"] = 12,           -- Infinite, buffs all ore/oil; flat cost scaling, cheap UPS
     ["transport-belt-capacity"] = 10,       -- Strong but finite (stack size up to 4)
     ["processing-unit-productivity"] = 9,
 
@@ -51,26 +54,27 @@ M.research_weights = {
     ["scrap-recycling-productivity"] = 6,   -- Strong if you lean on recycling loops
 
     -- Logistics & base throughput
-    ["worker-robot-speed"] = 6,             -- Infinite, dramatically scales bot bases
+    ["worker-robot-speed"] = 5,             -- Infinite but exponential cost wall; practical limit ~40
 
     -- B-tier: good ROI, situational but solid
-    ["physical-projectile-damage"] = 4,
-    ["stronger-explosives"] = 4,
+    ["physical-projectile-damage"] = 5,     -- Key breakpoints: L13, L18, L33 (one-shot promethium)
+    ["stronger-explosives"] = 5,            -- Key breakpoint: L31 (one-shot big promethium asteroids)
+    ["railgun-damage"] = 4,                 -- Useful to L20-30; years territory beyond
 
     -- C-tier: moderate value, decent fillers
-    ["laser-weapons-damage"] = 3,
+    ["laser-weapons-damage"] = 1,           -- Rarely used; beam cost exceeds ammo cost
     ["electric-weapons-damage"] = 3,
-    ["railgun-damage"] = 3,
+    ["refined-flammables"] = 3,             -- Strong on Gleba
 
     -- D-tier: minor utility / low impact
     ["follower-robot-count"] = -10,
-    ["refined-flammables"] = 2,
+    ["health"] = -1,
 
     -- Negative / avoid: low ROI or hard-capped by game mechanics
     ["artillery-shell-shooting-speed"] = -5,
     ["artillery-shell-range"] = -3,
     ["artillery-shell-damage"] = -3,
-    ["health"] = -1,
+    ["railgun-shooting-speed"] = -2,        -- Most aggressive exponential; impractical beyond ~20
 }
 
 -- Hard caps: beyond this level the research is useless or capped at 300 %.
@@ -78,6 +82,7 @@ M.research_weights = {
 -- Format: ["technology-name"] = max_level,
 M.research_caps = {
     -- Recipe-based productivity techs: capped by the 300% productivity limit
+    -- (4 legendary prod modules = +100%, so level 20 gives the remaining 200%)
     ["processing-unit-productivity"] = 25,
     ["rocket-part-productivity"] = 30,
     ["low-density-structure-productivity"] = 25,
@@ -89,6 +94,64 @@ M.research_caps = {
 
     -- Artillery shooting speed has finite levels; past that treat as useless
     ["artillery-shell-shooting-speed"] = 10,
+
+    -- Practical infinite-tech caps based on abucnasty breakpoint analysis:
+    -- Combat techs hit one-shot thresholds, then diminishing returns are severe
+    ["physical-projectile-damage"] = 33,    -- L33: one-shot medium promethium asteroids w/ red ammo
+    ["stronger-explosives"] = 31,           -- L31: one-shot big promethium asteroids
+    ["railgun-damage"] = 30,                -- L30: years territory beyond; months already at L30
+    ["railgun-shooting-speed"] = 20,        -- Most aggressive exponential; impractical beyond L20
+    ["worker-robot-speed"] = 40,            -- Exponential cost wall; millions of years by L60
+    ["laser-weapons-damage"] = 10,          -- Rarely useful; laser costs more than ammo
+    ["electric-weapons-damage"] = 20,       -- Diminishing returns on Gleba defense
 }
+
+-- Per-pack production difficulty weights used in scoring.
+-- Higher = more expensive to produce (in UPS, logistics, and complexity).
+-- This adjusts the cost component of score_tech_detailed so that a tech
+-- requiring 8 packs (including promethium) is weighted as genuinely harder
+-- than a 4-pack tech on Nauvis, beyond just the ingredient count.
+-- Values derived from abucnasty's UPS cost analysis per science pack.
+M.pack_difficulty = {
+    ["automation-science-pack"] = 1.0,      -- Nauvis, trivial
+    ["logistic-science-pack"] = 1.0,        -- Nauvis, trivial
+    ["military-science-pack"] = 1.0,        -- Nauvis, cheap
+    ["chemical-science-pack"] = 1.2,        -- Nauvis, oil processing overhead
+    ["production-science-pack"] = 1.5,      -- Nauvis, complex chain
+    ["utility-science-pack"] = 1.5,         -- Nauvis, complex chain
+    ["space-science-pack"] = 2.0,           -- Orbit, rocket launch overhead
+    ["agricultural-science-pack"] = 3.0,    -- Gleba, spoilage mechanics, UPS-heavy
+    ["electromagnetic-science-pack"] = 2.5, -- Fulgora, scrap recycling chains
+    ["metallurgic-science-pack"] = 2.5,     -- Vulcanus, foundry + casting chains
+    ["cryogenic-science-pack"] = 3.0,       -- Aquilo, extreme cold, cryo plant
+    ["promethium-science-pack"] = 5.0,      -- Solar system edge, most expensive UPS per pack
+}
+
+-- ESPM (Effective Science Per Minute) formula constants.
+-- ESPM = raw_SPM * lab_drain_multiplier * (1 + module_productivity + research_prod_level * per_level_bonus)
+-- In Space Age with biolabs + 4 legendary prod modules:
+--   lab_drain_multiplier = 2.0  (50% drain = 2x output per pack)
+--   module_productivity  = 1.0  (4x legendary prod modules = +100%)
+--   per_level_bonus      = 0.10 (research productivity: +10% per level)
+-- Simplified: ESPM = raw_SPM * 2 * (2 + 0.1 * research_prod_level)
+-- At level 30: ESPM = raw_SPM * 10
+-- At level 100: ESPM = raw_SPM * 24
+-- These are reference constants for display/target calculations; the runtime
+-- always reads live values from the Factorio API (force.laboratory_productivity_bonus,
+-- lab_entity.productivity_bonus, prototype.science_pack_drain_rate_percent).
+M.espm_constants = {
+    lab_drain_multiplier = 2.0,
+    module_productivity = 1.0,
+    research_prod_per_level = 0.10,
+}
+
+-- Compute the ESPM multiplier for a given research productivity level.
+-- This is a reference helper for display/target purposes only; runtime
+-- code must use live API values, not these constants.
+-- Returns: ESPM = raw_SPM * multiplier
+M.espm_multiplier = function(research_prod_level)
+    local c = M.espm_constants
+    return c.lab_drain_multiplier * (1 + c.module_productivity + (research_prod_level or 0) * c.research_prod_per_level)
+end
 
 return M
