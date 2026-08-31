@@ -1394,23 +1394,32 @@ queue.sync_ingame_queue = function(f)
     -- If there is only one item in the research queue check if it is our first next tech
     if #f.research_queue == 1 then
         local next = get_first_next_tech(f)
-        if f.research_queue[1].name == next then
+        local queued_tech = f.research_queue[1]
+        local queued_name = type(queued_tech) == "string" and queued_tech or
+            (queued_tech and queued_tech.name)
+        if queued_name == next then
             return
         end
     end
 
     -- Remove all tech from our queue (if applicable) and add it again
-    for _, t in pairs(f.research_queue) do
-        queue.remove(f, t.name, true)
+    local queue_names = {}
+    for _, queued_tech in pairs(f.research_queue) do
+        local tech_name = type(queued_tech) == "string" and queued_tech or
+            (queued_tech and queued_tech.name)
+        if tech_name then
+            table.insert(queue_names, tech_name)
+            queue.remove(f, tech_name, true)
+        end
     end
-    for i = #f.research_queue, 1, -1 do
-        queue.add(f, f.research_queue[i].name, 1, true)
+    for i = #queue_names, 1, -1 do
+        queue.add(f, queue_names[i], 1, true)
     end
 
     -- If we don't have anything in our queue but there is an in-game queue, add all tech
-    if #sfq == 0 and f.research_queue and next(f.research_queue) ~= nil then
-        for _, t in pairs(f.research_queue) do
-            queue.add(f, t.name)
+    if #sfq == 0 and #queue_names > 0 then
+        for _, tech_name in pairs(queue_names) do
+            queue.add(f, tech_name)
         end
         return
     end

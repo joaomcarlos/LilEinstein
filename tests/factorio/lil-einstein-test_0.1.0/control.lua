@@ -115,7 +115,11 @@ local function record_research_state(scenario, tick)
     local force = game.forces.player
     local queue_names = {}
     for _, technology in ipairs(force.research_queue or {}) do
-        table.insert(queue_names, technology.name)
+        local technology_name = type(technology) == "string" and technology or
+            (technology and technology.name)
+        if technology_name then
+            table.insert(queue_names, technology_name)
+        end
     end
     table.insert(scenario.timeline,
         tostring(tick) .. ":" ..

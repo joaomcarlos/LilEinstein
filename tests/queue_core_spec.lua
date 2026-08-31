@@ -1459,6 +1459,27 @@ local tests = {
         queue.record_research_progress(1)
         t.assert_equal(#sfq.speed_samples, 4)
     end},
+    {"syncs Factorio 2.1 string research queues", function()
+        local force = reset_runtime()
+        local old_remove = queue.remove
+        local old_add = queue.add
+        local removed = {}
+        local added = {}
+        queue.remove = function(_, tech_name) table.insert(removed, tech_name) end
+        queue.add = function(_, tech_name) table.insert(added, tech_name) end
+
+        force.research_queue = {"a", "b"}
+        storage.forces[1].queue.queue = {}
+        queue.sync_ingame_queue(force)
+
+        queue.remove = old_remove
+        queue.add = old_add
+
+        t.assert_equal(removed[1], "a", "2.1 queue entries are strings when removing")
+        t.assert_equal(removed[2], "b", "2.1 queue entries are strings when removing")
+        t.assert_equal(added[1], "b", "2.1 queue entries are strings when re-adding")
+        t.assert_equal(added[2], "a", "2.1 queue entries are strings when re-adding")
+    end},
     {"guards queue operations and runtime synchronization edge cases", function()
         local force = reset_runtime()
         _G.serpent = {line = function(value) return tostring(value) end}
