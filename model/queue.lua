@@ -2452,10 +2452,11 @@ local get_lab_research_unit_spm = function(lab_entity, current)
 end
 
 local get_lab_capacity_spm = function(lab_entity, current)
+    -- lab_entity.productivity_bonus already includes force-based bonuses
+    -- (laboratory_productivity_bonus) as well as beacon/module bonuses,
+    -- per the Factorio API docs. Do not multiply by force productivity again.
     local productivity_multiplier = math.max(0, 1 + (lab_entity.productivity_bonus or 0))
-    local f = lab_entity.force
-    local force_productivity_multiplier = math.max(0, 1 + ((f and f.laboratory_productivity_bonus) or 0))
-    return get_lab_research_unit_spm(lab_entity, current) * productivity_multiplier * force_productivity_multiplier
+    return get_lab_research_unit_spm(lab_entity, current) * productivity_multiplier
 end
 
 local get_lab_science_pack_drain_multiplier = function(lab_entity)

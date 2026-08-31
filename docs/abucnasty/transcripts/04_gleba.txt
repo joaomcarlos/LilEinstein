@@ -1,0 +1,1349 @@
+# Gleba [Road to 2.5 Million ESPM]
+# Channel: abucnasty
+# Video ID: MX7neW2OVHE
+# Transcript length: 63369 chars
+# Fetched: 2026-08-31
+# Source: TranscriptAPI.com
+
+[0.24s] Hello, welcome back to Factorio. My name
+[2.08s] is Abugn Nasty. This is going to be the
+[4.72s] first video of a short series where I'm
+[6.96s] going to talk about what I've done over
+[8.16s] the last 3 weeks. I'm going to
+[10.0s] specifically uh one of the things that
+[12.24s] I've been I've been focusing on has been
+[14.799s] going and doing a lot of spring cleaning
+[17.279s] across Gaba, Aquill, some changes to
+[20.4s] Vulcanus, and a lot of small changes to
+[22.72s] Novice. Uh Fora has been slightly
+[25.84s] overhauled, but not very much. But like
+[27.76s] I've I've made changes to all the inner
+[29.84s] like basically every single planet and
+[31.76s] I'm going to kind of break them down by
+[33.52s] each individual planet. We're going to
+[35.52s] start with the most exciting one which
+[37.2s] is Clayba. I've leaned as hard as I
+[39.36s] possibly can to make a case for trains
+[41.52s] on Clayba in this particular uh in in
+[45.12s] this particular video. So stay tuned if
+[46.96s] you really like trains. That's what
+[48.079s] we're going to be talking about. To be
+[50.559s] honest, one of the reasons that I'm I
+[52.559s] have spent the last 3 weeks just playing
+[54.64s] Factorio has been I've I've kind of
+[56.399s] burned myself out on just the hardcore
+[58.719s] benchmarking. And that's one of the
+[61.12s] things that like if you're doing mega
+[62.879s] basing, it's like really really good to
+[64.4s] go and do individual benchmarks and
+[65.92s] continue to push yourself to kind of
+[67.52s] like find what is going to be more UPS
+[69.76s] optimal. But honestly for me uh you know
+[73.6s] that I I kind of just got to a point
+[75.36s] where I I I felt like I wasn't playing
+[77.84s] the game as much as I really would like
+[79.68s] to be. So especially after the Linux
+[83.119s] versus Windows uh benchmark compet like
+[85.84s] that that I wound up doing, I all of a
+[87.759s] sudden found like a love for like I kind
+[89.68s] of want to be out of the editor. Like
+[91.2s] 90% of my time is spent in the editor
+[93.04s] and I I really would like to go and just
+[94.88s] play the game it itself. Back is a
+[96.88s] beautiful game. I want to go and do that
+[98.56s] and just take some time to do that. So,
+[100.4s] that's what I've been doing over the
+[101.439s] last three weeks. We're going to start
+[103.36s] off in this minieries. We're going to
+[105.2s] start with GABA. We're going to
+[106.799s] specifically talk about uh the the the
+[110.0s] complete overhaul that I've done of it.
+[112.64s] And and I I think you'll like it. I' I'm
+[115.2s] trying to give the best case for using
+[117.2s] trains on Glip, not from a point of it
+[120.159s] being UPS optimal, but because I just
+[122.719s] love trains. So, with that being said,
+[126.079s] that's what we're going to focus on
+[127.28s] today. We're going to through the
+[128.959s] series. We're going to go and talk about
+[130.72s] a very complete refactor that I've done
+[133.12s] of Aquilla, which I'm really excited to
+[134.879s] talk about. I've made some minor changes
+[136.8s] on Vulcanus and Novice, but there's some
+[139.52s] some key differences. So, I'll I'll
+[141.44s] focus on this will be a three-part
+[142.959s] series where I'm going to go and talk
+[144.16s] about Glava first, then I'll talk about
+[145.68s] Aquill, and then I'll wrap it up with
+[147.52s] some of the complete changes that I've
+[149.2s] made with Prometheium and talking about
+[151.68s] how I've gotten to the point where I'm
+[153.68s] running about 2.6 six effective science
+[157.44s] uh ESPM. So 114,000
+[160.8s] 115,200
+[162.56s] SPM at right around 90 UPS on average.
+[166.56s] So we'll get into that and we'll I'll
+[169.44s] see you in a second when I go and talk
+[171.2s] about the things I wanted to change in
+[172.4s] Clayba and then the new stuff that we've
+[174.08s] got.
+[187.84s] Welcome to Glaba.
+[189.92s] This is the last state that you've
+[191.76s] actually wind up seeing GLAA since I've
+[193.519s] recorded any actual videos or like
+[195.28s] showcased it. One of the core problems
+[198.4s] that I wound up having like as I was
+[200.239s] running research productivity and trying
+[201.76s] to scale it up was that the pollution
+[204.0s] cloud was growing very very large on
+[206.239s] GABA just constantly as I'm running
+[208.159s] research prod. So, one of the first
+[210.48s] problems that I wanted to deal with was,
+[212.159s] okay, these outposts don't give me
+[213.92s] adequate coverage. Okay, they sure they
+[215.519s] do, but because I was I transitioned
+[217.92s] fully to solar already on Gaba,
+[220.4s] pentapods would wind up going and
+[221.92s] spawning here, going and taking out some
+[224.0s] of the solar here, and it was just a
+[225.44s] constant fight that I just didn't want
+[226.879s] to deal with. So, I wanted to go and
+[229.519s] move these little outposts that I wind
+[232.319s] up having here. And I wanted to move
+[234.48s] them out much further onto the map so
+[236.64s] that I w up having like core like kind
+[238.959s] of like targets for pentapods to go and
+[241.599s] wind up going in wanting to go and
+[243.2s] attack. So that's one of the main things
+[245.2s] that I wanted to do was move these
+[246.56s] outposts way further out, create a much
+[248.4s] larger perimeter, and so allowing the
+[250.48s] pollution crowd to grow. And that was
+[252.64s] one thing that I wanted to change
+[254.0s] immediately. The next thing that you're
+[255.68s] noticing right now is there's a lot of
+[257.44s] bot activity. So, I've I've using I'm
+[261.359s] still using pretty heavily robots here
+[263.44s] on Gaba. I wanted to as much as possible
+[266.0s] remove it. There's some good use cases
+[268.479s] for robots like here for very very
+[270.56s] quickly loading the train up. I this is
+[272.72s] a short travel distance. You don't need
+[274.24s] a whole bunch of bots to wind up doing
+[275.68s] this. Like maybe like like you could be
+[277.36s] get away with 250 bots and be very very
+[27
+
+9.28s] happy with this small little setup for
+[280.96s] quickly loading trains. So, I I like
+[283.84s] this setup. Um, but what I don't like
+[285.759s] about this is you can see how they're
+[287.199s] constantly moving to kind of fill up the
+[288.8s] buffer chests. And this is a lot of
+[291.36s] insurgters here that I really don't
+[292.8s] like. So, let's let's talk about the
+[294.639s] farms. I'll start off with this about
+[296.479s] one of the things that I just uh detest
+[298.639s] about this current setup. So, the way
+[300.88s] that I have quote unquote clocked the
+[303.04s] agriculture towers is I wind up going
+[305.84s] and looking inside the agriculture tower
+[308.08s] for if the output of the Yakco plants
+[311.6s] that it currently has is less than 50.
+[314.0s] So every time you harvest a basically
+[316.72s] Yumako plant, right, Yumako tree, you're
+[318.4s] going to get 50 of them. So anytime it's
+[320.08s] less than 50, it's going to go and
+[322.0s] enable, pick one up, and then stop. The
+[324.88s] problem with this is that
+[328.24s] it it it's relying this this in itself
+[331.44s] isn't bad. It's the output. The output
+[334.24s] and the way that this works is I wind up
+[336.24s] reading constantly the logistics network
+[338.8s] here. And this is a constantly changing
+[340.8s] signal as things rot, as things are
+[342.72s] going into uh different states. And the
+[345.36s] idea here is that hey, whenever I have
+[347.039s] less than a trains worth of items, I'm
+[349.68s] going to go ahead and enable this so
+[351.759s] that all of the insertters will pull out
+[355.12s] the actual uh yakco plant or the I'm
+[358.479s] just going to call them balls because
+[359.52s] it's easier for me to think about. So
+[361.12s] the red balls come all the way down here
+[362.96s] and then flow through here until we
+[364.72s] reach the chest. This is cool when
+[367.28s] you're running because I run both
+[368.72s] research productivity and full speed
+[370.96s] agriculture science. So twice the speed.
+[372.88s] So this is kind of nice and like a
+[374.479s] dynamic approach. The problem with this
+[376.4s] is that it's like almost impossible to
+[378.08s] tune because every single inserter has
+[380.16s] its own condition and also some of the
+[382.72s] other things that I don't like is that
+[384.08s] the trees are kind of uh overlapping. So
+[386.639s] like you can see this one is harvesting
+[388.56s] the same plant. This one's also
+[389.919s] harvesting the same plant. So they have
+[391.28s] multiple targets that are the same. I'd
+[393.28s] like to spread those out much further.
+[395.68s] So, the reason it's hard to tune is
+[398.319s] because I'd have to make a change to
+[399.68s] every single one of these inserters.
+[401.759s] Another problem that I have is like the
+[403.52s] overall growth area. This one's
+[405.199s] significantly better because I've belted
+[407.199s] almost all of the actual um in this case
+[411.039s] the actual fruits that come in. But I'm
+[414.24s] still using bots to deliver the seeds,
+[416.88s] which I don't like. And this one is a
+[419.36s] much worse setup where I'm still using
+[421.44s] like rare insertters for things for
+[423.599s] example. And I wind up using completely
+[426.16s] bot-based in this area. So there's
+[427.919s] constant bot activity here. I
+[430.08s] transitioned a little bit to belt based
+[431.759s] up here. And you can see them starting
+[433.12s] to harvest. But there's there isn't a
+[436.8s] rhyme or reason for why I've done this.
+[438.639s] So one of the core things I want to do
+[440.88s] is completely delete this. Completely
+[442.8s] delete this and move this all to one
+[444.96s] isolated farming area in this area here.
+[447.36s] That's one big change that I'm going to
+[448.8s] make. I also don't like the way that
+[450.96s] these these trains are coming in. And
+[453.199s] this is the biggest problem that I have
+[454.8s] right now with Clayba. You see, I have
+[456.72s] this like central loading dock that's
+[458.479s] all here on the left. And then there's a
+[460.0s] central bus that comes across. So you
+[461.599s] can see a very very slow moving when I'm
+[464.08s] running research productivity. It's
+[466.0s] going to speed up when I'm actually
+[467.84s] going and running the science, which
+[469.919s] will happen every once in a while, but
+[472.56s] my freshness on on novice is actually
+[476.0s] relatively low. Is is is is not where
+[478.639s] I'd like it to be. So if I look at
+[480.08s] agriculture science right now I am at
+[483.199s] when I'm running research productivity
+[485.199s] and this is before I wound up scaling
+[487.12s] up. This is when I was running at um
+[490.4s] it's 100k. So 117k is the actual science
+[493.919s] that I wind up having and you're going
+[495.759s] to wind up seeing that the uh freshness
+[497.84s] in in the labs here is right around like
+[500.8s] 87 88%. I wanted to push this to at
+[504.16s] least 90% to reduce the uh especially
+[507.84s] the amount of bots that I have. Like you
+[509.919s] can see all these bots that have to
+[511.28s] deliver extra amounts of agriculture
+[513.599s] science to these first four labs in
+[515.599s] here. And I wanted to at least cut it
+[517.2s] down to three labs that are actually
+[518.719s] getting fed. That cuts down the travel
+[520.88s] distance especially for this back corner
+[523.12s] where they have to go and bring that
+[524.8s] agriculture science. And just in
+[527.36s] general, you can see just how much bot
+[528.959s] activity there is just from agriculture
+[530.8s] science. So that was a core thing that I
+[534.399s] wanted to change. So in order to do
+[536.48s] that, I realized that like fundamentally
+[539.04s] the way that this is laid out here, when
+[541.279s] the trains all come in, they prioritize
+[545.2s] the opposites of what you should be
+[547.6s] prioritizing for freshness. So okay,
+[550.16s] we're prioritizing right now Boflux.
+[552.48s] That's good. The problem with this
+[554.64s] though
+
+ is that every single thing
+[556.48s] afterwards I'm prioritizing right now
+[559.44s] and I I saying priority because since
+[562.959s] this is a a spoil spoilable good
+[566.0s] anything that's in the beginning of the
+[567.6s] bus is going to wind up being a priority
+[570.48s] for freshness. So I'm prioritizing the
+[573.279s] ability to go and create seeds as a back
+[576.0s] uh up method. I'm so I'm also
+[579.6s] prioritizing right now a pretty terrible
+[582.24s] build of creating uh carbon fiber which
+[585.839s] you do need constantly for research
+[587.6s] productivity, right? So why am I
+[590.72s] prioritizing this? That doesn't make any
+[592.32s] sense. It's almost always using
+[594.16s] spoilage. So there isn't really anything
+[596.72s] in here that cares about it being fresh
+[598.64s] cuz it's a final good, right? And I'm
+[601.6s] going to sound a lot like I'm just
+[603.12s] getting down on myself here, but that's
+[604.64s] kind of the the the point is to hard
+[606.959s] evaluate these individual planets and
+[609.68s] redesign them as much as I can. Right?
+[612.32s] So then I'm also prioritizing here the
+[615.76s] creation of again a finished good iron
+[619.04s] ore, right? Why am I going and
+[621.04s] prioritizing that? Why am I prioritizing
+[623.6s] copper? Both of those don't make any
+[626.48s] sense for me to be prioritizing here
+[629.44s] because there again just a finished
+[631.36s] good. Also, if you look at this design
+[633.2s] in general, one of the things that I I
+[635.68s] don't like about is that I'm using a lot
+[637.12s] of red insertters here and I wind up in
+[640.399s] general this could be a lot more direct
+[642.88s] insertionbased, which I would like to
+[645.12s] completely redesign this little cluster
+[647.519s] and and make this just a a better thing.
+[649.92s] I'm also just constantly belting with
+[652.399s] splitters here, the spoilage that's
+[654.16s] going across the the the the belt here.
+[656.56s] And that's one of the things that I wind
+[658.16s] up ultimately that I want to want to
+[659.76s] change for that. Anyway,
+[662.64s] bringing this as we continue to go
+[664.399s] further down. Again, more just finalized
+[667.6s] goods. Everything pretty much every
+[669.839s] priority right now is for something that
+[671.76s] is not spoilable. And then that finally
+[674.88s] brings me all the way along this bus to
+[678.88s] the actual science setup.
+[682.16s] And in this setup, this is where this is
+[685.44s] the thing I'm using the most in my
+[687.279s] actual base. So I should be prioritizing
+[690.959s] science as a first class citizen. Like I
+[693.2s] should be using it first, right? That's
+[695.839s] one thing that I want here is if you
+[697.839s] think about this fundamentally, I want
+[699.92s] to get rid of a lot of the bot traffic
+[701.519s] that I have here and almost make it down
+[703.12s] to a complete minimum. I want to use
+[704.88s] belts and completely just bring
+[706.88s] everything in. I still want to heavily
+[708.32s] use trains cuz I think trains are cool.
+[710.48s] Uh I wind up using legendary fuel for
+[712.88s] them. So that you can see that here in
+[715.12s] all the fuel delivery because of the
+[716.959s] increased vehicle top speed that you
+[719.279s] wind up getting. The acceleration is
+[721.36s] 475% with legendary fuel. So that was
+[724.0s] one thing that I definitely wanted to
+[725.519s] keep. So
+[729.04s] that's what I want to do. So I want to
+[730.48s] use trains. I want to have the first
+[732.72s] thing that the trains deliver to to be
+[734.88s] the actual science. I want to flip that
+[736.639s] completely around so that I wind up
+[739.12s] using that instead. I also want to craft
+[741.519s] all of the rocket parts that I'm
+[743.279s] creating. Why am I using bots for this?
+[745.279s] For extremely high throughput green
+[747.12s] circuits. This should be completely just
+[748.959s] belted. Direct inserted actually should
+[751.12s] be the ultimate like best thing that I
+[752.959s] wind up doing for this. So
+[758.16s] that's my overall grievances with the
+[760.16s] base. So let me talk shortly here now
+[763.6s] about the blade and some of the things
+[765.6s] that I don't like with like the general
+[768.079s] mechanics of the strategy that I was
+[770.0s] originally employing for creating
+[771.44s] agriculture design. So, here's a good
+[773.76s] example of when I'm running mining
+[776.0s] productivity and I'm not using GABA at
+[778.24s] all, the way that the strategy that I
+[780.16s] had worked. So, for agriculture science,
+[783.6s] I would wind up just letting it rot and
+[785.92s] sit inside these three ships that I'm
+[788.56s] running. So, request 240,000 science.
+[791.279s] That's two lock rocket launches from
+[793.6s] GABA. And this would just sit here and
+[796.24s] would slowly let it just effectively
+[798.88s] just overall die eventually.
+[801.68s] The problem with this is that for
+[803.36s] freshness on novice,
+[806.24s] everything just winds up rotting and
+[808.399s] very slowly you just wind up seeing
+[810.48s] here. We wind up accumulating spoilage.
+[812.639s] We wind up having agriculture science
+[814.24s] packs that are at 38% sitting in the
+[816.32s] labs. So that means that the transition
+[820.48s] going into research productivity was
+[822.88s] much slower because the freshness had to
+[824.8s] slowly go and get built up. So it would
+[827.12s] just spike, consume as much agriculture
+[829.2s] science as possible, and the transitions
+[830.72s] were just harder in general.
+[833.279s] To combat this, the way that I actually
+[836.0s] handle this is, and I still use this
+[838.72s] now, and I haven't gone and changed
+[840.399s] that. You're seeing right now there's a
+[841.76s] purge request that is I have completely
+[844.48s] locked out cuz I was just turning it
+[846.0s] off. Um, if this is turned on, what
+[848.8s] would happen when that uh individual
+[851.36s] purge is happening, this would create a
+[854.0s] timer for 45 minutes and woul
+
+d go and
+[856.16s] delete all the agriculture science. So,
+[858.399s] right now, when I just flip that button,
+[860.16s] you're going to see all the labs
+[861.519s] activate and I wind up pulling uh on
+[864.24s] like a tick pulse here all the
+[866.24s] agriculture science out of these labs.
+[868.88s] Right? But you're seeing here that right
+[871.12s] now I'm not picking anything up cuz I
+[872.639s] have just spoilage here. and uh and and
+[876.56s] there is it's slowly slowly getting to
+[880.079s] the point where it's starting to bring
+[881.6s] these items out. That's because it's
+[883.6s] just rotting. And because I'm using bots
+[886.32s] to deliver the actual science, it isn't
+[889.68s] super consistent about the very first
+[891.92s] labs having the highest freshness and
+[893.76s] then the last labs having the lowest
+[895.279s] freshness because there's
+[897.199s] non-deterministic
+[898.72s] uh like allocation here of the
+[901.279s] agriculture science packs cuz it's just
+[902.959s] picking up whatever from the hub when
+[905.04s] it's bringing these in. So I wanted to
+[906.88s] belt those directly. That was one big
+[908.8s] major core change that I wanted to make.
+[911.12s] You can see here very slowly we're going
+[913.04s] and taking all of the agriculture
+[914.959s] science out and we're slowly shredding
+[916.8s] it here. And you're seeing that this is
+[918.959s] like kind of occasionally taking stuff
+[921.44s] out. And that's also just because we're
+[924.16s] waiting on a lot of these belts that
+[925.76s] have spoilage on them to slowly get
+[928.32s] filtered out and eventually come onto
+[932.16s] the splitter that would filter it out.
+[934.0s] So it's just a slow throughput. So not a
+[936.0s] really great way of deleting everything.
+[938.56s] So, what I wanted to change was
+[940.48s] ultimately I don't want to let it rot,
+[942.399s] but I'd rather just constantly have a
+[944.399s] trickle running and dumping the unused
+[948.399s] agriculture science on a timer into
+[950.72s] space. The reason that's useful is if
+[954.72s] you look at the current way that I'm
+[956.24s] doing agriculture science and spoilage
+[958.48s] removal, you're noticing here I have a
+[961.279s] lot of inserters all over the place
+[963.759s] checking for spoilage. And on on worse
+[966.639s] than that, it's throwing them into
+[968.24s] active provider chests. So, I constantly
+[971.12s] have bots flying around like this,
+[973.519s] delivering, picking things up, going and
+[976.079s] taking uh spoilage out. All this stuff
+[978.959s] down here is all spoilage that is
+[980.8s] getting removed. And even worse, when
+[983.44s] it's not running, there's just constant
+[984.8s] bot activity of bringing spoilage out of
+[986.88s] the system. So, that's an overhead that
+[989.759s] I wanted to eliminate. And also those
+[991.839s] inserters are constantly scanning
+[993.68s] because they're not clocked all these
+[995.36s] buildings. So you think about it, this
+[996.56s] building has an extra inserter. And
+[998.16s] especially if I actually go and create a
+[999.68s] deletion planner, you can just wind up
+[1001.04s] seeing just how many active provider
+[1002.8s] chests. These are all unnecessary
+[1004.88s] insertters. If I look at this, that's
+[1006.639s] 730 insurgters specifically dedicated to
+[1010.399s] removing spoilage,
+[1012.399s] which can be completely eliminated from
+[1014.72s] this. Like if I look at this and I wind
+[1016.639s] up saying like, okay, out of the total
+[1018.24s] number of insertters that I have here,
+[1019.839s] and let's go and grab this as well.
+[1023.279s] I have Okay. All right. So, it's a lot.
+[1025.36s] It's 2,000 insertters. But if like out
+[1027.36s] of the stack insertters, which is the
+[1028.72s] majority of the ones that I care about,
+[1030.799s] if 700 of those out of the 2,000,
+[1035.36s] that's 35% of them are dedicated to
+[1037.439s] spoilage. So, I can completely eliminate
+[1039.439s] those by constantly just relaunching a
+[1041.76s] little bit.
+[1044.48s] So that's one thing that I want to
+[1046.48s] change. So we'll talk about that in a
+[1048.16s] second more in depth so that I can
+[1049.6s] explain that new mechanism.
+[1052.24s] The second problem that I have right now
+[1053.919s] is I'm using a push system to push
+[1057.44s] science. Right? So there's a concept of
+[1059.2s] with trains of pushing versus pulling.
+[1061.44s] Right? So, one of the things that is
+[1064.4s] when I'm in a low throughput situation
+[1066.48s] like this, I have trains very slowly
+[1069.6s] unloading their Yamako into here because
+[1072.96s] in this case right now, sure, I wound up
+[1075.039s] just running uh a launch. So, it wound
+[1077.52s] up coming out, but you're seeing here
+[1079.52s] just how long these trains are sitting
+[1081.28s] here very slowly unloading. And because
+[1084.16s] they're now I have so many trains in
+[1086.16s] here for max throughput,
+[1088.559s] that means that occasionally I'm going
+[1090.72s] to have to go and create some extra
+[1092.88s] jelly nut like is happening right now
+[1096.64s] because I wind up running low on the
+[1098.4s] seeds because things are just rotting
+[1100.0s] and turning into spoilage cuz we have
+[1101.44s] these trains just constantly sitting
+[1102.88s] here just slowly slowly get rotting
+[1105.039s] away. So, I want to change this so that
+[1107.28s] if the train isn't used that it's smart
+[1109.76s] enough to go and say, "Hey, I'm going to
+[1111.679s] go into timeout zone so that I'm not
+[1113.919s] actually uh going to go back into the
+[1116.08s] network as quickly.
+[1118.64s] So, these are the main changes that I
+[1121.36s] want to make. This is the overhaul that
+[1123.2s] I want to do. So, let's go and I'm going
+[1126.48s] to save it right here. and I will go and
+[1129.84s] overlay immediately what the new GABA
+[1133.44s] setup looks like after I've completely
+[1135.52s] redesigned everything.
+[1137.76s] Welcome to the new GABA.
+[1142.0s] What you're going t
+
+o notice immediately
+[1143.6s] is the whole entire core of GABA has
+[1146.96s] been ripped out that used to be here and
+[1149.679s] I completely moved it to this new
+[1151.919s] section.
+[1153.6s] So, you're also going to notice that the
+[1155.84s] Yakaco farm has been completely
+[1158.32s] consolidated into this specific area.
+[1160.559s] Now, the brains uh but I can't remember
+[1165.12s] the the pink stuff I haven't wound up
+[1167.28s] actually changing at all. This is
+[1168.559s] exactly the same that it was before, but
+[1170.72s] the main difference is now there's an
+[1172.08s] express route that directly delivers the
+[1174.4s] items from here and there's a direct
+[1176.48s] route here. So, these trains are never
+[1178.559s] overlapping in terms of crossing paths.
+[1180.96s] So that's one big change that they come
+[1182.72s] in here. Another thing that you're going
+[1184.72s] to notice is that now I have a lot more
+[1186.88s] of these outposts. So this has greatly
+[1189.44s] increased the potential range that I can
+[1192.24s] handle because now when I'm running at a
+[1194.72s] higher rate of research productivity, my
+[1197.36s] pollution cloud is going to grow
+[1199.2s] massively in in in many different
+[1201.679s] directions. So, by having these now
+[1204.08s] outposts here, I have a much higher
+[1206.08s] chance of actually eliminating anything
+[1208.72s] with the the trains that wind up going
+[1210.799s] around and just scanning for any
+[1212.88s] individual potential new nests that wind
+[1215.039s] up growing. And it does happen now
+[1217.36s] occasionally because even though I can
+[1219.12s] run with my spiderrons around and
+[1220.559s] destroy all of the nests, these are here
+[1222.96s] as a backup mechanism because I do run
+[1224.64s] this space overnight to just continue to
+[1227.2s] to stress test the system. So, knowing
+[1229.36s] that it's working is is a pretty big
+[1231.679s] deal. Another thing you're going to
+[1233.44s] notice here is that I've drastically
+[1237.52s] reduced the actual bot traffic that is
+[1240.4s] going around. So there is a very
+[1245.039s] completely overhauled farming area now.
+[1248.559s] So you're going to see here that if I
+[1249.919s] look at the bots, there's a very
+[1251.52s] isolated bot network that's down here.
+[1253.84s] And that's very much by design. So the
+[1256.64s] reason I have done this is I've created
+[1259.039s] uh a pretty cool system. I'll wind up
+[1261.52s] saying
+[1263.28s] the way that this works is this actually
+[1265.039s] winds up kind of dynamically assigning
+[1267.84s] and setting up these individual train
+[1270.48s] stations based on how much I currently
+[1273.36s] have in this logistics node. So if I
+[1276.32s] wind up having too much in it because I
+[1278.799s] wind up going and not not using it
+[1280.96s] enough, it will quickly go and open up
+[1284.0s] more of these train stops to be enabled
+[1287.52s] or disabled. I always have the outsides
+[1290.159s] always enabled for constant throughput.
+[1292.08s] And you're seeing that here. The trains
+[1293.36s] are constantly picking up items. They're
+[1295.12s] constantly going and dropping those
+[1296.48s] things off. And as the speed of the
+[1299.679s] whole base increases depending on my
+[1301.84s] what my throughput needs are. This will
+[1304.4s] actually request more trains to come
+[1306.4s] here. So I'll talk through that here. Um
+[1309.2s] the way this whole system works is I
+[1310.72s] wind up requesting here is the current
+[1312.48s] amount of Yakaco that I want in this
+[1314.64s] network. So, I'm reading currently the
+[1317.36s] contents of logistics network and I'm
+[1319.2s] comparing the delta between what I want
+[1321.919s] and I'm also reading all of the belts
+[1324.08s] themselves. So, I'm like checking what
+[1325.84s] is the current full system that it has.
+[1328.559s] And so, you wind up seeing that this
+[1330.08s] actually naturally clocks all of the
+[1332.48s] agriculture towers. And you're seeing
+[1334.72s] here they all enable for a split second
+[1336.64s] here and then all disable creating a
+[1339.12s] large burst of all of the actual plants
+[1342.32s] which is exactly what I want because of
+[1344.159s] the way that I actually launch all of
+[1346.72s] the agriculture science into space. It's
+[1349.76s] one big burst of production. So by
+[1352.64s] naturally if I just did a constant
+[1354.64s] throughput here, I'd have to redesign
+[1356.799s] how the actual blades work here. And uh
+[1359.52s] so by doing this burst production here
+[1362.64s] to quickly get and saturate the demand,
+[1364.96s] I have more agriculture towers than I
+[1366.88s] need, but it winds up going and taking
+[1369.2s] them from all the different locations
+[1371.84s] here, belting in all the seeds, which is
+[1373.76s] a very big difference. And then we'll
+[1375.84s] ride along with this train. What this
+[1377.76s] does now is, well, we can, I guess, grab
+[1380.88s] this one and follow along with them.
+[1383.76s] So we have now all these areas that
+[1386.08s] bring all of the actual plants and uh to
+[1388.64s] the main area. Then these can
+[1390.48s] immediately go. They travel really
+[1392.88s] quickly because of the uh fuel source we
+[1395.919s] have the nuclear fuel here. And they
+[1397.84s] come directly into this loading zone. So
+[1400.72s] I've designed this very intentionally to
+[1403.6s] always prioritize whichever one comes in
+[1406.4s] first cuz sometimes the signals really
+[1408.799s] mattered here. I wind up creating here a
+[1411.36s] rail chain signal to kind of say like,
+[1413.039s] hey, stop here first. But the moment
+[1415.28s] that this opens up, go ahead and move
+[1417.44s] in. And uh, okay, we have one edge case
+[1419.76s] where this guy won out a little bit. So
+[1421.52s] maybe someone who knows a little bit
+[1422.64s] more about trains can win out a little
+[1424.0s] bit, but this guy should be the next
+[1425.44s] priority here. So in general, it's
+[1428.159s] alw
+
+ays first come, first in, first out.
+[1430.4s] So FIFO kind of system. And that's the
+[1433.36s] idea for the loading. So in general,
+[1435.28s] this can sneak up a little bit, block
+[1437.12s] the actual entrance like this, and then
+[1439.44s] the the next train can actually go. So
+[1441.919s] that's kind of this concept, like the
+[1443.679s] core concept here of just constantly
+[1445.679s] bringing another train in and breathing
+[1447.52s] in. This is a constant flowing system.
+[1452.4s] What you'll notice though is if any of
+[1454.4s] these trains ever get to the point where
+[1456.08s] it backs up and is in the loading bay
+[1458.08s] for too long, like right now we're
+[1459.76s] constantly rocking like launching right
+[1462.48s] now because we're running research prod.
+[1465.12s] But if they ever back up, what's going
+[1466.88s] to happen is eventually I'm going to get
+[1468.88s] to a point where I don't have the
+[1470.48s] throughput that I currently need because
+[1472.4s] I'm running right now individually just
+[1474.88s] like a lower research speed, right? Cuz
+[1476.64s] we're doing half the speed for research
+[1478.24s] prod. Eventually, these trains are going
+[1480.96s] to go to a timeout zone, which you're
+[1482.88s] seeing here. So, I have a condition set
+[1485.919s] up on the trains
+[1488.64s] that if at any point in time
+[1492.88s] it is currently I I create a very
+[1495.36s] specific condition. So, when it goes to
+[1496.799s] the requester,
+[1499.279s] the requesters are now here.
+[1502.48s] Whenever requester is going to be and we
+[1505.6s] were there and we're over six seconds at
+[1507.6s] that location,
+[1509.52s] then that train means that it still it
+[1512.24s] had too many fruits uh than than it
+[1514.72s] actually needed. It's immediately going
+[1516.64s] to go and say, "Hey, right now I wind up
+[1520.4s] having in this condition here, I am
+[1522.96s] currently I have cargo in my inventory.
+[1525.279s] It's less than the 8,000 that I can
+[1527.279s] hold. I'm going to go very simply and go
+[1529.84s] and empty my cargo inventory. So when it
+[1533.279s] does that, it goes to this station here,
+[1536.0s] which creates a timeout of 45 seconds
+[1540.0s] where it just has to sit here and wait
+[1542.72s] until it's its cargo is completely
+[1544.799s] empty. One core thing that I'm doing is
+[1547.12s] I'm directly inserting from the trains
+[1549.36s] and I'm bringing in the Yamako so that I
+[1552.08s] can immediately go and create seeds out
+[1553.919s] of it. That way I never have a seed u uh
+[1556.96s] I don't have enough seeds here on the
+[1558.799s] actual planet and I can constantly go
+[1561.2s] and reprocess them if I'm not using
+[1562.96s] them.
+[1564.48s] So this is a a timeout zone where if I
+[1567.44s] have too many trains in the network,
+[1568.88s] they come here, they wind up going and
+[1570.96s] getting the extra stuff is used and
+[1573.76s] removed. There's a small kickoff that
+[1575.52s] happens by a bot that goes and brings
+[1577.36s] the initial amount of nutrients that we
+[1579.52s] need so I'm not constantly making
+[1580.96s] nutrients. And then this just goes and
+[1583.52s] recycles any excess of the actual uh
+[1587.12s] jelly and then turns it back into seeds.
+[1589.919s] And I just have a very simple circuit
+[1591.679s] here that winds up just checking, hey,
+[1593.2s] anytime the jelly nut seeds are greater
+[1595.039s] than or equal to 8, I wind up pulling
+[1596.96s] them out. And I set the filter on this
+[1599.36s] particular output inserter so that it
+[1601.12s] goes and brings them. All those seeds
+[1603.279s] now then and spoilage that I have on the
+[1606.0s] excess will go down this little belt and
+[1608.159s] then feed into the main area right here.
+[1612.4s] So that leads me to let's talk about the
+[1615.52s] core mechanism for how this is now
+[1617.84s] designed that is fundamentally different
+[1619.679s] than before. You're going notice that
+[1621.76s] I've flipped everything on its head. The
+[1623.76s] very first priority for every single
+[1626.559s] output here is immediately going and
+[1629.679s] feeding the science labs uh or the
+[1632.24s] science production area. You're also
+[1633.919s] going to notice that there is almost no
+[1636.159s] spoilage whatsoever uh of the inserters
+[1639.12s] that are on here. I've removed them
+[1640.64s] completely for just some very simple
+[1642.48s] timers that just check for spoilage
+[1644.24s] occasionally
+[1645.84s] because these are constantly launching
+[1648.08s] now. Sure, right now we're doing
+[1649.52s] research productivity,
+[1651.679s] but I'll show you how I'm handling the
+[1653.6s] excess science. So, we're going to
+[1655.44s] follow along with this design. And this
+[1657.2s] is a design that uh Ray Jeff and Largo
+[1659.679s] wound up coming up with. So, I'm using
+[1661.279s] currently their ship design. You're
+[1663.6s] going to notice here that when we're
+[1664.799s] over novice, we have too much
+[1667.039s] agriculture science. So, we're currently
+[1669.12s] dumping it here into space. This is a
+[1671.679s] concept that I got from Conage, who's
+[1673.52s] also on another YouTuber that is a mega
+[1676.159s] baser. This concept I really like
+[1678.799s] because what it does is it's saying,
+[1680.72s] "Hey, it's basically quote unquote free
+[1683.679s] to throw items into space and throw them
+[1686.08s] away. It's like going into a chest."
+[1687.6s] What's not free is this right here where
+[1690.24s] it's once the spaceship is moving the
+[1693.039s] agriculture science like it has to track
+[1695.44s] that it's moving and it increases your
+[1697.44s] space platform update time. So to
+[1699.44s] mitigate that I have this timer here
+[1701.76s] that checks only when I'm over novice
+[1704.32s] and it winds up going and making sure
+[1705.76s] that my velocity is less than 300 uh
+[1708.0s] km/s and then it will start a timer to
+[1711.039s] start dumping the agriculture science or
+[1713.919s] spoilage ho
+
+wever much is in the actual
+[1715.76s] system. And then it will do that for 860
+[1719.279s] ticks. And then for the remainder of
+[1721.6s] this, it will wait for in theory that
+[1724.88s] agriculture science to fly out here. And
+[1727.2s] then the ship can only then start
+[1729.12s] moving. I can tune this a little bit
+[1730.96s] better, but this has already like in
+[1732.64s] general just been a a balancing act
+[1735.84s] between the full speed agriculture
+[1738.799s] science that I'm running versus when I'm
+[1740.24s] just running research productivity. All
+[1742.399s] these insertters are set to spoiled
+[1744.08s] first. So, this removes all the the
+[1746.32s] spoiled contents, and this overall keeps
+[1748.48s] the freshness relatively high in in
+[1751.279s] here. So, you'll have things that are
+[1752.72s] all the way from 95% and then coming
+[1755.2s] down to uh 87% or so. I have four ships
+[1759.6s] that are constantly going back and
+[1760.799s] forth, constantly picking items up, but
+[1763.12s] this is my end state to make sure that I
+[1765.679s] don't actually have ever spoilage in
+[1768.799s] this network here. So, I've completely
+[1770.88s] done away with all my fallback
+[1772.399s] mechanisms. So, I don't have those
+[1774.0s] timers anymore that purge eggs, and I
+[1776.32s] just have a very simple clock that
+[1777.84s] constantly is acting like a pilot light.
+[1779.6s] This was an idea I got from Stupid Fat
+[1781.2s] Hobbit, also on YouTube. And just kind
+[1784.159s] of creating a constant flow of eggs in
+[1786.48s] case any of these need ever need to pick
+[1788.159s] up. So, this is now because it's
+[1791.919s] constantly flowing. We're constantly
+[1793.52s] rock launching rockets here. That means
+[1797.039s] that I can get rid of these 700 plus
+[1799.44s] insertters that were dedicated just for
+[1801.279s] spoilage. And I can now completely belt
+[1804.32s] all of the other potential spoilage
+[1806.799s] that's here by just checking once every
+[1809.12s] 1,800 ticks just for like hey maybe
+[1812.399s] there is some spoilage in the system. So
+[1814.08s] every 30 seconds I wind up just checking
+[1816.0s] and I just turn on real quick the uh the
+[1819.279s] spoilage and I send a signal to all of
+[1821.12s] them and they'll just turn on check if
+[1822.799s] there's spoilage and if not don't do
+[1824.64s] anything. So it's a very short pulse so
+[1827.12s] they're not constantly scanning.
+[1830.399s] This is otherwise here
+[1833.919s] that's like the main core concept that
+[1835.6s] is chained. Other thing is I realized I
+[1838.48s] didn't need anywhere near the amount of
+[1841.279s] uh export here for the actual boflux
+[1844.559s] because I'm I'm not consuming anywhere
+[1846.32s] near the amount that I had. I had four
+[1847.919s] rocket silos here on the end of each of
+[1849.6s] these pods for a total of uh that 6* 4.
+[1854.399s] So 6 12 24 24 potential that I could
+[1857.2s] shoot. So 24,000 at a time. I never
+[1859.919s] needed that much. So, I've I've opted
+[1863.52s] ultimately for this relatively simple
+[1866.159s] system here that is going to just
+[1868.88s] basically launch just when is needed.
+[1871.12s] And there's only 6,000 can ever get
+[1872.72s] exported at any point in time. And
+[1874.399s] that's all that I ever request in the
+[1876.159s] actual ships is the exact amount that I
+[1878.0s] could launch in one go. So that I never
+[1880.159s] am requesting more than that and the
+[1881.6s] bots are never taking over.
+[1884.48s] The next thing that I've kind of changed
+[1886.0s] is fundamentally I used to recycle here
+[1888.399s] on the end constantly nutrients. And if
+[1891.6s] you look at this, there's a production
+[1894.48s] graph of uh spoilage that I used to be
+[1897.76s] creating.
+[1899.919s] If you see this like very large spoilage
+[1902.24s] indicator that's constantly here. Uh I
+[1905.36s] actually have to go farther back. There
+[1906.64s] we go. I was making about 100,000 or
+[1909.2s] 114,000 spoilage per minute.
+[1912.48s] And you see this sharp drop off. The
+[1915.039s] reason for that is because I switched to
+[1916.799s] just throwing it in a chest and letting
+[1918.72s] it very slowly turn into spoilage here.
+[1921.36s] So the big large chest here just acts as
+[1923.36s] a large buffer. And I have a simple
+[1924.96s] circuit that is just on a timer pulling
+[1927.919s] three swings out of this belt to keep it
+[1930.399s] constantly moving, but then just
+[1932.08s] throwing it directly into the steel
+[1934.0s] chest so that it can rot. The reason is
+[1937.2s] if you look at the recipe for nutrient
+[1941.279s] recycling is you actually get more
+[1944.96s] spoilage than you put in usually, right?
+[1948.88s] So whenever you put one nutrient into
+[1950.96s] the system, you're going to get two to
+[1952.399s] three spoilage out of it. So
+[1956.32s] you're actually having to recycle and uh
+[1958.799s] you have to burn a lot more items. So
+[1960.88s] you actually just increased overall the
+[1963.36s] amount of items that I am generating
+[1965.519s] purely by using a recycler. So this
+[1967.279s] system ultimately was just much simpler
+[1969.44s] in terms of not creating it anywhere
+[1970.96s] near as much spoilage uh when I didn't
+[1973.519s] need to. That's what I've kind of
+[1975.6s] changed there. Belting everything is
+[1978.24s] still the same, but fundamentally yeah
+[1980.159s] the trains now come and act with this
+[1982.08s] push or pull system and then have a
+[1984.24s] timeout penalty.
+[1986.559s] Now everything else down the line is now
+[1991.039s] un is going to not be needing to be
+[1994.32s] constantly going. There's no freshness
+[1996.399s] that's really required here. Now I've
+[1998.559s] gone and created a a new system here
+[2001.039s] which this is using a lot more direct
+[2003.2s] insertion. And effectively all this
+[2005.6s] whole system does here is it just
+[2007.279s] monitors whenever the iron ore drops
+[2009.76s] below a threshold. It will then
+[2
+
+012.0s] momentarily create a single like maybe
+[2014.96s] like 24 iron bacteria which goes into
+[2017.84s] the network. The bots like very quickly
+[2019.919s] just bring it to a couple of these
+[2021.44s] requesttor chests and fill it with iron
+[2023.679s] bacteria to kick it off and then that
+[2027.2s] will go and go and create the iron
+[2029.84s] bacteria cultivation. I'm realizing that
+[2031.919s] kicks it off and it very very quickly
+[2033.36s] goes and fills this. One thing I'm
+[2034.96s] realizing is um I need to turn on trash
+[2039.12s] unrequested. So, I'm going to go ahead
+[2040.799s] and turn that on because otherwise this
+[2042.399s] will all get completely filled up, which
+[2044.32s] I uh which I don't want. So, this is
+[2047.279s] very slowly over time getting filled up,
+[2049.44s] but so go ahead and turn that on just so
+[2051.919s] that when they actually do get enabled
+[2053.44s] later on, they wind up going getting
+[2054.72s] replaced. But you're seeing right now
+[2056.0s] here the system which is going and
+[2058.0s] filling up the iron bacteria. And right
+[2059.679s] now, it's completely filled up. So,
+[2063.679s] okay. So, that's the new system that
+[2065.44s] uses a lot more DI and then everything
+[2067.119s] else just kind of shuts down if we're
+[2068.8s] not using it. One thing I'm doing, and
+[2071.359s] this is because I do plan on scaling up
+[2073.44s] the base further, is I'm constantly
+[2076.32s] recycling at the end of the line here,
+[2079.2s] the uh the extra jelly nuts that I'm not
+[2082.399s] using. Um, this is a future refactor
+[2085.28s] that I didn't have time to do yet, and
+[2087.119s] it's to not have anywhere near as much
+[2089.52s] throughput that I have on Jelly. You can
+[2091.839s] see here I'm it's uh it's the same
+[2094.0s] throughput as the the
+[2097.2s] um which I don't really want because
+[2099.359s] it's it's a lot less that I'm actually
+[2101.04s] using the jelly kn at all. Um so for
+[2104.48s] that reason I I shouldn't be going and
+[2106.88s] having to constantly upcycle this, but I
+[2108.56s] have to currently do that so that I
+[2110.56s] don't wind up running out of seeds. A
+[2112.72s] really fun thing is you can use cars for
+[2114.96s] this
+[2116.64s] and so that I can completely get the
+[2119.52s] full throughput of of the system because
+[2122.0s] this is going making 460 items per
+[2124.0s] second. And uh this way I can go and get
+[2127.52s] four inserters
+[2129.44s] to be able to pull at max 480 items per
+[2132.4s] second
+[2133.92s] out of each of these biochambers and
+[2135.599s] then go directly in recyclers. So it's
+[2137.359s] just a kind of a fun method
+[2139.76s] to go and get as much out as possible.
+[2142.4s] This backup here is an emergency backup
+[2144.56s] because I once was running out of uh
+[2147.359s] jelly nut seeds. And so there is a
+[2150.0s] circuit condition that will bring in an
+[2151.52s] extra lane and bring all the extra jelly
+[2153.839s] nut into this system here to get
+[2155.359s] upcycled if it's needed. There's also a
+[2157.68s] backup mechanism that I have here that's
+[2159.52s] also circuit controlled to bring in
+[2161.04s] yumako uh and crate seeds if it's
+[2163.68s] needed, but I'm very much uh at ratio
+[2166.24s] correct with the so this is almost never
+[2168.24s] running and is completely unnecessary.
+[2171.28s] So, all of this kind of comes down
+[2172.96s] finally into here where I've created and
+[2175.28s] this you'll see this is a common pattern
+[2176.72s] on all the planets. I've been creating
+[2178.72s] these little pods to wind up making all
+[2181.52s] the rocket parts that I need. These are
+[2183.76s] all clocked perfectly and they wind up
+[2186.4s] going and producing and starting and
+[2188.56s] stopping uh just using a kind of like a
+[2191.359s] latching mechanism that monitors the
+[2192.8s] belts when it's not needed anymore and
+[2194.32s] then stops all the clocks.
+[2197.2s] So, I'm each planet is going to have
+[2199.119s] their own way of making plastic or
+[2200.8s] whatever those ingredients are. So,
+[2202.16s] whatever those planets are, I wind up
+[2203.52s] feeding it and adapting it slightly to
+[2205.119s] that planet. And you can see here that
+[2206.96s] we're wind up making bioplastic. And I
+[2209.28s] wind up feeding one of them specifically
+[2211.52s] into a storage chest. And that's mainly
+[2213.92s] just for the occasional moment that I
+[2215.839s] need to go and uh upcycle carbon fiber
+[2219.2s] because my uh ships do lose occasionally
+[2222.64s] some uh carbon fiber, legendary carbon
+[2224.96s] fiber based products. So this winds up
+[2227.2s] just being there as a backup mechanism
+[2228.64s] that will go and uh upcycle the tool
+[2231.44s] belts to wind up going and creating the
+[2233.359s] carbon fiber. And whenever I have, in
+[2235.52s] this case here, I'm on the logistics
+[2237.359s] network. when I have less than 30,000 in
+[2239.92s] the system, it will go and press a check
+[2241.68s] mark and go enable those. And I'm
+[2244.8s] realizing that I think I have a uh
+[2247.68s] complete backlog in the system because
+[2249.52s] this should be running, but it is
+[2251.2s] currently not because of Yep. So, I'll
+[2253.76s] have to redesign this. Anyway, this is a
+[2256.96s] constant ongoing thing. But the reason
+[2259.04s] the plastics and the logistics network
+[2260.48s] is just to provide occasionally whenever
+[2262.079s] I wind up making some red circuits here
+[2264.48s] and it just brings it over to
+[2266.0s] occasionally top up because the uh the
+[2268.88s] the system it's almost always uh I'm I'm
+[2272.24s] going to run uh positive or it's
+[2274.56s] occasionally going to need some more red
+[2275.839s] circuits that are getting upcycled and
+[2277.2s] then comes in here. So
+[2281.359s] let's move on then to finally the uh the
+[2284.64s] the carbon fiber production which has
+[2287.44s] been completely redesigned to use a lot
+[2289.76s] more direct insertion here. So the way
+[2294.2
+
+4s] that I've designed this is now there's
+[2295.599s] no spoilage on a belt. But one of the
+[2297.68s] things I really like about this system
+[2299.28s] here is I've got this iron bacteria
+[2301.52s] recipe. This makes an absolute ludicrous
+[2304.96s] amount of spoilage. You can see this
+[2306.72s] makes up to 645 per second and just
+[2309.599s] makes about 16 iron bacteria. This is
+[2312.0s] way over the amount than we actually
+[2313.599s] need. So very occasionally we'll wind up
+[2315.44s] recycling something and then going and
+[2317.119s] getting destroyed. But you can see here
+[2318.88s] this made 1.9 million here and this has
+[2320.96s] made 262,000 things to recycle. You
+[2324.079s] could actually point the spoilage or the
+[2326.4s] nutrients from the thing that we talked
+[2327.76s] about before directly into here with the
+[2329.92s] recycler and actually go and destroy the
+[2333.28s] nutrients and have that come in here
+[2335.28s] instead. The thing that I like about
+[2337.119s] this system is that you're going to
+[2338.8s] notice that this gets completely shut
+[2340.4s] down and all the slots completely fill
+[2343.04s] with spoilage and then this system is
+[2345.599s] then shut down effectively and can't
+[2347.76s] input anything until all the spoilage is
+[2349.92s] removed. I like this because it's more
+[2352.4s] true to the actual GABA kind of
+[2354.64s] experience
+[2356.24s] and allows then for this just to be a
+[2359.599s] giant container of spoilage just waiting
+[2361.76s] to go whenever we wind up needing to go
+[2363.52s] and make some carbon fiber occasionally
+[2365.52s] when we're running research prod. All of
+[2368.16s] this uh carbon comes down on a belt and
+[2372.0s] then gets fed into the carbon fiber
+[2374.0s] creators and then those all go down in
+[2376.72s] the belt. Effectively, this shuts down
+[2379.44s] or should shut down the nutrient
+[2381.04s] creation whenever this belt gets
+[2382.64s] completely backed up. And ultimately,
+[2384.96s] that just goes into a buffer that can
+[2388.24s] send the e extra carbon fiber up to the
+[2390.64s] ship whenever it comes by.
+[2393.52s] So, otherwise, what I'm doing at the end
+[2395.599s] of the line is I'm upycling the jelly,
+[2398.48s] and that's because I occasionally do
+[2400.64s] need to go and create a couple different
+[2402.32s] byproducts. So, one of them being stack
+[2404.24s] insertters that I have to make
+[2405.68s] legendary, but more so one of the
+[2408.0s] biggest thing is the capture bot
+[2409.28s] rockets, and that's because I'm using
+[2411.92s] those to go and create uh a couple
+[2414.8s] things. One is captive biter spawners,
+[2416.88s] and then more bolabs on novice if as I'm
+[2419.839s] thinking about scaling up the base. So,
+[2423.76s] that's what I'm doing here. I'm just
+[2424.96s] keeping this around. But eventually once
+[2426.32s] I get to the final target like uh rate
+[2428.72s] of the base that I want, I won't have to
+[2430.64s] just constantly be recycling these items
+[2432.72s] here. So then I'll probably remove this
+[2434.88s] as the end of the line here. That's the
+[2437.119s] reason I have to have constant seed
+[2438.56s] production is because this is slowly
+[2440.56s] removing seeds from the whole system
+[2442.32s] over time for because of this brute
+[2443.92s] force upycling method. And then that's
+[2447.44s] why I'm uh having to have all those
+[2449.2s] backup mechanisms.
+[2451.119s] Anyway, and for better or worse, talking
+[2453.44s] about upycling, I upcycle all the uh
+[2457.28s] boflux just to keep it constantly
+[2459.119s] moving. Also, again, for uh for moving
+[2462.56s] things up in general though, I could
+[2465.52s] just let this eventually turn into
+[2466.96s] spoilage, which would be probably better
+[2468.4s] for UPS than this thing, but that's the
+[2470.56s] way that I'm currently handling it
+[2473.04s] because of just creating the legendary
+[2474.72s] materials that I need for crafting other
+[2476.16s] stuff. Otherwise though, you're seeing
+[2478.24s] here that there's very like very
+[2480.72s] infrequently we have kind of bots moving
+[2482.64s] around. We have which is a lot lot
+[2484.4s] better. So this whole entire system here
+[2486.56s] is completely botless.
+[2488.96s] So which has been kind of a nice uh
+[2491.76s] change from the previous designs that I
+[2494.4s] wound up having.
+[2497.28s] Otherwise that is the main overview of
+[2500.4s] GABA. So, let me talk a little bit and
+[2502.4s] go over to novice where I can talk about
+[2504.4s] how I'm pulling the actual agriculture
+[2506.88s] science out. Um, now
+[2511.359s] let's talk about the freshness that's
+[2512.88s] there.
+[2514.56s] So, you're going to see for the first
+[2516.24s] time that this is a very very different
+[2519.599s] hub design than I've had in the past.
+[2523.04s] So,
+[2524.56s] I am heavily utilizing uh cars here. And
+[2530.0s] uh in fact, if I'm just going to
+[2531.68s] highlight this so that we can see this a
+[2533.76s] little bit better. Um we'll bring this
+[2535.839s] all out.
+[2538.88s] You can see that these cars that are in
+[2540.56s] here and they're very intentionally
+[2542.319s] placed in the way that they are so that
+[2544.88s] I can constantly have as many inserters
+[2547.44s] coming out of the hub at the same time.
+[2550.48s] And more specifically, uh, the reason
+[2553.52s] I'm doing this is to get the throughput
+[2555.92s] demands that I want.
+[2558.72s] So, you're going to notice here that I
+[2561.04s] have these inserters that are there's
+[2563.119s] 240 per second effectively. You can see
+[2565.119s] that this is targeting the car and this
+[2566.64s] is targeting the car. And then there's
+[2568.96s] just some filters here to prevent this
+[2570.64s] from uh, putting too many items in the
+[2572.88s] car itself. But you're going to notice
+[2574.48s] here that the freshness overall we've
+[2576.319s] gone from like 87% which was like the
+[2578.8s] max that we were getting and we're like
+[2580.56
+
+s] now at this is the worst stuff that is
+[2583.52s] currently in the actual hub because we
+[2586.64s] are pulling the uh spoiled first out of
+[2590.56s] the hub that we're not accumulating
+[2592.56s] spoilage in here. So the worst stuff
+[2594.96s] that's in here is currently at 90%
+[2597.359s] basically which is great. So that's a
+[2599.28s] huge improvement from the like 70% or
+[2601.839s] 40% that was sitting in there
+[2603.2s] occasionally. Now I'm doing something
+[2605.359s] kind of clever and this is totally
+[2606.56s] cursed and it places depends on the
+[2608.24s] order of how you wind up placing these
+[2610.0s] inserters. You can see that this is
+[2611.76s] inserter and this inserter can pull
+[2613.2s] spoilage from the car. And so these can
+[2615.839s] actually bring these down on this belt
+[2617.68s] and that's my exhaust belt that will
+[2621.359s] bring spoilage down the line and then
+[2623.52s] ultimately go and get burned. And so I
+[2625.119s] have this mirrored on all the different
+[2626.4s] sides. But now I've prioritized
+[2629.359s] agriculture science because I'm running
+[2631.04s] research productivity a lot more. And
+[2633.76s] this has been an overall huge net
+[2635.68s] positive. So that means that in the
+[2639.28s] actual labs, we're now like at 88% in
+[2643.04s] some of them. Um the the freshest ones
+[2645.2s] wind up being like more like 90% which
+[2647.119s] is great. And so ultimately in net
+[2649.52s] effect, what that means is if I look at
+[2651.839s] agriculture science here, we're hovering
+[2654.4s] at right about 133,000 per minute that
+[2657.28s] we are currently consuming. And compared
+[2659.2s] to all the other sciences, you can see
+[2661.28s] here that we have like 115k for the
+[2663.52s] other sciences. So this is a little bit
+[2665.119s] of an overhead of about 15,000 extra.
+[2667.92s] Before when I first tried to kick this
+[2669.76s] off with glabber running, this was like
+[2671.359s] about 140 145,000 per minute that I was
+[2674.72s] consuming. So the freshness has gotten a
+[2676.48s] lot better.
+[2678.079s] So, what are we actually launching from
+[2680.24s] Clayba?
+[2681.76s] Because like like you might be curious
+[2683.76s] about like what what your your actual
+[2685.76s] launch uh uh like freshnesses. You can
+[2689.2s] see here we're getting actually about
+[2690.88s] 97%
+[2692.4s] uh freshness that's actually coming out
+[2694.16s] of these. And that's actually way better
+[2697.04s] than I was getting before. I was capping
+[2698.8s] out at 95% because of those uh design
+[2701.44s] choices that I had made. The fact that
+[2703.68s] now when we go and are creating fresh
+[2706.56s] net new science, the fact that we're
+[2708.24s] getting 96 97%
+[2710.8s] is really really good. Um there's
+[2713.76s] diminishing returns as you try to
+[2715.599s] continue to go and push freshness
+[2717.44s] further and there's kind of like a point
+[2719.599s] of like why would you want to continue
+[2720.96s] to push it and like any more than you
+[2723.92s] wind up actually needing. But 97 is
+[2727.44s] pretty good. One thing that I could do
+[2729.44s] is if I wound up saying, "Hey, I don't
+[2732.0s] care anymore about
+[2734.8s] running uh any of the other agriculture
+[2737.76s] science-based stuff." So, if I wanted to
+[2739.44s] run if I don't care about refined
+[2741.599s] flammables and stronger explosives, I
+[2743.359s] could make the argument for cutting the
+[2745.119s] amount of blades that I have in half cuz
+[2746.96s] I don't need that kind of throughput
+[2748.48s] anymore and reducing the overall number
+[2750.24s] of trains I have. I still want to be
+[2752.88s] able to run at both speeds.
+[2755.76s] So, at 2.6 million and 5.2 2 million for
+[2758.24s] agriculture science. So that's why I'm
+[2760.4s] keeping this around and keeping this
+[2761.839s] whole system in place. So if I was only
+[2764.24s] running a lot less of these, I'd wind up
+[2766.96s] having significantly higher freshness of
+[2769.119s] the actual fruits that were coming out
+[2770.48s] of. So when this is running at full
+[2772.88s] production speed, I wind up getting like
+[2774.96s] 99 to 98% freshness of the emaco that's
+[2778.319s] actually coming out of here.
+[2780.24s] That's actually a really cool thing
+[2781.92s] because and this is the one reason why I
+[2783.68s] would say trains are can be actually
+[2785.599s] worth it on uh for for this is mainly
+[2789.44s] just because of how fast I can get all
+[2792.56s] of the actual fruit out directly out of
+[2795.119s] here and the trains can very very
+[2796.64s] quickly go and move it to where it needs
+[2798.64s] to go. If I transported this on a belt,
+[2801.04s] the overall freshness would be
+[2802.88s] significantly lower coming over here.
+[2805.76s] So,
+[2807.599s] that's a a pro to it is that you can
+[2810.72s] kind of you don't have to have the the
+[2812.4s] best speed spawn. In other words, uh and
+[2815.68s] you don't have to kind of just keep
+[2817.04s] picking different maps in order to get
+[2818.88s] the best seed in order to get the
+[2820.56s] trains. Uh
+[2824.56s] so, trains are a way to to to ultimately
+[2827.28s] uh allow you to do that. And this is my
+[2830.24s] attempt just frankly of just like I
+[2832.72s] wanted to see how far I could push
+[2834.319s] trains and using them. Um I have no
+[2837.599s] idea. This is probably not UPS optimal
+[2840.24s] at all to be going and bringing all
+[2842.319s] these this ludicrous amount of trains
+[2844.64s] that are like in the system. Like if we
+[2847.04s] look at the the overall amount of trains
+[2848.96s] that we have, we have uh nine yumako
+[2853.76s] trains that are constantly moving
+[2855.2s] throughout the network. Um, we have then
+[2858.4s] and seven of the jelly nuts. So, you're
+[2861.599s] seeing here that they're trashing a lot
+[2863.04s] of them because there's too many of
+[2864.16s] them, but I needed this kind of
+[2865.44s] throughput if I'm running at full
+[2867.359s] research uh full s
+
+peed. So, science.
+[2871.68s] So, with that being said, this is the
+[2874.8s] main overhaul of of GA that I've been
+[2878.64s] wanting to do for quite some time to to
+[2881.2s] to ultimately get the system to be more
+[2884.64s] what I've wanted and more structured in
+[2887.04s] the way that that that I wanted to see
+[2889.359s] fit for prioritizing the actual things
+[2891.92s] that require higher freshness compared
+[2895.2s] to uh all the things that don't. So, the
+[2898.56s] least priorities are all down here that
+[2901.2s] wind up going and creating all the
+[2902.88s] individual products that we wind up
+[2904.319s] needing. So,
+[2907.28s] that is the overhaul that I've done on
+[2910.4s] GABA and the new hub layout that I've
+[2913.359s] wound up doing. And ultimately that's
+[2917.2s] what's uh improved overall my entire
+[2920.96s] GABA experience
+[2923.119s] and uh has net resulted in a pretty
+[2927.2s] decent UPS gain from just at least it's
+[2931.04s] more of a smooth UPS uh that I have
+[2934.319s] right now. I have no idea if it's
+[2936.0s] better. I didn't benchmark it. That's
+[2937.68s] been the whole point of this like 3 week
+[2939.52s] has been I'm not doing benchmarking. I'm
+[2941.359s] just having fun with uh with my current
+[2943.359s] base. And also just aesthetically,
+[2947.04s] this is such a like beautiful kind of
+[2949.28s] like organic looking like industrial
+[2952.0s] huge farm. Doing all kinds of like fun
+[2954.64s] little squiggly stuff here with getting
+[2957.04s] all the the fruits up. So anyway, this
+[2959.76s] was more of just a more aesthetic kind
+[2962.4s] of build that I wanted to do to just
+[2964.319s] have a a very unique uh approach that I
+[2968.48s] don't think anyone else is probably
+[2970.24s] going to wind up doing this in a mega
+[2971.92s] base and I wanted to to try it. So that
+[2976.4s] this is my attempt at using trains as a
+[2978.559s] first class citizen here on Clay.
+[2981.52s] You'll probably not see this in other
+[2983.28s] mega bases. So, and if I go and redesign
+[2986.559s] a mega base, I probably won't do the
+[2988.559s] same system again. But this was a super
+[2991.839s] fun uh way of creating a large train
+[2994.72s] network, setting everything up. So, with
+[2997.359s] all that said,
+[2999.359s] thank you so much for watching. Uh my
+[3001.119s] name is Abuk Nasty, and I'll see you in
+[3003.76s] the next part of this minieries. Have a
+[3005.76s] great day.
+[3008.24s] Oh, and by the way, I figured out what
+[3010.88s] was wrong with my uh my current upycling
+[3013.119s] build. Uh I I can't just randomly go and
+[3016.64s] pick up the items that are the tool
+[3018.24s] belts that are in here because this
+[3019.68s] backs up. What I need to do is I need to
+[3023.119s] sort uh ascending. So, create the the
+[3025.839s] lowest items first so that they move
+[3028.16s] through to the end of the line here. And
+[3030.079s] now you're seeing a good nice constant
+[3031.76s] stream of red circuits and also the
+[3034.64s] carbon fiber. So yeah, that was the the
+[3036.8s] the current problem in case you're
+[3038.4s] curious about it. Anyway, so that's
+[3041.92s] good. Then Mega Base won't actually die
+[3043.839s] because I don't have the carbon fiber
+[3045.119s] that I need for uh constant destruction
+[3047.359s] of random ship outages. All right, see
+[3050.079s] you in the next
+

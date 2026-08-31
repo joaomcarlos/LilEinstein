@@ -1,0 +1,780 @@
+# What is ESPM? How I define a Megabase
+# Channel: abucnasty
+# Video ID: qLLg2clxzjU
+# Transcript length: 36909 chars
+# Fetched: 2026-08-31
+# Source: TranscriptAPI.com
+
+[0.0s] Hello and welcome back to Factorio. My
+[1.68s] name is Abucknasty. Today's video we're
+[3.6s] going to talk about what is ESPM and
+[6.16s] what does it mean for measing. So first
+[8.0s] off, what is science per minute? That's
+[10.08s] where we need to start. [music] Science
+[11.84s] per minute is going to be the metric
+[13.679s] that you are producing. That's the
+[15.92s] keyword science for each of the
+[18.24s] different types of sciences that you
+[19.6s] could feed into a lab. So in this
+[21.6s] example here, we have 240 per second
+[24.24s] that is being created for each of the
+[25.68s] sciences. And if you extract that and
+[28.16s] multiply that by 60, that's 14,400 per
+[30.72s] minute. 240 is usually chosen as a
+[33.12s] target because it is a fully stacked
+[35.2s] turbo belt of science. That is [snorts]
+[37.36s] a that is a common number you're going
+[38.879s] to see. This specifically is not the
+[42.8s] very big number that you see at the top
+[45.2s] of your screen. These are totally
+[47.12s] distinct numbers. The point of confusion
+[49.68s] is that you'll see here is that it says
+[51.68s] science per minute and the number that
+[53.68s] you're hitting. And then the other
+[55.36s] number is going that is hidden is what
+[57.12s] are you actually producing. So the
+[59.359s] metric that exists here is specifically
+[61.84s] the production of that science. Now when
+[66.0s] you break this down if you want to
+[67.68s] understand what is ESPM? Well ESPM is
+[70.88s] all the multipliers that you could add
+[73.36s] to that individual science. So before we
+[76.88s] dive into this formula where we're
+[79.119s] talking about the production value
+[80.56s] versus the effective science, let's go
+[83.6s] back over here to factorial and I'll
+[85.2s] show kind of some production stats. So
+[86.88s] here we are on novice. If I look at
+[89.119s] while I am currently researching mining
+[90.88s] productivity, if I type in science here
+[92.64s] on the top, we are going to see that we
+[94.96s] have a bunch of different numbers. We
+[97.04s] have this big number here which is 19
+[98.799s] million. And we have this smaller number
+[101.04s] but still big which is 806,000
+[103.84s] per minute that we are producing. This
+[106.159s] is SPM. This is ESPM. This is the number
+[109.759s] after the multiplier. Now to break down
+[112.88s] kind of what ESPM is and why there's a
+[115.52s] confusion with it. The problem is is
+[117.6s] that it's a very big difference. We're
+[119.6s] going to 19 million versus 8 million. So
+[122.399s] 24x increase in terms of our production
+[126.56s] capacity that we have. The reason we
+[129.679s] distinguish between these two them
+[132.8s] number is based on the productivity
+[135.2s] multiplier. So first of all let's break
+[137.76s] down this formula and simplify it a
+[139.599s] little bit and then let's remove the
+[141.2s] time component. So we'll just simply
+[142.959s] think about it in terms of the effective
+[144.879s] science or the uh per minute is equal to
+[148.879s] the production which is SP. So SE is
+[151.84s] effective science per minute and then SP
+[154.0s] is going to be the produced science. So
+[156.48s] let's break down the productivity
+[158.64s] multiplier. So first off, in every
+[160.959s] single meabase, you're going to have
+[162.48s] Bolabs and those Bolabs are going to
+[164.4s] have four legendary quality productivity
+[167.68s] modules. That's what everyone's going to
+[169.28s] want in there because it gives you a
+[171.12s] 100% bonus, which is a 1x multiplier. So
+[173.84s] we'll substitute that in the equation.
+[176.48s] The next one is going to be the
+[177.92s] productivity that comes from research.
+[179.92s] So this value comes from researching
+[183.44s] research productivity that increases at
+[186.56s] a rate of 10% per level or a multiplier
+[190.159s] of 0.1. So when we substitute this back
+[193.76s] into the original equation that means
+[195.2s] the total productivity that we're going
+[196.959s] to get is 100% for the modules plus 10%
+[199.76s] per level. Let's bring this back in the
+[201.76s] original equation where you're seeing
+[203.68s] that we have the one for the initial
+[206.64s] amount of raw science plus the
+[209.519s] additional amount from productivity
+[211.28s] which we can just shorthand simplify to
+[213.36s] just 2 + 10%. So then what is that DL?
+[218.48s] Well that comes from the labs. There is
+[220.319s] a multiplier which is a drain
+[222.239s] multiplier. That's 50% drain on the
+[226.4s] individual science packs. So that's a
+[228.159s] straight up 2x multiplier. That means
+[230.239s] for every one pack of science, you're
+[233.04s] going to get two packs of research. This
+[235.68s] is a multiplier that is applied to both
+[238.08s] the individual pack and the productivity
+[240.159s] that you get in the end. So what that
+[242.799s] means is you're going to have a simply
+[244.56s] we can simplify this equation to just 2
+[247.28s] * whatever you've produced [snorts]
+[249.76s] times the productivity multipliers and
+[253.519s] itself. So that is going to be the final
+[255.76s] equation to give you effect of science
+[257.199s] per minute. So let's give an example.
+[260.079s] Let's say you are researching at 1,000
+[262.72s] science per minute that you are
+[263.919s] producing. What are you going to be
+[265.759s] researching at? So if we say level 30 is
+[268.24s] what we are currently at for the
+[270.0s] research productivity value. That means
+[272.16s] if we solve for this, it's going to be 2
+[274.32s] * 1,000 which is 2,000. And then 2 +.1 *
+[277.6s] 30 is going to be 5. And that's going to
+[279.759s] give us our multiplier. So that means we
+[281.919s] have a straight multiplier of 1,000 * 10
+[286.479s] which is going to be effectively 10,000
+[290.0s] total effective science per minute. And
+[292.72s] that is going to be the big number that
+[294.16s] you see on the top right hand side of
+[295.6s] the screen. To talk about how this
+[298.0s] changes, I've
+
+ researched all the way to
+[299.84s] level 100. So if we take that exact same
+[302.56s] equation and break down the math for
+[304.56s] that, you're going to see there's a 12x
+[306.0s] multiplier now for a total of 24x. So
+[308.72s] 1,000 science that's produced turns into
+[311.44s] 24,000. And that's exactly how in my
+[314.56s] current save file, you go from the
+[316.96s] number of 800,000 science per minute to
+[322.0s] 19 million science per minute or
+[324.72s] 19.346840.
+[327.039s] Right? So that's how the numbers work
+[329.12s] out. So that's the difference between
+[330.56s] SPM and ESPN. Like I said, this is a
+[332.88s] madeup number that we've created so that
+[334.88s] we can talk about the differences of how
+[337.52s] do you talk about a meabase and the
+[339.84s] scale of it. An easy way to represent
+[341.52s] that is the actual production value. I
+[343.919s] find the production value to be
+[346.0s] significantly easier to understand
+[348.32s] because you don't care about any of the
+[349.759s] multipliers. We all know that there's
+[351.28s] going to be that constant, right? It's
+[353.36s] only saying what is the production value
+[354.88s] and you ignore all the other
+[356.4s] complications of that formula that we
+[358.24s] just showed. So, if I but the problem is
+[361.52s] here on YouTube, if I go and publish a
+[363.919s] video and I say I have 806,000
+[367.039s] science per minute, someone's going to
+[368.72s] say, "Hey, there's that guy that I saw
+[370.319s] that made 4 million ESPM." Um, like, so
+[373.6s] this is a way smaller base. I am that
+[375.759s] guy who created over a year ago a 4
+[377.68s] million SPM base, and that's the title
+[379.44s] that I unfortunately used. So, this has
+[381.759s] caused the confusion. I'm trying to
+[383.36s] clear clarify that and say, how do we
+[385.919s] really decide what the size of a base
+[387.919s] is? I personally think that it should
+[389.44s] just be the SPM number what you're
+[391.039s] producing because all the bonuses are
+[393.52s] kind of just based on how long you've
+[395.44s] run your base and actually researched.
+[397.919s] However, I do think that you should be
+[400.0s] able to loud and proud state the fact
+[402.16s] that you've researched up to research
+[404.639s] productivity level 100. That is a huge
+[407.28s] accomplishment that not very many people
+[408.88s] are ever going to do and there's a huge
+[411.039s] dedication involved in that. So I think
+[413.44s] you should be able to say it is 19
+[415.199s] million ESPM but you should be very
+[417.68s] careful about saying what are you
+[419.68s] currently researching at and what is
+[421.039s] your UPS number. So next let's talk
+[422.96s] about the different types of things you
+[425.039s] can research in a meabase. So first
+[427.44s] assuming that you have researched all
+[429.52s] finite technologies that are not
+[431.44s] infinite we'll then move on to only
+[433.599s] infinite techs. So the first eight texts
+[436.479s] all deal with the productivity of the
+[439.039s] production of key ingredients for
+[441.039s] building rockets, dealing with asteroids
+[443.039s] in space, scrap recycling, etc. You
+[445.599s] really only need to research to the
+[447.28s] level of 20 to be able to get up to the
+[450.72s] 300% max bonus because if you can put
+[453.919s] four legendary quality modules in each
+[456.88s] of the uh the slots of the building, you
+[460.16s] get an additional 100%. So you get a
+[461.919s] total of 300%. Foundaries give a base
+[464.96s] 50% so you need less than that. The
+[466.96s] point just being getting to the point
+[468.639s] where you have 300% prod is going to be
+[470.56s] the best bet. On this channel, I am
+[473.28s] going to assume that you have gotten to
+[475.199s] level 30 because a lot of the designs
+[477.599s] that you see on this channel are going
+[479.52s] to be we're swapping out productivity
+[481.199s] modules for speed modules. So, we assume
+[483.039s] that you already have the maximum
+[485.68s] productivity for each of those
+[487.919s] respective ingredients. So, let's assume
+[490.72s] you did that. then you're done anyway.
+[493.68s] Regardless if you do or you do not,
+[495.28s] you're going to end at some point. The
+[496.96s] next ones that we're going to look at,
+[498.56s] these next six [music] are all damages
+[501.199s] and and technologies that impact enemy
+[505.199s] control on planets. Eventually, you get
+[507.36s] to a point where you've killed all the
+[508.639s] enemies and you no longer have a
+[510.879s] pollution cloud that grows on novice cuz
+[512.64s] you've maintained it. And the only other
+[514.64s] place you got to worry about enemies is
+[516.0s] on Glava. And on Gla, the only things
+[518.0s] that really matter is refined
+[519.279s] flammables. if you're crazy like me,
+[521.279s] artillery range and shooting speed and
+[524.0s] electric weapon damage. And eventually
+[525.92s] those get to a point where there's no
+[527.839s] reason to keep researching those because
+[529.44s] you're already one-shotting all the
+[530.64s] enemies and you're killing everything.
+[532.399s] So then at that point you can say, okay,
+[533.92s] we are done with this technology as
+[535.6s] well. So this isn't something we want to
+[537.44s] scale into the very very late game. So
+[539.519s] then there's two others before we get to
+[541.76s] the final six that exist. Rail gun
+[543.839s] damage, just make sure that you can
+[545.92s] one-shot all the asteroids. laser
+[548.08s] weapons damage doesn't really matter. It
+[551.44s] has the same six sciences you need for
+[553.36s] physical projectiles, but it's not going
+[556.0s] to matter in the grand scheme because
+[557.519s] you're not going to use them anyway for
+[559.12s] designing your meabase uh transport
+[561.279s] ships because you're going to want to
+[562.72s] use ammo anyway cuz we've gone and done
+[565.68s] testing on it. And the actual beam, the
+[568.399s] extra cost of the beam being calculated
+[570.959s] is actual
+
+ly more than the cost of
+[573.44s] producing the ammo and being able to
+[576.08s] shoot them out because the it just turns
+[578.64s] out even if the damage is exactly the
+[580.399s] same and they're one-shotting
+[581.92s] everything, the laser still costs more
+[583.839s] in the end. So that rules out those two
+[586.08s] technologies is something we want to
+[587.519s] optimize for. Finally, you're left with
+[589.2s] these six. The first three are all going
+[591.2s] to be used for research productivity and
+[593.519s] for transport ship logistics because
+[596.16s] these are going to be technologies that
+[597.519s] impact how you design ships and what
+[600.399s] level of production capacity do you need
+[602.48s] to be able to destroy all the asteroids
+[604.0s] that are coming at your ship. The last
+[605.68s] three are going to be true infinite
+[607.36s] techs that you can research
+[608.64s] indefinitely. Now, they all have
+[609.839s] practical limits to what you can
+[611.279s] research, but we'll get into that in a
+[613.36s] second. Here's the problem. In vanilla,
+[615.519s] it was very clear-cut. Every single
+[618.079s] science that was infinite all required
+[620.56s] six science research. So in this
+[623.519s] scenario is very simple. You would
+[625.92s] design a meabase. You target a thousand
+[628.0s] science per minute production and then
+[630.079s] you would build everything up to the
+[631.76s] point where you hit that number. And you
+[633.68s] could constantly research at that rate
+[635.12s] and feed all your labs. Because it was
+[637.36s] always six sciences. the relative cost
+[639.2s] in terms of UPS, although they're
+[640.88s] different cuz purple science costs a lot
+[642.48s] more and utility science costed a lot
+[644.24s] more because we didn't have foundaries
+[645.44s] and all the wonderful productivity
+[646.72s] bonuses. So, in those cases, there was
+[650.16s] some difference, but it was very simple.
+[653.36s] Every single thing required the same
+[654.72s] amount of science packs. So, in general,
+[658.16s] you would just target to be able to
+[659.519s] research any and all of the different
+[661.279s] sciences at the production rate that you
+[663.44s] wanted. Space Age, unfortunately,
+[666.48s] changed this. So now it's not clear at
+[669.6s] all which technology you're talking
+[671.839s] about when you're talking about the true
+[674.0s] production rate of your base because the
+[676.8s] UPS costs of a force science like mining
+[679.92s] productivity is significantly less
+[682.32s] expensive than research prod. [music] So
+[684.48s] physical projectiles is also relatively
+[686.56s] cheap because space science is very
+[688.32s] cheap in terms of EPS. So are the rest
+[690.48s] of the science produced locally on
+[691.76s] novice. There's no overhead of actually
+[693.36s] delivering them and bringing them in
+[694.64s] from other planets. And so that was also
+[696.959s] relatively cheap science. Then you get
+[698.56s] into the seven sciences. These start to
+[700.24s] get more expensive, especially full
+[701.839s] Gora. [snorts] And so this is where the
+[704.56s] cost of these sciences go up in terms of
+[706.88s] UPS. And then finally, rail gun is
+[709.519s] actually one of the most expensive
+[711.44s] sciences. And I'd actually argue that
+[714.16s] the you are in this case producing more
+[716.8s] science per minute total raw science
+[719.68s] that you need to produce for rail gun uh
+[722.88s] damage than you actually need for
+[724.8s] research productivity. But research
+[726.72s] productivity costs like twice the
+[729.2s] amount. So that's all because
+[731.12s] Prometheium science is still so
+[732.48s] expensive. So the reason I say that rail
+[734.8s] gun damage actually is more expensive to
+[738.079s] run is a the linear cost the exponential
+[742.48s] cost drastically quickly increases for
+[745.36s] rail gun speed if you're going to be
+[747.519s] shooting for that. But the main reason
+[749.279s] is because it's a 60 science 60-second
+[751.839s] research. If you target this research
+[755.2s] and you go with the tech the methodology
+[757.279s] that I do on novice where I run my labs
+[761.04s] at half the rate for research prod with
+[764.16s] the same 1,000 labs and then I run it at
+[767.44s] the normal speed where I and where it
+[771.04s] goes for the 60 science or 60-second
+[774.079s] research. In that case, technically the
+[776.639s] 60-cond research is more expensive at
+[779.2s] that point than research productivity
+[781.279s] cuz you have eight sciences that are
+[783.519s] running at twice the rate of research
+[785.519s] productivity. So, you're technically
+[787.36s] running the equivalent of 16 sciences.
+[789.68s] So, it's actually a more expensive per
+[792.16s] minute production value if you employ
+[794.959s] that that methodology. Now, of course,
+[797.6s] the most expensive is always going to be
+[798.959s] research prod if you double the number
+[800.959s] of labs, cuz now you're producing the
+[803.279s] same amount on all the different
+[804.639s] planets, but you just are running with
+[807.519s] twice the number of labs. So, let's
+[810.079s] quickly talk about the cost breakdown
+[812.8s] per level because they are very
+[814.48s] different. As you can see on the right
+[815.6s] hand side, because they're exponential,
+[817.2s] a linear graph doesn't make a whole
+[818.56s] bunch of sense to go and explain it per
+[820.24s] level. So, we'll switch to a logarithmic
+[822.8s] graph. This way all the different actual
+[825.6s] plots the linear means that it is a true
+[828.24s] exponential curve and then all of the
+[830.56s] ones that are not linear and taper off
+[832.639s] are going to be and especially once they
+[834.24s] go constant like for mining prod then
+[836.56s] effectively they are going to be a
+[838.32s] linear increase. So with these changes,
+[841.279s] you can see that there's a very sharp
+[843.12s] difference in terms of at already level
+[846.0s] 30, you're going to get into the 
+
+10 to
+[847.76s] the 13th power in terms of actual
+[850.24s] science that you're going to be
+[851.199s] requiring for rail gun shooting speed.
+[853.474s] [snorts] Now, if we go and extract this
+[855.199s] even further and go to level 500, now
+[857.76s] you're seeing that we're in absolute
+[859.6s] crazy territory and you will be waiting
+[861.44s] until the heat death of the universe to
+[862.959s] be able to research any of this
+[864.24s] technology. So specifically, we're
+[866.079s] talking about worker robot speed, rail
+[867.519s] gun shooting speed, and overlapping with
+[870.399s] those two because they have the same
+[871.6s] scaling factor is going to be physical
+[873.199s] projectile damage and explosive damage.
+[876.32s] The only ones that are kind of
+[878.16s] semiachievable
+[879.68s] is going to be research productivity and
+[881.839s] mining productivity in the very very
+[883.519s] long run. So in the end, you really the
+[885.6s] only two technologies that you can ever
+[887.36s] practically research forever is mining
+[889.839s] productivity and research prod. But the
+[892.24s] other ones are still fun to go and
+[893.92s] research even if you're doing the split
+[896.079s] of 60-second research and 122nd
+[898.72s] research. So let me talk about quickly
+[901.199s] here mining productivity. So here I'm
+[904.399s] going to be plotting 8 belts versus 16
+[906.8s] belts versus 48 belts. Let me switch to
+[909.199s] factorial and let me explain what I mean
+[911.44s] by that. So for example on my save file
+[914.16s] I have designed this to be able to be uh
+[917.199s] targeted for research productivity of
+[919.36s] eight total stacked turbo belts or
+[922.399s] 115,200
+[924.079s] per minute of science that we are
+[925.92s] producing. All the other sciences are
+[928.16s] scaled up to run at that when we're
+[929.519s] running research prod. We have the same
+[931.76s] fixed number of labs that are going to
+[933.36s] be available here. Right? So when we're
+[935.76s] running 120 research we're running at
+[937.92s] 2.7 ESPM 2 mill. And then when we go and
+[942.16s] run the 60-cond research, that's going
+[944.0s] to be 5.4 million ESPM. So the
+[946.8s] difference in terms of SPM numbers is
+[948.639s] 115200 versus 256,400
+[951.68s] in terms of the production rate. These
+[953.44s] are all again all based on the the
+[955.839s] capacity of a belt. So that's why those
+[958.079s] numbers are weird like that. So given
+[960.639s] that these are my targets, that means
+[962.8s] that I've had to adjust the speed that
+[965.199s] the insertters put things into the labs,
+[967.12s] and I've had to adjust that rate
+[968.56s] accordingly to be able to control and
+[971.519s] clock everything based on whichever
+[973.279s] production value that I'm at. Now, I've
+[975.759s] recently expanded to these outpost
+[978.8s] clusters for mining prod, and I've
+[980.8s] scaled up beyond the 16 belts total that
+[983.44s] I'll run for 60-cond research, and we've
+[986.399s] gone now to 48 total belts. And let me
+[989.68s] explain by going back to the graphic and
+[991.519s] explain why that is. So, here in this
+[993.279s] graphic, you'll see that right around
+[994.56s] the level 40,000, I started to see that
+[997.12s] it was getting annoying to wait 7.2
+[999.92s] minutes per level of mining
+[1003.12s] productivity. So that's where I said,
+[1005.199s] "Hey, if I basically 3x the amount of
+[1008.56s] science that we're producing, we'll drop
+[1010.48s] down to 2.4 minutes." And here in this
+[1012.959s] save file, I've got plenty of headroom
+[1014.8s] to do that cuz I was running at 300 UPS
+[1017.279s] with I accelerated it. So we did that
+[1019.92s] and we are now running at 2.4 million uh
+[1023.92s] or we're now going running in 48 belts,
+[1026.16s] which is 2.4 minutes total uh to take
+[1029.52s] per level. And you can see those costs
+[1031.839s] really start to add up when you get to
+[1033.839s] the really high levels like level
+[1035.919s] 70,000. I'm not there yet. I'm at 55,000
+[1038.559s] in my save, but I'm already practically
+[1040.48s] seeing that if I had targeted my whole
+[1043.039s] entire base to only be able to run
+[1044.88s] research productivity and I scaled only
+[1047.199s] for that target. If I want to push
+[1049.84s] mining productivity really far, I'd now
+[1052.4s] be waiting 25 minutes per level compared
+[1055.919s] to now because I can switch and activate
+[1058.48s] all these outposts. I can now run at 4.2
+[1060.88s] minutes per level, which is a lot more
+[1063.039s] practically possible for me to do. So,
+[1066.24s] um, now on the note of practicality, do
+[1069.12s] you need this level of mining
+[1070.4s] productivity? No. Do do I think it's
+[1072.72s] fun? Absolutely. So, just points of
+[1076.0s] reference if you're going to continue to
+[1077.52s] do this and the scale of things. Mining
+[1079.52s] productivity is basically pretty
+[1080.799s] flatlined. It's pretty easy to scale up
+[1082.799s] and it's something that you can
+[1083.76s] infinitely research. Physical projectile
+[1086.24s] damage, for example, has a couple
+[1087.76s] different key break points. It's level
+[1089.28s] 13, 18, and 33, which 13 is going to
+[1092.16s] allow you to one-shot the uh small
+[1094.32s] asteroids with red ammo. Level 18 is
+[1097.12s] you're going to be able to do it with
+[1098.16s] yellow ammo now. And then level 33 is
+[1100.96s] you're going to be able to one-shot
+[1102.4s] medium asteroids with red u medium
+[1105.679s] Prometheium with red ammo. So, it's a
+[1108.0s] really key target point. But you can see
+[1110.16s] here too, because I chose to scale up to
+[1112.24s] 16 belts, when I hit that level, I had
+[1115.2s] to only wait 8 days for that research
+[1118.16s] versus 16 days. So, it starts to really
+[1120.08s] add up in terms of the waiting time for
+[1122.08s] some of these technology levels that you
+[1123.84s] do want to practically hit. So, I can
+[1126.16s] make the argument that I would want to
+[1127.2s] scale it even fu
+
+rther, but beside the
+[1129.28s] point. Explosives has a very similar
+[1131.28s] thing where you have a target of hitting
+[1132.96s] level 31 eventually, and that's again
+[1135.6s] for Prometheium to be able to go and
+[1137.28s] take out the big uh Prometheium
+[1139.12s] asteroids and being able to one-shot
+[1141.28s] them. Um, and so then in that particular
+[1143.919s] case, you want to get up to level 31.
+[1145.84s] And again, the difference of eight belts
+[1147.6s] versus 16 belts, it's you're saving 2
+[1149.6s] days. So, time is everything. So you
+[1152.24s] might as well go and scale that up and
+[1154.32s] not lock everything down to what you can
+[1156.32s] possibly do for research prod. So then
+[1159.84s] continuing and going forward, here's one
+[1162.24s] of the infinite technologies we talked
+[1164.0s] about. You'll notice here there's a
+[1165.919s] really big number for level 60 and
+[1168.48s] that's because this law of exponents is
+[1170.799s] very very aggressive for this
+[1172.32s] technology. And it's the same for any of
+[1174.4s] the other of the uh of the texts we've
+[1177.12s] talked about where they very quickly add
+[1179.679s] up. Now, sure, with 16 belts, we are
+[1182.64s] going to save 6.2 million years of
+[1185.84s] research to get to level 60, but I don't
+[1188.16s] know if this is obvious or not. I won't
+[1189.919s] be alive then to see that happen. So,
+[1192.4s] there is a practical point where it's
+[1195.039s] not going to make sense to continue to
+[1196.48s] research worker robot speed even as far
+[1198.64s] as you scale this up because your CPU is
+[1201.039s] not going to be able to handle it. So,
+[1202.16s] there's going to be a point where it
+[1203.28s] just doesn't practically even make sense
+[1204.799s] to continue to do it at that rate. So,
+[1208.24s] but do I think that you can still design
+[1210.88s] an entire base to only run worker robot
+[1214.4s] speed? 100%. And there be should be no
+[1216.64s] one stopping you from going and doing
+[1218.08s] that. Just know that there's a practical
+[1219.679s] limit to what you're trying to achieve.
+[1221.52s] Now, rail gun damage is a similar story,
+[1223.84s] but I've capped it here at level 40 just
+[1225.52s] to make it a little bit simpler. And uh
+[1227.76s] you'll see here that we're getting into
+[1228.96s] the years territory quickly as you go
+[1230.799s] beyond level 30. But here in this case,
+[1233.84s] again, logarithmic scale. Level 20 is
+[1236.32s] still like very achievable, but you're
+[1237.84s] seeing that you're shaving off saving
+[1239.76s] shaving off hours. And at level 30,
+[1241.84s] you're saving off months of time. So
+[1245.36s] practically, you can keep researching
+[1246.559s] these things, but eventually it becomes
+[1247.84s] a point where it's futile to continue to
+[1249.6s] research them. So finally, research
+[1251.28s] productivity. In this case, I'm
+[1253.2s] describing a scenario where you actually
+[1255.2s] research all the way from the beginning
+[1256.4s] all the way to the end. Um, and in in
+[1258.64s] this case here, what we're talking about
+[1260.799s] in terms of the productivity multiplier
+[1263.12s] here, you're seeing I've researched up
+[1265.2s] to level 100, which took about 21 days
+[1267.76s] at 8 belts to to go and research. Now,
+[1270.88s] practically was a lot less than that
+[1272.24s] because I could run above 120 UPS. But
+[1275.28s] the point being, if you just let it run,
+[1277.36s] strictly speaking, it would take a very
+[1279.2s] long time to research that. So, it is a
+[1281.28s] a large achievement. And if you really
+[1283.039s] want to know the entire time, you would
+[1284.96s] take the area under the curve here to
+[1286.88s] get that. So I didn't compute it
+[1288.48s] unfortunately, but it's a kind of like
+[1290.48s] on a per level delta. Um, this is
+[1292.88s] getting now into the days range. This is
+[1295.12s] very long. If I want to go another 50
+[1297.36s] levels, level 150 will take me at my
+[1300.64s] current basis capacity 368
+[1303.919s] years. We're not talking about the
+[1306.159s] million-year mark, so that's nice. But I
+[1309.6s] I would love to live until I was 300.
+[1312.159s] I'm not. So you can see like there's a
+[1314.64s] that act law of exponence is really
+[1316.48s] getting to the point where the
+[1317.52s] practicality of researching research
+[1319.52s] productivity doesn't even make sense at
+[1322.08s] some point either. Eventually you're
+[1323.679s] going to reach a point where the save
+[1324.96s] file doesn't make sense to run anymore.
+[1327.12s] So all of these things are fleeting. So
+[1329.039s] if you see all these graphs, you're
+[1330.64s] probably going, well, why do I even want
+[1332.48s] to meabase at all [laughter] if uh if
+[1335.28s] eventually there's no point in
+[1336.72s] continuing to research? The whole point
+[1338.799s] of Factorio in my mind and the way that
+[1341.44s] I would view it is that you want to go
+[1344.559s] and be able to push this game to the
+[1347.12s] absolute limit. And the Factorio
+[1349.6s] developers have done an amazing job at
+[1351.36s] creating a game that is this incredibly
+[1353.28s] performant. Now, for the subselect few
+[1356.159s] like myself who wants to see how far we
+[1358.799s] can push the game, we care about two
+[1361.12s] things. one, we want to see how
+[1363.2s] practically far we can push that ESPM
+[1365.44s] number because that practically will
+[1367.679s] impact how fast and how long it takes to
+[1369.76s] get certain levels and be able to hit
+[1371.919s] certain milestones that no one else has
+[1373.44s] ever done. The other part from a
+[1375.2s] discovery standpoint is saying how can
+[1377.76s] we optimize the sciences so we can add
+[1381.52s] more capacity to hit in this case 48
+[1384.96s] belts of science while still maintaining
+[1388.08s] in this case if I go and run this at a
+[1390.0s] faster accelerated rate 130 to 140 UPS
+[1394.511s] [snorts] that's also its own achievement
+[1396.3
+
+2s] that we're looking for now here's the
+[1398.32s] caveat for mega basing your hardware is
+[1400.32s] going to be totally different than mine
+[1401.6s] and don't compare the numbers that you
+[1403.039s] see on this particular and or anywhere
+[1405.2s] on YouTube with what you are capable of
+[1408.0s] doing on your own computer because keep
+[1410.32s] in mind my particular computer here is a
+[1413.76s] save file or is a is a computer that has
+[1416.4s] been very purposefully optimized only
+[1418.48s] for running Factorio. Um I'm running on
+[1420.799s] Linux. I have a 9800 X3D and I've done a
+[1423.84s] whole bunch of timing changes and
+[1425.2s] profile changes on my actual hardware to
+[1427.44s] be able to hit certain numbers. So
+[1430.0s] overclocking all these different things.
+[1432.0s] So, if you're running on the laptop or
+[1433.52s] you're running on older hardware, you're
+[1434.88s] not going to be able to hit the same
+[1435.919s] numbers because you don't have the same
+[1437.039s] type of cache and memory uh limits and
+[1439.52s] constraints that you would have. So, all
+[1442.4s] that being said, if when you see
+[1445.039s] competitions on this channel or you see
+[1447.2s] any kind of competitions at all where
+[1448.88s] someone says, "Hey, is my base more
+[1450.48s] performant than your base?" You got to
+[1452.32s] compare it on the same hardware. So, the
+[1455.12s] overall point that I want you to take
+[1457.039s] away from this video, if you take
+[1458.159s] nothing else away, is understand the
+[1459.84s] difference between ESPN and SPM and what
+[1461.76s] those big numbers are. And that you'll
+[1463.919s] see people on YouTube, and I'm guilty of
+[1465.679s] this as well, of going and click baiting
+[1468.24s] titles with 20 million ESPN because the
+[1471.279s] number is big and so people want to go
+[1472.72s] and see big numbers. Truly, SPM is the
+[1475.039s] best way to measure it. But we're kind
+[1476.88s] of at a point where that's kind of too
+[1478.24s] far gone for people to want to go and
+[1480.4s] see a 800,000 SPM base because they
+[1483.279s] already have seen on YouTube by people
+[1485.279s] like yourself who have posted a 4
+[1487.36s] million ESPM base and now they think
+[1489.36s] that thing is small. You shouldn't, but
+[1491.36s] that's going to be hard to fight. So
+[1493.2s] then the next point that I want you to
+[1495.2s] also take away from this is that you can
+[1497.919s] design your save file however you want
+[1501.2s] to. If you want to go and play Scrooge
+[1503.679s] McDuck and go and see how many rocket
+[1507.2s] silos can I make per minute and you want
+[1510.64s] to go and put them all in a whole bunch
+[1512.4s] of chests and then run around in them,
+[1515.12s] great. Go and build your base that way.
+[1518.0s] So, what actually constitutes a meabase
+[1521.279s] in the end? A meabase for me is going to
+[1524.0s] be something that in space age I think
+[1526.4s] the milestone should be a true million
+[1530.32s] as uh um effective science per minute.
+[1533.279s] Practically you can achieve that number
+[1535.76s] at certain levels with let's say you
+[1538.799s] only research to level 30. You can hit
+[1541.279s] that by making about seven belts of
+[1543.2s] science of each individual one. If you
+[1546.159s] spend a little bit more time and get to
+[1548.24s] a very easily achievable level 60, you
+[1550.96s] can get close to about 4.3 belts.
+[1553.022s] [music] And then if you go all the way
+[1554.88s] to level 66, and technically 67 is the
+[1558.799s] break point, that's when you can be
+[1560.48s] running just four stack turbo belts of
+[1562.48s] science and you're already at a million.
+[1565.039s] That's a really good goal to hit to say
+[1566.88s] that you've built a meabase. Now, that's
+[1569.36s] strictly for me what I would consider to
+[1571.52s] be a meabase in my mind. If you go and
+[1574.24s] create one stacked belt of each of the
+[1576.559s] sciences, that's already a really big
+[1578.72s] achievement. That is a takes a lot of
+[1581.039s] planning and and thinking through to go
+[1583.279s] and do that. Um to get all the ledge
+[1585.36s] materials, everything you have to do.
+[1587.12s] I'm just saying strictly speaking for me
+[1588.64s] in space age, I consider a million plus
+[1591.6s] to be an actual meabase. So in that case
+[1595.52s] based on my own way that I think about
+[1597.84s] it the really divisive point here that
+[1599.84s] people are going to that will spark
+[1601.52s] controversy is that I would say out of
+[1604.48s] the 60-cond research hitting a million
+[1607.919s] of all the 60-second research is enough
+[1610.88s] to constitute being a meabase and then
+[1613.12s] in that case for research productivity
+[1615.12s] running at 500,000 ESPM is also enough
+[1619.679s] to say that you are a meabase but that's
+[1621.919s] my philosophy on how I approach it. I
+[1624.4s] hope that people can agree with that and
+[1626.159s] come and and understand that, but I
+[1628.64s] wouldn't focus as much as what I
+[1630.4s] personally think a meabase is because it
+[1632.96s] doesn't matter. The point is we just
+[1634.799s] want to push the game as far as we can.
+[1637.279s] And in that case, we need metrics and a
+[1640.08s] common ubiquitous language to talk about
+[1641.84s] that. So, this is how I'm going to refer
+[1644.0s] to it. This is how I'm always going to
+[1645.679s] talk about it in terms of the numbers,
+[1647.84s] the the meanings behind them, and what I
+[1650.24s] think personally that a meabase should
+[1651.84s] be. And personally for the way that I'm
+[1654.32s] going to continue to design is I'm going
+[1656.48s] to be designing so that every single
+[1658.799s] science that I can eight science, seven
+[1661.679s] science, four science, etc. I'm going to
+[1664.159s] push until the [music] point where I can
+[1666.799s] just barely maintain 60 UPS. I find the
+[1670.24s] challenge of doing that a lot more
+[1672.08s] interesting for me personally than ju
+
+st
+[1674.399s] targeting only research productivity and
+[1676.799s] artificially slowing down all the other
+[1679.279s] sciences that could potentially go and
+[1681.12s] get created. These are my thoughts on
+[1683.36s] ESPM versus SPM and what you should go
+[1685.76s] and build and how you should design a
+[1687.039s] meabase and what you [music] should
+[1688.159s] practically target. Hopefully, this
+[1690.0s] information is educational and helpful.
+[1692.159s] I would be very interested to hear your
+[1694.0s] thoughts in the comments below. If
+[1695.279s] you've made it this far, whether you
+[1696.96s] agree with me, disagree with me, think
+[1699.2s] I'm completely wrong, I'm fine with
+[1701.039s] hearing your thoughts and I will do my
+[1702.96s] best to respond to any of them. Thank
+[1704.72s] you very much for watching. My name is
+[1706.08s] Ebook Nasty. Have a fantastic rest of
+[1708.24s] your
+

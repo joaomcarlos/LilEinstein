@@ -99,12 +99,19 @@ Root-owned (no child doc):
 - `standard.md` — coding standard: naming, data model, module order; binding for all Lua edits
 - `RESEARCH_AUTOPILOT_IMPLEMENTATION.md` — maintainer/tester notes for the research-autopilot branch
 - `docs/_human/raw_request_log.md` — append-only verbatim record of user requests and project decisions
+- `docs/abucnasty/` — source transcripts of 13 abucnasty Factorio videos (ESPM, megabase tours, lab UPS, quality science, FFF-443) with a README index; primary source material for the `.devin/skills/factorio-abucnasty-*` and `factorio-fff443-*` skills
 - `audit/` — GUI mockup reference assets; `scripts/import_ui_slices.ps1` regenerates `lib/ui_slices.lua` from them
 - `scripts/run_tests.ps1` — canonical unit plus disposable Factorio runner; creates an isolated save, waits for creator shutdown, then advances the save in a hidden loopback-only headless server with an ephemeral port and auto-pause disabled
 - `scripts/clean_decision_console_assets.py` — deterministic cleanup/crop tool for the selected sprite-backed Research control center demo; it does not register runtime sprites or alter the live GUI
 - `graphics/` — mod icons and UI sprite assets
 - `output/` — generated output folder (`output/imagegen/` plus throwaway visual prototypes such as `output/science-throughput-demo/` and `output/research-control-center-demo/`)
 - `website/` — mod landing-page assets (`index.html`, `styles.css`, `script.js`, `assets/`)
+- `.devin/skills/` — project-level Devin skills:
+  - `youtube-research-apply` — transcribe and apply YouTube lessons to the codebase
+  - `factorio-abucnasty-science` — ESPM formula, practical infinite-tech caps, per-pack difficulty weights, tier rankings, per-pack quality recommendations, 2.1 meta shifts (13 videos analyzed)
+  - `factorio-abucnasty-lab-design` — lab clocking methods, inserter patterns, 16-beacon layouts, buffer thresholds, UPS benchmarks (3 videos)
+  - `factorio-abucnasty-megabase-logistics` — planet-specific strategy, spoilage management, ship design, production ratios, quality per pack (5 videos)
+  - `factorio-fff443-research-control` — Factorio 2.1 circuit lab control (set research, read research cost), landing pad throughput, red/green wire split, worker-robot-speed de-prioritization (1 video)
 
 ## Child DOX Index
 

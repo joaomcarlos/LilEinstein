@@ -1,0 +1,1453 @@
+# Quality Science Conclusion: Core Sciences
+# Channel: abucnasty
+# Video ID: hhn6a_TgCOQ
+# Transcript length: 65295 chars
+# Fetched: 2026-08-31
+# Source: TranscriptAPI.com
+
+[0.0s] Hello and welcome back to Factorio. My
+[1.92s] name is A Bug Nasty. In today's video,
+[4.52s] I'm going to give an answer on which
+[7.52s] quality signs you should pursue if
+[9.84s] you're going for the first three. So,
+[11.92s] for red, green, and blue science.
+[14.88s] I've given a lot of thought on how I'm
+[18.08s] going to want to benchmark this because
+[22.0s] in the past, I do a lot of what I call
+[24.4s] or what is called micro-benchmarking,
+[26.44s] where I'll take a design, I will get
+[28.68s] make [music] n copies of it, and then I
+[31.0s] will wind up going and testing how that
+[33.6s] design performs compared to another.
+[36.0s] Now, in reality, and I'll show here a
+[38.6s] benchmark that I did for chemical
+[40.68s] science, for example, the problem with
+[43.04s] that methodology is that it assumes that
+[46.8s] as you scale the number of that
+[49.12s] particular entity and copy it over and
+[51.12s] over and over again, that that's going
+[52.8s] to be reflective of a real game
+[55.0s] performance.
+[56.72s] And in reality, it's not. And that's
+[58.52s] because a lot of the actions that are
+[60.88s] being performed in the exact same tick
+[63.08s] are all exactly synchronized, and
+[65.04s] they're perfect, and they're as good as
+[66.56s] they can get. So, for example, in this
+[68.96s] screenshot, or at least this graph that
+[70.56s] you're seeing in front of you, now, this
+[72.28s] is 96 fully stacked lanes of chemical
+[75.56s] science. And it's hovering at right
+[78.2s] around 2 milliseconds of update time, or
+[80.68s] 2,000 microseconds of update time for
+[82.88s] for these saves. In reality, you're not
+[85.04s] going to have that many. You're going to
+[86.2s] have like in in the base that's that
+[88.36s] that I'm currently running, I'll have 16
+[90.48s] lanes of Q1 science. Let alone not 96
+[94.8s] uncommon lanes of of of of chemical
+[98.36s] science, right? As is actually being
+[100.2s] used in this benchmark [music] here.
+[102.0s] So, when you look at this, and you look
+[104.28s] at this particular benchmark that I ran,
+[107.12s] I know that Q1 is better.
+[109.68s] But, the question is, okay,
+[112.08s] if you think about it as you're going
+[113.72s] from 192 lanes down to a measly 16 that
+[117.48s] would actually be running in this base,
+[120.24s] how representative is that of your total
+[122.56s] update time, and how big of an impact
+[124.2s] does it even have? Is it even a point of
+[126.52s] of arguing about it, you know? So, so so
+[129.32s] that's like an example here, where if we
+[131.36s] took it just a micro-benchmark, I I
+[133.12s] could end the the video right here, and
+[134.68s] I could say Q1 is better than Q2.
+[138.32s] Now, similarly though, if we look at
+[140.48s] like let's say red science, and I'll
+[142.36s] apologize for the old format of of this
+[145.32s] as I this is from a
+[147.24s] before I made the chart update to make
+[149.12s] my my charting script a little bit
+[150.72s] better than graphics better. But, the
+[152.64s] the the the point here is where I did
+[154.88s] incorporate labs in this particular one,
+[157.2s] and I used 2,048 labs to to test this
+[160.08s] with ships, without ships, and then
+[162.16s] using it with Q1.
+[164.08s] And in this particular case, Q2 wound up
+[166.28s] being better. But, also if you look at
+[167.72s] the entity update time that's here, this
+[169.72s] is like 500 microseconds across these.
+[172.44s] Like, it's barely even taxing the CPU,
+[175.64s] which floats on average around like 300
+[177.8s] microseconds, or 0.3 milliseconds, when
+[181.04s] it's normally running without any
+[183.04s] entities in the game.
+[184.84s] So, so this is like this is like such a
+[187.12s] tiny amount because red science really
+[189.24s] doesn't contribute much to the overall
+[191.24s] update time. So, then when I looked at
+[193.36s] this, and and the conclusion of and I
+[195.16s] have a video of this previously where I
+[196.72s] analyzed this,
+[198.28s] I didn't really have a a strong
+[200.4s] inclination of one being better than the
+[202.28s] other. Like, it seemed like Q2 at the
+[204.24s] time was better, but is that really
+[206.52s] true? Because again, I'm talking about
+[208.16s] cache misses when you're it's not in a
+[209.96s] real game, so we're not really flective
+[212.2s] of the whole thing.
+[214.04s] So, with that being said,
+[217.0s] I wound up saying, "Okay, what I'm going
+[219.24s] to do, and the only way that I can
+[221.2s] feasibly think about actually going and
+[222.8s] benchmarking this thing,
+[224.4s] is I'm going to go and have to go and
+[226.36s] create and use my actual save file, and
+[229.36s] I'm going to go create four different
+[230.92s] versions to of my actual save file, and
+[234.68s] I'm going to benchmark that exactly. So,
+[237.44s] let me walk you through what the
+[239.48s] benchmarks are going to look like so
+[241.08s] that we can have a a representative
+[244.52s] reflection of of of a real save that has
+[249.04s] real full configuration of all of these
+[252.0s] different sciences, and and and and then
+[255.52s] let's go benchmark that, and compare red
+[258.56s] and green together, blue by itself being
+[261.44s] uncom- like being normal quality
+[263.2s] science. Uh let's test then all of them
+[265.56s] being uh
+[267.0s] all together, so red, green, and blue
+[268.8s] all together. And then also like all
+[271.48s] being all quality one. And then for and
+[274.52s] then compare that against the original
+[275.88s] save file, which is what I'm currently
+[278.32s] running, which is all Q2. And hopefully,
+[281.44s] by the end of the video, the way that
+[283.12s] I'm going to go about this is whichever
+[285.16s] of those save files winds up being
+[287.12s] better
+[288.4s] is what I'm going to wind up using as my
+[290.88s] actual save file going forward. So, with
+[293.84s] that, let me walk you through and
+[296.24s] showcase the different save files that
+[299.0s] I've painstakingly created. And then
+[302.16s] let's 
+
+go have some fun benchmarking. So,
+[303.84s] if you're interested in this, stick
+[305.32s] around. It's going to be a good time.
+[320.96s] So, this is the base save file that
+[323.04s] we're going to use. This is my actual
+[324.56s] mega base that is running quality
+[326.36s] science for everything. So, for those
+[328.32s] who have never seen my very first video,
+[330.48s] just a quick short summary of what I
+[332.72s] wind up using is for science, I wind up
+[335.92s] running
+[337.12s] everything in the uncommon flavors. So,
+[339.84s] I wind up running for every single thing
+[341.56s] is uncommon. The only things that are
+[343.84s] actually normal are going to be
+[346.2s] agriculture science and prometheum
+[348.32s] science, and then I run legendary space
+[351.48s] science packs. So, that is my current
+[353.96s] setup. The question is in this is we're
+[357.08s] going to replace red, green, and blue,
+[359.24s] and we're going to replace those with
+[360.68s] the common variants.
+[363.28s] And swap them out. So,
+[365.64s] for those who have seen my mega base,
+[368.4s] you'll probably notice that some things
+[370.08s] look different here. Especially, where
+[372.52s] did all this solar come from? Is it
+[374.92s] relevant for this test? No, not at all.
+[377.12s] I just strictly wanted to be able to say
+[379.4s] that I have 100 gigawatts of solar
+[381.52s] power, mainly because I thought it would
+[383.24s] be cool to do. And technically, it's
+[385.76s] slightly more UPS optimal compared to
+[388.32s] fusion energy. So, I have completely
+[390.96s] swapped those out, and we are now
+[392.8s] completely a a a solar
+[395.48s] shop here on Novus. Now,
+[398.72s] what I will wind up just as a as an
+[400.68s] intro now, just to to explain kind of
+[402.48s] the the the premise and the setup, we'll
+[403.92s] start with red science. So, the designs
+[406.64s] here I'm running at 4.5 million science
+[409.6s] per minute, or effective science per
+[411.12s] minute. The target that I am currently
+[413.16s] running is eight stacked lanes of
+[415.64s] uncommon science. So, when we go to use
+[418.0s] the the common variant, that's going to
+[419.64s] be 16 of those, right? Now, let me talk
+[422.6s] through quickly the designs as they have
+[424.44s] changed, and I have never created videos
+[426.56s] on it, so I'm going to quickly short
+[427.88s] summarize them. So, this is a design
+[429.76s] that Faend came up with over on my
+[431.4s] Discord channel. I really really like
+[433.44s] this design. It's very simple in the way
+[435.36s] that it just winds up extracting where
+[438.08s] the furnaces are going into each of the
+[439.92s] individual designs or the sciences, and
+[442.36s] it uses a lot more direct insertion than
+[444.76s] other builds that I've created in the
+[446.12s] past. I've benchmarked this, and this is
+[448.6s] superior than any of the other ones that
+[450.08s] I've created, so I've used it for this
+[451.6s] test to give the best representation we
+[453.48s] can for Q2 science. Now, I've also gone
+[456.92s] and swapped across the entire base all
+[460.08s] of the individual mining drills here
+[462.56s] that wind up upcycling all of the ore.
+[465.48s] So, I've already swapped all these out,
+[467.96s] and I have placed them now everywhere in
+[470.72s] the entire base. So, any signs that's
+[472.64s] currently actively running, or even not
+[474.72s] running, I have swapped out to use this
+[476.88s] design. So, and this is the one where
+[479.08s] I've created a video recently where we
+[480.48s] wound up testing and trying to optimize
+[482.44s] the recyclers, and this was the best
+[483.88s] version by far that we could create at
+[485.6s] the time. So,
+[487.68s] that being said, I have now over here,
+[490.16s] here's the green science setup that I'm
+[491.8s] using. Now, this is also different, and
+[493.68s] I've also never talked about this yet.
+[496.24s] This is a design that was inspired again
+[498.12s] by Faend, and I wound up modifying it so
+[501.76s] that it was a little bit more, well,
+[503.52s] aesthetically pleasing to me. So, it it
+[506.16s] it functionally is equivalent to a
+[508.36s] design that he wound up coming up with,
+[510.0s] and the clocks were actually created by
+[511.36s] him. And ultimately, I wound up changing
+[513.84s] the base module here, and then making it
+[515.84s] so that it routes a little bit better
+[517.919s] with some of the belts that I wanted for
+[520.0s] the way that I'm going to be routing all
+[521.719s] of the ores in here. It's a little bit
+[523.12s] of a weird ratio due to unevenly pulling
+[525.4s] items off of lanes. To main maintain
+[527.56s] back pressure, I need to run an extra
+[529.12s] lane. This is also similar to Faend's
+[531.2s] design, but I wound up just changing the
+[532.84s] layout a little bit just so that this
+[534.76s] section was a little bit more tileable,
+[536.96s] and
+[538.32s] overall, just mainly it was just for
+[540.04s] aesthetics. So, that's that's the
+[541.84s] ultimate change I made. But, what this
+[543.76s] does is this is all perfectly clocked.
+[546.2s] There is this is making 960 per second
+[549.84s] of the uncommon version, or two times
+[552.72s] that for the common equivalent. So,
+[554.64s] we're again we're running eight lanes
+[556.44s] and
+[557.76s] eight lanes in total here that's coming
+[559.24s] out of that.
+[560.4s] Now,
+[561.64s] I've already released a video talking
+[563.32s] about blue and chemical science, so this
+[565.12s] is actually the latest design that I
+[567.12s] have already created a video on, where I
+[569.6s] went and from the ground up went up
+[571.08s] designing the entire thing. So, check
+[572.56s] that out if you're interested in how I
+[573.84s] created this design. This upcycles
+[577.2s] sulfur, and is going to be otherwise
+[580.32s] just taking in again the raw materials
+[582.96s] that we have, using again the these
+[585.76s] setups that we wound up creating, and
+[587.68s] they're again just all swapped out to be
+[589.
+
+4s] the the best of these recycling setups.
+[591.6s] So, again, this is here going to be
+[593.0s] making eight lanes of blue science
+[595.24s] perfectly coming out of here. And
+[597.12s] otherwise we have then for then the the
+[600.68s] common equivalent we're going to need
+[601.8s] again 16 of those.
+[603.48s] One last thing I did before all of this
+[605.44s] is I said, "Well, my current purple
+[608.12s] science is pretty trash in the way that
+[611.04s] I had originally created it. The
+[612.6s] clocking on the input inserters that
+[615.04s] bring in the items in here were
+[616.68s] originally set the stack size four, and
+[618.48s] I said, "Well, I can I know I can do
+[620.04s] better."
+[621.0s] And so, I wound up redesigning a
+[623.16s] specifically the head module here
+[625.04s] completely so that I could better
+[626.8s] leverage just what I know that we can do
+[630.52s] by using not lead follower, but by using
+[632.68s] clocks. And lead follower is a concept
+[634.76s] where you monitor one of the individual
+[636.64s] assembly machines, and then you turn on
+[638.56s] and off the inserters. I have a whole
+[639.84s] video on that. You can look at that if
+[641.28s] you want to, but for a short summary, we
+[643.28s] are now using clocks, and we're using
+[644.8s] one shared clock across all of these
+[646.88s] now. So, that is one improvement that I
+[648.56s] wound up making as well. So, wherever I
+[650.6s] could, I wound up changing those out
+[652.64s] just to slightly reduce UPS consumption.
+[655.96s] When I wound up making the changes to
+[657.88s] the the this specifically just this head
+[660.44s] module here, I wound up seeing a 2%
+[662.839s] improvement across my whole save file
+[664.72s] just because I wound up changing this,
+[666.24s] which is actually a that's a big number
+[668.16s] for me, and that just goes to show just
+[669.8s] how bad my original design was. Um fun
+[672.56s] fact, the clock generator video that I
+[674.64s] just recently created
+[676.6s] is actually what exactly clocked this
+[679.48s] entire head module. So, I did not touch
+[681.48s] anything. It was created completely with
+[684.12s] that clock generator, and that is what
+[686.48s] is powering this. And then I also said,
+[688.839s] "Well, I can also clock perfectly this
+[691.8s] huge section of steel."
+[694.28s] And uh yeah, that's exactly what was
+[697.12s] also generated here with the clock
+[699.0s] generator.
+[700.24s] And not only is it controlling this
+[702.24s] section, but it's controlling all of the
+[705.44s] steel assembly machines here, all from
+[708.52s] one clock. So, I wound up changing that
+[710.6s] just so that everything was was
+[712.72s] perfectly clocked as much as I could.
+[714.72s] And I also wound up using a clock
+[716.2s] generator again just because I was
+[717.44s] having fun with it to wind up using it
+[719.88s] to create the electric furnaces that are
+[721.76s] here. So, again, just having a lot of
+[723.64s] fun with the new tool and experimenting
+[725.72s] it, and I've been testing it on my
+[726.68s] Discord. So, if you want to see that I
+[729.36s] there's a lot of investments there where
+[730.56s] I've talked about it, but the long story
+[731.92s] short is I wound up redesigning purple
+[733.68s] science. I'm not going to create a
+[734.92s] dedicated video on it. I made it better.
+[736.88s] It's so anyway, it's 2% better across
+[739.6s] the whole save file. So, that's a a a
+[741.56s] ton better for this. And this is in
+[742.96s] preparation for hopefully eventually
+[744.52s] finishing the purple science competition
+[746.44s] video, and then
+[748.4s] we can actually go and test purple
+[749.68s] science. But that's not the focus today.
+[751.56s] The focus today is just explaining the
+[753.8s] fact that we have we have changed that
+[756.56s] that we're going to be testing against
+[757.8s] blue, red, and we have tested against
+[760.839s] and with green. So, okay.
+[763.12s] What I'll do now is I will show I'll
+[765.4s] I'll tell you that I have one save file
+[767.52s] where I've swapped red and green out
+[768.88s] specifically, and I've left blue the
+[770.839s] same. I have another save file where
+[773.12s] I've left red and green the same, but I
+[775.2s] have swapped out blue. And then I have
+[777.2s] one where I have combined all of them,
+[779.4s] red, green, and blue together
+[781.88s] in all in the common variants. So, I'm
+[784.08s] going to show you the final version that
+[785.68s] has all three of them all together just
+[787.839s] so that you can just see what the final
+[789.32s] end product looks like, and then we'll
+[791.16s] get into the actual benchmarks
+[793.28s] themselves so that and then we'll talk
+[795.24s] about the actual results.
+[797.2s] So, this is the new version that is the
+[801.56s] 0.1 equivalent of the previous base.
+[807.16s] So, let's start off
+[809.839s] with where everyone starts off in
+[811.64s] Factorio. Let's start off with red and
+[813.4s] green science.
+[815.04s] So, the original plan was to move red
+[817.0s] science up here, but then I thought
+[819.4s] about a little bit, and I said, "Well,
+[820.92s] it's probably going to be better
+[822.6s] to just straight up combine the fluids
+[825.72s] that we're going to need because all
+[827.08s] we're really going to need is uh
+[829.6s] metallurgical sci- or not metallurgical
+[832.72s] iron ore uh fluid, and then uh the same
+[835.56s] thing we're going to wind up needing
+[836.52s] molten copper and molten iron. So, so we
+[839.32s] might as well just have the exact same
+[841.2s] location where all of the calcite can
+[844.2s] wind up coming in. And let me bring over
+[845.92s] my spidertron so that they we can
+[848.28s] actually go and see this because I don't
+[849.839s] actually have coverage over here. So,
+[851.6s] you have a little simple train station.
+[853.2s] This is a a a really simple one-lane
+[856.0s] unloading station here, and it just
+[857.76s] whenever it actually winds up running
+[859.48s] low, it will will w
+
+ind up having a train
+[861.16s] come in here and actually fill it up.
+[863.079s] So, that's dispatched here from this
+[865.4s] location here, so you can ride along
+[866.76s] with this train. We can watch it come
+[868.32s] in. And oh, nope, we are going to
+[870.6s] chemical science with that one. So,
+[872.04s] never mind. I thought that would have
+[873.44s] been a very cool transition otherwise.
+[875.24s] So, since we don't have that, what I'm
+[877.04s] going to wind up saying is this is where
+[878.72s] the calcite comes in, and these just
+[880.56s] come in just on demand, and very very
+[882.36s] infrequently does this actually have to
+[884.6s] have to come in. Actually, across the
+[886.4s] entirety of the save file, the calcite
+[889.56s] that we wind up actually consuming is a
+[892.52s] 3.6k per minute. So, very very doable in
+[896.079s] terms of shipping it in and bringing it
+[897.959s] in from Vulcanus. Now, I had already had
+[900.36s] all this set up to ship the calcite in,
+[902.88s] and I want to talk about it specifically
+[905.04s] because
+[906.72s] the calcite itself comes in from a from
+[910.839s] a ship, which
+[912.8s] and is going to be over here. Let me go
+[914.56s] and grab the express ship. This express
+[917.04s] ship's job is to bring in both bioflux
+[920.28s] and calcite on demand whenever factor
+[922.68s] when whenever we actually wind up
+[923.88s] needing it. So, it loads up in one shot
+[926.8s] all 32,000 calcite and then slowly drops
+[929.12s] it over a period of time slowly over
+[931.28s] onto Novus. So, and on Vulcanus just
+[934.2s] where that comes from are just I have a
+[935.92s] couple of these pods that just directly
+[937.56s] insert and put all the calcite in and
+[939.56s] then just launch it all in one go.
+[941.4s] So,
+[942.32s] that's how I wound up shipping the
+[943.32s] calcite in. I already had had all that
+[945.079s] set up, so I didn't change very much
+[946.44s] there. Now, this is here the full red
+[950.959s] and green science assembly.
+[953.56s] These are the designs that were the best
+[955.8s] designs from the previous competitions
+[958.48s] we've had. So, both for red and for
+[960.36s] green. Now, and also I have just had a
+[964.0s] video where I talked about I made the
+[966.28s] clocks better and wound up actually
+[968.04s] improving a little bit the overall
+[969.64s] performance of these. So, that's
+[971.88s] actually what is running here are the
+[973.4s] clocks that control in the absolute best
+[975.52s] new design that we have for green
+[976.92s] science and for red science are running
+[978.839s] here. So, here's all their glorious 16
+[981.92s] lanes of fully stacked science that is
+[984.079s] constantly being
+[985.68s] and we have the same thing over here for
+[987.48s] red science that's flowing across here.
+[990.16s] So, I have now routed all of those red
+[993.079s] and green sciences in here, and I've
+[994.839s] done some
+[996.48s] people are probably going to be mad
+[997.839s] because they're saying you're using
+[998.88s] splitters, and yes, I am, but the reason
+[1001.24s] is because I need to have priority lanes
+[1003.839s] that go to all the labs in the way that
+[1006.16s] I have designed these here is they they
+[1008.2s] all come in and feed this section, and
+[1010.92s] because there's a slight rounding error
+[1012.959s] in terms of how much these particular
+[1015.32s] labs can wind up consuming. So, if we go
+[1017.6s] and we highlight this, right? You're
+[1019.839s] going to see that per second it is in
+[1022.2s] terms of transport belts, right? It's
+[1024.12s] just it's slightly off. It's not exactly
+[1026.52s] the full amount that we wind up needing.
+[1028.439s] So, it instead it's 3.951
+[1031.6s] full fully stacked lanes, and so for the
+[1033.679s] rounding error, I take all the excess.
+[1036.28s] This gets routed into here and runs over
+[1039.32s] to these final four labs, which make up
+[1042.12s] the difference. So,
+[1044.199s] that's how I wound up running it so that
+[1045.56s] I can consume the entire amount. And
+[1047.52s] then you can see here perfectly clocked,
+[1049.04s] you're going to have exactly these
+[1050.52s] sciences are going to go and get flipped
+[1052.16s] out and all synchronized together, go to
+[1054.92s] all the different locations they need to
+[1056.56s] for all the lab because they're all
+[1057.76s] controlled off of one clock. So,
+[1060.52s] anyway, so that's how I have them routed
+[1061.96s] in, and then otherwise
+[1064.88s] yeah, that's that's basically it.
+[1066.04s] There's there's nothing super fancy here
+[1068.08s] other than, you know, painstakingly
+[1069.8s] having to go and use my spidertrons to
+[1071.6s] go and build all this out.
+[1073.52s] Now,
+[1075.04s] the next thing that I want to talk
+[1076.2s] about, and we'll bring these guys down
+[1077.56s] here just in case I can't see anything,
+[1079.6s] is chemical science, and boy is this
+[1082.52s] beautiful. So,
+[1084.64s] uh
+[1085.92s] pretty cool the way this all wound up
+[1087.48s] turning out. So,
+[1089.88s] uh from the previous competitions, this
+[1093.84s] wound up being one of the best chemical
+[1096.679s] science designs.
+[1098.4s] And I wound up actually going and using
+[1100.44s] my clock generator to create a better
+[1102.44s] clock for the the red circuits here so
+[1105.16s] that they have a two or three swing
+[1107.52s] output here. So, I don't know how the
+[1109.919s] clock generator came up with it. It just
+[1111.32s] came up with it, and then I tested it,
+[1112.76s] and it wound up being better. So, great.
+[1114.0s] Yay, okay. Cool. So, we wound up using
+[1116.24s] that, and that's winds up being for for
+[1118.52s] the input inserters here that wind up
+[1120.44s] pulling items out of out of these
+[1122.36s] advanced circuits here. So, so anyway,
+[1124.32s] so this is the design that has been
+[1126.04s] refined. Ultimately, I just didn't have
+[1128.56s] quite enough of a range to get all the
+[1130.88s] pumps in, so I wound up kind of
+[1133
+
+.08s] designing this little design
+[1134.36s] configuration here that brings in and
+[1136.72s] pumps in all of the fluids, and those
+[1139.159s] fluids again are just brought in via a
+[1141.28s] single train that is and I knew I needed
+[1144.12s] my spidertrons over here to show
+[1145.56s] something that I can't see.
+[1147.72s] The reason, by the way, that I don't
+[1149.0s] have radar coverage everywhere is
+[1150.4s] because this impacts your chart update
+[1152.679s] time, and so minimizing the amount of
+[1155.159s] things that are actually actively being
+[1157.2s] shown on the map actually improves UPS.
+[1159.96s] That's why not everything is actually
+[1161.24s] always shown and visible.
+[1163.88s] So, anyway, so again, just calcite
+[1165.76s] shipment, trains wind up coming in,
+[1167.36s] bringing that in, and then those then
+[1169.52s] flow to their respective locations here
+[1173.12s] for making the fluids that wind up
+[1175.88s] ultimately feeding the chemical science
+[1178.08s] design here.
+[1179.48s] Now,
+[1180.96s] I have not bothered with going and
+[1182.48s] adding all the lights that I'm going to
+[1183.679s] wind up needing, and the reason I just
+[1185.24s] haven't done that is like unless this is
+[1186.72s] actually the better design, I'm not
+[1188.12s] going to spend a whole bunch of time
+[1189.159s] aesthetically making it better. But of
+[1190.919s] course, we do need to have our refined
+[1193.92s] concrete on the ground, otherwise it's
+[1195.36s] not a mega base. So, you can't test it
+[1197.08s] without that, right? Anyway, water is
+[1199.36s] really simple. Water comes in from the
+[1201.12s] top up here, and then the oil reserves
+[1203.68s] are the exact same oil reserves I had
+[1205.36s] for Q2. Just comes in from this. And I
+[1208.32s] had already added in both the save files
+[1210.32s] a pollution encapsulation zone because I
+[1212.92s] wind up just having that this was
+[1214.28s] expanding almost indefinitely to the
+[1216.84s] left-hand side. And as you can see, this
+[1218.48s] is really capturing this really nicely
+[1220.48s] here as well.
+[1222.04s] So, um yeah, so here's chemical science
+[1224.64s] in all of its glory running. And
+[1227.4s] everything is controlled off of one
+[1228.64s] clock for this left side as long with
+[1230.6s] all the red circuits and science here
+[1232.4s] that's that's making all the advanced
+[1233.6s] circuits is all in one clock. And then I
+[1235.56s] have it just mirrored on the other side.
+[1237.2s] And so, this is making the the full 16
+[1240.24s] lanes of science that feeds all the way
+[1242.84s] up these glorious belts. And of course,
+[1245.72s] this is the way that I wind up designing
+[1247.84s] this is that I I run everything with
+[1250.52s] belts and don't bring trains in just to
+[1252.76s] because the amount of trains that we
+[1254.12s] would need to ship all of this
+[1255.6s] constantly and bring it all in would be
+[1257.76s] a ludicrous amount. So,
+[1260.04s] this is all being belted in. Now,
+[1261.88s] because I love trains, I will be using
+[1264.32s] calcite for this. And yes, it is
+[1266.36s] slightly less UPS optimal. I get it. But
+[1270.64s] I love having some calcite trains that
+[1273.2s] run
+[1274.08s] every once in a while. Like one of these
+[1276.84s] trains, right, is going to have 8,000
+[1278.76s] calcite. And working That means that
+[1280.92s] every once every 4 minutes it needs to
+[1283.68s] go somewhere. So, really rare that these
+[1286.92s] are actually running. So, it's not like
+[1289.16s] these are going to have to be constantly
+[1290.84s] on demand going somewhere. It's pretty
+[1292.76s] rare that they wind up actually needing
+[1294.2s] to be going anywhere. And so,
+[1297.04s] just occasionally they come in. And I
+[1298.52s] also kind of like the concept of there
+[1300.52s] being a logistics hub where everything
+[1302.68s] comes in. And then you have a train
+[1304.32s] station that then routes it to wherever
+[1306.0s] it else it needs to go. So, just more of
+[1307.48s] a aesthetic
+[1309.0s] design choice that I have made for this.
+[1311.92s] So, next let's talk about the labs.
+[1315.0s] So, the labs are going to be impacted by
+[1318.08s] Q1 science because they're going to
+[1320.76s] increase the rate at which they're
+[1322.16s] consuming science now. You can see here
+[1324.28s] how much faster chemical science is
+[1325.72s] being consumed compared to uncommon
+[1327.64s] science for production science packs,
+[1329.32s] right? So, it's twice the rate. That's
+[1331.4s] because of their effectiveness, right,
+[1333.92s] going up or science capacity goes up
+[1336.08s] with quality.
+[1337.6s] So, one of the things that happens in
+[1340.12s] this scenario is now the inserters that
+[1342.88s] and the way that are that are bringing
+[1344.76s] in red and green,
+[1346.2s] along with inserters that happen to be
+[1347.44s] bringing blue and purple in,
+[1349.48s] are going to now have to swing twice as
+[1350.96s] often into the labs.
+[1353.32s] Now, the good thing is that the
+[1354.8s] configuration setup for this is really
+[1356.56s] easy because I've already designed with
+[1358.12s] it with this case in mind for the all my
+[1360.56s] labs. And the only thing that had to
+[1362.48s] wind up changing was just this signal
+[1364.28s] here that says what is the quality of
+[1366.64s] science that I happen to be passing into
+[1368.52s] this bank of labs here.
+[1370.64s] So, in this case I changed them to a
+[1372.52s] normal quality signal, and that means
+[1374.32s] that these are going to get a signal
+[1375.72s] twice as often compared to the other
+[1377.4s] ones.
+[1378.56s] So, and everything else is then going to
+[1380.36s] be uncommon.
+[1382.12s] So, if you see that here, that means
+[1383.96s] that the inserters that are going to be
+[1385.24s] pulling in red and green science here,
+[1387.679s] and the inserters that are bringing blue
+[1389.16s] and purple in,
+[1390.56s] are going to both have to run twice as
+[1392.6s] often t
+
+o to to bring these in. And so,
+[1394.92s] you're going to notice here for blue and
+[1396.2s] purple, sometimes it swings just once to
+[1398.16s] bring blue in. And then it sometimes it
+[1400.16s] swings twice to bring both of them in.
+[1401.8s] And you can see that also impacted here
+[1404.0s] where it brings in blue once, and then
+[1406.24s] right as purple is about to run out, it
+[1407.64s] brings blue and purple in together.
+[1410.0s] So, that's how it winds up just keeping
+[1412.2s] the clock the same. But that means that
+[1413.56s] purple and blue are going to swing twice
+[1415.56s] as often, and red and green are going to
+[1417.44s] swing twice as often.
+[1419.28s] So,
+[1421.52s] that is something to consider. Now, how
+[1424.2s] much of an impact is this? Well, it's
+[1425.64s] not a small amount. There are 2,000
+[1428.0s] inserters that are here, right? And if
+[1430.12s] you think about that, that's 8,000 total
+[1432.24s] spread across all four banks here that
+[1434.52s] are completely all being controlled. And
+[1436.88s] if you think about that, then, well, 1/3
+[1439.36s] of the lanes, since there's six lanes
+[1440.92s] that are coming in here for all the
+[1442.04s] sciences, well, 1/3 * 8,000 is about 26
+[1447.88s] We'll round it up to let's say 2,730 or
+[1450.56s] so that now are swinging twice as often
+[1453.24s] as before.
+[1454.56s] Now, on the topic of inserters, there's
+[1457.2s] going to be more inserters just in
+[1459.08s] general because we we have more entities
+[1461.72s] now, right? Now, it's not exactly true
+[1463.96s] because we need to do We don't have the
+[1465.64s] ability to have foundries. So, you
+[1467.0s] actually can quite cut down on the
+[1469.0s] number of inserters, but your total
+[1470.72s] entities go up. So, that's the question
+[1472.679s] that kind of comes up is like, okay, now
+[1475.16s] that you're balancing these things, we
+[1477.6s] get to trade off not having these
+[1479.56s] recyclers upcycling setups here or
+[1482.32s] voiding setups, and we wind up trading
+[1485.08s] that now for more lanes or more
+[1487.2s] transport line update time because you
+[1488.88s] have more lanes that happen to be going
+[1490.64s] in. And ultimately the more swinging
+[1492.84s] here. So, that is another consideration
+[1496.0s] is just the fact that the lab setup is
+[1498.24s] now different, and your routing of all
+[1500.6s] of those extra lanes now, you know, you
+[1503.0s] go from you you you double the number of
+[1505.36s] lanes you have to bring in. So, that's a
+[1507.36s] a second consideration that exists that
+[1509.56s] changes now when we go to Q1.
+[1512.8s] So, the last thing that is relevant to
+[1515.2s] me in terms of Q1 versus Q2 is pollution
+[1519.6s] itself. I've talked about pollution in
+[1521.52s] the past, and I've talked about the fact
+[1523.12s] that I wind up using trees now to manage
+[1525.76s] pollution. So, they die, and they
+[1527.48s] actually absorb a lot of the pollution,
+[1528.88s] and that's why my pollution cloud that
+[1530.8s] used to go all the way to the edge of
+[1532.44s] the map, that's why all of this is
+[1533.88s] exposed and has been explored,
+[1536.64s] is now contained to this smaller area.
+[1539.24s] Now,
+[1540.56s] there's
+[1542.84s] If you're not playing with pollution on,
+[1544.64s] then you can kind of just skip this
+[1545.88s] whole section cuz it's irrelevant to
+[1547.12s] you. But to me, it matters because that
+[1548.679s] means that the question that I had was,
+[1550.52s] okay, does Q1 change anything when it
+[1553.24s] turns of the pollution output? And it
+[1556.4s] definitely does. So, when we talk about
+[1559.36s] here,
+[1560.56s] uh let's go into Let's get out of that,
+[1562.48s] and let's go into the production
+[1563.72s] statistics. Let's go to pollution. And
+[1566.12s] I'm going to ignore the biolabs, and we
+[1569.64s] are going to just look at assembly
+[1571.52s] machines, electromagnetic plants. Let's
+[1574.04s] just grab Yeah, we can basically just
+[1575.96s] grab everything except for biolabs.
+[1578.28s] Cool.
+[1579.32s] If I look at the last like 50 hours,
+[1582.2s] you're going to see for this save file,
+[1583.64s] this is when we were running
+[1586.12s] the the mining productivity
+[1588.72s] with assembly machines at Q2. It's about
+[1591.28s] 26,000 or so
+[1593.24s] per minute that were being created.
+[1595.96s] Then when we wind up swapping out red
+[1597.4s] and green, that is going to be this
+[1599.4s] amount, about 37,000 per minute. And now
+[1601.8s] that we're running red, green, and blue
+[1602.96s] all together, that's about 44,000. So,
+[1605.08s] we're going from 26 to 44, that's almost
+[1608.16s] almost twice the amount of pollution
+[1609.8s] that we are generating. That's a
+[1611.56s] noticeable amount. It's not anywhere
+[1613.92s] near the biolabs, of course, but still,
+[1617.28s] it's an amount that starts to increase,
+[1619.16s] and you need to now account for that.
+[1621.6s] So, that means that your pollution
+[1622.64s] cloud, if you don't do anything with
+[1624.679s] trees, let me show you what happens if
+[1627.36s] you don't actually add trees
+[1630.36s] to this exact setup that's here.
+[1633.2s] So, what you're seeing here is an hour
+[1634.64s] and a half of real game time compressed
+[1637.04s] into about 30 seconds here for to to for
+[1640.96s] you.
+[1641.76s] So, on the left-hand side, over an hour
+[1644.56s] and a half, you wind up seeing the
+[1646.0s] pollution cloud growing without trees.
+[1648.16s] And on the right-hand side is using tree
+[1649.92s] control. Specifically, look at the
+[1651.48s] chemical science, and just see how well
+[1653.76s] that's just holding that pollution cloud
+[1655.76s] in in place and isn't moving.
+[1658.8s] So, if you don't do some kind of tree
+[1661.2s] collection or some kind of like way to
+[1663.4s] mitigate pollution, that pollution
+[1665.28s] cloud, although it just looks red, I can
+[1667.76s] assure you that is going to ex- pand to
+[1670.96s] the poin
+
+t where the entire screen is red
+[1673.36s] if you don't control it. Won't happen in
+[1675.6s] a matter of an hour and a half, but it
+[1677.36s] will happen eventually uh over the
+[1679.64s] course of running it for a very long
+[1681.96s] time.
+[1683.0s] So,
+[1684.32s] that means that when you're running Q1,
+[1686.2s] the reason why I kept the tree farms
+[1687.88s] there in place is because I'm playing
+[1690.44s] with pollution on.
+[1691.8s] And so, it means that the trees are
+[1692.8s] going to die a little bit faster than
+[1695.24s] they would with Q2 just purely because
+[1697.76s] the assembly machines are producing more
+[1699.52s] pollution.
+[1701.0s] Now, to make sure that there's no bias
+[1704.04s] caused by the pollution cloud growing,
+[1706.159s] there's something that I wind up doing
+[1707.56s] to tackle that.
+[1709.44s] So, before I wind up creating all these
+[1711.919s] save files on my main save, what I wind
+[1714.24s] up doing is I took my spider trons and
+[1717.12s] went in a loop around the full
+[1719.8s] circumference here
+[1721.48s] and started to remove all the trees and
+[1723.96s] rocks completely by just using the
+[1726.52s] spider trons.
+[1729.0s] And eventually I got to the point where
+[1731.56s] I said, "Oh my goodness, this took me an
+[1733.679s] hour to just traverse around this whole
+[1735.6s] area and remove this."
+[1737.28s] Covering the whole map and removing all
+[1739.36s] the trees,
+[1740.679s] I am not going to do that.
+[1742.919s] So, I popped into the editor, and I
+[1746.159s] wound up just dragging my trusty tree
+[1750.24s] deletion blueprint, and I dragged it
+[1753.56s] across the entirety of the map here.
+[1755.96s] Now,
+[1757.64s] it removed every single tree. As you can
+[1759.64s] see here, there's not a single tree,
+[1760.96s] rock, nothing. There is absolutely
+[1763.04s] nothing out here. So, yeah, technically,
+[1766.32s] I did that, and that is totally
+[1768.48s] cheating, but I value my time, and I had
+[1772.8s] other things that I wanted to go and do.
+[1774.84s] So, but what you'll see is out here
+[1776.24s] there there's nothing. There is just the
+[1779.04s] dead carcasses that have been left over
+[1780.76s] from from the death world experience
+[1783.4s] that I subjected myself to. But
+[1785.28s] everything has been completely removed.
+[1787.52s] So why did I remove the trees?
+[1789.88s] Well,
+[1791.24s] the trees themselves, the main cost to
+[1794.32s] pollution
+[1795.96s] growing is not the pollution cloud size,
+[1799.12s] cuz that's a relatively cheap
+[1800.52s] calculation.
+[1802.2s] Turns out, through some testing, that
+[1804.24s] the actual cost comes in when the trees
+[1808.84s] are dying. So even if the tree is dead,
+[1812.16s] it is going to constantly check, you
+[1814.84s] know, and like should it be dying right
+[1817.28s] now? Because they will go through these
+[1819.36s] tree variations you see on the bottom
+[1821.12s] right-hand corner there. And you'll see
+[1823.04s] a progress of it is progressing towards
+[1827.0s] dying. So if we look at a tree over here
+[1829.56s] that is very dead, you can see the
+[1831.36s] progress is three. So it's dead. It's
+[1834.2s] like uh compared to one over here that's
+[1835.92s] progress is one, it's not fully dead
+[1837.88s] yet. But once they're at the point of
+[1839.4s] like great progress is a three, the
+[1841.24s] tree's dead. But each one of these trees
+[1843.44s] have to calculate and say, "All right,
+[1845.48s] am I dead? Yes or no?" Is that a thing?
+[1849.32s] So with that,
+[1851.92s] that's why I deleted all these other
+[1853.88s] trees because
+[1855.76s] any trees that are in the vicinity of
+[1857.8s] vicinity of this, although they do
+[1859.64s] reduce pollution spread, they cost way
+[1863.44s] more to hold that pollution in place. So
+[1866.24s] if I just naturally let the trees grow
+[1869.2s] in an not controlled manner like I am
+[1871.8s] doing in in in these scenarios,
+[1875.2s] well, that can cause implicit bias to Q1
+[1879.48s] versus Q2 because of the size of the
+[1882.04s] pollution cloud.
+[1884.36s] So to account for that, I deleted all
+[1885.8s] the trees.
+[1886.421s] >> [music]
+[1886.48s] >> So the only trees that are actually
+[1888.04s] physically on this map are trees that I
+[1891.28s] have put there.
+[1892.6s] So
+[1893.8s] uh
+[1894.96s] So this is something that I wanted to do
+[1896.64s] anyway for UPS reasons, but the the the
+[1899.72s] main benefit is actually a trunk my save
+[1902.36s] file by 100 megabytes. Went from 400
+[1905.16s] megabytes down to 300 megabytes. That's
+[1906.64s] the main reason I wound up doing it, but
+[1908.16s] also there's the the the the test bias
+[1910.88s] that comes into play if you have those
+[1913.0s] extra trees around cuz that's the main
+[1914.92s] cost of pollution is calculating is the
+[1917.16s] tree dead or not.
+[1918.88s] So
+[1920.6s] that was a thing that I wound up doing,
+[1922.36s] and so all the save files have no trees
+[1924.16s] on them
+[1925.16s] except for the trees that we wanted. So
+[1929.04s] if you're thinking about Q1 versus Q2,
+[1931.24s] the main thing that's happening is these
+[1933.08s] trees are dying faster.
+[1935.04s] Now,
+[1936.12s] that doesn't mean though that their
+[1938.2s] entity time goes down.
+[1940.6s] Um because it's it's just counting per
+[1943.84s] tree should it die. And even if it's
+[1945.92s] dead, it's still counting it. It's
+[1947.32s] saying, "Is it dead or not? Is it Should
+[1949.24s] it Should it die?" So it's still
+[1951.44s] checking that, as far as I know. So So
+[1954.36s] then effectively, even though we're
+[1956.36s] containing the pollution cloud, there's
+[1957.84s] no impact in terms of entity update time
+[1960.2s] cost when it comes to the the the fact
+[1963.52s] that there's more pollution right now in
+[1965.56s] this specific area.
+[1967.88s] It just means that like it's just the
+[1969.679s] the count of trees. So because I deleted
+[1972.04s] all the other trees, there's no other
+[1973
+
+.6s] additional counts to take into account.
+[1975.88s] So that was one extra bias that I had to
+[1978.4s] remove.
+[1980.64s] The last problem I encountered is
+[1984.679s] Gleba science.
+[1986.2s] Well, hold on, you're running mining
+[1987.44s] productivity. Why do you care at all
+[1988.92s] about Gleba?
+[1990.4s] Well,
+[1991.4s] right now this thing is sitting over
+[1992.64s] Gleba, and it is currently right now on
+[1995.679s] Gleba, we are launching
+[1998.679s] all this extra agriculture science.
+[2001.4s] Well, the reason is because right now
+[2004.4s] this ship is literally just
+[2007.88s] not consuming for science agriculture,
+[2012.84s] but
+[2014.04s] we still have to produce it because it's
+[2015.92s] rotting in space.
+[2017.8s] Basically, what happens is like
+[2020.8s] effectively, like this is going to have
+[2022.48s] to travel back and forth between Nauvis
+[2025.36s] and and Gleba all the time and wind up
+[2028.32s] picking up a little bit of extra Gleba
+[2030.0s] science. And it actually is enough to
+[2032.04s] impact the benchmarks. If we go and I'll
+[2034.6s] pull up the chart now for this,
+[2036.48s] you see those large spikes that are
+[2037.96s] there?
+[2039.0s] Well, those spikes are exactly what we
+[2040.48s] just witnessed. That's one of those
+[2041.8s] trips going to Gleba and then coming
+[2044.32s] back with extra agriculture science.
+[2046.88s] And so even though right now here,
+[2050.28s] this is just sitting here with this
+[2052.159s] agriculture science doing nothing, the
+[2055.399s] fact that it rots slowly over time means
+[2057.52s] that we're not getting 100% agriculture
+[2059.6s] science packs up here.
+[2061.48s] And that makes sense because well, we're
+[2063.48s] just very slowly moving these items
+[2066.24s] along the belt here and just constantly
+[2068.359s] maintaining some science in here.
+[2071.56s] So
+[2072.679s] that means that around every half hour
+[2075.48s] or so, at least one of these ships is
+[2077.359s] going to have to go back and forth. And
+[2079.56s] so those spikes in that period that
+[2081.359s] you're seeing kind of makes sense. So
+[2083.0s] you're seeing every like 15 minutes or
+[2084.56s] so here or or or less, you're seeing a
+[2087.2s] large spike caused by science. And then
+[2089.679s] you can see that here too. If we look at
+[2091.359s] this, though that lines up exactly with
+[2094.08s] these spikes here that we're seeing in
+[2096.08s] terms of time. So for production. Now,
+[2098.68s] okay, we can actually show the science.
+[2101.0s] Because we do these large spikes of
+[2103.24s] 200,000 per minute, so that it quickly
+[2105.0s] just launches and and vomits it all up
+[2107.24s] in the space.
+[2109.48s] So in order to deal with that, what I
+[2111.48s] wound up doing
+[2113.56s] is open up the editor,
+[2115.48s] and I just simply deleted the ships.
+[2120.8s] So the save files are not technically my
+[2123.24s] actual save. So the it's slightly it's
+[2127.08s] slightly altered. And the reason is so
+[2129.44s] that that way there are no there is no
+[2132.16s] actual Gleba science ever being brought
+[2134.28s] in to Nauvis. And the other thing that I
+[2137.2s] wound up doing as well
+[2139.16s] is I wound up making sure that every
+[2140.96s] single save file
+[2142.68s] once the was a not requesting
+[2147.88s] any agriculture science. That's the
+[2149.48s] first thing I wound up doing.
+[2151.64s] And then what I wound up doing too is I
+[2154.0s] wound up going into the editor, removing
+[2155.88s] all the unfiltered items in here.
+[2158.08s] And I wound up just going and removing
+[2161.28s] all the agriculture science pack from
+[2162.92s] the hub cuz it's a large inventory
+[2164.88s] container,
+[2166.04s] and it's technically constantly
+[2168.72s] adjusting and updating because these
+[2170.4s] agriculture science packs are just
+[2171.88s] sitting in here and are rotting, and
+[2174.44s] effectively also routing to each of
+[2176.6s] these things. So that's an extra little
+[2178.08s] bit of update time that's sitting there
+[2180.08s] because of the fact that like that that
+[2182.16s] Gleba science is coming in, depending on
+[2183.92s] the timing of when I happened to save
+[2185.6s] the files, that would cause those big
+[2187.88s] spikes to happen at maybe sometimes
+[2190.48s] would happen four times in a save,
+[2192.2s] sometimes it happened three times in a
+[2193.64s] save. And so I wanted to rule that out
+[2195.68s] completely because that would skew your
+[2197.6s] results when because we we ran these
+[2200.359s] save files for 45 minutes, right? So So
+[2203.28s] that's why that that that impacted the
+[2206.359s] the actual test itself, and I needed to
+[2208.4s] make sure that that's not included so
+[2211.359s] that we can have an unbiased result. So
+[2213.44s] I removed everything in here because
+[2214.76s] there's technically still while you're
+[2216.52s] waiting for all of the the the actual
+[2219.44s] agriculture science packs to rot, like
+[2222.08s] this is still taking stuff out. So I
+[2223.8s] wanted to make sure that the the hub is
+[2225.6s] clear, there is no more agriculture
+[2227.04s] science packs, and everything's in a in
+[2229.48s] a clean state before we wound up
+[2231.8s] actually going and and saving and and
+[2234.96s] creating the snapshots. So the snapshots
+[2237.28s] themselves that I took for the four save
+[2239.359s] files do not have any Gleba import at
+[2242.56s] all, and I removed them completely. It's
+[2244.88s] a thing that I A need to solve for, but
+[2247.96s] I don't have a good solution for Gleba
+[2249.52s] science quite yet to completely turn it
+[2251.6s] off.
+[2252.6s] So this is my current for now way that I
+[2255.72s] can go and test this and not add
+[2258.88s] effectively bias to a test depending on
+[2262.12s] when those large spikes occur.
+[2265.56s] This is not the best recording of this
+[2268.0s] process, but I wanted to just showcase
+[2270.84s] this cuz I
+[2272.28s] I'm not going to see this graph again
+[227
+
+4.12s] most likely. So it's an interesting
+[2276.4s] graph where you're at this scale
+[2278.92s] transitioning from uncommon science down
+[2282.6s] to common science, and you're seeing the
+[2284.6s] consumption rate on the actual labs
+[2287.16s] during that transitionary period.
+[2298.2s] And due to that transition, one last
+[2300.72s] thing that caused me to completely rerun
+[2303.88s] the benchmarks one final time, this is
+[2306.72s] the the second failed attempt,
+[2309.88s] I realized at the end of the line here,
+[2313.12s] as you're seeing right now, you see how
+[2315.2s] these are mixed between the different
+[2317.16s] sciences right now that are here? So
+[2319.4s] you're seeing that there's some common,
+[2321.12s] some uncommon.
+[2323.64s] I noticed it after I ran the test and I
+[2325.6s] said, "Well, that means that these last
+[2328.76s] inserters here are going to be having to
+[2331.16s] make a decision between different
+[2332.6s] sciences, and that's potentially
+[2334.359s] unstable." Now, it'll always somehow it
+[2337.64s] always worked and it was fine, but it
+[2339.32s] was like technically a bias, so I had to
+[2341.8s] go through and I got the bots to remove
+[2344.96s] each of these sections so that they were
+[2346.72s] fully the actual sciences were exactly
+[2349.68s] like that because even though all the
+[2351.359s] sciences did transition, they couldn't
+[2354.04s] quite transition
+[2356.56s] fully
+[2357.88s] down here
+[2359.32s] because there's this extra little space.
+[2361.08s] So technically, the update time of this
+[2363.04s] inserter is ever so slightly higher, so
+[2364.84s] I wound up just making sure that all
+[2366.16s] those little edges were edge cases were
+[2368.4s] removed, and then I have this little
+[2371.28s] setup here that just destroys any
+[2373.359s] science that goes into the the logistics
+[2375.96s] network. So
+[2377.4s] that was how I took care of that last
+[2379.12s] final thing. So this is attempt one with
+[2382.08s] Gleba on. That took 4 hours to run.
+[2384.92s] Attempt two with these little mistakes
+[2387.52s] here. That was another 4 hours.
+[2389.84s] And last but not least, let me showcase
+[2394.0s] the final runs with all four sciences
+[2397.0s] and stop delaying and we'll talk through
+[2400.04s] the results and I'll give you my
+[2401.8s] thoughts.
+[2414.44s] So, as this video montage plays in the
+[2416.28s] background, what I want to talk about
+[2418.44s] first is if you remember the purple
+[2421.32s] science benchmark that I briefly
+[2423.16s] mentioned earlier in the video. There's
+[2425.6s] was a 2% improvement
+[2428.84s] purely from increasing some of the
+[2431.4s] changes that were there. So, very high
+[2433.08s] entity update time, handling high
+[2435.16s] throughput traffic, changing the
+[2436.92s] inserter arrangements, right? That was a
+[2438.24s] 2% difference. There's a second
+[2442.8s] benchmark that I wound up completing
+[2445.08s] recently, which actually is a another
+[2447.84s] YouTuber named Klux wound up redesigning
+[2451.24s] his
+[2452.4s] or a a Q2 design for fulgora that uses
+[2457.16s] trains to smash through and to smash the
+[2460.8s] items.
+[2462.88s] Here's the actual chart that compares
+[2465.28s] those two designs.
+[2467.64s] That was a whopping 11.5%
+[2470.12s] difference across the whole save. That's
+[2472.2s] a huge amount in terms of the overall
+[2475.12s] UPS impact of an optimization like that.
+[2479.28s] So, here's the kind of metrics that I
+[2480.4s] want you to think about, right? So, we
+[2481.72s] had like a an 11 and 1/2% delta from
+[2484.96s] from that design alone compared to the
+[2486.88s] design that I had
+[2488.92s] originally created and is currently in
+[2490.64s] my actual save file.
+[2493.68s] And then the purple science changes made
+[2495.32s] it 2% difference. So, with that being
+[2498.56s] said, let's go look at now the actual
+[2501.92s] results of Q1, Q2. Okay. So, looking at
+[2505.68s] these results, the first thing that
+[2507.72s] stands out is that I want to make you
+[2511.08s] immediately aware of. Look at the
+[2512.64s] differences between these save files.
+[2514.56s] We're talking about less than 1% here.
+[2517.8s] These are run six times in aggregate
+[2519.56s] over a course of 45 minutes, which is
+[2521.8s] worth of 108,000 ticks and each save
+[2525.12s] file was run six times. So, this is the
+[2528.48s] average results and I've thrown out any
+[2530.12s] of the outliers. This is the the
+[2531.84s] absolute most most average runs across
+[2534.04s] all of them and I have I've run them one
+[2536.44s] at after another just to remove temporal
+[2539.16s] bias and anyway,
+[2541.76s] the fact that I've had to take the
+[2543.6s] amount of time in this video to
+[2544.96s] demonstrate just the thoroughness that
+[2547.44s] I've done to try to create as accurate
+[2549.68s] of a setup as I possibly can and keep it
+[2552.36s] realistic
+[2553.76s] is because of these numbers right here.
+[2557.04s] That's the whole reason that I spent the
+[2558.52s] time to do that.
+[2560.4s] The fact that we're under 1% means that
+[2563.44s] the differences between these save files
+[2566.12s] is so incredibly small.
+[2569.12s] And it makes sense because
+[2571.88s] these three sciences don't take up a
+[2574.08s] whole bunch of entity update time.
+[2576.48s] Compare that against purple or compare
+[2577.96s] that against the electromagnetic science
+[2581.24s] that has huge amounts of throughput and
+[2583.84s] flow rate of like items that are just
+[2585.44s] very expensive in complexity, right?
+[2588.6s] This has a much smaller impact even when
+[2591.28s] we completely change the strategy out.
+[2594.92s] And so, just just to back this up
+[2596.48s] because if you're looking at this chart
+[2597.76s] right now, you would think that oh,
+[2599.04s] okay. Well, well, blue science must be
+[2601.04s] the better one.
+[2602.44s] And so, Q1B stands for blue science. Q2
+[2604.92s] is for all three together, right? And
+[2606.44s] then t
+
+here's Q1 red green and then Q1
+[2609.12s] red green blue. So, you can see that
+[2610.64s] going down descending.
+[2613.0s] So, if you looked at this, you could
+[2614.52s] maybe draw a conclusion. You could say,
+[2616.12s] well, blue science is probably better.
+[2618.6s] And that lines up with the micro
+[2619.8s] benchmark that we saw earlier, which
+[2621.44s] was, you know, like a 12% difference
+[2623.76s] between those two, right?
+[2625.88s] And then you would say, well, that other
+[2627.44s] benchmark that we did was red and green
+[2629.28s] together and that one seemed to be
+[2631.36s] better for red at least like red like by
+[2633.8s] itself seemed to be better
+[2635.8s] at least according to that benchmark.
+[2637.56s] So, then looking at these metrics, you
+[2639.44s] would say, okay. Well, then therefore, I
+[2641.64s] should run blue as Q1 and for Q2, I can
+[2645.44s] just run that for red and green.
+[2648.32s] Well, not so fast. I did the exact same
+[2651.72s] thing six times for each of these save
+[2654.56s] files for 108,000 ticks a piece in Linux
+[2658.68s] and here are those results.
+[2660.68s] So, I ran those in Linux and
+[2663.84s] the pattern changes.
+[2667.48s] Um there's a 0.17%
+[2670.32s] difference between the save file when we
+[2671.96s] were running red and green versus in Q1
+[2675.08s] flavor versus Q2.
+[2677.64s] And sure, blue happens to win out again
+[2680.04s] in that particular save file, but it's a
+[2681.92s] 0.2% difference. And so, finally, for
+[2685.08s] some reason then when we combined red,
+[2686.68s] green and blue all together, that was 1%
+[2689.76s] worse than everything.
+[2693.28s] Uh
+[2694.12s] is is is that fair assessment? No, that
+[2697.0s] doesn't line up with at all with the
+[2698.96s] other two.
+[2700.84s] So,
+[2702.24s] what I'm trying to get at is the
+[2704.48s] differences between the save files
+[2709.6s] is not enough to draw any kind of
+[2712.16s] reasonable conclusion as to one being
+[2714.0s] better than another.
+[2715.72s] And I actually love this answer more
+[2718.4s] than any other answer that I could have
+[2721.04s] come up with in this test.
+[2723.0s] That means that the noise threshold for
+[2724.92s] when you should choose uncommon or
+[2727.68s] common flavors for these sciences
+[2730.2s] doesn't exist.
+[2731.44s] Like it is doesn't matter. This These
+[2733.4s] three sciences, you can choose to build
+[2736.08s] your mega base in any way that you would
+[2738.64s] like to. If you want to go and research
+[2741.04s] 8,000 mining productivity or 20,000 like
+[2744.76s] I'm at now, you can go and do that and
+[2748.359s] absolutely shred through or if you want
+[2750.76s] to.
+[2752.28s] Or you can you can choose to choose the
+[2754.92s] complexity of designing something that
+[2757.08s] is
+[2758.24s] going to have to upcycle sulfur to make
+[2760.32s] chemical science. You can choose to go
+[2763.64s] and use furnaces or foundries and you
+[2766.04s] can use that for red, green and blue and
+[2767.68s] it and it just doesn't really
+[2768.8s] practically matter for these sciences.
+[2772.08s] So,
+[2773.24s] I love that answer because that means
+[2775.12s] that you can really just build your mega
+[2777.28s] base the way you want to. For these
+[2779.28s] three sciences, I don't think that's
+[2780.84s] going to be the case for any of the
+[2782.04s] other sciences, but for these three,
+[2784.6s] which are used in every single research
+[2786.64s] and are the core of your mega base,
+[2790.12s] you can kind of just choose to build
+[2791.359s] your base the way that you want to and
+[2793.04s] just have freedom in that and I love
+[2794.96s] that answer.
+[2796.56s] So,
+[2798.12s] I'll give this with a caveat. You could
+[2800.24s] turn off pollution. You could turn off a
+[2802.12s] lot of the other noise and maybe when
+[2804.359s] you increase the scale of your mega base
+[2808.16s] and you get to the point where you're
+[2810.04s] twice the SPM that I'm running, maybe
+[2812.56s] then you'll see a difference. But for
+[2814.32s] me, practically, I don't see a reason
+[2816.72s] that I would use one science or the
+[2818.84s] other science
+[2820.44s] for my actual mega base right now.
+[2824.44s] So, that's a really exciting conclusion,
+[2826.6s] but okay. In the very beginning of the
+[2828.12s] video, A Buck, you wound up saying that
+[2830.48s] you would choose whichever science winds
+[2833.52s] up being better than another science for
+[2836.64s] your actual mega base and that would be
+[2838.96s] the save file that you use from now on.
+[2842.32s] So, how are you going to choose?
+[2844.4s] Well,
+[2846.6s] I'll show you right now which one I'm
+[2847.8s] going to choose. All right.
+[2850.08s] So, we're in the mega base that I've
+[2851.0s] chosen or the save file that I've chosen
+[2853.12s] to continue on with.
+[2855.44s] So, I've been running this for quite a
+[2856.4s] while now just to about 10 hours just to
+[2858.68s] make sure that everything's good.
+[2859.96s] Everything's stable. Everything is.
+[2863.2s] So, the mega base that I've chosen is
+[2866.32s] Q1 science.
+[2868.56s] So, why have I chosen Q1?
+[2871.76s] Well, it's a very easy answer for me.
+[2874.04s] It's because since August, members of my
+[2876.6s] Discord channel have spent a whole bunch
+[2878.44s] of time going and designing and
+[2881.56s] all these different
+[2883.52s] individual designs that have been
+[2885.76s] submitted to the competition. We've
+[2887.68s] learned a whole bunch of things along
+[2888.92s] the way. Different clocking strategies,
+[2891.16s] how to control these impossible stack
+[2893.28s] inserters, how it's actually a feature
+[2895.84s] to be able to to use stack inserters and
+[2898.4s] it's actually not a bad thing. You just
+[2900.24s] have to understand how to discreetly
+[2901.76s] control them. And and we've compared
+[2904.48s] concepts like lead follower versus
+[2906.84s] clocked controlled latching lead
+[2908.64s] follower methods. We've We've tested
+[2910.76s] direct insertio
+
+n versus belt driven and
+[2913.4s] we've we've tested them in all kinds of
+[2915.52s] different combinations [music] and
+[2916.88s] different sciences so far.
+[2918.96s] We're
+[2921.56s] And all these things have been the such
+[2923.28s] a like a super fun time for me.
+[2926.2s] I've like for crying out loud created an
+[2928.4s] entire clock simulator which I never
+[2931.8s] thought I would ever go and take on and
+[2933.64s] take the time to go and build something
+[2934.92s] like that. And it you know, it works
+[2936.76s] kind of. But it's like these are cool
+[2939.4s] concepts that are like encapsulating a
+[2941.48s] lot of learnings that we've done. So, I
+[2943.2s] want to pay tribute to that and I want
+[2945.28s] to honor that by having that in my mega
+[2946.76s] base, especially if I have the freedom
+[2948.32s] to choose.
+[2949.52s] Then I'm definitely going to choose that
+[2950.72s] every single time. So, the designs that
+[2952.72s] are in here are all the competition
+[2954.2s] winners and the designs that are in
+[2955.52s] that. But I want to honor all the people
+[2958.0s] that have been in this competition. So,
+[2960.96s] all their names are currently on the
+[2962.04s] screen and I just want to say thank you
+[2963.92s] so much for all the time and effort
+[2966.0s] because I just want to be clear.
+[2968.52s] Designing any of these builds takes a
+[2971.32s] lot of time and effort and to going
+[2973.96s] through and and and analyzing each
+[2975.96s] individual thing. Like I've I've spent
+[2977.92s] time just off
+[2980.48s] offline talking individually with people
+[2982.44s] refining their own designs, going
+[2984.2s] shooting back and forth like different
+[2985.76s] concepts, and that's like the coolest
+[2987.28s] part of all of this. So,
+[2989.84s] that's why I'm choosing these designs is
+[2991.44s] just because it's it has been an amazing
+[2994.6s] time going and collaborating coming up
+[2996.92s] with different concepts, and I think
+[2998.68s] that's the coolest part about the
+[2999.96s] Factorio community. So,
+[3003.16s] thank you again for all the people that
+[3004.4s] have participated in the competition.
+[3007.88s] Now, one thing I'll say is you may not
+[3010.4s] like the way that I've concluded this
+[3013.52s] because I tested this in a
+[3016.04s] non-noise-free environment. I tested it
+[3018.52s] with pollution on. I'm testing it with
+[3021.52s] at the
+[3022.36s] routing things from really far away. I'm
+[3024.92s] choosing non-optimal things like using
+[3027.76s] pumps to to to bring fluids in. I'm I'm
+[3030.8s] using trains, so I'm using calcite
+[3033.16s] delivery. That is, you know, coming from
+[3035.84s] one location and then like and then we
+[3038.0s] know that trains are not exactly the
+[3039.68s] most optimal. But, I find that more
+[3041.92s] interesting because this is a a real
+[3044.04s] save with with real actual problems that
+[3046.88s] you have to solve, and you're seeing me
+[3049.4s] solve those now by adding things like
+[3051.24s] tree farms. This is definitely an entity
+[3053.36s] update time that I don't necessarily
+[3055.52s] need if I just kill pollution, but I
+[3057.48s] like that challenge. So, that's the way
+[3059.16s] that I'm going to be testing these kinds
+[3060.44s] of things.
+[3061.44s] So, going forward, that's the way that
+[3063.92s] I'm going to continue to test purple
+[3065.24s] science, which is right next on my
+[3066.96s] bucket list of the next item that I want
+[3068.52s] to go and finish out is that series so I
+[3070.32s] can do this exact same follow-up video
+[3072.2s] to go and test purple science.
+[3074.44s] So, that's how I'm going to go forward
+[3076.28s] with each of these. I'm going to use the
+[3077.68s] same save file, and then I'm going to go
+[3080.12s] and create this final version of a
+[3082.24s] benchmark to go and test completely and
+[3084.96s] see is there a net improvement that I
+[3087.64s] can definitely and definitively see.
+[3090.76s] So,
+[3092.2s] that's the conclusion of red, green, and
+[3093.96s] blue, and you can kind of just choose
+[3096.4s] your own adventure in terms of which
+[3097.68s] ones you want to use.
+[3099.64s] So,
+[3101.72s] very excited for what's coming up next
+[3103.88s] and the other things that we're going to
+[3104.92s] continue to test. I very highly
+[3106.84s] anticipate that we're going to see a lot
+[3108.4s] larger of differences, especially when
+[3111.16s] purple science comes into play given the
+[3113.08s] amount of stone volume that is flowing
+[3114.84s] through there and some of the results
+[3116.2s] we've already seen.
+[3117.72s] And I'm excited to continue to test
+[3119.64s] those. So,
+[3121.16s] all that being said, if you've made it
+[3122.24s] this far in the video, thank you so much
+[3123.64s] for watching. I really appreciate the
+[3125.08s] people that have participated again in
+[3126.88s] the competition series, but also all the
+[3128.44s] people who watch this and comment on the
+[3130.12s] videos, and uh it really helps me stay
+[3132.68s] motivated. So, appreciate all you for
+[3135.24s] for for watching these videos and uh
+[3137.92s] and uh being interested in this kind of
+[3139.36s] stuff.
+[3140.4s] Anyway,
+[3141.68s] keep playing the Factorio grow, and I'll
+[3143.56s] see you in the next video.
+

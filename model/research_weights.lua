@@ -74,7 +74,7 @@ M.research_weights = {
     ["artillery-shell-shooting-speed"] = -5,
     ["artillery-shell-range"] = -3,
     ["artillery-shell-damage"] = -3,
-    ["railgun-shooting-speed"] = -2,        -- Most aggressive exponential; impractical beyond ~20
+    ["railgun-shooting-speed"] = -2,        -- Most aggressive exponential; game-capped at 12
 }
 
 -- Hard caps: beyond this level the research is useless or capped at 300 %.
@@ -100,7 +100,7 @@ M.research_caps = {
     ["physical-projectile-damage"] = 33,    -- L33: one-shot medium promethium asteroids w/ red ammo
     ["stronger-explosives"] = 31,           -- L31: one-shot big promethium asteroids
     ["railgun-damage"] = 30,                -- L30: years territory beyond; months already at L30
-    ["railgun-shooting-speed"] = 20,        -- Most aggressive exponential; impractical beyond L20
+    ["railgun-shooting-speed"] = 12,        -- Bug fix capped at 12; most aggressive exponential
     ["worker-robot-speed"] = 40,            -- Exponential cost wall; millions of years by L60
     ["laser-weapons-damage"] = 10,          -- Rarely useful; laser costs more than ammo
     ["electric-weapons-damage"] = 20,       -- Diminishing returns on Gleba defense

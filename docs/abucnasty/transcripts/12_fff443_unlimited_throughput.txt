@@ -1,0 +1,999 @@
+# FFF-443: Unlimited Throughput
+# Channel: abucnasty
+# Video ID: h-6Ld_g9-tY
+# Transcript length: 45485 chars
+# Fetched: 2026-08-31
+# Source: TranscriptAPI.com
+
+[0.0s] Friday facts, number 443, or planned
+[2.2s] delivery. Welcome back to Factorio. My
+[3.8s] name is A Book Nasty. Today we're going
+[5.32s] to be talking about one of the largest
+[7.64s] changes we've seen yet to how mega
+[10.12s] basing is going to be shaped in the 2.1
+[14.36s] era of Factorio.
+[16.84s] So, let's go over some of the basics.
+[18.8s] We've got a bunch of changes to cover
+[20.12s] today, so I'm going to try to be brief
+[21.4s] and be pretty quick with the the
+[22.64s] discussion here. So, we've got circuit
+[24.24s] networks. They alluded to this. This was
+[26.52s] kind of teased in the last episode where
+[28.08s] we saw a little bit of the outputs for
+[30.64s] the for specifically the connections you
+[32.68s] can make to the the fluid network. And
+[35.84s] now this is all coming full circle of
+[37.64s] what those little that Easter egg of red
+[39.6s] and green meant. And now we're able to
+[41.24s] fully talk about it, so that's exciting.
+[43.76s] So, what is changing? Well, first we're
+[45.76s] going to have some changes now. You can
+[47.36s] go and connect even more things to the
+[49.56s] circuit network. So, we're going to have
+[50.72s] the ability for boilers and heat
+[52.0s] exchangers to get connected to it, so
+[53.92s] you can turn them on and off. You're
+[55.84s] going to have the same thing now with
+[56.92s] land mines. And land mines actually will
+[58.84s] be able to when they get tripped, you
+[60.48s] might have the ability for the circuit
+[62.28s] network to be interrupted, which would
+[64.0s] give you a very clear indicator that
+[65.8s] there is currently an enemy there. Where
+[68.16s] is that useful? It's extremely useful in
+[70.84s] situations where you want to conserve
+[72.56s] power on Gleba. So, if you have a
+[75.04s] situation in which right now, if you
+[76.96s] look at the total power consumption,
+[78.4s] I've got a pretty high consumption right
+[80.24s] now all coming from Tesla turrets. So,
+[82.88s] those Tesla turrets are always
+[84.24s] constantly drawing power. But if you go
+[86.6s] and you disable them via the circuit
+[89.16s] network, they do not draw power. So,
+[91.48s] that's a really good situation where you
+[93.28s] could have a nice little trip wire
+[94.92s] that's out here on the perimeter. And if
+[97.16s] anywhere on the perimeter around, let's
+[99.16s] say a train like a cluster like this
+[100.96s] where I have a giant outpost is gone and
+[103.04s] it tripped, that could go and activate
+[104.96s] all the Tesla towers, and then all those
+[106.6s] Tesla turrets could be enabled. So, for
+[108.88s] early game, mid game, and even late game
+[110.56s] like this where you don't want to have
+[111.72s] this massive grid of solar panels, you
+[113.84s] could have it so that it'll just
+[114.92s] temporarily enable when you randomly run
+[117.56s] into an enemy. So, that could be a kind
+[119.76s] of a nice power saving thing here where
+[121.68s] you can just go and disable your very,
+[123.28s] very hungry power hungry devices here.
+[126.64s] So, that's one immediate practical
+[128.759s] application how you can use this.
+[130.6s] Although you of the community will of
+[132.68s] course find all kinds of degenerate ways
+[134.72s] to use this. So, I'm excited to go and
+[136.4s] see what everyone cooks up. All right,
+[139.0s] biggest change input output splits.
+[141.2s] Let's start from the very beginning. As
+[142.88s] you can see I was scrolling through this
+[144.04s] reading through everything.
+[145.64s] So,
+[146.68s] in the last FFF as we talked about they
+[149.0s] showcase the splice base platform set
+[151.72s] requests. And that they said it is also
+[154.16s] possible to use set requests in the same
+[156.04s] time as read contents due to a little
+[157.84s] bit of magic of self subtraction.
+[160.64s] This topic generates some discussion
+[161.92s] about the problems of the magic self
+[163.32s] subtract subtraction and possible
+[165.4s] solutions. And they're happy to say that
+[167.72s] they have solved it with a very clear
+[170.959s] difference of the red and green filtered
+[173.2s] inputs. This has been a request of the
+[174.68s] community who's been asking for a very
+[176.8s] long time. And I'm so excited to finally
+[179.56s] see this. The whole magic self
+[181.36s] subtraction of the especially in
+[183.519s] asteroid collectors was really confusing
+[185.16s] to people where you can kind of read the
+[186.6s] contents but also could set it what the
+[189.0s] filters were and that was really a
+[190.56s] problem because you'd have like
+[193.227s] >> [clears throat]
+[193.36s] >> you're reading what is currently in the
+[194.56s] chunks but on the red wire you're going
+[196.28s] and setting what it needs to be and it
+[198.2s] wasn't consistent across the entire
+[200.0s] platform. So, again remember 2.1 is
+[202.08s] about kind of creating a more polished
+[204.12s] look and polishing a bunch of the rough
+[206.76s] edges around Factorio and this is one of
+[208.44s] the the best changes that I'm
+[210.56s] I'm extremely excited for. So, this
+[212.519s] means that you can very clearly set red
+[214.32s] and green filters on the inputs for your
+[217.28s] asteroid collectors. So, that's one of
+[219.16s] the things but it's not limited to that.
+[221.44s] You can do this on any machine. So,
+[223.519s] you're going to be have the ability to
+[224.56s] set the input to go and say hey these
+[226.88s] are things you're going to tell the
+[227.88s] machine to do so turn commands rather.
+[229.92s] So, turn on turn off you can have that
+[231.68s] on one wire. You can still connect it to
+[233.68s] both, as you can see is like red and
+[235.4s] green are check marks, so you can select
+[237.32s] them on both. But, then it's very clear
+[239.6s] if you're reading something from it, you
+[241.28s] can read it from the output of the
+[242.56s] machine, and for the inputs when you're
+[244.12s] sending a command, you can go and send
+[245.6s] that on the separate wire. So, now it's
+[246.95
+
+9s] very clear, you can separate those
+[248.52s] things, and that's going to make it
+[249.52s] pretty nice for separating and isolating
+[251.52s] circuits as well.
+[253.16s] So,
+[254.32s] where is that practically going to be
+[256.12s] useful? So, we can do it on trains, so
+[258.239s] that's going to be an aspect. You can do
+[260.2s] this also then here where we're reading
+[261.799s] the fuel on one end, but then you're
+[263.4s] turning on and off the other stuff on
+[265.04s] the other end. So, these are all kind of
+[266.44s] more examples of where you can use this.
+[268.64s] This one I'm particularly excited about,
+[270.4s] and I'll tell you why. So, over in my
+[274.04s] current base, one of the problems that I
+[275.88s] have specifically on Galeba is that I
+[278.88s] had a situation like this where I have
+[281.0s] this outpost where I want to very
+[282.96s] clearly monitor the input incoming
+[285.16s] belts, cuz I don't want to overproduce
+[286.76s] anything. So, the whole point of this is
+[288.4s] that I want to have a very specific
+[290.4s] pulse that happens whenever a train
+[292.64s] comes and picks stuff up, and I want to
+[294.32s] know in the entire network
+[296.36s] exactly how much Yamako there is.
+[299.2s] Now, this is kind of a problem, and
+[300.84s] you're seeing this as a side effect with
+[302.48s] the amount of spoilage that's currently
+[304.12s] sitting in these requester chests.
+[306.2s] So, there's probably a more clever way
+[307.8s] to solve this, but what I wanted was I
+[309.96s] want the ability to be able to read the
+[311.96s] contents that are currently inside here,
+[314.08s] be able to tell it to turn on and off,
+[316.32s] and I also want to be able to set the
+[317.6s] requests. Well, I can't do both. So, it
+[319.72s] was more important to me to be able to
+[321.16s] read the contents that are currently in
+[323.16s] these requester chests, and then to go
+[326.24s] and set them to stop asking for Yamako
+[329.96s] in this particular case. But, I would
+[332.28s] like to also be able to dynamically
+[333.76s] control how much Yamako I am load
+[335.72s] balancing between these different size
+[337.32s] as the trains come in. So, always
+[338.84s] prioritizing this side, but then
+[340.28s] balancing it so that there's always
+[341.8s] enough in the network to always supply
+[343.96s] the very first train. Not easy to do
+[346.84s] because I'm not able to read and set the
+[349.16s] requests of these items and so then you
+[351.04s] see the situation where I'm not actually
+[353.92s] able to go and remove the spoilages
+[356.0s] that's in here.
+[357.76s] And some of it gets trapped. There's
+[359.32s] probably more clever solution and I'm
+[360.72s] sure someone in the comments will tell
+[361.96s] me how I'm wrong and there's a probably
+[363.44s] a better way to do it, but this is so
+[365.72s] simple now because you're going to be
+[367.12s] able to both read the contents so I know
+[368.8s] exactly what's in the whole entire
+[370.36s] network here and I'm going to be able to
+[372.48s] set specifically the requests all by
+[375.6s] just simply disconnecting the red and
+[378.0s] the green wires. So that's going to be a
+[380.08s] nice a small practical example of where
+[382.68s] that could be useful. But I'm excited to
+[384.56s] go and see that here in this upcoming
+[387.04s] release. So that's one practical place
+[388.96s] where I'll [music] be using it. Last but
+[390.68s] not least because this comes up quite a
+[392.44s] bit on my particular channel, I've
+[394.88s] created a video about a year ago now
+[396.68s] where I talked about how the pollution
+[398.76s] control abandonment that trees are
+[400.88s] actually going to be the best for
+[401.919s] pollution control and that's kind of
+[403.16s] taken over on the and there's the mega
+[404.68s] base in meta at this point where I'm
+[406.84s] pretty much everyone is using it. So to
+[409.2s] control pollution. So right now one of
+[411.68s] the things that exist now with this
+[413.2s] concept is that now you have the ability
+[414.64s] to specifically enable the harvesting
+[416.32s] conditions and the planting conditions.
+[418.36s] So that's a net new thing that didn't
+[419.88s] exist before. I don't think it'll
+[421.72s] practically make a huge difference with
+[423.24s] how I use it because the way that I'm
+[425.08s] using it is over on Novice. I use it for
+[426.919s] all the tree farms to manage pollution,
+[428.96s] turn them on and turn them off very
+[430.72s] explicitly and tightly controlling it.
+[433.04s] So
+[434.24s] it's not going to make a huge practical
+[435.76s] difference, but it might be able to go
+[437.56s] and set like more tight control of like,
+[440.16s] hey, right now you can plant and you can
+[441.72s] harvest in these particular ticks and we
+[444.08s] might be able to get around away from
+[445.8s] these like these little self-contained
+[447.48s] loop where this is reading currently
+[449.56s] nothing, but it is creating a
+[451.12s] self-reading loop where it reads its own
+[453.08s] contents and turns itself off whenever
+[455.16s] the wood is less than four is when it
+[457.16s] enables itself. So you might be able to
+[459.28s] control this more globally so everything
+[460.8s] happens exactly on the same tick. And I
+[463.68s] don't know, we'll see how that looks
+[465.12s] like. Um on Gleba, it might also have
+[466.96s] some practical implications where you
+[468.56s] can set a very specific harvesting time
+[470.4s] and a very specific I want to just be
+[472.48s] planting during this time, so you might
+[473.96s] be able to control those a little bit
+[475.12s] differently. So, we'll see how that
+[476.36s] actually turns out. Practically, I don't
+[478.16s] think it's going to make a huge
+[479.08s] difference immediately from just like my
+[481.44s] guessing, but this opens up the door a
+[483.72s] lot for people that are not outside of
+[486.12s] clocking cuz not everyone's going to be
+[487.6s] clocking these things. You might be able
+
+
+[489.64s] to want to go and say I want to go and
+[491.56s] create a huge planting and only plant
+[493.64s] during this time and then I want to only
+[495.28s] harvest specifically when a train is
+[497.96s] coming. So, I want to just be focused on
+[500.24s] harvesting right now, and then I want to
+[502.52s] only plant when the trains are gone. So,
+[504.16s] that might be like a way to kind of
+[505.68s] min-max and be able to just focus on
+[507.52s] just pick up stuff first as a priority.
+[509.84s] So, it might allow you to do some more
+[511.64s] clever stuff, and I'll probably
+[513.24s] experiment with that because I've got
+[514.68s] trains and I'm using them and I'm trying
+[516.2s] to
+[516.96s] min-max that. So, that's exciting.
+[518.919s] Another huge change you've got lab
+[520.599s] control behaviors.
+[522.599s] This is so exciting.
+[525.04s] Um if you've watched my channel, and
+[526.839s] especially if you watched the very long
+[528.88s] video uh uh videos that I have about
+[530.72s] clocking the the labs themselves and the
+[533.88s] inserters going into them,
+[535.68s] it's the largest and hardest challenge
+[537.8s] has been like, "Okay, you you need to
+[539.4s] know what science is currently running
+[540.839s] so you can turn on the correct inserters
+[542.36s] at the right time to only insert the
+[543.839s] specific science that you currently
+[545.28s] need." And when we're looking at this,
+[547.72s] we're seeing that there's uh there's
+[549.839s] there's now a couple things that we have
+[551.28s] access to. So, one huge difference is we
+[554.0s] can set research. So, right now, you're
+[556.12s] going to notice that I have a mod that
+[558.2s] is called, you know, it's some auto
+[559.839s] research is what it's called.
+[561.76s] What it allows you to do is you can go
+[564.56s] and in this case, I have it so that it
+[566.36s] auto queues mining prod unless I
+[568.28s] override it like I have right now where
+[570.0s] I'm doing research productivity. So,
+[572.2s] that's because I don't want to every 4
+[574.0s] minutes go and select mining prod again
+[575.76s] because I'm researching that overnight.
+[577.68s] And so that just allows me to basically
+[579.68s] use an auto clicker for that. This now
+[581.76s] brings that into the game so you can
+[583.36s] actually set the current research and
+[585.84s] that is what you're going to be using.
+[587.28s] So specifically like for me in the late
+[589.2s] game it's really nice because I don't
+[590.56s] have to auto click things.
+[592.16s] But it's also really nice if you have
+[594.24s] gleba science coming in from a different
+[596.08s] planet. So,
+[598.08s] that science comes in only occasionally
+[600.08s] because you don't really have enough
+[601.32s] production to keep up with it.
+[603.64s] And you just want to go and say, "Hey, I
+[605.4s] want to go and research something with
+[606.96s] gleba science only when I have it and
+[608.68s] otherwise just use the novice sciences
+[610.6s] that I currently have in mass." So
+[612.32s] whatever you are in your play through
+[614.24s] because not everyone's going to be
+[615.16s] making mega bases. So this is like a
+[616.76s] really nice thing if you want to just
+[618.28s] conditionally set things. I'm actually
+[619.84s] really curious how speedrunners are
+[621.24s] going to be using this and if they will
+[622.72s] use this tactic to um conditionally set
+[626.08s] research based on when something happens
+[628.32s] to be in stock and when it's not. So
+[630.12s] that'll be kind of interesting to see
+[631.4s] how that meta evolves.
+[633.4s] Otherwise, the other thing I'm actually
+[635.76s] even more interested in than the setting
+[638.04s] is being able to read the research cost.
+[640.16s] If you know what the research cost is,
+[642.4s] then you know what current sciences are
+[645.28s] actively being researched. You know if
+[647.12s] you're using promethium, you know if
+[648.64s] you're using gleba, you know if you're
+[650.48s] using metallic or met- metallurgic
+[652.56s] science packs, etc. Why is that cool?
+[656.72s] Well, I created this incredibly complex
+[659.36s] mechanism over on gleba to go and create
+[663.24s] a science monitor that reads the hand
+[666.24s] contents of this specific inserter and
+[669.04s] then keeps a memory cell of every single
+[671.0s] time it has swung up to a certain amount
+[673.36s] and then ticks backwards so that I keep
+[675.0s] a record of currently what science is
+[676.68s] currently running. And you can see that
+[678.32s] in here that I'm actually even having to
+[679.6s] import from novice the other individual
+[682.12s] sciences that I'm not producing here
+[684.16s] locally on gleba so that I can keep
+[685.52s] track of it constantly while I'm doing
+[687.0s] research prod. All of that goes away
+[689.2s] because you can just read the cost of
+[691.68s] the current science.
+[693.6s] So, that's super exciting cuz that just
+[695.12s] means that if we're looking at it this
+[697.16s] way,
+[698.16s] one, they just made the enhancements so
+[699.92s] that radars can communicate between
+[701.6s] different planets. But, now two, you can
+[703.96s] just use a lab effectively to just know
+[707.12s] what the current science is. So, you
+[708.64s] could just have a lab on every single
+[710.48s] one of your ships even, and they could
+[712.44s] just say, "Hey, I won't need gleba
+[713.8s] science cuz I'm not researching. It go
+[715.24s] shut down completely." Or, just have one
+[717.72s] active right now that just has to
+[719.32s] deliver bio flux back and forth. And you
+[721.6s] can have them all just sit over novice
+[723.2s] and not request anything. So, you can
+[724.76s] actually save a little bit on the space
+[726.64s] platforms having to go back and forth.
+[728.56s] But, also you can set dynamically the
+[730.68s] request amount that you're having for
+[732.64s] the agriculture science that you're
+[734.0s] requesting. So, that's nice because you
+[736.08s] can fine-tune now your ships to only
+[73
+
+8.64s] specifically say, "Hey, when I'm running
+[740.24s] prometheum, I want to request 96,000 cuz
+[742.68s] we can set requests now on the actual
+[745.24s] platforms." And then, let's say I'm
+[746.96s] running for
+[748.72s] a 60-second research science, I could be
+[751.2s] requesting double that. So, now you
+[753.24s] could effectively tune your individual
+[755.48s] ships based on what you're researching,
+[757.08s] which is just a much more elaborate way
+[759.88s] to do it is possible, like I was just
+[761.88s] showing, but it's a pain to do and not
+[764.4s] going to be very user-friendly for most
+[766.0s] people. Speaking of not user-friendly,
+[768.08s] my lab setup.
+[770.28s] Half of the of these combinators that
+[773.12s] are in here, specifically all of this is
+[775.0s] just to filter out and make sure that I
+[776.48s] don't accidentally go and pretend to
+[778.56s] insert on accident an extra agriculture
+[781.36s] science because this very first one
+[783.32s] where I'm again just reading all the
+[784.72s] hand contents because this happened to
+[786.56s] spoil. And what happens is like the way
+[789.0s] that I'm researching all this is that
+[790.52s] every single one of these labs that are
+[792.08s] up here
+[793.28s] are all controlled based off of this
+[795.839s] clock that I have down here, and that
+[797.72s] sets very specifically the inserters to
+[799.8s] be enabled or disabled on a very like
+[802.2s] when a signal comes across, and that's
+[803.8s] what clocks them.
+[805.36s] But, more specifically, I have always
+[807.64s] one lab here that is constantly
+[809.84s] scanning, and the reason is because I
+[812.28s] have to read the hand contents of the
+[814.68s] individual science so that I know what
+[816.64s] science is currently researched. That's
+[818.68s] how I know what current science is
+[820.08s] active, and I feed that into a memory
+[821.72s] cell, and then that is going to
+[822.96s] constantly keep active which individual
+[825.2s] sciences are currently being used. So,
+[828.88s] when I'm using all these different
+[830.48s] sciences, I'm keeping a track record.
+[832.2s] And I'm actually you're seeing a bug in
+[833.56s] mine where it will constantly keep
+[835.32s] ticking up cuz it's ever so slightly off
+[838.12s] over a very, very long period of time as
+[840.52s] I've been researching this for a very
+[841.8s] long time.
+[843.0s] But, the point anyway, side the point.
+[845.28s] This all goes away. So, I no longer need
+[847.52s] to read the hand contents, so that can
+[849.44s] all go away. I can have all the filters
+[851.16s] for gleba completely out, and I can
+[852.6s] remove the memory cell, and then
+[854.04s] everything just is a very simple
+[855.88s] clocking mechanism with some some basic
+[858.16s] changes. So, my lab setup will be
+[860.12s] significantly easier because you'll be
+[861.92s] able to A, just read the contents from
+[863.96s] just one lab, and then instead have
+[866.52s] everything else clocked. I think you'll
+[868.52s] still need clocking in the end because
+[871.24s] and we'll have to test this when 2.1 is
+[873.64s] actually officially here,
+[875.32s] but I still think you're going to need
+[876.72s] clocking in some instances because
+[879.24s] unless they change the automated
+[880.6s] insertion limits inside here, you're
+[882.8s] still going to have issues with stack
+[884.12s] inserters always uh desyncing if you use
+[886.72s] a basic clock. So, that's at least my
+[888.48s] assumption. I haven't tested it, but
+[890.16s] we'll see what it looks like when uh 2.1
+[892.2s] actually comes out.
+[893.839s] So,
+[895.16s] lot of simplification, and even though
+[898.48s] yes, there's still some mad science
+[900.4s] that's going on with those videos that
+[901.92s] I've posted in the past where I've
+[903.04s] talked about research and uh
+[905.4s] uh uh using and controlling the clocking
+[907.4s] for labs, and I think it'll still be a
+[908.92s] bit issue, but but we'll see.
+[911.56s] The other thing that I find is
+[912.68s] interesting in here, if you're noticing
+[914.28s] this, is that the user interface has
+[915.839s] changed where like just noticing this,
+[919.76s] and this is me mainly speculating, but
+[922.52s] you see how there's all these like drain
+[924.52s] like the remaining percentage on
+[926.44s] logistic science packs. I'm really
+[928.6s] curious if anything has changed with
+[930.4s] that. Speculating here, the fact that
+[932.4s] the UI has changed makes me wonder if
+[934.44s] science packs themselves have changed at
+[936.2s] all.
+[937.04s] Um but right now kind of just
+[939.68s] speculation what has changed with this.
+[941.44s] Maybe it's just a graphics overhaul
+[942.88s] because I still see it for gleba where
+[944.32s] it has that drain amount that's there.
+[946.0s] So it might be that it's still here. The
+[948.0s] reason I care is because if like science
+[950.92s] packs are no longer actually going to
+[952.72s] have like individual properties for
+[954.36s] being drained,
+[955.84s] one of the nice optimizations that could
+[957.56s] be made in Factorio for very large
+[959.36s] inventories is that then they can
+[961.72s] benefit from large inventories. If you
+[963.32s] don't know, one of the main reasons that
+[965.92s] like the hub has had so many like um
+[968.44s] like the stack inserters are so
+[969.88s] expensive for the hub is because science
+[972.56s] packs have a uh they're they're
+[974.96s] considered tools uh in the modding API.
+[977.72s] And that might be you know not exactly
+[978.96s] the correct word, so don't quote me on
+[980.48s] that. But mainly what I'm saying is they
+[981.76s] have some percentage amount. So since
+[983.88s] you don't know if a science pack had
+[985.76s] already been used a little bit, the
+[987.76s] large inventory optimizations that exist
+[990.24s] right now that have been shipped uh
+[992.4s] already before by Factorio where it can
+[995.0s] kind of just keep an eye and a record of
+[997.2s] where is this item currently in this
+[
+
+999.72s] whole stack so it could just start here
+[1001.6s] instead of having to scan the entire
+[1002.96s] inventory doesn't really work with
+[1004.839s] science packs because they all have this
+[1006.64s] little property of their remaining
+[1008.08s] percentage. So
+[1010.2s] here's hoping that that changes because
+[1012.08s] if that changes and they still figure
+[1013.6s] out a way to do daisy chaining cuz I
+[1015.2s] know that was one of the main blockers
+[1016.8s] was just allowing the them to be daisy
+[1018.44s] chained. I think that would be a pretty
+[1020.44s] nice quality of life not quality of life
+[1022.6s] change cuz most people won't notice it,
+[1024.319s] but it would be a UPS optimization that
+[1026.12s] we could benefit from.
+[1027.706s] >> [snorts]
+[1028.04s] >> And I think it's especially important
+[1030.079s] when we get to the next part of this
+[1031.68s] whole entire thing.
+[1033.199s] So the biggest change to mega base in
+[1035.56s] today the landing pad on loading bay.
+[1038.92s] So, up until now, how do you get maximum
+[1042.12s] throughput through a landing hub? Well,
+[1044.48s] let me tell you over here.
+[1046.92s] You need some cursed stuff like this.
+[1049.08s] You need to have a lot of bots pulling
+[1051.16s] everything out because you have only
+[1053.24s] access
+[1054.6s] to the couple little areas here where
+[1056.76s] there's inserters that can pull things
+[1058.32s] out. This is about
+[1060.2s] as maximum throughput that you can get
+[1063.24s] without bots here or it's not optimized
+[1065.56s] for gleba and I've done also for
+[1067.6s] promethean here cuz I'm running
+[1068.84s] promethean quite a bit.
+[1070.48s] But, it makes it so that you cannot
+[1072.92s] benefited from everything else and you
+[1074.4s] need to have a lot of requestor chests
+[1075.96s] here. And a lot of people have scaled up
+[1077.68s] their bases significantly further than I
+[1079.36s] have. I'm quite a bit behind in terms of
+[1081.2s] the the the max size of of bases and
+[1084.0s] that's because we're well over the 60
+[1085.52s] UPS mark cuz we could scale up. That's a
+[1087.4s] whole another conversation of why we
+[1088.88s] haven't done that. I've talked about it
+[1090.12s] before. But anyway, the point of where
+[1092.44s] I'm going with this
+[1093.88s] is that this is going to for mega basing
+[1096.32s] specifically, the fact that we have
+[1098.2s] something that can extend the range of
+[1100.52s] what you can pull out is going to be
+[1102.08s] massive cuz that basically means that
+[1103.96s] bots are dead. Um what do I mean by bots
+[1106.92s] being dead? So, what are the things that
+[1109.0s] are relevant for UPS that you would like
+[1111.24s] to research once you [music] have
+[1112.56s] everything unlocked?
+[1114.4s] Well, most likely right now the meta has
+[1116.48s] been worker robot speed, mining
+[1118.28s] productivity, and research prod because
+[1120.8s] these are the three things that still
+[1122.24s] give you benefit later on cuz everything
+[1124.36s] else is hard all of the sciences like
+[1126.72s] LDS and blue circuits, those are all
+[1129.08s] going to be capped to you know, 300%
+[1131.0s] productivity cuz that's the maximum
+[1132.36s] you're going to get out of a machine.
+[1134.2s] So, worker robot speed was a nice one
+[1136.8s] and I've actually really appreciated cuz
+[1138.24s] there's been two or three different
+[1139.76s] people in my actual community that have
+[1141.88s] scaled up worker robot speed up to like
+[1144.36s] beyond 15 million effective science per
+[1146.84s] minute. So, three times the size of my
+[1148.4s] base.
+[1149.6s] And it's been really cool to see that
+[1150.88s] they made bases and save files
+[1153.36s] specifically dedicated to making worker
+[1155.16s] robot speed faster because you have
+[1158.12s] the faster that they can actually
+[1159.76s] deliver items means that the longer they
+[1161.68s] can be running and you need less spots
+[1163.56s] in general that are going to be active
+[1165.52s] here. So, it was a perceived UPS
+[1168.48s] optimization that you could have by
+[1170.72s] continuously researching worker robot
+[1172.88s] speed.
+[1174.04s] Of course, there's some diminishing
+[1175.44s] practical effects of that because you
+[1176.96s] won't be able to forever research this.
+[1179.8s] But, it was cool to see some of those
+[1181.08s] bases that are going to kind of be
+[1183.16s] obsolete now, which makes me pretty sad.
+[1185.72s] Because really like now in the end game,
+[1187.52s] there really isn't a lot of interesting
+[1189.0s] things to do. And there were there we've
+[1190.96s] kind of been put into a position where
+[1193.36s] once you've gotten physical projectile
+[1194.96s] damage high enough and stronger
+[1196.68s] explosives high enough, there aren't any
+[1198.76s] more practical until the levels that you
+[1201.84s] could research to get you to
+[1204.84s] the point where you actually have
+[1207.2s] uh like for example, the next breakpoint
+[1209.28s] of stronger explosives would take me
+[1211.04s] well over 5 years to actually go and
+[1213.08s] research. And I'm never going to go do
+[1214.6s] that to hit another breakpoint. Um and
+[1216.76s] then the one after that is like the heat
+[1218.48s] death of the universe. So, it these
+[1221.04s] things scale to a point where it doesn't
+[1223.16s] practically make sense even research
+[1224.92s] them anymore.
+[1226.08s] So, but there still was a sense that
+[1228.08s] worker robot speed effectively continues
+[1230.68s] to scale by an additional 65%. You can
+[1234.0s] even argue that research prod doesn't
+[1235.4s] really scale that much cuz only 10%
+[1237.68s] chance or 10% of the amount for each rep
+[1240.2s] level that you research.
+[1242.08s] Um but mining prod made total sense.
+[1243.84s] It's a relatively very cheap cost to
+[1246.12s] actually produce and each one keeps on
+[1247.8s] giving you 10%. So, mining prod always
+[1249.6s] makes sense as something to go and
+[1250.8s] research.
+[1
+
+252.0s] So, now we're kind of stuck. We got
+[1253.76s] research prod, we got mining
+[1254.68s] productivity. So, it kind of makes s-
+[1257.44s] the variety of mega bases you're going
+[1258.8s] to see are going to be we effectively
+[1261.28s] remove one thing.
+[1263.24s] But, it makes me sad that we're not
+[1264.36s] going to see worker robot speed bases.
+[1266.08s] Maybe we will, but there will be less of
+[1268.56s] an argument for practically why are you
+[1270.88s] actually researching that thing? So,
+[1272.56s] that makes me kind of sad with this
+[1274.12s] change. However, it is an objectively
+[1276.88s] good change, I think. Because it allows
+[1279.28s] us to now explore other things. Like, we
+[1281.52s] might want to go and explore what does
+[1283.2s] utility science production over on
+[1285.6s] Fulgora look like? Cuz you get most of
+[1287.6s] the end products that you already need
+[1289.0s] just from scrap. Um with the throughput
+[1291.12s] limitations being resolved that now you
+[1293.44s] can very easily extract uh Q1 science
+[1296.76s] out of the hub without any real bot
+[1298.6s] overhead and doubling the number of bots
+[1300.28s] you need.
+[1301.52s] This could make like a significant shift
+[1303.68s] in the quality meta that we've been
+[1305.0s] discussing here on my channel quite a
+[1306.6s] bit over the last year.
+[1308.48s] Now, I don't think it's going to change
+[1311.12s] everything. So, I think there's still
+[1312.6s] going to be some a lot of situations
+[1313.96s] where Q2 is better. And that's
+[1315.44s] specifically in the situations where
+[1316.96s] they're just objectively better before
+[1319.04s] you even get to the hub. So, like Aquila
+[1321.36s] we've measured is objectively better
+[1323.92s] here and in Q2 and we didn't even take
+[1326.56s] the hub into consideration. So, that
+[1328.2s] means like some of these things will
+[1329.56s] stay, but some of the things that we'll
+[1331.4s] have to go and test out a little bit
+[1332.84s] more is like is Vulcan is really better
+[1334.92s] in Q2? Don't really know.
+[1337.68s] Um and is uh Fulgora still better in Q2?
+[1341.44s] Potentially. It's just more like now we
+[1343.44s] need to consider like okay, the the hub
+[1345.6s] is no longer really a consideration for
+[1348.04s] a bottleneck cuz it's just some like
+[1350.08s] you're having the number of inserters
+[1351.84s] which is going to be basically a
+[1352.88s] fraction of the amount of cost. But it
+[1355.24s] also makes the testing much easier
+[1356.76s] because
+[1357.88s] you really don't need to simulate all
+[1359.28s] the bots and then what research what
+[1361.48s] research level of bot speed you have
+[1363.12s] etc. So, it does make the testing
+[1364.56s] easier. So,
+[1366.08s] more things for us to explore.
+[1368.08s] So, this is exciting. Just what they're
+[1370.44s] showcasing here in this graphic is that
+[1372.44s] you can now have the the trains actually
+[1374.2s] coming through.
+[1375.52s] I don't think the train meta is going to
+[1376.68s] shift at all. I don't think they've
+[1377.88s] actually done enough to actually make
+[1379.32s] trains viable
+[1380.88s] as of right now.
+[1382.28s] So, I know the the me thing that's
+[1384.12s] making me sad is where they were talking
+[1385.92s] about it is that they had originally,
+[1389.28s] when the traffic increased to point you
+[1390.68s] want to unload into trains, you
+[1391.8s] eventually get to a state where you're
+[1392.84s] placing robo ports everywhere so you can
+[1394.4s] meet the demand. Initially, we thought
+[1396.08s] we'd specifically make a train loader,
+[1398.16s] which is what Arumba uh
+[1399.751s] >> [music]
+[1400.24s] >> prepared concept art for. However, when
+[1402.84s] Jaroslav was in the process of making
+[1403.96s] the graphics, we hit some severe issues
+[1405.4s] and luckily this made us reevaluate. I'm
+[1407.32s] sad that's gone. I was really hoping
+[1409.64s] that we would have something to make
+[1411.64s] train loaders a reality because I really
+[1413.64s] want trains to come back for for mega
+[1415.96s] basing.
+[1417.44s] If you're min-maxing UPS,
+[1419.88s] I still don't think they're going to be
+[1420.88s] practical. The extra transfer, the extra
+[1422.6s] overhead from the trains are just not
+[1423.92s] going to even make sense and the how big
+[1425.56s] of a trains that you're going to have,
+[1426.68s] they're even showcasing this here. We're
+[1427.92s] going to have to have I think you're
+[1429.12s] going to need way bigger trains than
+[1430.52s] what they're actually showcasing here.
+[1432.2s] So,
+[1433.36s] I don't think the meta is going to
+[1434.2s] change at all, which makes me pretty sad
+[1436.0s] because like I'm using trains on Gleba.
+[1438.0s] I'm loving using them. I'm something
+[1439.8s] that I I want to continuously use in my
+[1442.08s] mega base, but it's going to be a hard
+[1444.16s] thing if you're just perfectly
+[1445.64s] min-maxing UPS. There's an argument if
+[1447.68s] you should even like care like like
+[1449.24s] should you be strictly only focusing on
+[1451.24s] that? And maybe not. Maybe you're we're
+[1453.8s] being a little bit too prescriptive, but
+[1456.28s] I'm focusing on I'm going to take it
+[1457.72s] just from the blanket statement of like
+[1459.32s] pure min-max UPS, trains are still not
+[1461.76s] going to be it and it makes me sad that
+[1463.56s] we don't have something that can just
+[1465.36s] instantly unload in one big stack all of
+[1468.2s] the items onto the train and the train
+[1469.76s] can just instantly take off. That would
+[1471.92s] reduce a lot of the actual inserter
+[1474.04s] overhead of having to transfer
+[1475.4s] everything over and would have made
+[1477.24s] trains actually like the go-to option
+[1479.76s] probably for cargo pad unloading if that
+[1481.92s] was the main option that we had.
+[1484.6s] Now, what you'll probably see is more
+[1486.32s] just unloading to belts and that'll be
+[1488.32s] like directly to belts from these and
+
+
+[1490.24s] that'll be probably all you're really
+[1491.56s] going to see from this from the mega
+[1492.96s] basing side of things. So,
+[1495.04s] a bit sad that it doesn't hit the mark
+[1496.72s] for me. Um so I'm a bit sad about that,
+[1498.88s] but
+[1499.96s] overall, I'm still excited
+[1503.2s] positively here that we have much bigger
+[1506.28s] throughput and the the actual unloading
+[1509.2s] of science is no longer a bottleneck.
+[1511.44s] That's huge for mega basing. Okay,
+[1513.44s] planets in the background. You're seeing
+[1515.0s] this constantly in my save piles. Um I
+[1518.24s] specifically use a a a let me let me go
+[1521.28s] and find one that's actually hovering
+[1522.76s] over Novus. I'm using a particular
+[1525.88s] graphic design that's been uh made by
+[1527.4s] Omega. So um I really love his designs
+[1530.44s] and and his actual art for these
+[1532.52s] different planets. And I'm I'm actually
+[1535.0s] hoping that uh they will go and make the
+[1537.44s] same exact graphic change and adapt it
+[1540.2s] for 2.1 uh because there's a lot of new
+[1543.12s] fancy stuff that's been unlocked for
+[1544.84s] this. So they've made this now a big
+[1546.32s] globe. And this globe now is just a
+[1549.04s] sphere that can be rendered. So like I
+[1551.16s] think like the the art that actually has
+[1552.8s] been done here is like compared to what
+[1554.92s] I'm used to right now is pretty ugly. Uh
+[1557.88s] but to be fair, I understand again,
+[1560.6s] Factorio has limitations of not going
+[1562.48s] and loading a huge amount of stuff into
+[1564.48s] VRAM. We've talked about it in the last
+[1566.12s] FFF and like having backwards
+[1567.64s] compatibility. And also load time does
+[1570.36s] go up when you're loading a huge sprite
+[1572.4s] like we have um across over some of
+[1574.76s] these planets. Like having this is
+[1576.44s] actually a pretty big load time increase
+[1578.2s] because it is a pretty large asset that
+[1579.96s] needs to be loaded. And some people
+[1581.56s] don't want that. So I understand the
+[1583.24s] balance of like trying to have like a
+[1584.52s] minimal still kind of like graphic like
+[1586.48s] this while still allowing it to be part
+[1589.84s] of the vanilla game.
+[1591.36s] There's now small little animations that
+[1594.4s] seem to be um uh available now. You have
+[1597.08s] small rotations of the planet. Uh there
+[1599.48s] seems to be moving clouds on there. So
+[1601.52s] it seems like for the modding community,
+[1603.08s] it's going to be really nice to make
+[1604.88s] very, very rich looking planets. Like
+[1606.88s] look at this. This is what I really
+[1608.28s] like. I like the like the lightning
+[1609.72s] storms coming up over Fulgora. So
+[1611.36s] actually big shout out. I know I was
+[1613.08s] just hating a second ago
+[1614.8s] on the on the graphics.
+[1616.76s] But honestly, this looks pretty cool. I
+[1618.6s] really like this fulgora graphic. This
+[1620.44s] is a pretty cool look to this particular
+[1622.48s] one. Um
+[1624.56s] So, in general, I know this is like they
+[1627.24s] even said this this thing that they
+[1628.28s] always wanted in 2.0. They just ran out
+[1630.4s] of time for things like said in the last
+[1633.44s] FFF where they didn't even have time to
+[1634.96s] go and repaint the rocks on gleba. So, I
+[1637.6s] know a lot of the stuff was rushed out.
+[1639.08s] So, it's nice that they were able to
+[1640.08s] come back, polish this up, and then
+[1641.96s] hopefully the experience of using these
+[1644.04s] will be a nice quality of life
+[1645.92s] immediately if you're playing strictly
+[1647.2s] vanilla. But then for modders, you have
+[1649.52s] access to more stuff on how you can
+[1651.72s] actually render the planets. And we'll
+[1654.2s] give some graphic designers a fun time
+[1656.24s] going in and updating this. So, pretty
+[1658.64s] cool stuff to see that.
+[1660.48s] So, finally, there's a couple small
+[1662.04s] changes that come outside of this. This
+[1663.96s] is where we're we're kind of done with
+[1665.24s] the major changes that are coming out
+[1666.88s] that and the most of the things that I'm
+[1668.44s] excited about. So, you've got the
+[1670.32s] ability to go and connect pumps to
+[1672.4s] trains in all kinds of different
+[1673.72s] orientations. So, it's not just relying
+[1675.48s] on it being straight. Now, you can
+[1676.56s] connect it in any way. Cool.
+[1679.08s] Great to see that.
+[1680.52s] Um I won't be practically using this a
+[1682.28s] lot, but it is cool that you can have
+[1684.0s] these weird orientations and curve it
+[1686.96s] around the the land a little bit more.
+[1688.72s] So, if you are now more of a person
+[1690.48s] who's interested in uh I don't know.
+[1693.04s] Maybe you're making more spaghetti
+[1694.44s] factories. This might be a nice like
+[1696.6s] quality of life for you specifically.
+[1698.48s] Won't impact me, but you know, hey. I'm
+[1700.2s] not every player. So, be cool to go and
+[1702.2s] see that. Um and they even called this
+[1704.2s] out here no matter how cursed your
+[1705.36s] station design is, it'll always go and
+[1707.56s] connect. So, it's a nice thing for new
+[1710.16s] players too. And that's what I got to
+[1711.8s] also remind myself is like new players
+[1714.4s] um don't know that this is a mechanic.
+[1716.32s] So, they'll go and they'll create like a
+[1717.52s] curved stop like this and they'll go,
+[1719.08s] "Why can't I connect my fluid pumps?"
+[1720.8s] And then
+[1721.92s] they won't know why. Now, it's the
+[1723.88s] answer is really clear. Like they don't
+[1725.36s] have to worry about it. So, again, good
+[1727.76s] thing for allowing more types [music] of
+[1730.08s] designs to be uh created. So, and less
+[1732.92s] limitations. I think I I can't really
+[1735.32s] complain about that. I think that's a
+[1736.68s] good thing.
+[1737.734s] >> [gasps]
+[1738.6s] >> So, the the next things that we've got
+[1740.96s] here is uh it's more graphic design
+[1743.08s] changes. So, 
+
+they've touched up the oil
+[1744.64s] refinery.
+[1745.92s] I like the way this looks. Um this is
+[1747.84s] kind of like a lot of kind of like
+[1749.36s] overall sprites were uh were left a
+[1751.72s] little bit behind in Space Age. So,
+[1753.52s] they're updating this to to look more
+[1756.12s] like and to feel more like the rest of
+[1758.24s] the the graphics that they have.
+[1760.4s] I I'm I'm a personal sucker for
+[1762.2s] graphics. I I love the little cog also
+[1764.52s] constantly moving here create driving
+[1766.24s] this cam motion to go back and forth
+[1768.0s] drive a pump going up and down. There's
+[1769.84s] actually some nice little attention to
+[1770.96s] detail and it's cool that this is
+[1772.04s] actually rotatable and then it keeps
+[1774.16s] that animation from different
+[1775.48s] perspectives and it's pretty consistent.
+[1777.08s] So, I'm actually a huge fan of the way
+[1779.04s] this looks. I think this is a pretty
+[1780.52s] nice touch. Um
+[1782.0s] and then practically, you know, it it'll
+[1784.6s] it'll show up in more playthroughs cuz I
+[1786.16s] do use these buildings quite a bit. So,
+[1787.84s] it'll be nice to just see those and
+[1789.4s] having a a nicer animation qualities to
+[1792.12s] them as a whole.
+[1793.72s] So, and lastly, the assembly machine is
+[1796.36s] getting a completely new graphic design.
+[1799.0s] So,
+[1800.24s] I love this. These machines have kind of
+[1801.92s] been left in the dust for a while. So,
+[1804.52s] being able to know that we are going to
+[1806.72s] see them um
+[1809.12s] after all this time finally updated to
+[1811.6s] have new graphics inside of them. These
+[1814.08s] look really cool. They are they're very
+[1815.8s] rich textures like overall this is a
+[1817.6s] pretty cool looking machine and then uh
+[1819.88s] this is again a lot more complex. You
+[1822.28s] have a lot more just random belts and
+[1824.68s] things moving inside here and this is
+[1827.2s] now kind of again bringing everything
+[1829.68s] full circle to be more aligned with the
+[1831.56s] other types of buildings that we have
+[1833.24s] and it makes it look like a lot more of
+[1834.72s] a cohesive uh
+[1838.56s] it doesn't make it look as as out of
+[1840.92s] place. I still say that these furnaces
+[1843.6s] are a little bit out of place with the
+[1845.2s] way that they look, but
+[1846.92s] um
+[1848.12s] but otherwise, you know,
+[1849.8s] that's probably the only minor thing
+[1851.04s] that I've got in terms of if we're
+[1852.32s] talking about graphics specifically. So,
+[1854.88s] cool thing to see this.
+[1856.52s] Big thing,
+[1857.92s] they we are really happy to have you all
+[1859.64s] join this journey with us and hope you
+[1861.04s] all enjoy playing 2.1 next week.
+[1864.8s] I don't know if that means this upcoming
+[1866.6s] Monday or this next week Friday. I I
+[1870.08s] don't know what that means, but
+[1872.2s] maybe they mean by the next feature
+[1874.4s] uh FFF or I I don't know. So,
+[1877.8s] hopefully
+[1878.561s] >> [laughter]
+[1878.76s] >> we'll get an exact answer soon, but I'm
+[1881.24s] excited to test out these mechanics and
+[1882.84s] especially to go and test out some of
+[1884.32s] the UPS optimizations that I know exist
+[1886.84s] and being able to share that with the
+[1888.2s] rest of y'all. So, stay tuned, subscribe
+[1890.36s] if you're interested in that, and then
+[1891.64s] otherwise,
+[1893.2s] I'm excited for 2.1. Don't get it wrong.
+[1896.72s] See you in the next video.
+

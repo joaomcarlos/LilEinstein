@@ -1,0 +1,2041 @@
+# Nauvis & Vulcanus & Space  [Road to 2.5 Million ESPM]
+# Channel: abucnasty
+# Video ID: vD_zzN8VT68
+# Transcript length: 96146 chars
+# Fetched: 2026-08-31
+# Source: TranscriptAPI.com
+
+[0.08s] Hello and welcome back to Factorio. My
+[1.52s] name is Abuk Nasty. In today's episode,
+[3.2s] we're going to be covering the second
+[4.319s] part of this minieries where I'm talking
+[6.64s] through how I've scaled the base to get
+[8.639s] to 2.5 million effective science per
+[10.88s] minute running all the sciences across
+[12.719s] all the different planets to for
+[14.48s] research productivity. So, first off,
+[17.84s] you're going to notice that I'm not
+[18.96s] running research productivity. So, I'm
+[20.4s] running mining productivity. And you'll
+[22.4s] probably be wondering why. So, the
+[24.8s] reason for that is I'm I have talked
+[27.92s] about in the last episode that I
+[29.279s] redesigned Vulcanus and I am currently
+[31.599s] testing out a new build that I have
+[34.0s] there. So, we'll cover that here in a
+[36.16s] second. But the mining productivity has
+[38.16s] a key component for why I am I am
+[41.68s] currently cranking on mining
+[42.96s] productivity to make Vulcanist better.
+[45.76s] The second part that I want to talk
+[47.12s] through this in this particular episode
+[48.48s] is about novice and the specific
+[50.48s] transition when you go into research
+[52.32s] productivity and how I've completely
+[54.559s] eliminated the token system for the
+[58.079s] planet or the ships that actually go to
+[59.68s] the solar system edge and beyond. So,
+[62.16s] I'll talk through that and a couple
+[64.08s] different redesigns on novice. I've
+[65.84s] redesigned gray science, so I'll talk
+[67.68s] through that shortly. And I've also
+[69.6s] redesigned yellow science, which I will
+[71.68s] also talk about. The yellow signs is
+[73.6s] full isn't fully stable and it's very
+[75.52s] similar to my previous build. So, we'll
+[77.28s] there's mainly I'm trying to explain
+[79.2s] some of the problems that you'll wind up
+[80.799s] having with this no matter what quality
+[82.479s] you have, but just some different design
+[84.56s] choices that exist there and then
+[86.4s] ultimately holistically how I wind up
+[88.4s] shutting off half the base when I'm
+[89.68s] running research productivity, which
+[91.119s] I'll cover here in a second as well. So,
+[93.28s] stay tuned and we'll get right into the
+[95.36s] video.
+[109.04s] So, this is Vulcanist before I did the
+[111.439s] redesign. You're going to notice that
+[113.6s] there is a kind of absurd number of
+[116.799s] rocket silos that are here. And as this
+[119.84s] particular ship comes over Vulcanus,
+[121.92s] you're going to wind up seeing them all
+[123.2s] launch in one go. The core concept for
+[126.24s] why I did this was just to minimize the
+[129.039s] downtime and being able to launch all
+[131.12s] these rockets at one time. I think it's
+[134.319s] cool to see this many rockets all firing
+[137.12s] at once for sure, but
+[141.76s] it's it's definitely overkill. The you I
+[144.959s] don't need this quite this amount of
+[146.4s] throughput for for these number of
+[148.239s] rocket silos. You're also noticing the
+[150.64s] swarm of bots that go to all of the
+[153.44s] different silos to build them all up.
+[156.56s] And you wind up seeing here that while
+[158.239s] we're what we're wind up actually
+[159.92s] requesting here is 384,000,
+[163.2s] which is four launches of if I can do
+[166.48s] the math here, how many rocket silos we
+[168.48s] have?
+[170.879s] 192. So I guess two launches of of 192
+[174.959s] rocket silos.
+[176.879s] This is just kind of overkill. like or
+[179.36s] are drastically overkill. These two
+[181.92s] should be enough just to launch this out
+[184.08s] of here. And you're seeing that there's
+[185.519s] also just a lot of insurers that are
+[187.44s] just daisy chained here to just quickly
+[189.36s] fill this up and then fill up the next
+[191.519s] one. And like ultimately I I don't like
+[195.519s] the way that I've designed this. There's
+[197.36s] a lot of just wakes that are turning on
+[199.44s] and off all the time. The belts are not
+[202.4s] really properly tuned here because I
+[205.04s] don't quite need consume a full 240
+[207.36s] coming here. So there's kind of in other
+[210.4s] words, although this can technically
+[212.799s] produce here enough for like it's an odd
+[216.879s] number is where I'm kind of coming from.
+[218.319s] There's 169 per second or so and it
+[220.799s] can't quite even do that because it'll
+[222.4s] turn on and off occasionally. It's using
+[224.56s] individual lead followers, so a lot of
+[226.4s] circuit control for everything.
+[229.28s] So overall, I wanted to completely
+[231.92s] redesign this. I'm probably going to
+[233.76s] keep this section and slightly redesign
+[235.92s] it just to have a continuous clock for
+[238.879s] everything, but this is perfect for the
+[241.04s] amount of actual fluids that I wind up
+[243.519s] needing here. So, this ultimately
+[244.959s] doesn't have to change, but I want to
+[247.92s] eliminate the bot usage. I have this
+[250.159s] very overkill rocket factory that sits
+[252.56s] here. I'm not going to remove this at
+[254.4s] all. I'll just keep it, but instead I'll
+[256.0s] just belt the materials to the actual
+[258.32s] silos that need to go out there.
+[260.56s] Additionally,
+[262.4s] one of the things that I I have here is
+[264.72s] I have an overkill number of lanes. We
+[266.88s] have like 24 of them, and I really just
+[268.88s] need five for every 240. So, really, I
+[271.6s] can cut down on four lanes here. And
+[274.16s] that means that like here, this kind of
+[276.72s] works because
+[279.12s] I wind up adding like a speed beacon so
+[282.24s] that this is slightly faster, which is
+[284.639s] what you're going to wind up needing to
+[285.919s] actually produce the tungsten. Because
+[287.36s] one of the things you got to think about
+[288.56s] with tungsten is that its mining time is
+[290.96s] 500%.
+[293.04s] So compared to iron ore which is at 100%
+[297.12s] like just normal and you also see like
+[299.44s] for example uranium is 200%. But then
+[302.72s] this being 5
+
+00% means that it is 500 or
+[306.56s] five times slower to actually mine
+[308.96s] anything from tungsten. So for this
+[311.199s] whole voiding technique, you wind up
+[313.68s] needing significantly higher mining
+[315.919s] productivity in order to get a break
+[318.32s] even point where you don't need speed
+[319.84s] beacons anymore or any any more beacons
+[322.8s] with any speed module in them. And
+[325.84s] specifically, if we're talking about
+[327.68s] that, let's go and I will open up here
+[331.36s] this specific chart. This is from a
+[333.68s] video that I created a long time ago
+[335.84s] where I brute force computed all of the
+[338.24s] individual values that you would need at
+[341.039s] a specific mining productivity level for
+[345.199s] like how many number of miners you're
+[347.039s] going to need in order to mine tungsten
+[349.6s] ore and get a target of 60 or 240 per
+[354.08s] second. So, if we're looking at this
+[356.0s] here, you're seeing that there's a very
+[358.24s] magic mining productivity level, which
+[360.08s] is 26,658,
+[362.639s] where you can get a clean 240
+[366.4s] of Q2 tungsten ore, and you have to void
+[369.919s] the minimum amount in order to do that.
+[372.08s] So, that's my current goal is behind the
+[374.56s] scenes to get the base to the point
+[376.08s] where I can hit this magic 26,658
+[380.16s] so that I can run these normal optimized
+[385.52s] voiding setups
+[387.759s] without having any speed beacons.
+[389.68s] Because right now, if let's go bring
+[392.72s] this up here just so we can look at
+[394.16s] that.
+[396.4s] If we don't have these speed beacons
+[398.24s] here, you wind up seeing this produces
+[401.28s] 804 per second. Well, based on that
+[404.4s] chart, we need to be voiding here a a a
+[408.96s] total of 826.68
+[412.24s] per second plus 240. So that means that
+[415.6s] in total that's 240 plus 826.
+[423.28s] So, we need this needs to be at least at
+[426.16s] 1,066
+[427.84s] per second. And we are not there. So,
+[431.12s] this is the older version before I
+[433.12s] started actually cranking on mining
+[434.72s] productivity. You'll see here I'm at a
+[437.199s] measly 20,111.
+[440.08s] So, I've gotten 4,000 extra levels since
+[442.24s] then, but I I I'm not quite there yet.
+[445.68s] So, I will talk through the new design
+[448.0s] now and I'll talk through some of the
+[449.36s] compromises I made so I can still run it
+[451.919s] and uh with with using effectively like
+[455.039s] the the least amount of speed increase
+[457.28s] as I as I possibly can. So, take this
+[461.039s] into consideration here. Here's the old
+[463.28s] setup and the old factory and the way
+[465.28s] that it looked. And then we'll
+[467.039s] transition now over to the new setup and
+[469.199s] you'll see just how much smaller it
+[470.88s] winds up actually being.
+[473.68s] So, this is the new setup for Vulcanus.
+[475.52s] You're going to notice immediately that
+[476.72s] there's a significantly less real estate
+[478.72s] that is being taken up here. There's
+[480.4s] some new belts that come down here.
+[481.759s] That's for the rocket part delivery. I'm
+[483.599s] using the exact same setup that I had
+[485.68s] before. This is something I designed a
+[487.12s] while ago. It's very overkill for the
+[489.52s] actual
+[491.039s] amount of of of actual rocket parts that
+[494.72s] I'm going to wind up needing, but I uh
+[496.8s] don't feel like actually changing it.
+[498.24s] So, we're just going to keep the exact
+[499.599s] same setup that we had here already
+[501.44s] previously.
+[503.28s] So, what I'm doing now is I'm belting
+[506.24s] all the rocket materials and then those
+[508.0s] go into the individual silos here. One
+[510.4s] of the things that I am doing right now
+[512.64s] in order to continue to test this is I'm
+[514.88s] currently dumping all of the science.
+[516.959s] I'm just traveling between Novice and
+[519.36s] Vulcanus and then I wind up just
+[521.279s] simulating the consumption of it by just
+[523.039s] dumping it into space. So, the tests and
+[526.16s] that's mainly also just so I can
+[527.519s] demonstrate it here because I'm not
+[528.88s] running research prod.
+[531.839s] So the main core differences of this new
+[535.04s] design is that we are now just having
+[538.88s] two silos per individual foundry. The
+[541.839s] beaconing is much higher. So this is
+[544.0s] going to go to 50 per second. Although I
+[546.32s] am throttling it using clocks here to go
+[549.279s] down to 48 per second. And 48 per second
+[551.839s] time 5 is going to get you to the magic
+[555.04s] number of 240 per second. So slightly
+[558.48s] underclocking the actual builds, but it
+[560.88s] also makes it pretty nice from a back
+[562.88s] pressure standpoint. So that means that
+[564.56s] I can run one dedicated belt to two of
+[568.56s] these individual foundaries. And so
+[571.12s] you're going to notice here that when I
+[572.959s] had mentioned a second ago that I was
+[574.24s] running 24 lanes, well, we brought that
+[575.92s] down now to 20 and a very nice even
+[578.56s] split. So you wind up having one with
+[580.88s] one splitter that happens to exist here
+[583.12s] just to split them between this section
+[585.04s] and this section. But the consumption
+[587.92s] rate is kind of nice because we're
+[589.44s] pulling from this side of the inside of
+[591.279s] the belt and then this is pulling from
+[592.64s] the outside lane of the belt. So there's
+[594.72s] more or less it's not exactly perfectly
+[596.64s] distributed. And because it's not
+[598.08s] perfectly distributed, I can't actually
+[599.76s] set the output priority here. That means
+[601.839s] that it needs to split evenly between
+[603.6s] the two sides. But for more or less the
+[607.44s] the convenient part about all of this is
+[610.08s] that now we have a a a very new build
+[614.16s] that leverages now a lot more beaconing.
+[617.44s] And technically you could get even more
+[618.959s] beaconing around this. I just decided to
+[620.88s] go 
+
+for a 10 beacon setup because that's
+[622.959s] plenty. If you go a little bit higher
+[625.04s] you could potentially make the argument
+[626.64s] that instead of doing five and five for
+[629.12s] 480, you could potentially do a 44 + 1.
+[633.12s] So, nine of these for 480 per second. I
+[638.0s] I've kind of found over time, just
+[639.68s] myself, the way that I wind up designing
+[641.279s] things is that if I need to add a whole
+[642.959s] bunch of extra beacons and complexity to
+[645.12s] get to the point where I have that like
+[647.04s] one break point of having one extra
+[649.519s] science assembler, usually it just
+[651.68s] doesn't wind up being worth it. And
+[653.92s] that's very subjective. That's not
+[655.68s] always going to be the case, but that's
+[657.2s] just something that I have personally
+[658.56s] kind of found in my design philosophy.
+[660.56s] So I I don't go for the break point of
+[663.2s] having like a like a non-even
+[665.519s] distribution between sides because the
+[667.36s] logic and the complexity goes
+[669.04s] significantly higher when you don't have
+[670.48s] a divisible by two number of uh actual
+[673.839s] science assemblers.
+[675.92s] So because like in the end the amount of
+[678.8s] transfers are going to be the exact same
+[680.48s] in terms of the throughput but at the
+[683.76s] but with reducing the number of entities
+[686.079s] you wind up needing which can be better
+[689.519s] but in general it winds up being that
+[692.16s] like okay let's say we had instead of
+[693.76s] these these 10 here we had nine right
+[697.44s] well then one of these cryogenic plants
+[700.48s] are going to have to be dedicated to
+[702.079s] just one of these buildings and one of
+[704.48s] these buildings right So it whether it
+[707.44s] really winds up being useful, I don't
+[709.92s] know. The main benefit that I wind up
+[712.64s] having here, and that's a huge side
+[714.079s] tangent aside, these pods are
+[717.04s] significantly smaller than they used to
+[718.8s] be.
+[720.079s] So now we're kind of in a nice scenario
+[722.32s] where the number of rockets that we're
+[724.48s] actually needing to use here
+[727.839s] is we've jumped down to only 80 silos
+[730.72s] that we're actually going to be using at
+[732.079s] any point in time compared to the 196
+[735.2s] rocket silos that we had. And this is
+[737.68s] plenty for the actual throughput. You
+[740.16s] buffer in this particular chip car here.
+[743.279s] This is what we're doing. And the car is
+[745.279s] what is then going to these two
+[747.2s] different inserters that are then going
+[749.2s] to feed these two individual rocket
+[751.2s] silos. And if you run this at full
+[753.76s] speed, this will eventually be able to
+[756.0s] throw these items into space faster than
+[759.6s] this it science assembler could actually
+[762.48s] keep up. So this is plenty for the
+[764.72s] actual throughput that we have here. And
+[767.279s] then otherwise, yeah, the the clocks
+[769.519s] here are all a generated by the clock
+[772.24s] generator that I've demonstrated in the
+[773.92s] past. Just as a quick side tangent, I
+[776.399s] have a clock generator sidecar mod now
+[778.88s] that I have created. And you can hover
+[781.36s] over the entities that are in a build
+[783.76s] and it will wind up extracting all of
+[786.16s] the wonderful info that you wind up
+[788.24s] needing and you can copy that and paste
+[790.0s] it directly into the clock generator so
+[791.839s] that you can use it. So that you that
+[793.68s] way you don't have to go and list very
+[795.839s] manually every single one of the
+[797.2s] inserters and it can go and do do the
+[799.12s] simulation for you. Been having a lot of
+[801.2s] success about using the clock generator
+[803.2s] in a lot of these kind of quirky builds
+[805.04s] where you're kind of touching things and
+[806.72s] and slightly adjusting when this
+[809.04s] inserter is going to be inserting into
+[810.72s] this machine versus this machine. And
+[812.24s] it's been working out pretty good so
+[813.68s] far. So
+[815.92s] this is the new setup drastically
+[817.92s] smaller the main core concept now
+[820.72s] because we have reduced the number of
+[824.399s] belts that we have is that now that also
+[828.079s] means that the assemblers or the the
+[830.48s] actual upcyclers can be drastically
+[832.8s] reduced up here as well. So, if we look
+[835.6s] now at the the setups here, you can see
+[837.839s] there's a lot more beacons. And the main
+[839.839s] reason for that is I'm trying to
+[841.519s] compromise because right now I don't
+[843.36s] have the 2,000 extra mining productivity
+[846.959s] that I wind up needing. So, the the idea
+[850.959s] that I have now is I will reduce the
+[853.519s] actual effect that this one speed beacon
+[856.48s] has by adding up to five beacons around
+[858.959s] these mining drills. Now, that still is
+[861.68s] over the amount that we need because we
+[863.279s] said in the past we needed 1,66 per
+[865.44s] second. This is 1,600 per second. So,
+[867.68s] this is still too fast and I need it.
+[871.36s] So, in order to to compensate for that,
+[873.76s] what I'm doing right now is I will
+[875.279s] occasionally use this extra inserter,
+[877.92s] which is usually just dedicated for
+[879.519s] higher quality materials to pull out of
+[881.519s] here. I wind up using this to send
+[884.48s] occasionally a normal quality tungsten
+[888.16s] or to get through the amount that we
+[890.639s] actually need to void here. So, because
+[892.8s] we would you can get away with a total
+[895.279s] of seven inserters when you're
+[899.36s] well, you can get away with seven
+[900.72s] insertters once you're at the magic no
+[902.959s] speed beacons anymore, but you're going
+[904.72s] to need eight at least for at least the
+[907.519s] mining productivity I have and this
+[909.44s] speed beacon configuration. So this is
+[911.92s] all controlled by one master clock now
+[914.16s] here. So that's very different.
+[915.839s] Everything b
+
+efore was wake lists. So and
+[917.76s] this may look really complicated, but
+[919.36s] the main thing that just exists here is
+[921.92s] I'm checking for a signal from all of
+[924.959s] the four blades. So these four blades
+[927.6s] down here all wind up going and emitting
+[931.12s] a a signal
+[933.44s] whenever this particular machine stops
+[936.56s] crafting because we can't output
+[938.32s] anything anymore into this car. Then
+[940.959s] this will go and say hey I'm over the
+[943.519s] the the limit I'm output blocked here
+[945.68s] and working is is equal to zero. So and
+[949.04s] that just says is 25 here is not a magic
+[951.68s] number very specific number which is the
+[954.079s] overload multiplier that you see over
+[955.68s] there which is 25. So that means that
+[958.88s] hey we are output blocked because our
+[961.199s] signal is we are not working. So this
+[963.68s] particular foundry is now in a spot
+[966.0s] where it has stopped producing anything.
+[968.24s] we can go and emit our moon signal,
+[970.16s] which is going to be, hey, we are now
+[971.519s] dormant. We're sleeping. And then just
+[973.44s] to separate the signals, this is kind of
+[975.04s] just a no-op. It winds up just sending
+[976.56s] that signal across. And all of those
+[979.04s] individual blades all come with red
+[980.88s] wires up here. You see here, this comes
+[983.44s] also across from this side and this
+[985.12s] side. And what happens then is that red
+[987.6s] wire comes all the way up here. And it
+[989.36s] winds up saying, "Hey, if all four of
+[991.36s] them are currently sleeping, go ahead
+[993.519s] and start a timer." And whenever we are
+[996.32s] we are sleeping for 30 seconds then go
+[999.199s] ahead and disable all the clocks. So it
+[1001.68s] just sends a signal to disable all of
+[1003.759s] the tra these combinators that have
+[1006.24s] clocks for voiding and turning on and
+[1008.24s] off the recyclers and also all the
+[1009.92s] arithmetic combinators. So that the
+[1013.04s] clock value here which is one winds up
+[1016.0s] then getting combined with this negative
+[1017.839s] one here so that it's zero and then all
+[1019.759s] of the arithmetic combinators stop in
+[1021.759s] place. So that is convenient because
+[1025.12s] then we don't have all of these uh
+[1027.12s] constantly turning on and off with the
+[1029.199s] clocks to turn effectively to go and
+[1031.919s] turn on the recyclers and you just have
+[1033.439s] a constant um number of signals going
+[1035.52s] across here. Then this is completely
+[1037.52s] shut down. Those signals then get
+[1039.199s] propagated over here. So there's just
+[1040.64s] one clock that feeds all of these
+[1042.24s] different
+[1043.76s] mining setups. So you can see here this
+[1046.24s] is all completely shut down while we're
+[1048.079s] not actually actively using it and we're
+[1050.559s] simulating the consumption right now.
+[1052.64s] But
+[1054.24s] really this whole entire setup if I was
+[1056.799s] just targeting research productivity
+[1058.64s] could just be this because that's the
+[1060.88s] actual amount of of of of speed that you
+[1063.84s] wind up needing for 120 second research.
+[1066.32s] So that's going to be 960 per second.
+[1068.799s] But I'm going for a full 1920. Let's see
+[1071.28s] if I did the math there right. Cool. So,
+[1074.48s] I'm doing 1920. And the reason I'm doing
+[1076.96s] that is because if I ever for some
+[1079.039s] reason want to increase my artillery
+[1081.039s] shooting speed or my shell damage or any
+[1084.16s] of those kind of things, I still want to
+[1085.84s] be able to say that I can go and run
+[1087.28s] those at full speed. And that's what
+[1088.559s] this whole setup is here for. So,
+[1092.0s] otherwise, to talk a little bit about
+[1094.559s] the fluid setup, it's remained mostly
+[1096.799s] unchanged. The main difference is that
+[1098.72s] because the fluids are all going to be
+[1100.4s] outputting at the same rate. You'll
+[1102.96s] notice here that this is 30 31. These
+[1105.52s] are like very very close in terms of the
+[1107.12s] stone outputs. You're also going to see
+[1108.88s] that the cal site is hovering around
+[1111.2s] this automated insertion limit of 13. So
+[1114.0s] all I'm doing here is this is a really
+[1115.6s] simple lead follower setup. This just
+[1117.44s] monitors this one individual
+[1120.88s] foundry and it just goes and reads the
+[1122.96s] contents included also in crafting and
+[1125.2s] this just winds up saying hey whenever
+[1126.88s] calite is less than the odd but then six
+[1129.76s] which is just arbitrarily chose that as
+[1131.76s] long as it's under the automated
+[1132.96s] insertion limit I just divided it by two
+[1135.039s] that way if one of them is slightly over
+[1137.76s] or slightly under this will always be
+[1139.84s] constantly outputting it at a lower
+[1142.0s] amount it doesn't matter this they're
+[1143.84s] all going to get consumed at the same
+[1145.2s] time So the main goal is just to choose
+[1148.559s] a number that's under the automated
+[1150.08s] insertion limit so that one of the
+[1152.32s] foundaries is going to lead all the rest
+[1154.4s] of them. And then otherwise I also void
+[1157.44s] all of the stone and that just kind of
+[1159.84s] clocks in it pretty easily. It's just
+[1161.28s] like hey whenever it's greater than 32
+[1163.039s] grab all these inserters and throw them
+[1164.799s] into landfill. The landfill compresses
+[1167.12s] it at a 50 to1 ratio and then just
+[1169.28s] occasionally will go and throw that
+[1171.039s] landfill into recycler which then
+[1172.559s] instantly voids it into the lava. I
+[1175.52s] don't really know if this is actually
+[1177.2s] better than just doing something like
+[1179.44s] this.
+[1181.039s] And we'll bring the these over here
+[1183.2s] because I don't really have any
+[1184.32s] construction in this area.
+[1186.559s] Um, this might be sufficient, but kind
+[1190.08s] of lava in itself is it the way that the
+[1193.52s] animation ti
+
+me works for a stack
+[1195.2s] inserter is voiding something into lava
+[1197.679s] is the same as putting a belt directly
+[1199.679s] in front of it because it takes four
+[1202.0s] ticks to go and unload it because one
+[1204.0s] tick per stack of four items. So, this
+[1207.919s] is then an instant transfer, that was
+[1209.919s] the idea here, into this particular
+[1212.799s] recycler.
+[1214.4s] So, and then that reduces it by 25%.
+[1217.28s] This thing barely ever runs. I don't
+[1219.76s] know if this is better or not, but the
+[1221.6s] point is here that only 25% of this is
+[1224.16s] getting unloaded to a quote unquote belt
+[1226.559s] here cuz that's kind of how this is
+[1228.88s] mocked like simulated behind the scenes
+[1231.28s] in terms of animation time. This
+[1233.76s] instantly destroys it. So, in theory,
+[1237.919s] that is potentially better, although
+[1240.32s] I've never actually tested it. But
+[1242.48s] that's kind of the way that I'm I'm
+[1243.84s] setting this up is as much direct
+[1245.52s] insertion as possible to get rid of the
+[1247.52s] stone, cuz it is quite an amount of
+[1249.12s] stone that actually gets generated here
+[1250.64s] whenever this is running. So,
+[1254.96s] I've set that up. So, then then this is
+[1256.64s] one giant pod here. And here we can
+[1258.799s] actually see it running.
+[1261.28s] This will actually turn on and off. And
+[1263.28s] this is because we are latching this to
+[1265.919s] keep a certain amount of buffer in this
+[1267.919s] range here. You'll see once this all
+[1270.48s] kicks off and starts running at 100%
+[1272.799s] speed, we're going to drop under the
+[1275.44s] amount
+[1277.039s] that we've latched to on the decider
+[1278.88s] combinator. And that's going to issue a
+[1280.48s] signal for all of these to turn on. So,
+[1284.48s] and you'll notice then also that all of
+[1286.24s] these insertters are all kind of acting
+[1287.919s] together to remove all of the stone from
+[1290.24s] here. And so effectively the way reason
+[1294.159s] that that's um so useful is that like
+[1296.559s] when I have right now wake list turned
+[1298.32s] on, they're very occasionally having an
+[1300.24s] extra flicker and that's just to come
+[1302.08s] like overcome having one of these
+[1304.08s] insertters to hold in hand a buffer
+[1306.64s] occasionally.
+[1308.559s] And this is enough to get the throughput
+[1311.039s] that I wind up needing while only using
+[1313.44s] one of the actual foundaries as the
+[1316.88s] lead. So, there's no real clock going on
+[1318.96s] here cuz it's kind of annoying to clock
+[1321.28s] this otherwise
+[1323.52s] because like you're going to run into
+[1325.52s] the fluid output kind of restrictions
+[1328.24s] here cuz you can only really evict 100
+[1330.799s] fluid per tick from each of these
+[1333.039s] different ports. So, it's 200 per tick.
+[1335.28s] So, you wind up getting occasionally
+[1337.44s] where this winds up getting output full
+[1339.44s] and you'll see that. And it's not output
+[1341.12s] full on stone, it's actually output full
+[1342.799s] on molten copper. So, which is fine. it
+[1346.559s] just winds up being kind of like a a
+[1348.88s] really annoying thing to clock. So, just
+[1350.88s] using a very simple lead follower setup
+[1353.28s] here to just kind of occasionally bring
+[1355.12s] in calsite and to like remove stone.
+[1358.72s] You're going to see here that they just
+[1360.0s] wind up clocking, turning on and off,
+[1361.84s] just occasionally pulling all the stone
+[1363.52s] out. So, that's how I've done it. And
+[1367.12s] then there's two independent banks, two
+[1368.88s] different fluid banks here. So, all
+[1370.32s] these are controlled independently and
+[1371.679s] these are controlled independently. And
+[1373.76s] then otherwise here you can start seeing
+[1376.0s] the whole entire build come alive. Here
+[1377.84s] we got all the tungsten ore coming in
+[1380.799s] and this extra little excess getting rid
+[1384.64s] of the tungsten ore is not exactly
+[1386.72s] perfect. We occasionally will back up
+[1389.039s] but for me right now running research
+[1390.72s] productivity this is perfect because
+[1393.28s] this is like plenty enough of a buffer
+[1394.96s] to kind of hold over and just barely
+[1397.12s] hang on as we are trying to go and
+[1399.039s] produce all that we need. And you can
+[1400.24s] see here we we stop all of the stuff
+[1402.48s] gets eliminated. All the extra stuff
+[1404.32s] here and then we wind up completely
+[1406.24s] going dormant here in a second. So
+[1409.919s] this is working right now. So for that
+[1412.159s] reason, what I'm going to do now is I'll
+[1414.08s] show the transition to research
+[1416.48s] productivity and then we'll let the
+[1419.039s] whole build run uh for real now. So
+[1421.52s] let's get rid of all of these insurgters
+[1423.28s] here
+[1425.12s] and then we can go ahead and switch
+[1428.4s] over. So, I'll see you there in a
+[1429.76s] second. So, the first thing that you're
+[1431.919s] going to notice that's now different
+[1433.36s] about my base is all my Prometheium
+[1435.44s] ships are currently hovering over Nvice.
+[1438.24s] In the past, all of them except for one
+[1441.679s] would be sitting over Aquill. And the
+[1445.039s] reason is because on Aquill, I used to
+[1447.12s] have an epic barrel that I would wind up
+[1449.679s] requesting. And there was only one epic
+[1452.24s] barrel in the entirety of the uh in the
+[1456.159s] entire world. So I only ever produced
+[1458.48s] one and I had just one floating around.
+[1462.0s] So the idea behind that was and this is
+[1464.48s] the remnants of that silo. I used to go
+[1467.76s] and bring that epic barrel, convert it
+[1471.039s] from the fluid basically that was in it,
+[1473.6s] which was a crude oil barrel, and I'd
+[1475.6s] make it a normal barrel here on novice,
+[1478.159s] and I would launch that up. And that was
+[1480.0s] kind of the bathroom key that I would
+[1482.08s] use for each of these ships to know
+
+,
+[1484.88s] hey, I currently have the token, so I
+[1487.12s] can request something from the planet
+[1489.52s] surface.
+[1491.6s] Now, I've done away with that mechanism
+[1494.32s] altogether. And now I still have a
+[1497.36s] signal that I wind up sending down to
+[1499.12s] the planet, which is this barrel here.
+[1501.76s] Whenever we we we're always going to be
+[1503.919s] constantly requesting biter eggs. That's
+[1505.84s] not going to ever stop because whenever
+[1507.679s] you get over the planet, you're going to
+[1508.88s] be requesting that. However, when I wind
+[1512.64s] up actually you you'll notice that
+[1514.48s] there's one legendary barrel in here.
+[1517.36s] So, what happens is whenever the
+[1519.76s] Prometheium science packs go below
+[1522.0s] 10,000, I wind up emitting a barrel
+[1525.44s] signal here, which will set the filter
+[1527.919s] on this long-handed inserter
+[1531.919s] that's going to go and put it onto this
+[1533.76s] belt here.
+[1535.2s] Now, this will only bring this barrel
+[1538.64s] back once novice is not the current
+[1541.2s] planet that we're hovering over. So,
+[1542.88s] whenever you have a number of three for
+[1544.32s] the novice signal, that's going to mean
+[1545.6s] that we are currently traveling from and
+[1547.36s] to this planet. That means we're
+[1548.64s] currently on, right?
+[1551.6s] So, this enables a signal to tell right
+[1556.0s] now novice that hey, I need eggs. Now,
+[1561.919s] the reason that this is actually winds
+[1564.32s] up now working without this token system
+[1566.08s] altogether is that they've the the way
+[1569.12s] that the game works now is that any ship
+[1572.32s] is in the order in which they arrive at
+[1575.12s] the planet and their requests are
+[1576.88s] initiated,
+[1578.4s] it'll be the first in to first out.
+[1580.72s] That's how the rocket silos will
+[1582.72s] prioritize something. So on novice,
+[1585.52s] because I have exactly 256 rocket silos
+[1588.799s] that can deliver 1,000 biter eggs each,
+[1591.84s] what winds up happening then from that
+[1593.919s] is that I can request in one shot all of
+[1596.799s] the biter eggs to go and get sent up to
+[1599.919s] the actual Prometheium ship in one go.
+[1603.36s] Now this becomes a problem though. Even
+[1606.48s] though yes, I can deliver it immediately
+[1608.0s] to the first one, I have to be careful
+[1610.4s] that I don't go and try to send and
+[1612.559s] slowly buffer and craft all of the the
+[1615.52s] actual captive bider spawners, like the
+[1617.36s] actual eggs that I need slowly over time
+[1619.44s] and start slowly sending rockets up into
+[1622.159s] space because that'll be not as good for
+[1623.84s] for freshness. So, what I wind up doing
+[1626.559s] is pretty simple here. I wind up having
+[1628.64s] this timer here, which is pretty large
+[1630.799s] at the moment. But what this winds up
+[1632.799s] doing is it winds up saying, "Hey, right
+[1634.96s] now, when was the last time I launched a
+[1638.64s] rocket?" Which is actually pretty easy
+[1640.24s] to tell because I just read currently
+[1642.72s] the hand contents of this one bulk
+[1645.279s] conserter.
+[1647.52s] And whenever it winds up having any
+[1649.76s] value, that means that we just launched
+[1652.0s] a rocket. So that just starts a timer
+[1654.559s] and that just says, "Hey, as long as the
+[1658.24s] amount of time is greater than I need to
+[1661.2s] produce eggs in every single one of
+[1663.44s] these captive biter spawners,
+[1666.0s] then I create a green signal here, which
+[1668.72s] just basically says, "Hey, I'm ready to
+[1671.2s] go and launch." So the silos are ready.
+[1674.48s] Now, here's where I actually create an
+[1677.2s] inter delay that's a little bit larger.
+[1679.76s] So, I actually want to space out my
+[1682.08s] Prometheium ships 6 minutes apart. And
+[1685.919s] that's because of the consumption rate
+[1687.52s] that I have here on novice. So, I want
+[1690.0s] them to only launch every 6 minutes at
+[1692.64s] maximum. So, even though like this first
+[1695.12s] one will wind up getting all the eggs,
+[1697.12s] it will take 6 more minutes for this
+[1699.52s] one, 12 more minutes for that one, 18,
+[1701.679s] 24, 30 minutes until this one winds up
+[1703.84s] actually going and launching and taking
+[1705.76s] off from novice. The problem though that
+[1708.48s] you wind up having is that they are
+[1712.32s] going to even though the the the things
+[1714.72s] that you send from a planet is going to
+[1717.039s] be first in first out. So they'll
+[1719.12s] prioritize the first ship. That's not
+[1721.36s] how the drop mechanic works at all. So
+[1724.399s] when they're dropping science from these
+[1726.32s] different ones and we can wind up seeing
+[1727.52s] whichever one was the actual first one
+[1729.12s] that arrived here by checking the amount
+[1731.679s] of science that's currently in here. So
+[1733.44s] you see these are all 766k.
+[1736.0s] I'm assuming this one, yeah, this one's
+[1737.76s] 128k. So, I want this one to take off
+[1741.279s] first, but all of these ships are going
+[1743.52s] to be slowly be trickling down from
+[1745.84s] science. So, what I do, and we'll kick
+[1748.799s] this off by actually switching over to
+[1750.399s] research productivity over here.
+[1753.279s] Let's transition over. Let's turn on
+[1755.44s] research prod.
+[1758.159s] And you're going to notice that all of a
+[1760.24s] sudden the request for Prometheium
+[1763.36s] science skyrockets to 12 million.
+[1766.88s] That what happens now is every single
+[1769.84s] one of the ships are going to dump all
+[1772.08s] of their Prometheium science in one
+[1774.32s] giant huge swarm like this. And you're
+[1777.679s] seeing just by the absolute raining of
+[1780.08s] Prometheium science coming down here.
+[1783.12s] So, every single ship just dumped all of
+[1785.679s] their Prometheium scan. And this means
+[1788.559s] that now every single ship is currently
+[1790.96s] completely free to wind up receiving
+[1793.76s] e
+
+ggs. I simply do this by and we'll go
+[1797.2s] over here to the actual setup for this.
+[1800.159s] I just wind up just detecting here. Hey,
+[1803.6s] whenever my main lab setup over here and
+[1806.72s] give it a second for it to fully
+[1808.159s] normalize, this is a uh there we go.
+[1814.88s] Whenever we have detected that we are
+[1816.72s] currently running Prometheium Science,
+[1819.919s] it starts a timer and it says, "Hey,
+[1822.399s] whenever Prometheium Science is
+[1823.919s] currently under the consumption rate or
+[1826.32s] sorry, not consumption rate, uh, let me
+[1828.32s] find this thing in here somewhere. Okay,
+[1830.88s] whenever the master the main control
+[1833.36s] network, the main clock that controls
+[1835.2s] all the labs has detected that
+[1836.64s] Prometheium science is currently
+[1837.919s] running, we start a timer and it just
+[1840.08s] starts counting up for how long you've
+[1841.44s] been running research prod. Well, as
+[1843.919s] long as this is under 30 seconds, in
+[1846.0s] other words, so 18,000 ticks,
+[1849.679s] it's going to wind up requesting 10
+[1851.52s] million Prometheium science extra, that
+[1854.32s] signal gets combined. And because I wind
+[1856.799s] up setting the requests here, this
+[1859.52s] ensures here that I wind up taking all
+[1862.08s] of the buffer from all of the different
+[1863.84s] ships that happen to be above and
+[1865.679s] throwing them all into immediately into
+[1868.799s] the hub. So, what that means is that you
+[1871.52s] can already see this ship has
+[1872.799s] immediately to took off at the moment
+[1875.12s] that we did started research
+[1876.48s] productivity.
+[1878.08s] Now, the next ship won't be able to
+[1880.64s] launch, and we'll go over to the actual
+[1882.72s] launch control network until it's been 6
+[1886.0s] minutes since we've launched the last
+[1887.76s] time. This is slowly going to count up.
+[1889.52s] You can see this is red right now. We're
+[1891.12s] kind of waiting. So, this is telling us,
+[1892.72s] hey, there's a launch delay. We're
+[1894.159s] waiting right now for the ender delay to
+[1895.679s] be satisfied. And then here is the the
+[1898.96s] eggs are requested. So, we can tell that
+[1901.44s] right now we have 1.2 million eggs that
+[1903.6s] are being requested across all these
+[1905.12s] different ships. But we are waiting now
+[1907.679s] until we actually can launch, which is
+[1910.399s] to create that inner delay between the
+[1912.24s] the individual rocket launches. So now
+[1916.88s] once those 6 minutes are up, we'll get
+[1918.799s] one more green signal. And as long as
+[1921.6s] the green signals are greater than equal
+[1923.12s] to two, and here are some other
+[1924.72s] mechanisms that I have just to basically
+[1926.72s] say, hey, this is a way for you to
+[1929.76s] disable them just in case I want to do
+[1932.08s] some maintenance or something like that.
+[1934.0s] But anyway, so this is all just like a a
+[1936.799s] a fallback mechanism. So I can turn off
+[1938.96s] the launches if I don't want to actually
+[1940.48s] use it. But in general, once we have a
+[1942.96s] request and we've been over this amount
+[1944.64s] of time and we have currently a barrel
+[1946.799s] that's greater than zero, that means all
+[1948.32s] of them don't have any science in them,
+[1950.32s] then we can go ahead and launch the next
+[1952.08s] bat. So, and this is just for
+[1954.559s] convenience here. This just tells me the
+[1956.0s] last time since I launched. So it was 2
+[1957.679s] minutes and 57 seconds ago. So we'll
+[1959.519s] wait until we get to the the 6 minute
+[1961.36s] mark and then all those will launch.
+[1963.679s] So, while all those ships are going out
+[1965.679s] into the into the field, let's go and
+[1969.76s] talk about some some ways that I have
+[1972.159s] optimized things for research
+[1974.159s] productivity. So, one of the things that
+[1977.519s] I've done now is because I have a master
+[1981.44s] setup here that tells me very
+[1983.84s] conveniently here on this little red
+[1985.76s] wire every science that I am currently
+[1988.159s] consuming and that I'm running at the
+[1990.0s] moment. because that is available to us.
+[1993.44s] What that means is that I can wind up
+[1995.36s] going and saying, "Cool, I know when I'm
+[1998.08s] consuming or not consuming a certain
+[2000.159s] science." And because six of the
+[2001.76s] sciences are here on on novice, that
+[2004.24s] means we can do some really cool stuff.
+[2006.0s] So, we can hook it up to this radar. And
+[2008.96s] the radar is now a very long signal that
+[2011.76s] connects all of the other radars
+[2013.279s] together. So, we'll talk about first
+[2015.44s] what I'm doing on the input side. So, we
+[2018.559s] talked about this and I may have
+[2020.159s] mentioned in the previous video, but for
+[2021.519s] completeness, we'll talk about it.
+[2022.72s] Whenever research productivity is
+[2024.48s] detected, so again, we have that red
+[2026.08s] network that's coming across. That means
+[2028.08s] we're going to turn off every other lane
+[2029.919s] because we'll only be consuming at half
+[2031.6s] the speed. Now, these are very carefully
+[2034.159s] set up to go all the way back to the
+[2037.279s] individual science that's actually going
+[2039.039s] to be making that lane. So, I very
+[2040.799s] carefully routed these these belts here.
+[2043.44s] And this is mainly for transport uh belt
+[2046.799s] uh or transport uh optimization. So if I
+[2051.2s] look up transport lines for example,
+[2053.28s] we'll turn off the gaps and I turn on
+[2055.04s] this. You're going to see that like
+[2057.44s] whenever
+[2059.28s] these are currently all active here, but
+[2061.839s] all of the individual lanes here are
+[2063.679s] completely turned off. White means that
+[2065.2s] it's inactive and blue means that it's
+[2066.879s] currently active. And you'll see that
+[2068.879s] every other one is currently active
+[2070.639s] across these different lines. And 
+
+that's
+[2072.48s] very intentional because then we don't
+[2074.079s] need all the different transport lines
+[2076.0s] constantly active when we're only
+[2077.44s] consuming at half the speed. So that all
+[2081.28s] works by going back to the individual
+[2083.76s] science assembly machines and and
+[2085.919s] turning them on and off. So let's talk
+[2087.44s] with chemical science cuz it's one of
+[2088.8s] the best examples of this. So with
+[2091.119s] chemical science, one of the things that
+[2092.48s] I'm doing is I've got the Prometheium
+[2093.839s] science pack here that winds up coming
+[2095.76s] on the signal and this gives a weight
+[2097.599s] signal. This actually there's one clock
+[2100.32s] here for for the entire science assembly
+[2102.96s] here. And whenever this weight signal is
+[2105.119s] greater than one, it's going to turn off
+[2107.2s] this clock. So what that actually means
+[2109.68s] is this whole bank here on the right
+[2112.16s] hand side is right now completely shut
+[2115.44s] down. Even though there's science on the
+[2117.52s] lanes, you're going to notice I've very
+[2119.28s] intentionally woven these in because
+[2122.56s] these lanes are currently the only lanes
+[2124.72s] that are active and these are completely
+[2127.119s] shut down.
+[2128.48s] And that's so that I can turn off
+[2130.64s] completely half of this whole build just
+[2133.04s] using circuits. So that weight signal
+[2135.44s] comes across this radar and it goes to
+[2137.44s] any of the clocks that actually control
+[2139.28s] this. And we only have one clock here
+[2141.119s] for that controls this whole bank. And
+[2143.359s] then we have another clock here down
+[2145.52s] here that controls the red circuit
+[2147.359s] production. So that's one way that I am
+[2149.839s] currently telling very specifically this
+[2152.16s] whole bank to shut down.
+[2154.64s] I'm doing the same thing for green
+[2156.16s] science and for red science where they
+[2157.839s] wind up shutting down half their lanes
+[2159.44s] when they're not in use so that we can
+[2161.44s] wind up completely shutting down those
+[2162.88s] systems. I haven't quite done it for
+[2164.96s] military science yet and as this is a
+[2167.119s] brand new setup, but in general you so
+[2169.76s] you'll still see some of these clocks
+[2171.44s] here are fluctuating. So let's go and
+[2174.16s] turn off the transport lanes.
+[2177.76s] So ideally what I'd like to do is shut
+[2179.92s] down this whole entire setup and shut
+[2182.8s] down this whole entire setup because
+[2184.32s] they are not currently running. So I can
+[2187.76s] optimize that by just not sending the
+[2189.44s] signals over, but I just haven't quite
+[2190.72s] done it yet. But in general, that same
+[2193.28s] mechanism works everywhere. So I wind up
+[2195.28s] here detecting, hey, we're actually
+[2196.88s] running military science right now. So
+[2199.2s] let's go and turn on our clock, which
+[2202.88s] controls our entire new military setup
+[2205.2s] here. So, it's kind of convenient
+[2207.119s] because like when I was just running
+[2208.4s] research or or mining productivity, this
+[2210.32s] whole thing can be shut down and we can
+[2211.68s] turn off all the circuits to it. And you
+[2213.599s] can go even further and use that same
+[2215.599s] kind of concept to turn off the actual
+[2219.04s] uh clocks that are going to all of the
+[2221.359s] individual upcyclers and all of those
+[2223.44s] things, right? So ideally I will
+[2227.2s] continue to optimize this so that I can
+[2229.2s] get it to the point where maybe just
+[2230.48s] this one bank is running because you can
+[2232.079s] see like half of this is running versus
+[2234.0s] the other half and then shutting them
+[2235.44s] down by evenly distributing them. But
+[2237.76s] there's lots of like small little things
+[2239.2s] you can do using that core concept
+[2240.96s] that's really really convenient.
+[2244.0s] So using radars are super powerful along
+[2246.72s] with having a
+[2248.8s] dedicated network on the radar that
+[2250.8s] tells you what sciences are currently
+[2252.48s] running because you can really like if
+[2254.24s] you think about it there's all these six
+[2255.52s] sciences here and you for free can turn
+[2258.8s] off complete builds if you're not
+[2260.4s] actually running that science. It's a
+[2262.0s] really nice little optimization that you
+[2263.92s] can make. So in all of these what I wind
+[2266.64s] up doing is I just wind up starting a
+[2268.8s] timer. And this is so that you can get
+[2271.28s] to the point where you fully always
+[2272.72s] guarantee you're saturating the build.
+[2275.119s] So in all of these different cases, what
+[2276.72s] I wind up doing is I wait like, you
+[2279.119s] know, in this case 1,800 ticks, so 30
+[2281.839s] seconds, and then I'm saying, okay, we
+[2284.4s] haven't used uh military science for 30
+[2287.52s] seconds. All right, we can completely
+[2289.28s] shut down. We're no longer going to be
+[2290.8s] needed. So having that little inner
+[2293.28s] delay is also a good thing. You don't
+[2294.64s] want it to be instantly turning off
+[2296.16s] because then you wind up getting small
+[2297.44s] little gaps on the belt which you don't
+[2299.04s] really want.
+[2300.88s] But
+[2302.4s] that is that is a core concept of
+[2304.4s] sending signals around so that the
+[2306.4s] entirety of the the base can actually
+[2308.64s] shut down individual subsections and
+[2310.8s] turn on and turn off individual sciences
+[2312.88s] when not in use.
+[2314.8s] So, let's talk a little bit about
+[2317.28s] utility science because I finally got
+[2320.56s] this new setup to be stable, but man, it
+[2322.8s] is an absolute wild pain. So, let me let
+[2325.119s] me let me talk through that here. So,
+[2326.8s] the reason that this setup here is so
+[2329.599s] incredibly annoying is because no matter
+[2333.44s] what you do, you're going to have a
+[2336.56s] problem when you are trying to insert
+[2339.599s] the same ingre
+
+dient with stack
+[2341.2s] insertters from two sides of the belt.
+[2343.599s] This is a theoretical thing that does
+[2346.16s] work and it's actually really really
+[2348.8s] convenient to wind up inputting
+[2352.32s] the low density structures at two times
+[2355.119s] the amount that uh compared to
+[2357.44s] everything else. Cuz if you look at this
+[2358.88s] right, we're consuming low density
+[2361.04s] structures at three is a three of the
+[2364.0s] ingredients, right? So in other words,
+[2366.4s] what you can do is the inserter that is
+[2369.28s] going to be inserting processing units
+[2371.839s] is going to always do a double swing of
+[2374.64s] LDS and then blue circuits. The flying
+[2378.4s] robot frame is going to do a one time a
+[2381.44s] swing of LDS and then the next time
+[2384.0s] it'll do a double swing of both LDS and
+[2386.24s] then flying robot frames. This by nature
+[2389.28s] is incredibly unstable because if you
+[2392.16s] ever get to a point where this inserter
+[2394.64s] gets stuck holding LDS in hand, you will
+[2398.32s] never ever recover from that. So, the
+[2401.119s] reason why we're doing this is so we can
+[2402.72s] get three swings of utility science out
+[2405.28s] from this individual machine.
+[2408.16s] And that's really nice because this
+[2409.76s] keeps it as a a very simple
+[2413.119s] lock to turn on and off these insertters
+[2416.0s] so that they're active for the minimum
+[2417.92s] amount of time to actually bring the
+[2419.28s] items in.
+[2421.119s] So, the way that I've compensated for
+[2423.119s] all of this is now I look at these belts
+[2426.079s] here, and this is actually what's made
+[2427.76s] this whole thing stable is I wind up
+[2430.32s] checking that, hey, whenever this is
+[2432.0s] greater than 160, we're going to go and
+[2436.0s] turn off this locking mechanism. We're
+[2438.72s] actually going to turn off the whole
+[2439.92s] system. Now, I also have a second thing
+[2443.52s] here, which is checking that the clock
+[2445.28s] is equal to one or is equal to zero.
+[2448.079s] again. This way, the entire build is
+[2450.72s] constantly going to go through a full
+[2453.04s] clock cycle all the way through and
+[2455.839s] build all of the different items that
+[2457.52s] it's going to need, and it will never
+[2459.44s] get stuck because this winds up just
+[2461.52s] checking like, hey, we're over 160 and
+[2464.079s] our clock is going to be back at its
+[2466.16s] zero case. We can shut down the build.
+[2468.96s] Now, this also will occasionally
+[2470.96s] actually naturally happen because I'm
+[2473.68s] not running a full 240 per second. I'm
+[2476.48s] running 239 point in change that I wind
+[2480.319s] up actually consuming from each of these
+[2482.56s] individual belts and that's just because
+[2485.119s] I wanted constant back pressure. So this
+[2487.04s] is also a back pressure mechanism that
+[2488.8s] will actually shut down the whole build
+[2490.48s] for a few seconds and allow these uh and
+[2494.16s] in the case that this ever fully backs
+[2495.92s] up. This way these when they actually
+[2498.56s] are dormant. So you'll see that over
+[2500.16s] here on this side, this is shut down so
+[2503.76s] that in essence the the the actual items
+[2507.839s] that are the low density structures here
+[2510.319s] are going to be in a spot where they
+[2512.079s] have at least 16 or they have nothing in
+[2514.96s] them. And that's kind of how you want
+[2517.2s] this to be set up. I know this is overly
+[2519.119s] complicated. What I'm effectively just
+[2521.44s] trying to say here is that this
+[2524.16s] mechanism for the way that I've clocked
+[2526.64s] this is just not stable by nature. And
+[2530.16s] if you are designing a utility science
+[2532.079s] in general, you're going to have a lot
+[2533.839s] of these problems. And I just wanted to
+[2535.28s] talk through these are just some of the
+[2536.56s] ways that I've dealt with that issue.
+[2538.319s] And it's actually been working finally
+[2540.319s] now after a while. Utility science as a
+[2543.52s] whole hasn't changed much. Uh the main
+[2546.48s] difference is now I have actual proper
+[2548.56s] clocking on all of the furnaces. I have
+[2550.56s] just the number of furnaces that I
+[2552.0s] actually wind up needing here to
+[2553.599s] actually produce the raw materials that
+[2555.119s] I wind up needing with a slight amount
+[2557.52s] of back pressure. And this is so in
+[2560.079s] other words, I've reduced the number of
+[2561.359s] entities drastically that I wind up
+[2563.04s] needing. I hate this layout because it's
+[2565.92s] ultra wide for producing the science
+[2568.88s] here when in reality I could probably
+[2571.28s] squash this a lot more. I just didn't
+[2573.44s] want to change too much the original
+[2575.28s] design that I had. The big difference
+[2577.359s] now though is that I have a dedicated
+[2580.4s] LDS assembly machine, which is perfectly
+[2583.28s] clocked
+[2584.88s] to produce exactly 240 LDS per second.
+[2587.68s] And it's actually really complicated to
+[2589.44s] get LDS in a good spot because it's
+[2592.96s] going to constantly get get locked out
+[2595.359s] and you're going to wind up having these
+[2596.72s] situations where you will have too much
+[2599.119s] plastic in here. So, to compensate for
+[2601.839s] that, one of the simplest ways that I've
+[2604.0s] gotten around a lot of my LDS headaches
+[2605.839s] because I couldn't get this to be stably
+[2607.44s] clocked is that like in general, you're
+[2610.079s] going to notice here that the fluid
+[2611.839s] inputs here are not enough. You're just
+[2614.16s] not going to quote get the amount of u
+[2617.92s] you're not going to get the throughput
+[2619.04s] that you actually wind up needing on
+[2620.48s] just one of these individual pipes. You
+[2622.4s] can see here it needs 4.2k per second,
+[2624.64s] right? So, you're going to constantly
+[2626.0s] see that it's under it the amount that
+[2628.079s] we actually need for molten co
+
+pper.
+[2630.72s] So in reality, going and setting these
+[2633.76s] inserters at the full stack 16 actually
+[2636.4s] introduces more starts and stops that
+[2638.72s] ultimately makes it unstable. So the way
+[2640.64s] that I currently just do this very
+[2642.16s] simply is I just have a buffer chest
+[2644.0s] here
+[2645.68s] that winds up holding the amount of
+[2647.52s] plastic that we wind up needing here for
+[2649.28s] short bursts. This is still set to stack
+[2652.0s] size 16, but the input insertters are
+[2654.4s] both set to stack size 15. And what this
+[2657.52s] allows you then to do is to dump in a
+[2660.319s] very short succession 30 plastic bars
+[2663.359s] and in a very short uh amount of time.
+[2666.72s] And that allows you to slightly
+[2668.079s] underclock the the low density structure
+[2670.4s] and get around the molten fluid that is
+[2672.96s] constantly not consuming enough in this
+[2675.68s] particular build. So by doing this that
+[2678.319s] actually means that you will see here
+[2679.92s] that right now even though we have this
+[2681.28s] turned on this has no wake lists at all
+[2683.359s] and is always grabbing 16 items
+[2685.359s] perfectly out of here. Again this is
+[2688.0s] using the clock generator to uh come up
+[2690.319s] with all these cool concepts. So another
+[2693.28s] really useful application of that. But
+[2694.96s] yeah so now we can get a full 240 out of
+[2697.04s] just four of these. Uh so each of these
+[2699.599s] producing uh 60 per second perfectly
+[2702.24s] which is pretty cool.
+[2704.319s] Otherwise, everything else is exactly
+[2706.079s] the same. Uh I'm I'm not a huge fan of
+[2708.0s] this blue circuit assembly, but it's
+[2709.839s] works for now. So,
+[2713.359s] that is utility science and how it's
+[2715.44s] been redesigned. Let's go through now
+[2718.4s] while I'm I'm I'm waiting for some of
+[2720.48s] these uh machines to actually normalize.
+[2723.28s] Let's talk about military science
+[2724.8s] because this received a very heavy
+[2727.76s] redesign. And I want to talk a little
+[2729.68s] bit through some of the core concepts of
+[2732.16s] what I wanted to change.
+[2734.319s] And I'm probably going to change a lot
+[2737.28s] of the the ways that people actually
+[2739.2s] traditionally think about this. And
+[2742.079s] let's cover that here in a second. And
+[2743.44s] I'll go in the editor so that I can
+[2744.8s] explain that. So, one of the very first
+[2747.44s] videos I ever created on this channel
+[2748.8s] was redesigning military science, which
+[2750.96s] is here right now.
+[2753.839s] So, at the time, I wanted to mess around
+[2756.079s] a lot more with rocket silos and
+[2757.839s] transporting items. And this has been
+[2760.319s] slightly optimized since that last
+[2762.48s] video. and actually going using the
+[2764.56s] clock generator to turn on and off these
+[2767.119s] inserters based on when they're actually
+[2768.72s] going to be needed across here. But one
+[2772.319s] of the things that is kind of a bait
+[2774.48s] when it comes to military science is you
+[2776.88s] wind up looking at one of these assembly
+[2778.72s] machines and you wind up going like,
+[2780.0s] "Oh, I can produce all of the walls that
+[2783.2s] I'll ever need. I'm just going to need
+[2785.2s] to go and shove 460
+[2787.76s] stone bricks per second into here."
+[2790.319s] Which you can kind of do, right? you can
+[2792.72s] get uh 360 items per second, which will
+[2795.839s] get you the 60 that you wind up actually
+[2797.52s] needing across this, right? So, that's
+[2800.56s] actually is going to be enough. But the
+[2802.56s] problem is like what do you do? Do you
+[2804.16s] belt them in? You wind up going and and
+[2807.44s] bringing them from like like in this
+[2808.96s] case, that's why I was trying to go and
+[2810.24s] use rocket silos for this to go and
+[2811.92s] bring all the the actual stone bricks
+[2814.0s] over to feed these two cuz you can
+[2815.76s] really like minimize the number of
+[2817.04s] assembly machines.
+[2819.119s] However, like in reality, if you look at
+[2821.2s] like the thing that's being consumed the
+[2822.64s] most, it's going to be walls that are
+[2824.88s] going into here. So, traditionally, when
+[2826.8s] I think about like a design, one of the
+[2828.4s] things that I wind up going and
+[2829.839s] challenging is like, hey, if I'm looking
+[2831.76s] at this, whatever is going to be the
+[2833.92s] higher throughput item, I should go and
+[2836.24s] direct insert that. Conveniently though,
+[2839.52s] a lot of people will wind up going and
+[2841.2s] saying, well, I should directly insert
+[2843.04s] grenades.
+[2844.56s] And the reason they say that is because,
+[2846.24s] well, look at the ratios here. This can
+[2848.0s] produce about eight per second and I can
+[2850.56s] directly insert into here and that's
+[2852.16s] over the 6 per second that I'm going to
+[2853.92s] need. So I might as well just direct
+[2855.28s] insert this.
+[2857.28s] However, really at the ratio of what
+[2859.52s] you're consuming, you're consuming
+[2861.2s] exactly evenly grenades and piercing
+[2863.92s] rounds magazines, right? And two times
+[2867.119s] that is the wall. So you're kind of
+[2869.68s] because the convenient nature of these
+[2871.599s] two recipes lining up in terms of their
+[2873.44s] crafting speed doesn't necessarily mean
+[2876.0s] this is going to be better for UPS. And
+[2877.76s] it actually presents another problem is
+[2880.079s] getting enough beacons around the actual
+[2882.72s] machine and so that it doesn't kind of
+[2885.68s] get into this scenario where it gets
+[2887.119s] output blocked at 12
+[2889.52s] or 14 in this case. You'll never get it
+[2892.0s] to reach a full 16 especially with just
+[2895.2s] one inserter going into it.
+[2897.839s] So you kind of start getting into a
+[2899.76s] scenario where it can't actually craft
+[2901.599s] high enough for you to grab 16 items at
+[2904.8s] a time. So that means that these are
+[2906.48s] going 
+
+to actually start and stop
+[2907.839s] occasionally, which actually presents a
+[2909.44s] kind of a nightmare for clocking. So one
+[2912.48s] of the things that I wound up saying was
+[2914.0s] like, let's okay, let's ignore this.
+[2916.079s] Let's go and optimize for the thing that
+[2917.839s] has the highest amount of insertion into
+[2919.599s] the actual science assembly machine,
+[2921.599s] which is going to be the actual walls.
+[2923.76s] And walls are convenient cuz they can
+[2925.2s] stack up really, really high. So there's
+[2927.2s] there's not going to be an issue there.
+[2928.72s] And the automated insertion limit is so
+[2930.96s] incredibly low, so incredibly high that
+[2933.599s] you'll never have a problem with like
+[2935.52s] throwing items actually into the
+[2937.2s] machine. So
+[2940.24s] what I've done is I said I'm going to
+[2942.48s] completely reapproach this. I'm going to
+[2944.559s] flip this around and I'm going to wind
+[2946.079s] up saying that I'm going to put now the
+[2947.92s] furnaces directly from a belt to lead
+[2951.119s] into a wall assembly machine that will
+[2953.839s] ultimately go into the actual military
+[2956.48s] science packs. So, let's talk through
+[2958.8s] this new design and how I've
+[2960.079s] reapproached it now. So, here's the
+[2961.839s] rework.
+[2963.68s] What you're going to notice is there's
+[2964.96s] now three distinct sections for each of
+[2967.119s] these builds. There's one that actually
+[2968.8s] produces the actual piercing round ammo.
+[2972.16s] There's another one that goes and crafts
+[2973.599s] the grenades. And then we have the final
+[2976.0s] science of setup. So,
+[2979.44s] one thing that I've done here is I've
+[2981.119s] very much not overbeacon things unless I
+[2983.839s] absolutely have to so that I can
+[2986.559s] actually hit the target production rate
+[2987.92s] that I want. But you can see here that
+[2991.44s] the big benefit that you get from using
+[2993.839s] a setup like this
+[2996.24s] is that like in in practice, you are
+[2999.359s] going to wind up needing here in order
+[3001.2s] to craft the amount of actual, let's put
+[3004.88s] it this way, the walls that you're going
+[3006.079s] to actually wind up needing. you're
+[3007.839s] going to need about 60 per second stone
+[3010.24s] bricks that you're going to wind up
+[3011.44s] needing in order to keep up with the
+[3013.92s] 12.5 or in this case the limited the 12
+[3017.599s] per second of the actual walls that
+[3020.72s] you're going to wind up needing. So
+[3023.2s] immediately you're going to need two
+[3024.72s] furnaces for that because one one
+[3027.28s] furnace, right? No matter what you do,
+[3029.76s] uh even if you wind up going and putting
+[3032.319s] and max beaconing it,
+[3035.04s] you're never going to get to the
+[3036.319s] throughput that you actually wind up
+[3037.839s] wanting. So, put that there. And then
+[3041.119s] let's just grab some stone. Throw that
+[3042.8s] in there. You're going to notice here
+[3044.48s] that we can make 52 per second. So,
+[3046.88s] overbeaconing this just to get one less
+[3049.119s] furnace is just not going to work
+[3051.599s] because you're you're going to wind up
+[3053.04s] needing two anyway. So, for that reason,
+[3054.96s] because you're going to just be using
+[3056.0s] two, like just barely in my case, I'm
+[3058.319s] just like, "All right, well, I just need
+[3059.52s] to hit 30 per second per furnace." So, I
+[3062.0s] just need them just slightly higher than
+[3064.319s] that amount and then occasionally just
+[3066.0s] like drop the actual stone input so that
+[3068.079s] it's not going to actually have it. So,
+[3069.44s] you see here, it'll just occasionally
+[3070.8s] get underclocked and not have enough.
+[3073.599s] So, and that's because it's 30.9 instead
+[3076.72s] of the 30 exactly evenly that I wind up
+[3079.119s] needing. So the benefit there is that
+[3082.079s] like you're you're not going to get it
+[3084.16s] from one furnace. So you might as well
+[3086.0s] instead of overbeaconing it like you
+[3087.839s] instead of having 12 beacons, we really
+[3089.68s] just need four here. That's going to be
+[3091.28s] plenty for actually producing the amount
+[3093.52s] of stone that we wind up needing. And we
+[3095.52s] can actually clock everything then here.
+[3097.359s] And that's again here using the clock
+[3099.04s] generator for all of this where we have
+[3101.44s] no weight list at all. and we can
+[3104.079s] exactly output just the amount of items
+[3106.0s] that we need to keep up and craft the
+[3108.4s] walls that we actually wind up needing
+[3109.76s] and keeping this nice and saturated.
+[3112.64s] So, this is convenient because you don't
+[3115.28s] run into any automated insertion limit
+[3117.28s] problems here cuz we can put 500 of them
+[3119.2s] in here, right? And this stacks all the
+[3121.2s] way up to 100. So, when you're doing a
+[3123.52s] single swing here into here, you're
+[3125.359s] never going to have a problem where this
+[3126.559s] runs out of a buffer. So,
+[3130.319s] what that kind of means is that now we
+[3132.96s] can do a very simple backto-back swing
+[3135.68s] of the other items that we wind up
+[3137.44s] needing from this belt. You always see
+[3139.04s] that this will pick up one, two, one,
+[3140.88s] two, like this. And we just put in one
+[3143.119s] at a time. This is incredibly stable
+[3145.76s] compared to the grenade setup that I
+[3147.44s] showed before. And the grenades benefit
+[3150.079s] significantly from this because now we
+[3152.16s] can go and increase the number of
+[3153.52s] beacons that we have around here to get
+[3155.28s] to a magical break point of 10 per
+[3157.68s] second. 10 per second means that we only
+[3160.88s] really need 30 per side here. So that
+[3163.44s] means we can go down on the number of
+[3165.28s] actual assembly machines that we have
+[3167.04s] crafting grenades and we can go down to
+[3168.88s] three of them. So that means three
+[3171.04s] assembly ma
+
+chines here that and this is
+[3173.52s] still the same number of furnaces in the
+[3175.28s] old design, right? So there's 10
+[3176.559s] furnaces here. We go look at this over
+[3178.48s] here. There's going to be a total of 10
+[3180.559s] over here. We've just changed now that
+[3182.4s] they are all directly inserting. And
+[3184.72s] there's really no, these are barely ever
+[3186.72s] running. So there's like it's the amount
+[3188.64s] of transfers have been reduced. And also
+[3191.359s] on top of that, now the grenades can
+[3193.2s] actually craft all the way up to the
+[3195.119s] magical 16 items in here. And you'll see
+[3198.72s] that that that's constantly happening.
+[3200.24s] So the clocking is significantly easier
+[3202.16s] as well.
+[3203.92s] So again, with some of the things that
+[3205.68s] we mentioned on Vulcanus, because of
+[3207.76s] this getting blocked so early, you do
+[3209.92s] want to have two inserters bringing in
+[3212.64s] coal, which allows you then to get to
+[3215.44s] cuz it's again like a 2:1 ratio.
+[3219.599s] It's effectively going to get you around
+[3221.04s] the problem that you're going to have of
+[3222.24s] not being able to burst throw all the
+[3223.839s] coal in that you need at a time. But
+[3225.68s] this is also good for transport belt
+[3227.28s] lengths like distribution because you
+[3230.559s] can wind up seeing here that we're
+[3231.68s] bringing in all the coal to the
+[3233.2s] individual sections here and these can
+[3234.96s] just for a burst hold a buffer of them.
+[3237.52s] That's why I'm using both lanes even
+[3239.119s] though I only really need 120 per
+[3241.119s] second. Having both of them saturated
+[3243.28s] like this is going to mean so that you
+[3245.28s] can this individual insertter on the
+[3248.319s] bottom is never going to be choked out.
+[3250.8s] So again, all of this is clocked to
+[3254.079s] produce exactly 10 per second. And you
+[3255.92s] can see here that these are constantly
+[3257.44s] always pulling out exactly 16 items. So
+[3260.319s] it means that this inserter always is
+[3262.079s] active for a very small amount of time.
+[3264.0s] Sometimes it'll hold four, sometimes it
+[3265.599s] holds 16. It does not matter at all. So
+[3268.24s] it's just that it's constantly pulling
+[3269.839s] those items out and has an extra tick on
+[3272.96s] the way back to basically pull those
+[3274.48s] grenades out.
+[3276.48s] Finally, this setup is not I'm not
+[3279.28s] ultimately super happy with this.
+[3280.88s] There's a couple things that I haven't
+[3282.4s] clocked on here, but like I've
+[3284.16s] intentionally not clocked these cuz this
+[3286.0s] will always have back pressure. So,
+[3287.92s] there's no point in clocking these. And
+[3289.52s] then I'm just clocking all the other
+[3290.72s] inputs that actually have to go in here
+[3292.48s] and then just basically just pulling out
+[3294.8s] exactly 16 whenever I wind up actually
+[3296.72s] needing it. As you'll see here, this
+[3298.079s] will back up occasionally and then we'll
+[3300.24s] wind up getting free. So, it's not
+[3301.76s] exactly perfect in terms of this
+[3303.119s] clocking, but it's good enough.
+[3306.8s] So, the cool part about this whole
+[3308.24s] entire setup is the way that I've
+[3310.24s] designed this is that now you have a
+[3312.88s] lead setup that you can drop down that
+[3315.04s] has all the clocks and then you go and
+[3317.2s] grab a follow section which is set up
+[3319.119s] perfectly to overlap with this. And then
+[3321.92s] now you have one clock here on the
+[3324.16s] bottom which is all propagated. We have
+[3325.92s] one clock here that turns on for each
+[3329.2s] subsection that has their own little
+[3330.96s] clock uh enabled. And then that red wire
+[3334.0s] sends all of that those clocks over
+[3336.24s] here. And we normalize them then to
+[3338.319s] their individual subcycle in ticks. So
+[3342.319s] 11,520
+[3344.24s] is the least common multiple of all of
+[3346.0s] the base clock cycles. And so then you
+[3348.799s] just have one clock here that can enable
+[3351.28s] all of the clocks to all work together
+[3354.0s] as one. Uh it it basically synchronizes
+[3357.359s] the whole build into one effectively the
+[3360.48s] same clock which is convenient. So in
+[3363.04s] other words, you can keep on pasting
+[3365.04s] this now and keep on going up here as
+[3368.559s] much as you want and they all are going
+[3370.319s] to be using the exact same shared clock
+[3372.16s] as long as you can get the actual raw
+[3373.599s] inputs that you wind up actually
+[3374.96s] needing. Right?
+[3376.96s] So, in theory, this is significantly
+[3380.079s] better. I haven't benchmarked it, but
+[3382.64s] I'm sure that it's going to be a lot
+[3384.0s] better. I'll benchmark it eventually
+[3385.52s] when we get to a military science
+[3386.96s] competition, and I'll use that for for
+[3388.799s] that point. But, in theory, this is
+[3390.88s] going to be significantly better for UPS
+[3392.4s] than the previous design that I had. So,
+[3394.24s] I wound up going and putting it into my
+[3397.28s] actual base, and that's what you were
+[3399.76s] just seeing a second ago. So, those are
+[3402.24s] my thoughts on military science, and
+[3403.44s] hopefully this helps you out so that you
+[3404.64s] can kind of like if you're going to be
+[3405.76s] designing something. My high
+[3407.68s] recommendation is to craft the actual
+[3410.799s] grenades separately along with also the
+[3413.28s] piercing rounds and then just directly
+[3414.96s] inserting the higher throughput item,
+[3416.48s] which is going to be the walls and just
+[3418.319s] using utilizing this concept if you're
+[3420.72s] going to be belting the actual
+[3421.92s] materials.
+[3423.92s] So, here's that exact same build that we
+[3425.68s] just demonstrated a second ago, but now
+[3427.76s] in the actual meabase. You wind up
+[3430.559s] seeing it actually running, and it works
+[3432.319s] just like it did in in the in the
+[3434.88s] the
+
+oretical world. Right.
+[3437.76s] So,
+[3439.44s] that's a a major redesign that I did for
+[3441.599s] for military so that I could wind up
+[3443.76s] having a a a better design ultimately
+[3447.359s] than what I had before. And I wanted to
+[3448.88s] get rid of a lot of the silos and and
+[3451.359s] ultimately I realized that I had
+[3452.96s] overkill the number of actual inputs. So
+[3455.599s] I have optimized it now for just the
+[3458.0s] number of actual belts that we wind up
+[3459.68s] needing. And again, as tradition, I wind
+[3462.4s] up belting things from all over the map
+[3464.16s] to actually feed the actual inputs. And
+[3466.64s] because I want to dedicate an entire
+[3468.319s] video to just talking about Aquillo,
+[3470.16s] I'll round this up while again we're
+[3471.92s] waiting on research prod. So to to have
+[3474.64s] all the ships running sequentially that
+[3476.24s] takes about 30 minutes for them all to
+[3477.76s] be running in the field. Uh I'll talk
+[3479.599s] about my my white science setup.
+[3482.799s] So white science is significantly
+[3485.44s] different than I had run in the past. So
+[3487.839s] I've I've removed a lot of weight from
+[3492.4s] this particular build. And I'm actually
+[3494.88s] really really proud of this new setup
+[3497.28s] that I have here.
+[3499.44s] This is for producing fuel. So, I use
+[3501.839s] this on both this ship and I also use it
+[3504.319s] over here on my producer for all of the
+[3507.359s] legendary parts that I need across all
+[3509.2s] the different planets. These are my my
+[3510.799s] upcycler ship for legendary parts.
+[3513.599s] What's nice about this particular design
+[3516.4s] is I wind up allowing it to occasionally
+[3520.0s] go and grab oxide asteroids whenever it
+[3522.88s] actually needs it and can feed that in.
+[3524.96s] but has a very simple setup using as
+[3527.44s] much direct insertion as possible to go
+[3529.599s] and recycle the carbonic asteroids and
+[3532.559s] also the meta metallic asteroids that we
+[3535.68s] always have enough ice here. And the
+[3537.52s] system is actually perfectly balanced
+[3539.359s] even with the additional amounts of
+[3541.44s] little bit of calite and iron ore that
+[3544.079s] we need for producing all of the the
+[3546.079s] ammo and stuff. As you can see here, I
+[3548.96s] have a backup mechanism in case we get
+[3550.72s] too much ice, but these have never
+[3552.079s] actually destroyed ice at all. So that
+[3554.319s] means with the circuit logic of
+[3555.76s] balancing between producing ice here
+[3558.559s] with advanced asteroid concept versus
+[3562.799s] the the additional one here to just pop
+[3565.599s] up and grab a little bit of extra ice.
+[3568.0s] What's nice about this setup here is
+[3569.599s] you'll notice that because inserters
+[3571.359s] always prefer to grab from the inside
+[3573.599s] lane, they're always going to grab the
+[3576.079s] ice first that comes from in this case
+[3578.96s] the advanced oxide asteroid crushing. So
+[3581.2s] knowing that you really don't need too
+[3583.2s] many circuits involved here. I have some
+[3585.28s] just in case just to turn on and bring
+[3587.76s] out some extra ice whenever we run low.
+[3590.799s] But then otherwise like from a priority
+[3592.48s] system, you're going to notice here that
+[3594.0s] we wind up bringing the ice around these
+[3596.0s] little block loops here that'll go all
+[3598.16s] the way around but always will merge so
+[3600.319s] that these insertters are always picking
+[3602.0s] up from a non-moving belt. So you'll see
+[3603.92s] that here.
+[3605.76s] And then they always go out on the
+[3607.28s] outside lane to come back so that they
+[3609.359s] can loop around and get back to the
+[3611.2s] point where they're getting merged here
+[3613.119s] on the inside of this belt so that they
+[3616.64s] come on the inside lane here. So this
+[3619.44s] concept is something that I'm using
+[3620.88s] pretty much everywhere on all of these
+[3623.599s] little like setups where I need to have
+[3625.2s] a little bit of a buffer. And I've I've
+[3627.2s] noticed that that's like a a pretty
+[3629.119s] significant like change than just always
+[3630.96s] using sushi everywhere. And it's nice
+[3633.44s] because then these belts and everything
+[3635.04s] and the transport lines and everything
+[3636.48s] completely can shut down whenever you
+[3638.24s] don't have uh the need to be running
+[3640.319s] this ship. So, these are things that
+[3643.119s] like ultimately a large sushi bus like
+[3645.119s] this is still going to be needed, but
+[3648.4s] for like at least in this case when I'm
+[3650.079s] like upycling all the individual
+[3651.76s] asteroids for producing legendary
+[3653.359s] science,
+[3654.96s] but this is a a pretty nice little
+[3657.04s] assembly machine for crafting all of the
+[3659.599s] actual thruster like fluids and stuff
+[3661.52s] that we wind up needing. So, those are
+[3664.4s] some of the things that I've done. I I
+[3666.079s] really like this this little design. Um,
+[3667.839s] and I I'm pretty proud of it. I'll
+[3670.0s] probably start using it more in in in
+[3671.68s] other uh ships because you can really
+[3674.319s] just have a few dedicated uh asteroid
+[3677.28s] collectors that can turn on and off just
+[3679.68s] when needed and produce and get the
+[3682.64s] extra amounts that we wind up needing.
+[3684.0s] And the reason why we're doing all of
+[3685.359s] this instead of just having a dedicated
+[3687.359s] oxide asteroid chunk hauler cuz like
+[3690.24s] really what you could do is you could
+[3691.44s] delete this and that might actually even
+[3692.88s] be better for UPS. I just have it so
+[3694.88s] that I'm not wasting the amount of of
+[3697.92s] oxide asteroid chunks that we have. But
+[3699.68s] unfortunately, that means that this is
+[3700.96s] always enabled and is always like
+[3702.48s] looking around, which is probably worse
+[3703.839s] for UPS. The reason you do this is
+[3706.079s] because you're going
+
+ to be like all
+[3708.16s] these all these uh asteroid collectors
+[3710.4s] are constantly going to be like, "Hey, I
+[3711.92s] want ice. I want ice desperately."
+[3714.319s] Because ice is a 2x ratio of producing
+[3717.839s] oxide asteroids like much much faster
+[3720.16s] than uh than the other recycling
+[3721.839s] recipes. So as you're traveling around
+[3725.119s] and like the optimal one is to travel
+[3726.799s] between novice and fulgora which is
+[3728.24s] something that I've learned from Conage
+[3729.92s] is that like this particular route is
+[3731.76s] going to be the best for for producing
+[3734.079s] science for uh space science at least
+[3736.799s] because of the ratios of what you're
+[3738.16s] going to get. So everything here is
+[3740.559s] designed at ratio for that individual
+[3743.28s] type of science that or or for the
+[3745.359s] asteroids that we're going to wind up
+[3746.64s] collecting. And then I'm using some
+[3748.4s] clocking of the actual uh asteroid
+[3750.72s] collectors to turn them on and off just
+[3752.4s] like so that they're not constantly
+[3753.92s] scanning. So you'll see here that this
+[3755.44s] is constantly just emitting a little
+[3756.64s] check mark just to like occasionally
+[3758.4s] turn them on and turn them off.
+[3761.2s] Now the science setup down here
+[3764.319s] I have the little dedicated areas here
+[3766.16s] again using that kind of like inside
+[3767.839s] lane concept here for the dedicated
+[3771.119s] items. So in this case the metallic
+[3772.96s] asteroid chunks are legendary.
+[3775.44s] This is just using very simply like a
+[3777.04s] lead like a latching lead follower
+[3778.88s] circuit that's going to go and turn them
+[3780.319s] on for the inputs occasionally when
+[3782.48s] needed. And then these outputs are just
+[3784.0s] free because they should be always
+[3785.599s] constantly having back pressure in here.
+[3787.839s] So they just turn on and turn off when
+[3789.359s] they're actually consumed.
+[3791.44s] Everything down here is clocked. So
+[3793.44s] you'll notice right now that we're
+[3794.799s] producing an exact 38,400 per minute.
+[3799.039s] And this looks like it's kind of going
+[3800.88s] up and going down and going up and going
+[3802.559s] down. But the average when you actually
+[3804.559s] look at it is is exactly 38k400
+[3807.76s] which you'll notice when you're actually
+[3809.359s] running like military science over here
+[3811.52s] there's that 38,400 for example when
+[3814.24s] you're actually consuming it at full
+[3815.44s] speed. So this clock here just turns on
+[3818.799s] and off just depending on if we happen
+[3821.039s] to have enough space science packs here.
+[3824.4s] And if they ever go and and we have uh
+[3827.76s] enough that the entire system is set up
+[3829.92s] and is full, then we will go ahead and
+[3832.4s] shut down everything. And actually all
+[3834.559s] these individual subbanks will shut down
+[3836.88s] depending on if they actually need to
+[3838.72s] produce more legendary components or
+[3840.4s] not.
+[3841.68s] So that means that although the ship is
+[3843.44s] flying back and forth, we can shut down
+[3845.359s] most of the asteroid collectors and
+[3847.359s] we're now you can see that we're
+[3848.96s] hovering exactly at the 19,200 mark
+[3852.88s] that and that's actually the consumption
+[3854.4s] rate that we currently have on novice
+[3855.92s] when we're running research
+[3857.359s] productivity. When we're running any of
+[3859.44s] the other faster sciences, then this
+[3861.44s] will go at max speed and will be
+[3863.2s] constantly producing. But the nice thing
+[3864.72s] is this is all clocked here now which
+[3866.88s] wasn't before to produce exactly uh
+[3870.16s] between the two different banks the 1920
+[3874.16s] or or rather the 640 per second that we
+[3876.64s] wind up actually needing for legendary
+[3878.24s] science. So
+[3880.88s] this is the new ship. This is the way
+[3882.72s] that I've designed it. It looks ugly,
+[3884.72s] but I uh I I like it. So, I've never
+[3887.599s] tested it against other people's designs
+[3889.2s] and things like that, but I as far as
+[3892.079s] the from what it was before, this is
+[3894.319s] definitely from my small testing that
+[3896.0s] I've done is more UPS optimal than the
+[3898.0s] way that I had designed it before. So,
+[3900.799s] that's space science.
+[3903.76s] Last but not least, let's talk about the
+[3905.68s] hub.
+[3907.28s] So,
+[3909.119s] the hub itself is like one of the most
+[3911.839s] subjective things. Like people will have
+[3913.359s] different philosophies on how they wind
+[3914.559s] up designing it. In my mind, like the
+[3916.96s] best thing to do for eliminating bot
+[3918.559s] usage is to prioritize the two things
+[3920.64s] that will always be normal quality
+[3922.079s] science, which is going to be GLA
+[3923.52s] science and Prometheium. Both of those
+[3925.2s] don't really make sense from a UPS
+[3926.96s] perspective to be anything but normal
+[3929.76s] quality.
+[3931.28s] So, that's how I've designed my hub. So,
+[3934.319s] I try to pull out Prometheium Science as
+[3936.079s] fast as I possibly can, which at max
+[3937.839s] throughput, the best that you can get is
+[3939.839s] a total of eight belts out of this. You
+[3942.559s] could do fully 16 belts of Prometheium
+[3944.96s] science if you wind up actually
+[3946.4s] utilizing uh all of the slots around it.
+[3949.359s] But the with cars and with the actual
+[3951.52s] insertters that are coming out of here,
+[3953.119s] I've kind of done a balance of both Gaba
+[3955.2s] and for Prometheium Science. Gaba is
+[3958.0s] convenient because you can always then
+[3959.92s] prioritize on these insertters. And if I
+[3962.16s] can see anything on here, I have no idea
+[3963.92s] how YouTube's going to handle the
+[3965.039s] compression on this. Where is my mouse?
+[3967.92s] It is somewhere here. There we go. Thank
+[3970.16s] you. So you wind up seeing here that
+[3972.079s] this can be se
+
+t to spoiled first and
+[3974.48s] this can always then grab the actual
+[3976.079s] agriculture science directly out of the
+[3977.52s] hub. The bots are non-deterministic in
+[3979.599s] terms of what they're actually going to
+[3980.559s] go and grab. So there's you're going to
+[3982.799s] wind up having different levels of
+[3984.079s] freshness in these uh individual chests.
+[3986.4s] So some things that I wind up doing is
+[3989.2s] I'm a little bit more smart because
+[3990.88s] again I have said or a little bit
+[3992.559s] smarter with this whole system because I
+[3994.079s] have a global system that tells me all
+[3995.839s] the sciences that I'm running. I can
+[3997.599s] utilize that information to make some
+[3999.44s] pretty simple decisions. So, if I'm
+[4001.039s] running Prometheium science, then I wind
+[4004.079s] up turning off these additional
+[4006.72s] requesttor chests cuz there's no reason
+[4008.24s] for me to go and be dropping science
+[4009.92s] into them. If I'm running agriculture
+[4013.039s] science but not Prometheium science,
+[4014.96s] then I do want those enabled so that I
+[4016.88s] can have the full 240 per second out of
+[4019.44s] this individual lane. So there's some
+[4021.839s] small things that I wind up doing for
+[4023.68s] setting the requests here to only be
+[4025.92s] enabled when I'm running research prod
+[4027.76s] or not. So again, like holistically
+[4029.44s] bringing all the things together and
+[4030.88s] running everything with with the
+[4033.2s] knowledge that of um of of the actual
+[4037.599s] setup that you're trying to do, right?
+[4039.52s] And you'll see here that like I have too
+[4041.119s] many like inserters here for like the
+[4043.359s] uncommon science, but it's also because
+[4045.119s] I run both things. is I run at half
+[4046.96s] speed for research productivity and in
+[4049.2s] other words the full speed for all the
+[4051.119s] other sciences. So I do need those extra
+[4053.039s] requesttor chests, but trying to get
+[4054.96s] them as close to the hub is something to
+[4056.88s] go and optimize for so that you don't
+[4058.559s] have as much bot travel distance here if
+[4060.72s] you're seeing this right now. But even
+[4063.039s] here, like running this these these
+[4065.039s] bots, there's some things that could be
+[4066.559s] potentially optimized. And this is just
+[4068.16s] because I already had the base laid out
+[4070.0s] the way that I wanted to. Ultimately, if
+[4072.319s] I ran these uh this particular block
+[4075.599s] here up for the top area and away from
+[4078.319s] the actual base instead of having it
+[4080.079s] here on the bottom, this would actually
+[4082.079s] optimize a little bit so that I don't
+[4083.68s] have this longer distance cuz they all
+[4085.44s] come from the top leftand corner. So
+[4087.359s] going all the way down to here is not as
+[4089.44s] optimal. And I could in theory bring a
+[4092.16s] lot of these additional requesttor
+[4093.76s] chests a lot closer here. And then just
+[4096.64s] bring this up and out from the top here
+[4098.799s] so that the bots don't have as long of a
+[4100.96s] distance of travel here as compared to
+[4102.96s] how nice and tight it is here on the
+[4104.719s] top. You can see kind of that uneven
+[4106.719s] distribution.
+[4108.64s] The downside of designing a hub like
+[4110.319s] this that is purposefully built
+[4112.319s] specifically for the research prod that
+[4114.48s] I'm targeting is that it if I ever scale
+[4117.279s] up, I'm going to have to redesign it
+[4118.56s] again. I've redesigned the hub so many
+[4120.96s] times at this point that I don't really
+[4122.159s] care. But that's just something that you
+[4123.6s] should probably consider if you're doing
+[4124.799s] this. Um, big difference as as compared
+[4127.52s] to before too is because I have such a
+[4130.159s] small consumption rate of calite, I wind
+[4132.239s] up just bringing these over to the side.
+[4134.0s] And the same thing that I also do for
+[4135.759s] the very little consumption of Boflux,
+[4137.92s] those also come to the side with request
+[4139.52s] chests very occasionally.
+[4141.6s] Do they actually need to have anything
+[4143.04s] inserted into them? And they can go
+[4144.48s] across like this. One fundamental
+[4147.199s] difference is you'll notice here that I
+[4150.48s] have an isolated bot network
+[4152.88s] specifically here just for and we can
+[4155.6s] look at it uh named there is an export
+[4158.799s] here of the calsite and I have a very
+[4162.0s] small bot network there's about 200
+[4164.159s] logistics bots and it's just all their
+[4166.799s] job is to do is to distribute this
+[4168.799s] calite into these individual uh chests
+[4172.48s] that go to deliver calsite with the with
+[4175.359s] the actual trains. So, I have this
+[4178.719s] isolated bot network that way that what
+[4180.56s] would happen sometimes is occasionally
+[4182.319s] if you you got to a point where this
+[4184.56s] belt wasn't quite fast enough in a burst
+[4186.56s] to fill up all these buffer chests. But
+[4189.199s] what happened is the bots would all
+[4190.319s] create a huge wave of flying back over
+[4192.239s] here quickly to fill it up and then go
+[4193.6s] back to their normal tant.
+[4195.92s] So just having an isolated network here
+[4197.52s] means that they can just occasionally
+[4199.28s] top up these trains whenever they
+[4200.64s] actually wind up needing more calsite
+[4202.96s] and they can just quickly deliver them
+[4205.04s] in an isolated network and then they
+[4207.28s] don't have to actually go and uh
+[4210.32s] ever have these robots interact with
+[4213.04s] this particular network. So
+[4217.52s] that is the main core of the hub itself
+[4221.12s] and those are the main changes that I've
+[4224.0s] made to more reduce the actual active
+[4227.28s] bots here. And you you can see that like
+[4229.199s] the actual number of logistics bots even
+[4231.199s] though I have a lot in the network. I'm
+[4233.04s] only using a
+
+bout a thousand actual bots
+[4236.56s] to while I'm running research prod which
+[4238.8s] is pretty nice that that's uh one of the
+[4242.239s] main benefits that you're going to get
+[4243.679s] from running uncommon science
+[4245.12s] everywhere.
+[4247.52s] So now that we've been running
+[4248.48s] Prometheium science for about almost an
+[4250.48s] hour, you can see kind of how that
+[4252.56s] distribution function works of spreading
+[4254.719s] them out every six minutes. You'll see
+[4256.159s] the first one kick off, then 6 minutes
+[4257.84s] later the next one comes out and 6
+[4259.6s] minutes later the next one comes out and
+[4261.6s] it overshoots because we're only
+[4262.96s] consuming 115k.
+[4264.96s] Right? So here you can see that. But
+[4267.92s] eventually this will normalize and we'll
+[4270.32s] get back to a a a a regular cadence as
+[4274.0s] the ships have to there's going to be a
+[4275.679s] little bit of a of a buffer when all of
+[4277.44s] the science is dumped. The key thing
+[4279.04s] just to have is get rid of all the
+[4280.719s] science, drop it all on into the landing
+[4282.8s] pad, and then just go and start
+[4285.84s] spreading out your ships so that you can
+[4288.239s] quickly get to a stable point
+[4289.84s] afterwards. So, that's the main function
+[4292.719s] of why I do that and how I've gotten
+[4294.239s] completely rid of the token system and
+[4296.0s] it's made it a much smoother experience.
+[4298.8s] So that now when we do an actual
+[4300.8s] transition, you'll see immediately that
+[4303.12s] there's a small dip and that's be and
+[4304.96s] that small dip there is about 2 minutes
+[4307.12s] or so for agriculture science to come
+[4309.6s] back up in freshness. I am destroying
+[4311.679s] them at the end of the line, but that
+[4313.44s] slight overshoot means you do run out
+[4315.04s] out of agriculture science for a small
+[4316.719s] bit of time until it gets back to normal
+[4318.8s] freshness. But 2 minutes when you're
+[4321.199s] running something for 90 hours is is is
+[4325.36s] a nothing burger. So you'll see also
+[4328.56s] here, just as a small side note, you'll
+[4331.199s] see that there is a slightly higher
+[4333.04s] consumption or of of of science here at
+[4335.52s] this point. And that's because when I
+[4337.36s] dump all the science out from the labs,
+[4339.679s] they wind up then consuming uh there's
+[4341.92s] four additional labs that wind up
+[4344.4s] consuming science, which is this bad boy
+[4347.6s] right here. So you'll wind up seeing
+[4349.6s] that this takes a buffer of all the
+[4351.36s] other dumped science that comes from all
+[4353.199s] of the individual labs and then gets fed
+[4354.88s] in here. And so those extra four make
+[4357.84s] that slight difference where it's
+[4359.76s] slightly consuming higher and then it
+[4361.52s] goes back down to because it's consuming
+[4363.36s] the buffer of of extra science that we
+[4366.239s] threw out of the system
+[4368.96s] out of all of the individual labs when
+[4370.48s] we do the transition and then it goes
+[4371.84s] back to its normal paces. So it's a it's
+[4373.84s] a it's almost a rounding error but it's
+[4375.6s] a very small amount but you do wind up
+[4377.12s] seeing it here on the chart and it takes
+[4379.04s] about uh 20 minutes or so for that
+[4380.719s] buffer to fully run out from just having
+[4383.12s] one lab consume it. But then otherwise
+[4385.44s] this completely shuts down it once we
+[4387.44s] run out of all the sciences in uh in
+[4389.6s] this chest here. So
+[4392.88s] and that's it. So now this should be
+[4394.719s] able to run completely successfully and
+[4397.28s] I don't have any more the issues that I
+[4400.159s] had ever since I started like just
+[4402.08s] dumping all the science because it would
+[4404.48s] wind up having it so that you if you
+[4406.239s] don't send all the ships out immediately
+[4408.08s] then you'd wind up having a period where
+[4409.679s] eventually it would become unstable. you
+[4411.44s] run out of science and then eventually
+[4413.52s] the ships would synchronize. I just
+[4415.04s] wanted to get rid of that completely so
+[4416.8s] that we can have a very nice production
+[4418.64s] graph and then immediately just switch
+[4421.12s] over and have constant production here.
+[4423.36s] So that's one of the the the main
+[4425.92s] optimizations I've made for Prometheium
+[4427.76s] science and and delivery of the eggs and
+[4429.84s] and all those wonderful things that come
+[4431.6s] with that.
+[4434.719s] So, in conclusion, I've bumped up the
+[4437.76s] actual FPS right now to run at 2x speed
+[4440.56s] just so that we can see that we are well
+[4442.32s] over the 60 UPS mark. And then otherwise
+[4446.4s] in the next video, what I want to talk
+[4448.32s] about is three things. I want to go
+[4451.44s] through the new setup here on Aquill and
+[4454.48s] some of the design choices and
+[4455.92s] differences that we've made for
+[4457.36s] optimizing uh both quantum processors
+[4459.44s] and the actual blades for the Aquill
+[4461.52s] science. And we'll also do a deep dive
+[4463.679s] on these Prometheium ships. So stay
+[4465.36s] tuned and subscribe if you're interested
+[4466.719s] in that.
+[4468.159s] And then finally, I I will talk a little
+[4470.8s] bit more in depth about what I would
+[4473.76s] what the future plans of this base are
+[4476.0s] because
+[4478.08s] I want to talk about what are the
+[4480.32s] challenges that exist when you're
+[4482.64s] running these very small Prometheium
+[4484.56s] ships compared to the much larger ships
+[4486.96s] that other people are running and and
+[4489.44s] why you should be probably running those
+[4490.96s] much larger ships and not these very
+[4492.56s] small ones that I am I am currently
+[4494.32s] running. So stay tuned and subscribe for
+[4496.48s] that. Otherwise, my name is Abuk Nasty
+[4500.48s] and thank you for sticking around for
+[4502.64s] all this wonderful info about uh the
+[4505.36s] progress that I'
+
+m making continuing to
+[4507.04s] scale up this particular base. So, thank
+[4510.4s] you so much and I will see you in the
+[4512.159s] next video.
+

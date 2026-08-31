@@ -1,0 +1,1775 @@
+# Which Quality Space Science is best for UPS?
+# Channel: abucnasty
+# Video ID: 4qNDC_NEq5E
+# Transcript length: 79604 chars
+# Fetched: 2026-08-31
+# Source: TranscriptAPI.com
+
+[0.0s] reductive amination to yield
+[1.56s] methamphetamine 4 lbs.
+[3.72s] >> So, no pseudo?
+[4.6s] >> No pseudo.
+[6.8s] >> So, you do have a plan.
+[8.8s] Yeah, Mr. White.
+[11.24s] Yeah, science.
+[12.56s] >> Hello and welcome back to Factorio. My
+[14.24s] name is A Buck Nasty. In today's episode
+[16.8s] of forever procrastinating on the purple
+[19.0s] science competition, we're going to be
+[20.56s] exploring space science.
+[23.08s] So, the question that I've had for a
+[25.48s] while is which space science quality
+[28.52s] takes the least update time.
+[30.92s] So, the question is pretty complex since
+[32.84s] each quality requires more asteroid
+[35.0s] upcycling, but reduces the number of
+[37.24s] buildings and inserters for producing
+[38.88s] that science. So, at the extreme,
+[41.56s] Q1 or normal quality requires no
+[43.84s] upcycling, but the most science
+[45.68s] assemblers. You can see that as the
+[47.12s] spaceship that is currently in the
+[48.44s] middle of the screen.
+[50.48s] However, Q5, which is legendary,
+[52.72s] requires the most upcycling, but the
+[55.04s] least number of production buildings.
+[57.04s] You can see that on the top right-hand
+[59.04s] corner of the screen right now. That's
+[60.76s] specific ship design.
+[63.2s] So,
+[64.28s] as well, there is a Q4 variant, a Q2,
+[68.48s] and also a Q3 design.
+[71.36s] Now, the Q3 design that you're seeing
+[72.72s] right now is twice the scale of the
+[74.28s] other ships, and more on that in the
+[76.2s] rest of the the video to come. But,
+[78.28s] that's another thing that I'm curious
+[79.68s] about exploring is does the ship size
+[82.84s] matter? So, in other words, if you're
+[84.32s] building a mega base, should you go and
+[86.32s] design a like multiple ships that match
+[89.92s] let's say four belts of throughput
+[92.56s] respective to that quality or eight
+[95.2s] belts of throughput. So, for example,
+[96.88s] right now, my base, I wind up running
+[98.96s] eight
+[100.2s] fully stacked belts of uh of turbo belts
+[103.56s] of science, right? So, for legendary,
+[106.76s] I'm going to wind up needing 640 science
+[109.32s] per second.
+[110.68s] Whereas, if I was running this with uh
+[114.16s] Q1, I'd need 3840 science per second.
+[118.36s] So, kind of a a scale of things. So, the
+[120.76s] question that I have as well is, okay,
+[122.56s] should So, should I go and design a
+[124.4s] spaceship that goes and produces 640
+[126.56s] science per second or one that or two
+[129.0s] smaller ships that produce 320 science
+[131.16s] per second? That's another question that
+[133.28s] I have. Finally, I'm curious about how
+[135.52s] much does this all impact the hub
+[137.24s] throughput? And does that actually make
+[139.84s] Q5 better
+[141.52s] even though it requires more asteroid
+[143.04s] upcycling?
+[144.6s] Or is there some middle ground?
+[146.8s] So, going into this, the current meta
+[148.88s] that exists in mega basing is doing
+[151.44s] legendary science. And I want to
+[153.28s] validate if that actually is the best
+[155.68s] science that's there. So, to do that,
+[157.76s] I've
+[158.6s] I've gone about creating at least the
+[160.52s] five ships that you see here along with
+[162.24s] 20 other variants that exist in the
+[163.88s] benchmarks. And also, I've had a couple
+[167.0s] people help specifically in my community
+[169.76s] to refine specifically the legendary
+[172.12s] ship itself. So, more to come on that
+[174.44s] video. So, those are the questions that
+[176.88s] we're going to be asking today, and
+[179.239s] we're going to have an answer by the end
+[180.84s] of this video. So, stay tuned, and I'm
+[183.0s] excited to talk through it.
+[197.08s] Initially, let's talk through
+[200.08s] what all goes into quality space
+[202.84s] science, right? So,
+[205.48s] if you've been
+[207.08s] playing Factorio for quite a while,
+[208.44s] especially if you're playing Space Age,
+[209.56s] you're going to know about the quality
+[210.88s] upcycling mechanic that exists for
+[213.68s] asteroids. But, if you don't know, this
+[215.68s] is a ship that I currently have in my
+[217.72s] mega base. I have it currently in the
+[219.36s] editor, and so that we can just go and
+[221.48s] mess around with it. That's why it's
+[222.68s] currently dumping all the space science
+[224.4s] off of the side of the ship so that it
+[225.92s] just constantly is running.
+[227.88s] So, let's talk through this. So, the way
+[229.88s] that if works, and this is how I had
+[231.88s] designed the ships in the past. You'd
+[234.4s] have a a module that would handle all
+[237.04s] the quality one science. You wind up so
+[238.96s] or the quality one asteroids. You
+[240.76s] collect them in these asteroid
+[242.28s] collectors. They're going to go and
+[243.52s] bring those items in. They put them on
+[245.04s] this outside sushi belt. And then this
+[246.88s] is going to be your your normal quality
+[248.88s] that's up here. You upcycle them using
+[251.4s] the reprocessing recipe, which is going
+[254.12s] to give you, every time you wind up
+[255.72s] doing this, a chance of an 80% chance to
+[258.6s] get an item back, which is really good.
+[260.84s] That is so much better than using
+[263.28s] recyclers, which only has a 25% chance
+[265.6s] of giving an item back.
+[267.48s] So, in short,
+[269.84s] although these recipes are pretty slow
+[271.44s] with a 2-second crafting time, your odds
+[273.68s] are so high, and also is that it the
+[277.12s] odds are so high, so that's a really
+[278.4s] good thing to get a higher quality. The
+[280.04s] second thing that's really good about
+[281.32s] this is that you have an infinite
+[283.52s] research that you can do, which is going
+[286.0s] to be for asteroid productivity, right?
+[288.76s] So, if you get this up to level 31 with
+[291.28s] 31 available, that means that you're
+[293.32s] going to have a 300%
+[296.12s] productivity bonus, which is the maximum
+[297.96s] that you can wind up getting.
+[300.12s] So, that means that one of these small
+[303.2s] metalli
+
+c asteroid chunks, when it
+[305.24s] becomes legendary, is actually going to
+[307.8s] be worth, in this case here,
+[310.64s] 20 iron ore. But it's not 20 iron ore,
+[313.28s] it's has a 300% productivity, so it
+[315.28s] actually becomes 80. And then 80 stacks,
+[317.96s] of course, on top of that, when you have
+[319.52s] 150% product or 50% productivity, so
+[322.76s] that would be 80 * 1.5.
+[325.2s] So, you're going to get 120 plates per
+[327.84s] iron plates per individual asteroid that
+[330.76s] you wind up putting in, which is really
+[332.04s] really good.
+[333.28s] So, that means that the actual raw
+[335.0s] materials that we need to upcycle is
+[337.16s] very small.
+[339.68s] Now,
+[341.6s] sushi is one way of doing this.
+[344.6s] The problem with that is you'll see some
+[346.08s] of these inserters will kind kind of get
+[347.64s] stuck. There isn't really a consistent
+[349.88s] pattern to when they're going to be
+[351.76s] picking up items, especially when you
+[353.12s] get a huge amount
+[355.36s] that of volume that comes in.
+[357.84s] And that's an important thing to talk
+[359.04s] about, too. Along the journey, and we've
+[361.48s] specifically chosen Novice to Fulgora
+[363.56s] because some people have done some
+[365.64s] wonderful research and determined that
+[366.92s] this is going to be the best for getting
+[368.2s] the ice, which we're going to be the
+[369.28s] lowest on.
+[370.64s] So, this is going to be the best. Konaj
+[372.44s] specifically was the person who wound up
+[373.8s] doing that research and I've been using
+[375.4s] that as a as a as a metric here. So,
+[378.96s] what I'm talking about is you're going
+[380.04s] to have different points of the journey
+[381.4s] where you're going to have more asteroid
+[383.28s] chunks or less asteroid chunks. Now,
+[385.88s] don't be really confused by this chart.
+[387.88s] You might look at this initially and
+[389.12s] say, "Oh, there's a whole bunch of
+[390.36s] metallic asteroid chunks." Well, these
+[391.84s] are the small ones. The large ones and
+[394.16s] the medium ones show up as you get close
+[395.96s] to Fulgora. So, the higher volume is
+[397.48s] actually over here, not over here,
+[399.24s] although it looks like that. It's a
+[400.44s] little bit deceiving.
+[402.12s] That means that you're going to have a
+[403.24s] variability to how many chunks you're
+[405.36s] going to have at any individual time
+[407.76s] along the journey of the ship.
+[409.68s] So, that's where sushi kind of makes
+[411.52s] sense cuz you don't really know how much
+[412.76s] flow rate you're going to have. You
+[413.88s] don't really really exactly design it.
+[416.16s] But, it also makes it really hard to
+[417.96s] understand conceptually how many items
+[420.24s] are actually going to be on the belt and
+[422.08s] how much throughput your demands you're
+[424.0s] going to have at different points along
+[425.52s] the journey, especially if you're
+[426.56s] constantly running.
+[428.4s] So, that's where it this particular
+[430.6s] design style is something that I want to
+[432.28s] get away from as I design the new ships.
+[434.44s] We'll get into that in a second.
+[436.52s] But, just to continue to cover this,
+[438.56s] there's generalized reprocessing. So,
+[440.6s] the way that I would handle this is
+[441.919s] you'd have Q1 up here on the top. All Q2
+[445.16s] and above would come down here, bring
+[447.2s] into this inner belt, and this is where
+[448.68s] we had dedicated reprocessors for all of
+[451.84s] the the higher quality here, right? So,
+[454.36s] this is a pretty massive ship for space
+[456.56s] science specifically. This would go and
+[458.28s] create 640 science per second. So,
+[461.24s] that's per second, not per minute. And
+[463.16s] that'd be 640 sign legendary. So, that's
+[465.12s] six times that. So, that's 3,840
+[468.12s] legend or total science effectively that
+[470.72s] this is producing all the time. And we
+[473.24s] can wind up seeing this here with the
+[474.52s] global statistics right there. That's
+[475.96s] 38,400. That is the number. Now, if you
+[478.76s] zoom in, you'll actually want to see
+[479.76s] that. So, that's the amount that it's
+[481.44s] going in producing.
+[484.04s] So, the target that I said was for this
+[486.76s] entire experiment is going to be, "Hey,
+[488.76s] I want to take this same like target
+[491.44s] metric here,
+[492.88s] but I want to go and design multiple
+[495.36s] ships. So, what I'm going to do is I'm
+[496.68s] going to design some smaller ships just
+[498.16s] due to the complexity of the task at
+[499.8s] hand cuz we're going to design five
+[501.24s] different ships at a minimum for each
+[502.84s] quality so that we can do this
+[503.96s] experiment. So, we're going to take just
+[506.2s] this design philosophy here. We're
+[507.64s] making 320 science per second. That is
+[509.96s] the goal. So,
+[512.12s] each one has to make at least that
+[514.039s] amount. 320 science, and I'm talking
+[515.96s] about that in terms of legendary, and
+[517.68s] that would be * 6 is 1,920
+[521.2s] science per second for each quality.
+[523.76s] So, let me talk through next here
+[526.48s] what were the design choices to kind of
+[528.32s] make it as equal of an apples-to-apples
+[531.0s] comparison for each of the quality that
+[534.44s] we wind up testing. So, the first thing
+[536.56s] that we I wanted to go and tackle was I
+[539.0s] wanted something that I could design
+[540.839s] that's modular that can support all the
+[544.04s] different scales of of quality science
+[546.28s] that you're going to need. You're going
+[547.68s] to need different amounts of
+[548.92s] reprocessing as you step up the quality.
+[551.52s] So, you're going to need more Q1 input
+[554.6s] to increase the the amount of like Q2,
+[557.92s] Q3, Q4, and then ultimately Q5 that you
+[560.32s] wind up getting.
+[561.64s] So, that means that the amount of raw
+[563.88s] inputs you're going to need at each of
+[565.2s] those quality levels is going to depend
+[567.2s] on the sc
+
+ience you're trying to create.
+[569.96s] So, it means we're going to need more Q1
+[572.12s] for for uh or or more raw asteroid
+[574.92s] inputs to get legendary, and we're going
+[577.36s] to need nothing for normal quality
+[579.44s] science for reprocessing, right? So,
+[581.12s] that's the scale of things.
+[583.24s] This design works out really good for
+[585.16s] that specific use case cuz it one
+[587.36s] eliminates sushi, which was one of the
+[588.84s] goals that I had. Sure, I'm still using
+[590.88s] that here for an output belt, but they
+[592.32s] get sorted down the line anyway. So,
+[594.28s] each of these are kind of modules of
+[595.72s] different quality levels.
+[597.6s] So, the goal that I had was here was
+[599.0s] like, "Okay, I will go and take an
+[601.08s] existing design. I will run it back and
+[602.96s] forth between the planets, and I will
+[604.4s] continue to remove chunks like this
+[606.96s] until I get to the point where this
+[608.84s] backs up and I can't help handle the
+[610.68s] pressure that's coming through it."
+[613.0s] So, at some point in the journey. And
+[615.16s] so, that would give me an indicator of
+[616.8s] how many items I needed. This is an
+[618.44s] empirical approach. I could have done
+[620.08s] this more of just going and doing math
+[622.84s] to go and figure out how much I needed,
+[624.24s] but this was very simple to go and
+[625.68s] design something that's modular like
+[626.96s] this so that I can step up or step down
+[629.0s] the amount of items I needed.
+[630.88s] You're going to notice something too
+[631.88s] that this belt is always containing a
+[633.44s] buffer.
+[634.56s] The reason I did this was before I
+[636.16s] actually wound up testing it,
+[638.04s] I wound up deciding that, "Hey, one of
+[640.28s] the design philosophies that I have is,
+[641.96s] like we talked about,
+[643.52s] along the journey of the ship as it goes
+[646.04s] in between these two different planets,
+[647.68s] right? We're going to have variable
+[648.92s] amounts of asteroids we're going to
+[650.08s] have. So, what I don't want to happen is
+[652.839s] or what I rather what I want to have
+[654.68s] happen is a very consistent production
+[657.8s] of those individual chunks, but have the
+[660.72s] flexibility of quickly jumping up in
+[663.0s] scale when we need it." So, the idea
+[665.04s] here was that A, I want these inserters
+[666.92s] to pick up from a non-moving belt. That
+[668.64s] was the idea behind this. The second
+[670.6s] thing that I wanted to do was eliminate
+[672.24s] the weightless inputs here.
+[674.16s] The really easy way to kind of do both
+[676.32s] of those things at once, even though
+[677.68s] you'll see here that sometimes
+[678.839s] occasionally this won't even be this
+[680.48s] won't be processing anything. It'll
+[682.16s] happen very infrequently if we go and
+[684.28s] speed this up occasionally. Just watch
+[685.839s] this little indicator up here. You see
+[688.0s] here how it runs out of ingredients.
+[690.8s] So, this is exactly designed for the
+[692.12s] particular clock that I have and then
+[694.16s] just slightly over designed. So, if I
+[697.08s] removed one of these, these would
+[698.12s] eventually back up.
+[700.2s] But, I can do that visually much easier
+[703.44s] in a setup like this
+[705.52s] than if I was going looking at the old
+[707.28s] forester design where I have no idea. I
+[709.28s] have no idea what my throughput demands
+[710.88s] are here and until it's too late and the
+[713.04s] whole thing clogs up and that takes a
+[714.48s] lot longer. So, this is very simple to
+[717.12s] go and actually test because you can
+[719.16s] visually monitor it
+[721.04s] by looking at these input belts right
+[722.88s] here. If these ever back up, which
+[724.8s] happens very quickly, then you'll wind
+[726.8s] up knowing that you have too little
+[728.0s] crushers. So.
+[729.84s] Now, you're going to notice here that we
+[731.2s] have these inserters are kind of
+[732.12s] clocked. All this is doing, this is
+[733.44s] reading each of these individual belts
+[734.88s] and it's holding the the belt so that we
+[736.76s] each just the contents of that one belt
+[739.56s] and each one can hold four of the
+[741.52s] asteroids per tile.
+[743.52s] So, all I'm doing here is when hey,
+[744.8s] whenever this gets to be greater than or
+[746.2s] equal to 12, that means that I have full
+[747.84s] back pressure and I will turn on all
+[749.4s] these inserters. That means that along
+[751.4s] the entirety of the journey of the ship,
+[753.64s] these will always pick up from a
+[754.839s] non-moving belt even though we have kind
+[756.92s] of an RNG effect of how many asteroids
+[758.88s] we're going to get along the actual
+[760.32s] journey of the ship. Editor here. So, I
+[763.2s] explained a decent amount about how it
+[765.0s] actually works, but I didn't explain the
+[766.44s] most important part is if it's better
+[768.12s] for UPS. So, here's a chart that kind of
+[769.64s] explains that. So, in version 4.1, we
+[771.88s] didn't use that control method. We just
+[773.2s] let the inserters swing freely and then
+[774.72s] version 4.2, we wound up using that
+[776.88s] control method. So, the game was paused
+[778.6s] exactly and was was swapped in place.
+[780.96s] So, you can see that when they were just
+[782.68s] free formed, it was two microseconds of
+[784.76s] update time increase for the entity
+[786.64s] update time. But, when it wound up
+[789.36s] introducing it, the control behavior
+[791.0s] update time went up the same amount. So,
+[792.64s] it went up two microseconds from 19
+[794.32s] microseconds to 21. So, they exactly
+[796.76s] balanced each other out for having a
+[798.16s] total of 200 microseconds of total
+[800.52s] update time. However, this seems like a
+[802.56s] fair trade-off because we want to reduce
+[805.32s] overall the entity update time more than
+[807.72s] the control behavior update time in most
+[810.0s] scenarios.
+[812.28s] Those then all get fed in and then we
+[813.
+
+8s] have a smaller amount for the ice
+[815.76s] because of course the ice processing is
+[817.8s] 1 second compared to the other ones
+[819.6s] which are 2 second recipes. So, they
+[821.96s] wind up this one's being faster so you
+[823.6s] have a lot less of them that you wind up
+[824.88s] needing.
+[826.44s] This modular approach is very easy to
+[828.28s] scale up if you want to have more inputs
+[830.96s] or you can scale it down as much as you
+[832.88s] want. This was the design that I chose
+[835.32s] and I use them in every single one of
+[836.76s] the ships. Next, let's talk about the
+[838.68s] differences of how at different quality
+[841.28s] levels what the ships are going to kind
+[842.76s] of look like.
+[844.12s] So, this was the design that I came up
+[846.04s] with which I've called the Heisenberg.
+[847.8s] Uh this particular ship is producing a
+[850.52s] whopping
+[851.72s] I think 1,920
+[853.92s] science per minute yeah or science per
+[855.68s] second
+[856.8s] rather of the actual space science packs
+[859.68s] and we can see that up here uh producing
+[861.64s] 15,400
+[863.36s] per per minute.
+[865.16s] The way that this one works and one of
+[866.56s] the really nice things about
+[869.839s] about using specifically Q1 is that you
+[872.52s] can use foundries. So, we actually
+[873.92s] benefit from and sorry for all the space
+[876.24s] science going away. I'll go and look up
+[877.56s] here.
+[878.48s] We benefit from the fact that we can
+[880.04s] wind up using foundries to go and input
+[882.24s] directly into four different science
+[885.08s] assembling machines and we can use
+[886.0s] direct insertion. I fiddled with this
+[887.839s] layout a lot but then ultimately I got
+[889.76s] inspiration from the Q1 science that we
+[892.64s] wind up designing. So, this came back
+[894.44s] from the competition.
+[896.0s] So, you can wind up seeing that this is
+[897.72s] very similar to the the the red science
+[900.8s] design because like it's the inputs are
+[903.12s] the same we just can't go and produce
+[904.44s] the other one. It's a three input
+[905.88s] instead of a two but the other ones are
+[907.44s] just belted in instead of having copper.
+[909.48s] So, we wind up having then just a belt
+[911.52s] here that inputs them. So, it's 10
+[913.32s] beacon design. 10 beacon is really
+[914.839s] useful because it gets you over a 40
+[916.88s] science per second break point and
+[919.2s] that's super convenient because if we
+[921.32s] have about six of these machines, right?
+[924.2s] We can produce 240 science per second.
+[927.76s] So, that means that we need a total of
+[929.4s] 12 and then on per lane here, so you can
+[932.64s] see 12, 24, 48 total to produce the
+[935.32s] 1,920 that we need.
+[937.72s] Also, the nice thing is because we're in
+[939.44s] space, you don't need power poles, so
+[940.8s] you can tight tightly bring all this
+[942.64s] stuff all as close as possible together
+[944.88s] and you don't have any issues at all
+[946.16s] here in space.
+[948.16s] So,
+[949.32s] the benefit of Q1 is that the amount of
+[951.76s] asteroids you need is so incredibly
+[953.6s] small. You can see this ship is just
+[955.36s] sitting here hovering over Nauvis for a
+[957.24s] very long period of time. We can run
+[958.84s] this at 64x speed. You'll see that it'll
+[961.24s] do one trip
+[963.76s] and then comes back to Nauvis and sits
+[965.28s] here forever. Just constantly just
+[967.16s] producing science.
+[968.76s] You really only need you very very small
+[970.92s] travel time just due to the
+[973.16s] absurd amount of like that you wind up
+[976.16s] getting along the trip. Along the trip
+[977.6s] is is is really a very small amount of
+[981.96s] uh is In other words, I'm saying is
+[984.08s] significantly over the amount that
+[986.08s] you're going to need. So, you can see
+[987.16s] each of this this is the thruster fuel
+[988.8s] level. This period is the downtime where
+[991.4s] it's not traveling. You can see that for
+[994.839s] 20% of the time, if that even, it's
+[997.4s] actually traveling. The rest is just
+[998.839s] sitting stationary over Nauvis because
+[1001.36s] you're gaining even more productivity
+[1003.32s] than you would with any other of the
+[1004.76s] quality sciences because you can use
+[1006.52s] foundries to get an additional at least
+[1008.96s] 50% productivity, but you're actually
+[1011.12s] getting 150% productivity.
+[1013.64s] So, what's actually interesting is at
+[1015.8s] the Q1 level, you're actually
+[1018.36s] reprocessing a lot of the metallic
+[1021.12s] asteroid chunks because you wind up
+[1023.0s] getting a lot less of the other ones
+[1024.48s] along the journey. So, because or rather
+[1026.4s] you're consuming a lot less of those.
+[1028.64s] Everything else stays exactly the same
+[1030.199s] in terms of the ratios of what they're
+[1031.6s] going to wind up needing, but at Q1 you
+[1033.6s] wind up seeing that like because of the
+[1035.24s] much much higher productivity, you
+[1037.12s] really don't need as many of the
+[1038.68s] metallic asteroid chunks, so you wind up
+[1040.199s] kind of evening out of what you're
+[1041.72s] actually reprocessing.
+[1043.48s] So,
+[1045.16s] that's where just there is like always a
+[1047.4s] backup of metallic asteroid chunks when
+[1049.52s] you're IQ1, which is not the case at
+[1051.6s] higher qualities.
+[1053.16s] So, this is kind of what a a one of
+[1055.76s] these
+[1057.04s] designs would look like. You can see
+[1058.72s] just the sheer scale of how big this
+[1060.72s] ship is to in order to actually go and
+[1063.2s] create Q1 science.
+[1065.68s] So, let's go and compare and contrast
+[1068.0s] that with the most extreme version,
+[1070.84s] which is a Q5 ships. Let's go look at a
+[1073.24s] legendary one. So, I'll go and jump
+[1074.8s] right away to the the the the version
+[1077.56s] that we wind up creating here.
+[1079.64s] So, this was the final design that we
+[1081.4s] came up with. We came up with a lot of
+[1083.68s] iterations to get to this particu
+
+lar
+[1085.56s] design approach, but ultimately, this is
+[1088.64s] the version that we landed on. So, you
+[1090.16s] can see this design in action, the one
+[1091.88s] that I was showing a second ago, that
+[1093.32s] modular design.
+[1095.0s] So, this all feeds in. Now, it's coming
+[1097.08s] from the actual asteroid collectors, and
+[1100.4s] then feeds into this particular bank,
+[1102.76s] which then goes into the next one, which
+[1104.52s] is then designed slightly more compact
+[1106.48s] because we can have the same width, but
+[1108.92s] half the number of buildings because
+[1110.32s] we're going to Q2. And then we step it
+[1112.36s] down to Q3,
+[1114.48s] and then ultimately to Q4, and then
+[1117.12s] finally have all the items feed in here
+[1118.92s] where the legendary components are going
+[1120.48s] to be coming into.
+[1122.08s] Now,
+[1124.24s] one of the things that you see right
+[1125.4s] away is how much smaller this ship winds
+[1128.04s] up being
+[1129.76s] to produce exactly the same amount of
+[1131.6s] science. And that's because purely we
+[1134.0s] don't need anywhere near the amount of
+[1135.68s] production, and these buildings are so
+[1137.48s] incredibly small, though it's very easy
+[1140.08s] to make a very compact design. So, if we
+[1142.16s] compare this here
+[1143.88s] and look at the Q1 version, the
+[1145.76s] Heisenberg,
+[1147.08s] you can wind up seeing just how much
+[1148.28s] smaller this ship winds up actually
+[1149.8s] being compared to the Q1 version. This
+[1153.04s] one's 1,435 tons and we go and look at
+[1156.08s] this one. That's 1,285.
+[1158.52s] They're still similar in terms of the
+[1160.36s] size. The difference is you could need
+[1162.2s] it to be wider than it is actually tall
+[1164.84s] because you're going to need to collect
+[1166.04s] so many more from the collectors up here
+[1168.0s] in the front.
+[1169.96s] So,
+[1171.04s] that's a big design difference that
+[1173.16s] exists as you go up in quality.
+[1175.84s] You're going to notice here on this Q5
+[1177.32s] design that there is kind of this
+[1178.68s] interesting that's going on been going
+[1180.52s] on. Why are we creating epic ice?
+[1182.72s] There's there's like why are we throwing
+[1184.28s] that away?
+[1185.8s] There's a reason for that. You wind up
+[1187.28s] actually getting more
+[1189.8s] ice by using the oxide asteroid crushing
+[1192.96s] recipe. You'll see that occasionally
+[1194.52s] we're getting some legendary ice out of
+[1196.12s] this. Now, the recipe is going to give
+[1198.44s] you a 20% chance of getting oxide
+[1200.48s] asteroid chunks back, right? So, for
+[1202.2s] each one that you're using. But, because
+[1204.2s] of the productivity that you wind up
+[1205.64s] having here, right? That actually
+[1207.56s] increases the the chances that you have
+[1210.08s] per individual time you're putting
+[1211.44s] something in. You can see this progress
+[1213.36s] bar each time is giving you a chance to
+[1215.44s] get that oxide asteroid chunk back. You
+[1218.0s] don't get that with the regular
+[1220.36s] reprocessing recipe.
+[1222.36s] What that actually means is that because
+[1224.12s] you're running this now for every one,
+[1226.32s] you have a 300% productivity chance. You
+[1228.24s] actually have four times you get that
+[1230.08s] chance of getting something back. That
+[1232.64s] means you have a effectively a a 80%
+[1236.04s] chance of getting the same asteroid
+[1238.76s] back. That's actually a lot better than
+[1241.28s] the traditional recipe which only has a
+[1242.84s] 40% chance of getting that same
+[1245.88s] same chunk back.
+[1247.96s] Why is that important? Well, because
+[1250.0s] what we've talked about, that particular
+[1252.36s] travel between Novice and Fulgora,
+[1254.88s] you're not going to get a lot of ice.
+[1256.68s] So, this gives you a much higher chance
+[1259.08s] of getting that oxide asteroid chunk
+[1260.84s] back that you really want at that higher
+[1262.6s] quality level.
+[1263.96s] And it gives you the the of getting
+[1265.88s] occasionally some additional ice in
+[1268.76s] legendary form. And as you can see here,
+[1270.84s] this is going to come through and we're
+[1272.2s] getting occasionally some additional
+[1274.32s] ice, which means that we even more
+[1276.04s] reduce the amount of ice that we're
+[1277.56s] actually going to going to need
+[1279.44s] consuming and feeding the blade here.
+[1281.96s] So,
+[1283.0s] what you're seeing here, too, there's
+[1284.12s] just a priority. We're using this belt
+[1285.88s] that comes as an input. It's going to
+[1287.6s] for in the beginning prioritize feeding
+[1289.56s] these items in and then they'll come up
+[1291.2s] here and do that.
+[1292.72s] Special thanks to you who actually wound
+[1294.68s] up implementing this. We went through
+[1296.4s] several iterations and uh
+[1299.68s] I'll I'll jump into the results of why
+[1301.28s] we wound up going to those iterations
+[1302.84s] here uh in a second, but there's uh
+[1305.76s] there's We went through a lot of
+[1307.04s] iterations just to make legendary
+[1308.64s] better.
+[1309.88s] So,
+[1311.8s] one of the the the things that we wound
+[1313.92s] up doing was as we continued to go
+[1315.8s] through that was we wanted that that
+[1317.6s] that that reprocessing for ice. You can
+[1319.44s] see here I was using originally in the
+[1320.84s] very first design when I did the initial
+[1322.44s] concept, we wound up having oxide
+[1324.4s] asteroid reprocessing. Then, as it went
+[1326.92s] on, there was a Mark II version, which
+[1329.12s] is where you implemented this uh new
+[1331.0s] module. And the real benefit that came
+[1333.2s] from this is now we have water that can
+[1335.36s] come all the way around here, and that
+[1337.16s] means we have extra water that we wind
+[1339.04s] up bringing into the ship. That means
+[1341.12s] that we don't actually need any kind of
+[1344.2s] collection of ice chunks because we're
+[1346.28s] just going to constantly be able to
+[1347.68s] bring in
+
+ most up Actually, what you're
+[1349.88s] seeing here is 100% of the water is
+[1352.32s] getting supplied by epic ice. So, epic
+[1356.08s] water, in other words.
+[1357.56s] Now, there is some water production up
+[1359.72s] here, and the only reason this exists is
+[1361.6s] because we do need calcite occasionally.
+[1364.04s] So, this calcite gets reprocessed up
+[1365.76s] here, which is just a simple little
+[1367.0s] module that goes and gets processed,
+[1369.0s] comes down into this little area, and
+[1370.4s] then brings the calcite into where we
+[1371.72s] need it.
+[1372.92s] So, now you do wind up having too much
+[1375.08s] water because of this.
+[1377.2s] So, what we do is we void the water, and
+[1379.8s] you'll see that most uh exemplified over
+[1381.76s] here.
+[1382.72s] We have occasionally this is going to be
+[1384.24s] a a recipe here that is going to be
+[1386.36s] setting in this case a
+[1389.52s] in this case the refined concrete recipe
+[1392.2s] and this will very quickly go and remove
+[1395.0s] the actual water. So we can see that
+[1397.52s] here if we go and speed this up a little
+[1399.36s] bit and get a little bit too much water
+[1400.84s] in here.
+[1401.88s] You'll see that occasionally this has to
+[1403.52s] go and remove it like this. This just
+[1405.6s] uses fluid voiding goes and removes
+[1407.36s] those items and just gets rid of it. The
+[1409.2s] easiest way and most EPS efficient way
+[1411.16s] of just voiding fluids.
+[1413.12s] So that removes then the water.
+[1415.92s] And then so whenever we back it up
+[1417.8s] that's all we wind up doing.
+[1420.24s] Now
+[1421.56s] that gives you a lot more ice which is a
+[1423.08s] really nice thing and then that means
+[1425.48s] that ultimately the the the two
+[1427.84s] ingredients that you're going to get the
+[1429.16s] most and because again because of just
+[1431.08s] the productivity stack that you're going
+[1432.4s] to have here you're going to wind up
+[1434.4s] just always kind of low on the carbonic
+[1437.36s] asteroid crushing. So you'll still
+[1438.92s] occasionally need to upcycle some of
+[1441.04s] those individual items and so this is
+[1443.28s] where I want to actually just really
+[1444.6s] thank Klux because Klux wound up getting
+[1447.52s] completely rid of sushi which is
+[1449.2s] actually a a really nice touch here for
+[1451.08s] this particular design. You can see here
+[1453.12s] even up until the Mark 2.8 and we won't
+[1455.72s] talk about Mark 3 because that was a
+[1457.0s] failed design. So Mark 2.8 was still
+[1459.32s] using sushi here with a reprocessing
+[1461.56s] recipe.
+[1462.84s] So
+[1463.72s] then so there's like I want to thank
+[1466.28s] yeah you and Klux for both their
+[1468.32s] contributions into making this better.
+[1470.16s] They both have YouTube channels so I
+[1471.52s] will link them down the video
+[1472.52s] description below. They went through a
+[1474.0s] very long iteration process on my
+[1475.96s] Discord to try to get this all working
+[1478.12s] and in being in a good state.
+[1480.48s] So
+[1481.72s] the next thing that I want to talk about
+[1483.52s] is asteroid
+[1485.52s] uh the the asteroid collector clocking.
+[1489.52s] So to demonstrate why clocking asteroid
+[1491.72s] collectors is good let's go and I'm
+[1493.92s] going to turn on F5 here and you're
+[1495.84s] going to see some extra little debug
+[1497.56s] stuff that's showing on.
+[1499.4s] What we're going to do is we're going to
+[1500.32s] type in asteroid,
+[1502.36s] and you're going to see the show
+[1504.2s] asteroid collector tracking.
+[1506.12s] Uh not that one, sorry. The asteroid arm
+[1507.92s] targets.
+[1509.2s] That will show this little vector of
+[1511.88s] what they're trying to target. Right now
+[1513.4s] you're seeing that they're locked
+[1514.4s] stationary.
+[1516.84s] I'm going to flip this little switch,
+[1519.56s] which allows it to bypass the clocking.
+[1523.44s] And what you're going to notice here as
+[1524.84s] I go and start moving it is these are
+[1526.52s] constantly updating as chunks are coming
+[1528.52s] in.
+[1529.56s] So, I'm going to go ahead and start
+[1530.32s] moving the the ship. You're seeing just
+[1532.48s] like almost every other tick or so,
+[1534.52s] every like all the time, this is
+[1535.76s] constantly going and checking what
+[1537.24s] should I go and pick up, right?
+[1539.4s] So, this is designed for any individual
+[1542.76s] ship that is traveling all over the
+[1544.52s] place, right? So, because of that reason
+[1546.32s] you want to be constantly going and
+[1547.64s] picking things up as much as you
+[1548.92s] possibly can. And so, these are
+[1550.92s] constantly active trying to go and grab
+[1553.0s] and scan all the different areas.
+[1555.36s] Now, if I go and turn on the it turned
+[1557.4s] this off, you're going to notice that
+[1559.2s] this is very infrequently updating. But,
+[1561.76s] we're still collecting almost all of the
+[1563.8s] chunks that are coming in. We do
+[1565.28s] occasionally drop one or miss one as
+[1567.4s] they come in.
+[1568.6s] But, for the most part, and this is of
+[1569.76s] course cuz they just shut down cuz we
+[1571.12s] got to novice, that's also very
+[1572.64s] intentional.
+[1574.04s] Uh you wind up noticing that these are
+[1575.4s] turned off. But, let's go ahead and let
+[1576.84s] this go and run for a little bit, and
+[1578.16s] let's go and let it go on its journey
+[1579.4s] again. You see occasionally this rests.
+[1581.48s] You're seeing now we are still picking
+[1583.24s] up a lot of those chunks here, not
+[1585.52s] having an issue, but we're scanning for
+[1587.8s] those chunks a lot less often.
+[1590.32s] And that happens because we wind up
+[1591.76s] having here a clock. So, let me show the
+[1594.64s] simple example here of an asteroid clock
+[1597.4s] that exists,
+[1598.8s] then I actually introduced it.
+[1601.04s] All this does is it just wraps around
+[1602.8s] for every 22 ticks, so it's always one
+[1605.28s] minus if you're using a decider
+[
+
+1606.68s] combinator for this. Every 22 ticks
+[1608.4s] we're going to wrap around the clock
+[1610.12s] here, and then we're going to emit a
+[1611.72s] little check mark. That check mark comes
+[1613.44s] to each of these asteroid collectors,
+[1615.0s] and then they're going to go and enable
+[1616.32s] and disable every single time that we
+[1618.84s] wind up going and saying, "Hey, go and
+[1621.04s] check for new chunks." right? So, by
+[1623.04s] disabling and enabling it rapidly like
+[1625.2s] that, you can wind up having that new
+[1627.08s] behavior where these individual things
+[1629.72s] are updating or those lines are updating
+[1631.92s] a lot less often. So, that means that
+[1633.56s] the collectors aren't constantly
+[1635.0s] scanning. And that can really reduce the
+[1637.08s] entity update time of those individual
+[1639.44s] asteroid collectors.
+[1642.12s] So, now
+[1643.52s] a thing that I wound up experimenting
+[1645.32s] with as we got further and further in
+[1647.48s] the design iteration, was I said, "Well,
+[1650.28s] because we know you're going to get more
+[1652.4s] chunks at the end than you are in the
+[1654.76s] beginning, you're going to kind of want
+[1657.2s] to clock them faster in this section
+[1659.56s] here and back, and you want to kind of
+[1662.08s] clock it a little bit slower over here."
+[1664.4s] So, the way that I handled that
+[1667.2s] was I wound up going and checking every
+[1670.08s] single time we're traveling between here
+[1672.6s] and Novice. So, whenever we're going
+[1674.44s] away from Novice, we wind up inputting
+[1676.48s] the current signal of the velocity
+[1679.12s] signal here. So, depending on the
+[1680.44s] direction, so if we're going towards
+[1682.72s] Novice, then that is going to be a a a
+[1686.08s] positive number, and if it is away from
+[1689.68s] Novice, we just subtract three from that
+[1692.16s] to make it negative one to make the
+[1693.76s] velocity go the other direction.
+[1696.44s] That means that we can go and create a
+[1698.24s] very simple distance tracker. So, we'll
+[1700.28s] go and move this over here.
+[1703.52s] So, you can see here if I pause the
+[1704.8s] game, we are now currently at a value of
+[1708.52s] 5.4 thousand, which is the current
+[1711.16s] distance away from Novice. I haven't
+[1713.52s] reset because you may not launch from
+[1715.36s] the actual planet. So, to because of
+[1717.44s] that, I always wanted this clock to
+[1718.84s] always reset whenever we got to Novice
+[1720.56s] just to make sure that we are uh
+[1722.68s] starting from zero whenever we you
+[1725.16s] launch from Novice cuz you might build
+[1726.64s] on Volcanis, you build on other planets,
+[1728.12s] and then this clock would get screwed
+[1729.24s] up.
+[1730.12s] So, this effectively then is just
+[1731.88s] taking, you know, that that velocity is,
+[1734.36s] you know, distance over time. And well,
+[1736.48s] we know what the time is. There's 60
+[1738.28s] ticks per second. So, if we just take
+[1739.84s] the sum of the velocity and divide it by
+[1741.72s] 60, then you're going to wind up knowing
+[1743.8s] what distance you traveled. That's all
+[1745.24s] you really have to do. So, that distance
+[1747.4s] and also the planets get fed into this
+[1749.64s] much more complicated uh scheduler.
+[1752.64s] But, it basically now allows us to say,
+[1754.44s] "Hey, what distance are we away from
+[1756.12s] Novus on the trip?" So, right now we're
+[1758.44s] at we're less than 10,000 km away. We're
+[1760.96s] going to have a much slower clock cuz
+[1762.56s] there's a lot less asteroids to pick up.
+[1764.36s] And you can see that here. There's not a
+[1765.84s] very high density of asteroids that
+[1767.64s] we're going to need to pick up during
+[1768.84s] this journey.
+[1769.96s] So, then once we wind up and we'll go
+[1772.08s] and move this a little bit forward until
+[1774.6s] we get to the point where the asteroids
+[1776.16s] you see here, now we're getting a lot
+[1777.64s] more dense here at 10,000 km.
+[1780.56s] This is when I want to kick it a little
+[1782.16s] bit more into high gear, and I want to
+[1783.56s] run it every 22 ticks so that we update
+[1786.0s] a little bit more often the clock and
+[1787.76s] wind up going and trying to grab things.
+[1789.76s] Now, I haven't perfectly gotten it so
+[1792.2s] that it picks up everything. And through
+[1794.32s] testing, I found that it actually was
+[1796.04s] worse to pick up everything. Now, that
+[1797.76s] might not apply for for things like
+[1799.4s] Promethium. Uh but like for for space
+[1801.92s] science, I I couldn't like the more
+[1804.04s] aggressively I clock the asteroid
+[1805.52s] collectors, sure we'd pick up more items
+[1807.48s] and then we would rest uh longer over
+[1809.76s] Novus, but it wound up just being better
+[1811.8s] to not pick up every single chunk and
+[1814.36s] rather just wind up having a a
+[1816.56s] like a a just the amount that we wind up
+[1819.12s] needing in a little bit of a surplus on
+[1820.76s] top of that.
+[1822.2s] So, that's the the schedule that I wind
+[1824.6s] up creating here for this, and I copied
+[1826.44s] this on multiple different ships. You
+[1828.32s] wind up seeing here as we now come back
+[1830.88s] from Novus, you're you're seeing here
+[1832.92s] that we are still now we're going to
+[1835.56s] Novus, and we're continuing to have that
+[1838.24s] higher tick rate constantly pulsating
+[1840.6s] until we wind up getting below the 4,000
+[1843.84s] km mark. So, now we're 7,000 away. We're
+[1846.64s] now 6,000 getting closer and closer to
+[1848.64s] Novus at this distance away from Novus
+[1850.4s] the whole time.
+[1851.52s] And then the moment that we get into a
+[1853.04s] more
+[1854.48s] a less dense zone like this, we step it
+[1857.04s] back down to the much slower clock.
+[1860.44s] So, that was a dynamic approach which
+[1862.4s] wound up actually being better, not a
+[1864.16s] huge amount better, but definitely
+[1865.84s] better for our 430 UPS to do it this
+[1868.1
+
+6s] way. More complicated, yes, but uh it's
+[1871.36s] and it requires you to really watch your
+[1873.0s] ship as it goes back and forth and
+[1874.64s] exactly look at how like the items that
+[1876.6s] it's picking up. But,
+[1878.88s] mainly, as long as you're getting the
+[1880.12s] throughput that you want and you keep
+[1881.48s] kind of stepping down your your clock,
+[1883.88s] it's just a balancing act because you
+[1886.44s] eventually will get to a point where you
+[1888.28s] have too many asteroids down here on
+[1890.4s] this belt. And very simply, the way that
+[1892.84s] that what what when that happens, you
+[1894.44s] don't want to collect more.
+[1897.08s] So, you want the ship ultimately to stop
+[1899.68s] when you have a large backup like you're
+[1902.16s] seeing here. When this gets completely
+[1904.08s] full, you want the ship to get in a spot
+[1906.64s] where it says, "Hey, I have
+[1908.96s] in this case,
+[1910.4s] I have enough science
+[1912.68s] or and this is not is is currently less
+[1916.24s] than I want to have a low battery
+[1917.8s] signal. So, if the sum of all legendary
+[1920.28s] asteroids that are here, which is let me
+[1922.0s] take 10 + 6 + 4, that's going to be 20
+[1924.2s] legendary that we're going to get out of
+[1925.44s] this,
+[1926.48s] if we have less than 10 of those, that
+[1929.72s] means that this
+[1931.24s] this is we've reached a backup state,
+[1934.6s] we want to stop over Novus.
+[1936.92s] So, here you can see that there's no low
+[1938.44s] battery and it just waits here over
+[1939.96s] Novus until that low battery happens
+[1942.04s] again.
+[1943.24s] So, that takes a little while.
+[1946.28s] And it might take like 2 minutes while
+[1947.64s] this is just sitting here because we do
+[1949.16s] collect a lot more asteroids than we
+[1950.92s] wind up needing cuz the ship is
+[1952.04s] definitely designed a little bit over
+[1953.64s] the scale that you'd wind up needing for
+[1955.16s] 320 per second.
+[1957.32s] So, you can see here this all backs up.
+[1958.88s] We continue to empty all the buffers of
+[1960.48s] all the other science and then
+[1961.84s] eventually, once we consume this, you
+[1964.64s] can see here that we have now dropped
+[1966.32s] below the condition or almost. So, we'll
+[1969.16s] wait here a little bit longer.
+[1971.12s] The moment that this drops below
+[1974.32s] we'll wait here.
+[1982.8s] Wait here a while.
+[1984.36s] All right, there we go.
+[1986.0s] And all of a sudden drop below that
+[1987.32s] value.
+[1988.4s] That means that the this is completely
+[1990.0s] empty.
+[1991.04s] And then at this point now we can go and
+[1992.96s] take off again because we need to
+[1994.68s] collect more. So, the the key here is
+[1997.08s] just making sure you have enough of a
+[1998.6s] buffer
+[1999.64s] here on this particular belt so that you
+[2002.96s] don't wind up running out of it as you
+[2005.56s] go and and are continuously producing
+[2008.48s] over novice the science that you have.
+[2011.2s] The last thing that I want to talk about
+[2012.8s] is specifically the collectors. The
+[2014.88s] reason I'm doing direct insertion here
+[2016.76s] is actually a throughput thing.
+[2019.2s] I want to have less items on this belt,
+[2022.12s] but I want them to be higher quality.
+[2024.4s] So, that means that occasionally this is
+[2025.96s] going to back up a little bit. So, when
+[2027.96s] it backs up, that's when we have this
+[2030.68s] uh inserter here that will drop those
+[2032.36s] items specifically onto the belt.
+[2034.92s] I wind up not reprocessing ice here
+[2037.2s] directly because you wind up getting so
+[2039.08s] much more in this case metallic
+[2041.16s] asteroids and then you get a little bit
+[2043.24s] less of the carbonic asteroids. And then
+[2045.68s] you get very, very infrequently any ice.
+[2048.84s] So, there's no filters that are set on
+[2050.24s] here. So, that's these are the ratio
+[2051.8s] that I came up with with still directly
+[2053.72s] inserting, but because this is going to
+[2055.8s] reprocess and you have ef- effectively a
+[2059.2s] total of like an 80-ish percent chance
+[2061.24s] of getting something back, you're you're
+[2063.399s] you're going to wind up reducing the
+[2065.28s] math isn't exactly right. I don't
+[2066.679s] remember exactly the amount that you
+[2067.84s] wind up getting, but either way, you're
+[2069.2s] losing some. And that's intentional cuz
+[2071.48s] like you you actually want Q1 at all.
+[2074.399s] You want Q5. So, this reduces the amount
+[2078.08s] of inputs and thus also reduces the
+[2080.8s] amount of reprocessing you need here
+[2082.96s] directly off of a belt. This effectively
+[2085.32s] acts as a compressor
+[2087.919s] to reduce the amount of items that come
+[2091.639s] into the belt
+[2093.399s] so that you have less that you need to
+[2095.0s] reprocess thus downstream of it.
+[2098.6s] Those are That was a design philosophy
+[2100.72s] that I did here and I applied it through
+[2102.44s] all the other individual designs.
+[2105.48s] So, let's step down in quality to just
+[2107.16s] show the differences in what you're
+[2108.8s] going to need at each of these. So,
+[2110.44s] you'll see that the asteroid collectors
+[2111.88s] start actually getting reduced in the
+[2113.48s] number of asteroid collectors you wind
+[2114.88s] up needing as the actual science block
+[2117.68s] starts to increase in size, right? So,
+[2119.64s] now we have more because we're you
+[2121.48s] running epic here. So, this is the
+[2122.88s] Skyler Mark 1 where you can wind up
+[2124.92s] seeing that we have a very similar
+[2126.52s] design philosophy. I wind up having the
+[2128.12s] same kind of reprocessing setup down
+[2129.96s] here. I wind up having the exact same
+[2132.0s] modules that are here, but then just
+[2133.88s] removing each individual step cuz we
+[2135.72s] only need rare now, right? Then if we
+[2137.96s] step it down, I'll show the smaller
+[2139.88s] Jessie Mark 2. This was the same design.
+[2142.4s] Now, we have les
+
+s collectors cuz we
+[2143.88s] don't need as many. We don't need the
+[2145.08s] six, we just need the four. That's
+[2146.76s] plenty. And then this ship now on on
+[2149.8s] except it's not going to need now as
+[2152.2s] much reprocessing. So, you can see this
+[2153.92s] modular design getting shrunk down.
+[2156.24s] But, now we need more buildings to
+[2158.52s] produce the actual ice and also thus
+[2160.6s] more actual assembly machines to go and
+[2162.68s] create the actual raw science.
+[2165.44s] Now, for blue science, we have two
+[2166.76s] different ships that I really want to
+[2167.92s] talk about. I've got Jessie Mark 2 and
+[2169.92s] I've also got the Fring Mark 2, which is
+[2173.4s] a twice the scale just to do a test of
+[2177.32s] is our bigger ships better. This I'm
+[2180.36s] very proud of this particular ship
+[2182.0s] because it is
+[2184.32s] very space efficient for the exact size
+[2186.68s] that it is. Still is using fluid voiding
+[2189.16s] down here that you saw with legendary,
+[2190.64s] but you need a lot more fluid voiding
+[2192.6s] cuz you're producing an absolute
+[2193.96s] gargantuan amount of actual ice from
+[2196.24s] this. Uh or rather, sorry, of water. So,
+[2198.84s] you're making 255,000 water per minute,
+[2201.48s] and you need to get rid of it because
+[2203.08s] you need uh nowhere near that amount of
+[2205.88s] fluid here. You need 15,000 per minute.
+[2208.04s] So, you have a surplus of 235,000
+[2211.44s] water that you need to get rid of
+[2213.44s] somehow. So, that's where we need now
+[2215.04s] three of these that are constantly
+[2216.64s] flickering on and off and removing all
+[2218.2s] of that.
+[2219.44s] So,
+[2221.52s] this is where you can see here then,
+[2223.12s] too, this is leveraging the fact that we
+[2225.24s] need a lot less collectors here on the
+[2226.92s] front, but still using that same design
+[2229.48s] of going and compressing the amount of
+[2231.44s] inputs so that we need less for the
+[2233.24s] actual blocks here, right?
+[2236.32s] So, let's step it down to uncommon. You
+[2238.68s] can wind up seeing again, we wind up now
+[2240.28s] having even more assembly machines, but
+[2243.68s] way less processing. This is the
+[2245.28s] smallest amount that you're going to
+[2246.48s] need, so the tiniest little module that
+[2248.36s] you're going to wind up needing for a
+[2249.48s] reprocessing the chunks.
+[2251.4s] So, there was a design choice that I
+[2253.2s] made initially early on to wind up going
+[2255.12s] and stopping the inputs here. I've
+[2257.2s] eventually realized like I don't need to
+[2259.08s] do that. I can just go and stop the
+[2261.72s] inputs for the asteroid collectors once
+[2263.6s] we get to novice, but I wind up now
+[2265.68s] revisiting for Q2, and you'll see why
+[2267.92s] once we get to the results.
+[2269.84s] So,
+[2271.4s] and that's a little bit of a spoiler, so
+[2272.64s] sorry about that.
+[2274.0s] So,
+[2274.96s] winds up then kind of going and saying
+[2276.28s] like, "Hey, like you need less
+[2278.2s] reprocessing of course up here, but now
+[2280.6s] a lot more production for for that
+[2283.04s] particular raw inputs, and then
+[2285.2s] ultimately coming down into the hub."
+[2288.64s] The last thing that I wanted to
+[2289.8s] experiment with is
+[2291.96s] and and the question that kind of arises
+[2293.88s] is, all right, you have all these like
+[2296.48s] you're producing different amounts of
+[2299.48s] those sciences at different qualities.
+[2301.72s] So, that means that when it comes to the
+[2304.28s] bot traffic at the hub,
+[2306.56s] specifically here, if we go look at
+[2307.92s] this, right?
+[2309.32s] We come down here to the hub,
+[2311.4s] you can see that this is the equivalent
+[2312.88s] amount of legendary science you're going
+[2314.32s] to need compared to the
+[2317.4s] way more amount that you're going to
+[2318.56s] need for quality one. And there's
+[2320.08s] varying amounts of that science that
+[2322.04s] you're going to need at each of those
+[2323.08s] quality levels.
+[2325.8s] So, then that translates, of course, to
+[2327.92s] labs. So, I have a set of save files
+[2331.56s] that I'm going to demonstrate where I
+[2333.6s] wind up actually creating here
+[2336.04s] a lab simulator. Uh what this is is
+[2339.4s] these are
+[2341.48s] you know, you're going to have
+[2342.28s] effectively, just for simplicity's sake,
+[2344.12s] you're going to have 32 inserters for a
+[2346.44s] bank of labs. So, what this is doing is
+[2349.32s] it's modeling at 160 per second per
+[2352.56s] side,
+[2353.84s] 240 per second, 100 or you know, 640 per
+[2359.0s] Yeah, 640 here.
+[2360.72s] And then over here, this is going to be
+[2362.0s] like more and more. Anyway, you get the
+[2363.68s] idea.
+[2364.56s] The point is that each of the different
+[2365.92s] quality levels, you're going to need
+[2367.4s] more and more inserters, and they're
+[2369.16s] going to have to swing more often. So, I
+[2372.08s] have clocked all these inserters here to
+[2375.04s] simulate the input that the labs would
+[2377.92s] wind up actually having on Novus to kind
+[2380.0s] of get an idea of how expensive would
+[2381.88s] these inserters be if we take that into
+[2385.0s] account as well.
+[2386.56s] So, let me show and walk you through
+[2387.76s] some of those save files. So, here's a
+[2389.44s] Q1 version. We're making 460,000 per
+[2392.6s] minute that we are creating of space
+[2394.56s] science.
+[2395.76s] And you can see that here, I have gone
+[2397.56s] and created four of those ships. Each of
+[2400.56s] the save files always have four, and
+[2402.8s] some of them have the labs, and some of
+[2404.2s] them don't.
+[2405.6s] So, I've so I can test both in
+[2407.48s] isolation.
+[2408.8s] You wind up seeing here that these are
+[2410.52s] all the raw sea of actual space science.
+[2414.36s] You need 32 lanes. And so, for
+[2417.04s] comparison, that is twice the scale of
+[2419.52s] my current base. So, I've just done this
+[2421.56s] so that for future, if we w
+
+ant to scale
+[2423.44s] up, that's kind of like an indicator of
+[2425.2s] what that would look like, but also
+[2426.32s] creates more of a load on the network.
+[2428.64s] You can see here that we're going to
+[2429.8s] need a almost 3,000 bots constantly
+[2432.84s] running to keep up with the demand here
+[2434.88s] for all this science that is uh very,
+[2437.76s] very difficult to even see what's
+[2439.4s] happening.
+[2441.28s] But, you need a lot more bots to deliver
+[2443.24s] all of this science here.
+[2445.12s] So,
+[2446.04s] here's our huge bank of simulated labs,
+[2447.92s] so we can wind up seeing that. Now,
+[2450.48s] next, let's go and we'll talk through
+[2452.68s] Q5, which is a very different one. So,
+[2455.48s] at the extreme, let's go all the way up
+[2457.8s] to Q5 that exists.
+[2460.4s] So, if we come here and we look at this,
+[2463.52s] oh, wow, we need a lot less bots.
+[2466.44s] Look at this.
+[2467.52s] We need like maybe 200, 300 bots to do
+[2470.8s] this.
+[2472.04s] So, you can wind up seeing here that
+[2474.0s] this is constantly getting fed and going
+[2476.64s] to all of these labs. Now, you'll notice
+[2478.76s] there's some gaps in here, that's
+[2479.96s] intentional. Each inserter can produce
+[2481.88s] 80 per second. 80 per second uh times
+[2484.48s] two is 160, and 160 times a a a the
+[2489.0s] total of six is 960 per second, which,
+[2492.08s] if you divide that by 240, is going to
+[2493.96s] be four belts worth of science. So, you
+[2496.8s] can feed two in for every eight total of
+[2501.0s] that you would for normal quality
+[2502.44s] science. So, that's why I've just very
+[2503.76s] simply had two inserters per lane,
+[2505.64s] that's just getting routed to the actual
+[2507.04s] labs. And if your labs are actually
+[2508.84s] clocked, you can just use two inserters,
+[2511.44s] and that's all you end up needing.
+[2513.2s] So, this is kind of like the sheer
+[2515.12s] difference in scale of to one extreme of
+[2517.92s] Q5 going all the way down to Q1 in terms
+[2520.12s] of how much traffic and throughput
+[2521.76s] you're going to have at the hub, right?
+[2523.16s] And just to be able to go and deliver
+[2524.52s] those items. The big pro strong side of
+[2527.04s] Q5 is this setup. The downside of Q5 is
+[2531.4s] the amount of raw asteroids you're going
+[2533.2s] to have to collect. So, compared to the
+[2535.24s] Q1 ship that we saw that it barely ever
+[2537.76s] has to run back and forth between the
+[2539.2s] planets,
+[2540.36s] you're going to see here, this one here
+[2542.16s] for like the actual travel between the
+[2544.28s] planets is going to be very often. It's
+[2546.56s] much, much more frequently. So, like 80
+[2548.36s] 60 to 70% of the time it's actually
+[2550.16s] traveling back and forth cuz it just
+[2551.6s] needs to constantly collect more and
+[2553.08s] more raw items.
+[2555.0s] So, that's the question. At all these
+[2557.16s] different quality levels and taking into
+[2559.96s] account the labs,
+[2561.76s] which of these sciences is going to
+[2563.44s] perform the best? So,
+[2565.76s] I've talked through as much as I can
+[2567.2s] right now. Let's just get right into the
+[2568.76s] results and I'll tell you which one's
+[2570.04s] the best.
+[2571.12s] So, when before we actually ran the
+[2572.48s] benchmarks, everyone on my Discord,
+[2574.76s] including myself, was convinced that Q5
+[2576.48s] was going to be the winner.
+[2578.16s] So, when we actually got the results as
+[2580.64s] you're seeing now, we were the our jaws
+[2583.2s] hit the floor when we wound up realizing
+[2584.64s] that rare was actually better. It
+[2586.76s] actually we were I think suffering from
+[2588.32s] copium a lot because we kept on
+[2590.8s] iterating on Q5, constantly making it
+[2593.28s] better. We went through 11 different
+[2595.4s] versions and improvements and
+[2597.0s] benchmarked all of them just trying to
+[2599.12s] squeeze out a one microsecond here, two
+[2602.16s] microseconds there. I'll dive more into
+[2604.52s] some of those changes cuz that actually
+[2605.88s] helps explain all the concepts of which
+[2607.48s] ones were worth it beforehand that I've
+[2609.56s] talked about so far.
+[2611.24s] But, it So, it winds up being that rare
+[2614.16s] actually is the best quality science
+[2617.24s] that we designed. So, all these designs,
+[2618.92s] just to recap on that, they're all
+[2620.56s] designed for 1920 per second. So, each
+[2622.84s] one is equivalent that. So, Q1 winds up
+[2625.0s] making a 7680 science per second and
+[2629.08s] this is for across four ships. You wind
+[2630.84s] up having then the Jessie Mark II makes
+[2633.08s] 2560 and so, but they're all the same
+[2635.28s] effective amount of science. This is all
+[2637.4s] with simulated with bots pulling things
+[2639.28s] out and in this case getting unloaded
+[2640.68s] into infinity chests.
+[2642.76s] So,
+[2644.16s] here, what's interesting, when I first
+[2646.64s] did these tests, I ran them without epic
+[2649.36s] because I assumed there'd be a clear
+[2650.72s] pattern. When you looked at this
+[2651.88s] initially, you see Q1 is better, Q2 is a
+[2654.32s] little bit worse, and then Q5 is better
+[2655.92s] all of a sudden. It's like like why is
+[2658.12s] Q1 the worst, then Q2 is better, and
+[2660.36s] then Q5 winds up being better than that,
+[2662.08s] but then it switches to Q3. The moment
+[2664.08s] we introduced an epic version, so I
+[2666.08s] created this Skyler Mark 1,
+[2668.76s] that's where the pattern was really
+[2669.92s] clear. So, Q2 and Q4 are equal. They are
+[2674.08s] almost exactly equal. They are a 0.18%
+[2677.16s] difference between the two. Now, again,
+[2679.32s] I the ships could be optimized, right?
+[2681.48s] And there's things that we can do as we
+[2682.64s] learn from Q5, but the the point was
+[2685.6s] that the initial ships with the exact
+[2687.08s] same methodology for how they were
+[2688.88s] designed, they wound up being almost
+[2691.16s] exactly equal. So, the pattern really
+
+ is
+[2693.76s] that Q1 has way too much science
+[2696.44s] production and too much bot activity on
+[2699.2s] novice.
+[2700.52s] Q4 and Q2 are equivalent in terms of
+[2702.6s] balancing out the amount of production
+[2704.76s] and upcycling and bot activity, but then
+[2707.08s] Q5 winds up being slightly better
+[2709.48s] assuming the reduction in the bot
+[2711.36s] activity at the hub.
+[2713.28s] But then Q3 is the best of both worlds.
+[2716.56s] You have 1/3 of the actual bot activity,
+[2718.68s] 1/3 of the actual amount of inserters
+[2720.72s] that you wind up needing.
+[2722.88s] And then you also wind up having 1/3 of
+[2726.08s] a lot less reprocessing that you wind up
+[2728.76s] needing at Q3.
+[2730.64s] But then so anyway, so it winds up
+[2732.64s] actually kind of balancing itself out.
+[2734.52s] And no matter how hard we try to make Q5
+[2737.16s] a little bit better, a little bit
+[2738.36s] better, Q3 still winds up winning in the
+[2741.2s] end.
+[2742.28s] So,
+[2743.28s] that's the actual answer. Which science
+[2745.24s] is going to be the best? It's going to
+[2746.64s] be Q3. Now, what we'd explored in the
+[2748.68s] past is Q1 or Q5 better. So, that still
+[2751.92s] proves to be true. Q5 is better than Q1
+[2754.32s] by a significant margin, right? But Q3
+[2757.92s] just slightly starts to outperform Q5.
+[2761.96s] So, let me go through now just all those
+[2764.4s] 11 designs that we talked about for Q5.
+[2766.44s] I'm not going to go through each one,
+[2767.6s] but I'm I'm going to touch on a couple
+[2768.96s] highlights to talk about which methods
+[2771.04s] actually wind up being better for the
+[2773.4s] ship that you're seeing now behind me,
+[2775.28s] which is the ultimate Mark IV, which is
+[2777.24s] the final iteration of Q5.
+[2780.56s] So, here's the account of all of those
+[2781.88s] changes. I lied, there was actually 12
+[2784.32s] total designs, not just 11.
+[2786.48s] So, what you're seeing on the bottom is
+[2788.24s] the Forester. That's the very first uh
+[2789.96s] design that I want to showcasing in the
+[2792.16s] original beginning of the video. That's
+[2793.76s] the current version that's in my mega
+[2794.92s] base. I used that kind of as a baseline
+[2796.4s] for Q5. So, you see that the first
+[2798.04s] version of Walt winds up being better
+[2801.04s] than like having two of those ships
+[2803.08s] winds up being better than the original
+[2804.36s] Forester. So, that's a So, we've already
+[2807.4s] through some of the different designs
+[2808.96s] and like my original approach was better
+[2811.68s] than what I was doing before. So, that's
+[2812.92s] a good thing. Now, what was interesting
+[2815.08s] is when you see Mark 2.2, the changes
+[2817.72s] that came from that was they would you
+[2820.8s] wind up introducing going and using Q4
+[2823.08s] water production increase the yield of
+[2824.76s] Q5 S ice asteroids. And that made the
+[2828.2s] largest difference here. There's some
+[2829.8s] minor things that then Klux wind up
+[2831.8s] adding. So, adding like reducing a lot
+[2834.76s] of like the like clocking the the fluid
+[2837.12s] producers on on the right hand side,
+[2839.2s] like switching it to voiding via
+[2840.96s] concrete cuz that was a little bit
+[2842.0s] better than just voiding via barrel
+[2843.52s] recipe. There was also less full belt
+[2846.4s] reads that wind up getting added and
+[2848.24s] then also clocking the iron out sorters
+[2850.36s] from the furnaces. So, those those
+[2853.52s] changes going from Walt Mark 1 to Mark
+[2856.44s] 2.2 wind up making an improvement where
+[2859.8s] the the old version was about 5% worse.
+[2862.92s] Then, when we go and get to the the next
+[2865.76s] part that wind up being a little bit
+[2866.92s] more interesting, we get to Mark 2.3.
+[2870.68s] That's where we introduced asteroid
+[2872.68s] collector clocking. So, you can wind up
+[2875.04s] seeing that 2.3 is way up above 2.2. So,
+[2878.68s] if you look at that, we wind up seeing
+[2880.24s] that like 2.2 versus 2.3
+[2883.32s] and we'll ignore the ones that are in
+[2884.68s] between cuz those were failed
+[2885.88s] iterations, but you wind up seeing that
+[2887.68s] 2.3 winds up being at about 208
+[2890.92s] microseconds versus 2.2 winds up being
+[2893.36s] 216 microseconds. That's eight
+[2895.2s] microsecond delta. So, that's that's a a
+[2898.12s] significant amount that came just from
+[2899.84s] asteroid collecting alone. So, that's
+[2901.48s] clearly worth it when it comes to that.
+[2904.44s] So, then when we get to the the next
+[2907.12s] version that's a little bit better than
+[2908.28s] 2.3, which is 2.7,
+[2911.28s] which I'm going to talk about, uh that's
+[2913.6s] where we wind up fixing a a mistake that
+[2916.8s] I wind up making, which is where I
+[2918.64s] forgot to actually clock the fusion
+[2921.56s] inserters that go into the uh the the
+[2924.8s] the fusion uh not
+[2927.12s] plants. And that's actually where you
+[2928.84s] see that that actually wind up being
+[2930.48s] worth it as well was doing that
+[2933.24s] specifically cuz that's where we got uh
+[2934.96s] we we reduced by another four
+[2936.6s] microseconds here.
+[2938.4s] I appreciate the fact that everything
+[2940.6s] I'm talking about now is in two or three
+[2942.64s] microseconds, and yes, that's how hard
+[2944.96s] we were trying to make Q5 better.
+[2947.76s] But, still, if this is if you can
+[2949.84s] extrapolate this to promethium and
+[2951.64s] there'll be very similar patterns that
+[2953.2s] you wind up seeing there, and that's
+[2954.28s] where the benefits are going to be much
+[2955.68s] much higher.
+[2957.08s] Finally, in the version 2.8 and Mark 4,
+[2960.72s] those were almost exactly equivalent,
+[2962.84s] one microsecond delta. Mark 4 was the
+[2965.12s] one that I wind up actually choosing,
+[2966.88s] and the reason I wind up choosing it is
+[2968.32s] because they didn't use sushi belts at
+[2970.52s] all, and Klax spent a lot of time, I
+[2972.24s] think about six hours trying to ge
+
+t that
+[2973.88s] into a good spot. So, I I wanted to
+[2976.0s] appreciate that and and utilize that
+[2978.56s] design. So, in 2.8, what I wind up
+[2981.24s] fixing was a bug that I introduced where
+[2983.64s] we would accidentally
+[2985.68s] reprocess constantly carbonic
+[2987.96s] unnecessarily. You should never be
+[2989.36s] reprocessing carbonic cuz you're always
+[2990.96s] going to be running low on it. It was a
+[2992.32s] bug that I've had in the circuit logic.
+[2994.56s] So, that made the the final improvement.
+[2996.64s] Now, that same fix was created forked in
+[2999.08s] parallel by Clux and ultimately that
+[3001.36s] wound up getting into Mark IV.
+[3003.36s] So, that was ultimately just making sure
+[3005.8s] that we are only reprocessing ice and
+[3008.68s] the metallic asteroids because that's
+[3010.28s] what we're going to have in excess. Then
+[3012.76s] summary, the things that are worth it,
+[3014.24s] asteroid clocking without a doubt, going
+[3016.64s] and using the normal recipe for ice
+[3019.12s] production using epic water to produce
+[3021.84s] the actual like getting extra ice is
+[3023.8s] also worth it.
+[3025.24s] And then ultimately, going and clocking
+[3027.44s] the fusion inserters is also something
+[3030.68s] that is worth it. And there's a
+[3032.84s] you can check it out yourself. There's
+[3034.32s] going to be blueprints in the video
+[3035.4s] description below, but you can see how
+[3037.08s] that's actually being clocked in the
+[3039.04s] both the wall design and now in the
+[3042.52s] final version, which is the Fring. And
+[3045.4s] we'll talk about that design here last.
+[3048.68s] The last thing that I want to talk about
+[3050.24s] is are bigger ships better or smaller
+[3053.24s] ships but more ships? So, which one's
+[3055.64s] actually going to wind up winning out?
+[3056.68s] So, the ship that you see behind here is
+[3058.48s] twice the scale of Jesse and we've
+[3060.24s] called this one the Fring.
+[3062.12s] So, you can see the original Jesse Mark
+[3064.12s] II, which wound up being the best ship
+[3066.64s] that we wound up designing. Now, Akara a
+[3069.8s] few months ago on my Discord wound up
+[3071.68s] creating also a Q3 variant but had made
+[3074.2s] it a twice the scale. So, just running a
+[3075.84s] benchmark just on that quick divine that
+[3078.52s] was prototyped, it really proved to be
+[3080.64s] better. So, that wound up leading me to
+[3083.28s] going and designing the Fring from
+[3084.96s] scratch, which uses all the concepts we
+[3087.4s] learned from Q5 and all those designs
+[3089.2s] that we learned from those improvements
+[3090.68s] that I was just talking about and
+[3092.16s] applied those to the Fring. So, that
+[3093.88s] what made it slightly better and
+[3095.88s] improved on that design. And that's that
+[3097.28s] final design that you saw behind
+[3099.24s] originally when we first transitioned
+[3100.88s] here. So,
+[3102.72s] so the Fring winds up using all the best
+[3104.52s] of both worlds. It uses uh uncommon ice.
+[3107.12s] It winds up going and using in asteroid
+[3109.6s] collecting the dynamic schedule that we
+[3111.32s] wind up having and then ultimately wind
+[3113.6s] up making the ship a little bit more
+[3114.72s] compact and using less asteroid
+[3116.36s] collectors. So, that was the the design
+[3119.36s] choices that went into that final design
+[3122.04s] that came in. So, it's very clear here
+[3124.04s] that the pattern is Jesse Mark II makes
+[3127.0s] uh there was four ships that were needed
+[3129.0s] for the benchmark, whereas the Fraine
+[3130.8s] and Acara, those different versions had
+[3132.64s] only two ships that were required. And
+[3134.76s] you can see that there is a very clear
+[3137.04s] UPS improvement that comes by about
+[3139.84s] there was a it was 10% worse to run two
+[3142.52s] ships rather than just wanting one
+[3144.08s] larger big ship, right? So, you wind up
+[3146.08s] seeing that that's that's the case from
+[3147.84s] the best version that we had. So,
+[3151.32s] that's the answer on should you run more
+[3153.6s] ships or one large ship is you should go
+[3156.76s] and run one you should build a ship for
+[3160.4s] the scale of the base that you're
+[3161.72s] currently running when you're running
+[3163.52s] when you're designing for the mega base
+[3165.88s] situation.
+[3167.28s] So,
+[3168.48s] with that, let's go and ship this thing
+[3170.56s] into production.
+[3171.96s] All right, back in the actual save file.
+[3174.72s] We have actually launched the Fraine
+[3176.28s] Mark II. II. All right, you didn't see
+[3178.72s] this in the benchmark results. There's a
+[3180.0s] tiny small differences that I made as I
+[3182.36s] was running this with research
+[3183.56s] productivity turned on. I started to
+[3185.24s] notice some problems. One of them was
+[3186.88s] like really sporadic production because
+[3189.08s] this was clocked for twice the speed. I
+[3191.08s] needed a way to shut this down before we
+[3193.92s] got uh to the point of just honestly
+[3196.52s] anytime that science wind up going and
+[3198.16s] getting ejected like this would kick the
+[3199.6s] clocks back on because we dropped below
+[3201.36s] the limit that we had set, which we
+[3203.0s] wanted 230,000 space science packs in
+[3205.04s] here. So, what it would wind up doing
+[3206.72s] was just like, "Okay, we 2,000 230,000.
+[3209.36s] All right, we launch dropped 1,000. All
+[3210.88s] right, run for a couple seconds and then
+[3212.24s] stop." That constant starting and
+[3214.44s] stopping was really aggressive on the
+[3216.4s] assembly machines and they couldn't even
+[3217.76s] benefit from the actual full clock
+[3219.76s] cycle.
+[3220.88s] So, what I what I just changed and this
+[3223.0s] will be in the blueprint book and you
+[3224.4s] can get this the latest version. I
+[3226.84s] didn't feel like going to re re re re
+[3229.08s] re-benchmarking them because it's such a
+[3230.6s] small difference and you wouldn't even
+[3231.96s] see it in the actual benc
+
+hmark save
+[3233.76s] files cuz they're running at full speed.
+[3235.4s] But, what I wound up just doing very
+[3236.48s] simply is I just said like, "Hey,
+[3238.68s] anytime we drop below 153,000, go and
+[3241.56s] emit a science pack signal and keep on
+[3244.08s] running science until we get to the
+[3246.92s] total amount that we want, which is
+[3248.68s] 230,400."
+[3250.64s] That number is specifically chosen
+[3251.96s] because that's the amount that we can
+[3253.04s] actually produce on a trip there and
+[3254.72s] back. And so, the idea is that if you
+[3257.28s] are constant or just slightly over that,
+[3259.4s] so if you're constantly running space
+[3261.24s] science, you'll constantly stay in this
+[3263.52s] latch state. So, if you're at full
+[3265.52s] consumption rate. But, then when you go
+[3267.24s] under that, right now what we're running
+[3268.88s] here for, you know, research products at
+[3271.08s] the rate, we just cycle back and forth
+[3273.84s] between the low condition, which is less
+[3275.68s] than 53,000, and we wait here. You'll
+[3278.28s] continue to notice this. We'll just wait
+[3279.8s] here for a load cuz we do consume this
+[3281.24s] relatively quickly.
+[3283.0s] So,
+[3284.48s] right now the difference that would
+[3285.92s] happen before is this would constantly
+[3287.68s] be producing right now. But, I don't
+[3289.24s] want it to produce because I'd rather it
+[3291.12s] produce for a large period of time so
+[3294.68s] that we can benefit from the clock uh
+[3297.48s] that we have on the actual assembly
+[3299.08s] machines so that it's very smooth
+[3300.64s] production and then a full stop.
+[3303.64s] So, just latching the science output.
+[3311.0s] You can see there it goes and gets
+[3312.12s] kicked off.
+[3313.36s] Now, we're going and producing at full
+[3315.12s] speed, bringing every single thing in,
+[3317.36s] and we'll keep on running until we get
+[3319.28s] over that amount, and you'll see that
+[3321.64s] also very nicely here on the actual
+[3323.4s] production graph. You see these very
+[3324.92s] large periods of a lot of science
+[3326.56s] getting produced and then nothing. Large
+[3328.32s] amount and then nothing.
+[3330.24s] So, in this case, we're actually taking
+[3331.96s] off and we're going to get to the point
+[3333.56s] where we have 100% of that science
+[3335.24s] already.
+[3336.24s] So, even though in the trip
+[3338.96s] right now we're not going to be
+[3339.76s] producing the whole time that we're
+[3341.28s] going, but because we have this buffer
+[3343.68s] that we need to satisfy, this constraint
+[3345.84s] here that's telling us how much rare
+[3348.4s] that we actually have on the belt,
+[3350.72s] that is going to be the other thing we
+[3352.4s] need to satisfy. So, I don't really care
+[3354.0s] about them being synchronized, like when
+[3356.2s] we're going consuming, when we're
+[3357.4s] producing.
+[3358.72s] The point is just that we still have
+[3360.6s] both of those conditions need to always
+[3362.28s] be satisfied, and that's why
+[3365.4s] in this particular case you're seeing,
+[3366.72s] "Okay, we're traveling. We're not
+[3367.72s] producing science." That's fine. What
+[3369.56s] we're doing right now is we are just
+[3371.96s] waiting to make sure that we have enough
+[3373.84s] of the rare uh actual items. You see
+[3377.04s] here, now we get over Novice, we have
+[3379.48s] plenty of the actual rare materials that
+[3381.72s] we need.
+[3382.88s] We don't have enough space science, but
+[3385.68s] we're not going to go and take off from
+[3388.08s] Novice until we are drop below 150.
+[3391.56s] And that just kind of very is a very
+[3394.32s] simple schedule to keep the ship not
+[3397.6s] constantly running back and forth
+[3399.12s] between the different uh
+[3400.88s] different uh places. So, anyway, so
+[3402.64s] those are some of the changes that I
+[3403.76s] made since uh since the actual
+[3405.36s] benchmarks.
+[3406.88s] Uh otherwise,
+[3408.96s] there it is. Got rare science flowing
+[3411.4s] through.
+[3412.52s] Had to change the clocks here, which was
+[3414.52s] about as hard as going here, and if I
+[3418.36s] can actually see this cuz it's so dark,
+[3420.72s] just changing this to rare.
+[3422.52s] And that was all I had to do for the
+[3424.76s] circuit tree. The more complicated bit
+[3427.48s] was draining all of the white science,
+[3429.28s] and then just making sure none of the
+[3430.44s] inserters got stuck with holding
+[3432.48s] legendary science in their hands.
+[3434.4s] There's only two or three that actually
+[3435.72s] had that, so that wasn't too bad, but
+[3438.2s] still something that I had to kind of be
+[3439.68s] aware of as I was I was looking at that.
+[3442.68s] All the legendary science has been since
+[3444.4s] eradicated, so.
+[3447.76s] So, now yeah, we're running rare science
+[3449.2s] here. That means that we could keep
+[3451.68s] because it is going from six down to
+[3455.56s] basically like like like six science
+[3457.92s] down quality science student down to
+[3459.6s] three so 300% effective
+[3462.0s] we wind up then just having to double
+[3463.32s] the lanes but that was all we wind up
+[3464.8s] having to do so I could keep the exact
+[3466.16s] same belt routing that I had before but
+[3468.68s] instead of having a one belt of
+[3469.92s] legendary science that I feed now I have
+[3471.52s] two belts of rare science that I need to
+[3473.24s] feed down here.
+[3474.64s] I had some issues with this occasionally
+[3477.16s] not fully stopping here because it was
+[3479.48s] running just rare.
+[3481.08s] So what I wind up doing is I doubled up
+[3483.68s] and added one extra inserter just to
+[3485.44s] make sure that we constantly had back
+[3486.96s] pressure here of the rare science but
+[3489.52s] then otherwise removed all the other
+[3490.68s] inserters. So we keep this still very
+[3492.52s] compact like we had before but we do
+[3494.72s] need to now have a couple little extra
+[3496.6s] outs like just modifying this in place
+[3
+
+499.24s] to account for rare.
+[3500.92s] So we we did need to go and increase the
+[3503.04s] number of inserters overall for that but
+[3505.16s] that also makes sense. We have more
+[3506.4s] throughput now down here.
+[3508.4s] So
+[3509.24s] that's it. So hopefully
+[3511.76s] I you found this as earth-shattering as
+[3514.04s] I did that legendary science or T1 and I
+[3517.24s] I would have thought it was either
+[3518.24s] legendary or it was going to be common
+[3519.56s] science that was going to be the best
+[3520.72s] but here we are in this weird world of
+[3523.36s] that this blue
+[3525.92s] science
+[3527.2s] is is is the is the best flavor here of
+[3530.48s] of what you can use while mega basing.
+[3531.88s] So hopefully appreciate it. This these
+[3534.12s] kind of video takes a whole bunch of
+[3535.36s] effort for me to go and do all the
+[3536.8s] research and all the testing and so
+[3538.88s] again special shout out to all the
+[3540.52s] people in my Discord. Thank you so much
+[3541.76s] for all the help but if you appreciate
+[3543.6s] this I would love or if you don't mind
+[3546.16s] liking the video that helps out the
+[3547.84s] channel a whole bunch and if I you think
+[3550.84s] I've earned your your subscription today
+[3553.2s] I'd I'd love for you to hit that button.
+[3555.6s] Never going to ask for it but just you
+[3557.08s] know if you appreciate what you're doing
+[3558.56s] it motivates me a lot so thank you very
+[3560.96s] much. Anyway, thank you for your
+[3562.28s] attention span for watching this as
+[3563.68s] always and I will see you in the next
+[3565.4s] video.
+

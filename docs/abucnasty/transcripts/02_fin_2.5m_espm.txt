@@ -1,0 +1,921 @@
+# Fin [2.5 Million ESPM Megabase]
+# Channel: abucnasty
+# Video ID: wRlRX-6azAU
+# Transcript length: 40892 chars
+# Fetched: 2026-08-31
+# Source: TranscriptAPI.com
+
+[12.92s] Hello and welcome back to Factorio. My
+[14.48s] name is A Bug Nasty.
+[16.8s] In the last video I said this was the
+[18.04s] last of this mini series, but I've got
+[19.92s] one more addition to talk through.
+[23.84s] So, I've been reflecting recently on the
+[26.72s] fact that we are like the that I'm
+[28.4s] constantly editor, constantly making
+[30.32s] changes, small tweaks to the base
+[32.04s] constantly over time. And and over time
+[34.96s] as you continue to make optimizations to
+[37.04s] all your designs, you sometimes lose
+[39.32s] sight of ultimately, you know, how much
+[42.56s] improvements have been made to the base.
+[44.84s] Because if I look back at like the last
+[47.0s] 9 months
+[48.52s] of uh creating content here on YouTube,
+[51.72s] I haven't actually scaled up my base at
+[54.16s] all. I I have scaled up the ability to
+[56.48s] make prometheum science, which is kind
+[58.84s] of the conclusion of this series here.
+[61.16s] But, other than that, everything is
+[63.08s] effectively the same in terms of the
+[64.72s] target values that we're hitting, right?
+[66.56s] So, like the the the goal has always
+[68.52s] been for all the sciences, ignoring the
+[71.44s] ESPM number because it's kind of
+[73.28s] irrelevant here because it's just
+[74.68s] time-based in this case.
+[76.72s] I've been targeting for about, in this
+[79.04s] case, 16 belts of science has been my
+[81.4s] target, right? So, for uncommon, we wind
+[84.12s] up doing eight belts of science. For
+[85.68s] legendary, it's some fraction of that.
+[87.48s] It's 640 science per second for
+[89.24s] legendary, right? But, across all the
+[91.08s] different sciences, that's been the
+[92.48s] goal. And if you look at like, you know,
+[94.4s] all of time here, like even going back
+[96.36s] 1,000 hours, nothing has really even
+[98.12s] changed in terms of the consumption
+[99.6s] rates, right? So, like if I look at
+[101.04s] blue, the only difference is if we're
+[102.32s] running 60-second research or we're
+[104.28s] running
+[105.52s] uh research productivity. And then
+[106.68s] that's it. Those are the two numbers
+[108.28s] that exist over all of time.
+[110.68s] Now, the metric that I care about is not
+[113.24s] so much the number because we can
+[114.76s] continue to copy and paste the same
+[116.96s] designs once we have kind of come up
+[119.32s] with what the best designs are. What I
+[121.52s] care a lot more about is what is this
+[123.44s] top number here on the right-hand corner
+[126.68s] as we're doing any of these individual
+[128.72s] researches, right? So,
+[131.64s] I have kind of a unique opportunity
+[133.32s] because I haven't actually scaled up my
+[135.48s] base and I've only been focusing on UPS
+[138.24s] optimizations and the exciting part is
+[141.16s] what I want to do is I want to take that
+[143.72s] mega base that I originally created a
+[145.84s] video for. It's the very first video on
+[147.32s] my channel where I debuted this base and
+[150.68s] what its capabilities were and what the
+[152.28s] target was.
+[153.76s] And I want to benchmark that base
+[155.959s] compared to the current latest version
+[159.36s] that I have
+[160.84s] and just compare and contrast and see
+[162.8s] what are the UPS gains that we've had
+[165.24s] over 9 months of researching, exploring,
+[168.12s] optimizing, tweaking as a community and
+[171.16s] see what that looks like.
+[173.04s] So,
+[174.32s] let's zoom way out here.
+[177.08s] And what I'll do also just for the own
+[179.4s] dramatic effect of what happens here,
+[182.08s] let me go ahead and turn pollution on.
+[184.64s] And what I'll do is I'll take you now
+[186.56s] back to that old base so that we can go
+[189.48s] and see it and I can talk about some of
+[191.4s] the complete changes that exist since
+[193.36s] back then. And then we'll follow up the
+[195.44s] video with a nice benchmark.
+[201.8s] Ah,
+[203.0s] blast from the past. This is taking us
+[204.8s] all the way back to May 18th of 2025, so
+[208.2s] almost 9 months ago to be exact.
+[212.76s] So,
+[213.8s] as you can see,
+[215.16s] there's a lot of difference immediately
+[217.2s] from the red pollution cloud that
+[218.6s] existed here. Got a nice video on
+[220.92s] talking about managing pollution and a
+[222.88s] lot of the things that we've done to to
+[225.0s] improve the actual pollution cloud that
+[227.28s] we have here.
+[228.84s] We'll go ahead and turn that off and
+[230.64s] we'll focus a little bit on some of the
+[232.88s] old designs and the old labs and
+[235.24s] everything that existed here.
+[237.24s] So, I'll make this as short and sweet as
+[238.76s] possible as I don't want to waste your
+[240.28s] time on that.
+[242.08s] The old lab, and this was the old video
+[244.44s] from the original base. This is the the
+[246.4s] actual uh setup that we have here.
+[249.36s] You can see all the original labs that
+[250.959s] were not the 16 beaconed nice labs that
+[253.0s] we have. They were 13 beaconed and used
+[255.04s] a really simple
+[256.76s] uh clock generator for or not clock, but
+[259.48s] just a two tick on every once in a while
+[261.72s] for bulk inserters that would turn on
+[263.76s] and grab things from the belt.
+[266.6s] The ultimately, this was the main setup.
+[270.4s] Back then, we had a huge amount of of
+[273.52s] farms that I ultimately shut down
+[275.28s] because they were too expensive at the
+[276.96s] time.
+[278.08s] And ultimately, we learned over time
+[279.919s] that actually me having left all these
+[281.919s] trees to be constantly dying was one of
+[283.919s] the most expensive UPS decisions I
+[285.919s] possibly could have made.
+[287.72s] So, actually pruning all these trees and
+[289.4s] removing them was actually a huge
+[290.919s] improvement.
+[292.72s] Back then, military science was a lot
+[294.68s] different. We had some relatively
+[297.08s] interesting choices with directly
+[299.12s] putting things into a silo and then uh
+[301.56s] maximizing the amount of walls that we
+[303.44s] wind up creating from the
+
+re.
+[305.32s] And then ultimately, this was reworked
+[307.28s] over multiple different episodes and we
+[309.32s] wind up got getting a better design.
+[311.36s] Talk about just overkill on copper
+[313.6s] production here. We have nowhere near
+[315.52s] that kind of requirement for for this
+[317.64s] particular base, right? 61 per second
+[320.08s] and then we're producing up here a total
+[322.919s] of 559 potentially, right? So, just way
+[326.48s] overkill for a lot of things. And that
+[327.919s] was kind of a common pattern back then.
+[331.0s] I used a lot of these like there's a lot
+[332.84s] of things haven't changed. We've just
+[334.24s] optimized all of these upcyclers that
+[336.8s] actually produce the raw ore and ratioed
+[339.04s] things more appropriately.
+[341.24s] Uh we've since then, some things that
+[343.36s] just have changed in general is we've
+[345.0s] We've removed our defensive walls as we
+[346.919s] no longer rely on defenses here in Novus
+[349.44s] as we've completely managed pollution
+[351.12s] ourselves.
+[352.4s] We have the very old green design which
+[354.52s] is a monstrosity that I never want to
+[356.28s] think about ever again. Just talking
+[358.2s] about just abuse of silo chests to the
+[361.0s] absolute extreme. Look at those
+[363.2s] weightless everybody.
+[365.32s] That's
+[366.4s] that is unacceptable nowadays by today's
+[369.68s] standards.
+[371.28s] So
+[372.84s] there's balancers going on all over the
+[374.84s] place. And if you think about it too,
+[377.36s] like this whole base was built in about
+[379.48s] 3 months, right? So this wasn't a a very
+[382.16s] like this wasn't in terms of like actual
+[385.0s] time investment is about a third of the
+[387.4s] time that we spent since then actually
+[389.08s] optimizing things. That's kind of how it
+[390.96s] normally works out.
+[392.68s] Um we don't have any of the solar panels
+[395.0s] and we have some solar farms but not
+[396.8s] much but we're still relying fully on
+[398.48s] reactor setups here. We still have the
+[400.24s] good old starter base that has not
+[401.88s] changed at all in all of this time. This
+[404.24s] is exactly the same as it was back then
+[406.96s] 9 months later which I should probably
+[408.919s] think about revisiting but that is still
+[410.48s] exactly the same.
+[412.04s] The interesting parts are these chemical
+[413.64s] science upcyclers here which were very
+[416.48s] overkill which I've optimized in a
+[418.24s] couple different videos and we
+[420.4s] definitely got a much better Q2 design
+[422.72s] than a lot of these concepts that exist
+[425.919s] and you just again just looking at it
+[427.44s] just weightless all over the place in
+[429.48s] terms of not properly clocking things
+[431.64s] trying to use lead followers as much as
+[433.24s] possible. So just a lot of changes that
+[435.84s] have have have
+[438.0s] have changed over time. One of the core
+[439.84s] mechanics back then that I was employing
+[441.88s] a lot was just reading the contents of
+[444.8s] the individual inserter or the
+[447.0s] individual assembly machine. This was
+[448.96s] before the days of actually having
+[451.04s] talked through and figured out how lead
+[452.44s] follower works or even even the much
+[454.16s] more complicated clocking methods that
+[455.96s] are now commonplace all over my base.
+[458.919s] So
+[459.919s] this was a core concept back then. One
+[461.36s] of the thought processes that I had was,
+[463.24s] "Hey, we should be going and monitoring
+[465.64s] the circuit network, and that's cheaper
+[467.36s] than weight lists." And although here,
+[468.84s] the weight lists are kind of gone, the
+[471.0s] nice part is that we're just we can
+[473.0s] guard that by just using circuit
+[474.52s] control. But, it's not as good as we
+[476.68s] found out over time compared to other
+[480.24s] strategies that we've come up. So,
+[481.56s] clocking has significantly improved
+[483.52s] since back when I was first exploring
+[485.4s] all of this.
+[486.6s] Um we've definitely mastered stack
+[488.24s] inserters at this point. Well, mostly.
+[490.68s] We're close. Utility science is, for the
+[492.84s] most part, unchanged. There's some
+[494.72s] overall like I've mainly changed the
+[496.72s] head layout here, but most of this stuff
+[499.16s] is is almost identical with with some
+[501.8s] changes. We've reduced almost all of the
+[504.24s] the weight lists and proper ratio of
+[505.96s] things, but this is about the same. One
+[507.56s] day, I'll do a a full proper redesign of
+[509.8s] that.
+[510.84s] Um purple science has undergone
+[512.599s] significant changes. There was a
+[514.52s] definitely an overkill amount of steel
+[516.84s] furnaces that were used here. Um not
+[519.599s] clocking things. You can see the weight
+[521.28s] lists are active, but it's actually
+[523.0s] because we're monitoring each individual
+[525.24s] electric furnace and turning them on and
+[526.8s] off. This is better in general because
+[528.839s] it always creates a constant back
+[530.32s] pressure, and you can assume that. But,
+[532.4s] the overall having one global clock for
+[534.52s] all of them, which is what you find now
+[536.44s] in my purple science design, is
+[538.68s] significantly better than just doing
+[540.28s] individual small little circuit networks
+[542.32s] across everything.
+[544.16s] Um this needed to go. This was a
+[545.88s] terrible design choice of just silo
+[548.28s] chests. Look at all those inserters with
+[550.0s] the constant flickering that's going on
+[551.839s] to get them to transport from a belt all
+[555.08s] of the items across this silo buffer.
+[557.48s] So, quite a quite a concept.
+[560.6s] So, overall, that's kind of novice. Uh
+[563.4s] let me go revisit how I was doing red
+[565.16s] science. Yeah.
+[567.28s] Again, lots of weight lists. So,
+[570.08s] definitely have significantly improved
+[571.88s] this design since then. But, an
+[573.96s] interesting concept nonetheless of
+[575.72s] getting us to this original base and
+[5
+
+79.28s] what we've seen.
+[580.68s] So, let's go explore a couple other of
+[584.0s] the overall planets and I'll try to do
+[586.68s] as good of it as I can of doing a
+[588.08s] transition back and forth between these
+[589.68s] planets here.
+[591.2s] This is Volcanus. One of the big things
+[593.36s] immediately when I look at this knowing
+[595.0s] what I know now is all this roboport
+[597.8s] coverage that's here should immediately
+[600.28s] get removed. The chart update time
+[602.32s] that's here and this is a general UPS
+[603.96s] advisory
+[605.24s] having lots of stuff constantly actively
+[608.28s] being scanned across the chart with
+[611.04s] radars or especially just with roboports
+[613.24s] is going to have a cost for UPS.
+[615.72s] So, that chart update time being about
+[617.92s] 0.2 milliseconds was drastically reduced
+[620.2s] in the the new base by just not having
+[622.96s] as much under radar coverage. So, that
+[625.08s] that's a huge difference.
+[626.84s] Um
+[628.16s] in general, I've already talked about
+[629.96s] it, but the Volcanus science was
+[631.24s] redesigned, but you can see even up
+[632.84s] until this last video, this was exactly
+[634.8s] the same. There's the silo chesting that
+[637.56s] was going on and this design works
+[639.12s] really good when you have a measly 8,000
+[642.24s] mining productivity compared to the
+[643.92s] 24,000 that I have now, but that's has
+[647.0s] seen a So, this is very valuable viable
+[650.24s] if you're at a lower mining productivity
+[652.36s] level. I understand that a lot of you
+[653.76s] will go and wind up saying 8,000 is
+[655.4s] already an absurd number and I will
+[656.96s] agree with you.
+[658.32s] So,
+[659.24s] that is a thing that you can wind up
+[660.68s] doing. You can see that this was the old
+[662.32s] Volcanus setup. Otherwise, the core of
+[665.0s] this base here has stayed about the same
+[667.68s] here in this area, which is one day a
+[669.88s] refactor
+[671.839s] that I should definitely do. But,
+[673.72s] definitely some overkill designs in
+[676.04s] terms of the tungsten carbide and then a
+[679.28s] significant amount of actual export
+[682.24s] here. It's about the same, but the
+[683.6s] difference is that the bots had to fly
+[685.16s] across all over the place to deliver
+[686.8s] those parts.
+[688.0s] Um one very big difference here is that
+[690.92s] you'll notice that there's only two
+[692.48s] ships, and these are my old ship designs
+[695.0s] that I had for doing Promethium science.
+[698.64s] And one of the big differences that
+[700.52s] existed back here is that we didn't have
+[703.48s] at this point in time really the ability
+[705.68s] to run
+[706.92s] We had like maybe we could run about
+[709.04s] 32,000 Promethium science per minute,
+[711.8s] but that was it, and that was as far as
+[713.48s] we could go.
+[715.0s] So,
+[716.36s] at that time like the research
+[718.68s] productivity wasn't a goal of mine as it
+[720.96s] is now to be able to have it at half
+[723.24s] speed of everything else. It was an
+[725.0s] eventual goal, but I hadn't quite gotten
+[726.8s] there yet cuz I needed to go and
+[727.92s] optimize everything else that was across
+[729.88s] all the other planets, right?
+[732.08s] So, Promethium science here could cap
+[734.44s] out at a maximum of 32K uh per minute.
+[737.72s] So, what what that or about let's say
+[740.8s] 36,000 thing cuz 18,000 was what these
+[743.64s] were targeted at. Over time I improved
+[745.52s] them to bump them to the maximum that
+[746.88s] you can probably get with this kind of a
+[748.32s] setup, which is about 20,000 on average
+[750.2s] per minute.
+[751.64s] And that was basically the state of
+[753.12s] Promethium science back then. So, I
+[754.48s] could run about 500,000 science per
+[756.68s] minute, effective science per minute at
+[758.56s] the research uh
+[760.2s] uh productivity level that I was at back
+[761.96s] then. So, having scaled that five times
+[764.88s] in terms of capacity and getting from
+[767.52s] 32,000 up to 115,200
+[771.36s] Let's do the math right now.
+[774.08s] Uh
+[775.36s] that's a 3x scaling factor since this
+[777.96s] video was originally released. So,
+[779.44s] unfortunately, I can't really do a
+[780.76s] research productivity demo in terms of
+[783.12s] testing one versus the other because
+[784.68s] it's not an apples-to-apples comparison.
+[786.64s] However, we can test every other
+[788.0s] science. So, what I want to test is I
+[790.36s] want to do mining productivity. I want
+[792.76s] to do physical projectile damage, so we
+[794.36s] do a six science for that. Then I want
+[796.4s] to do also worker robot speed to see how
+[798.12s] much better that is. And then we'll do
+[800.24s] one of the orange sciences, so I think
+[802.28s] I'll pick wind up picking artillery
+[804.0s] shoot artillery artillery shell range
+[806.28s] and just choosing that as the science.
+[807.96s] So, we get some orange science up there.
+[811.0s] Talk through quickly some of the other
+[812.32s] planets. So, white science has
+[814.04s] significantly changed. You can see just
+[815.6s] the number of weight lists just
+[817.12s] literally everywhere, and how that has
+[819.24s] definitely changed over time. We wind up
+[822.12s] having here for white science that it
+[824.88s] would wind up one of the the the big
+[827.12s] differences that exist here when you're
+[829.0s] when you're running this
+[830.52s] is that this ship add a lot that no
+[834.04s] clocking going on for any of these
+[835.8s] asteroid collectors. We were using
+[837.28s] lasers back then. That was a very heavy
+[839.28s] usage for all the interplanetary
+[840.96s] transports was using lasers, and that
+[843.2s] was kind of considered to be a cheaper
+[844.88s] option back then. But, we've learned
+[846.24s] over time that that's way more expensive
+[847.76s] for UPS. So, removing that was a big
+[849.6s] deal and in terms of making things
+[851.28s] better.
+[852.32s] A lot of the ships that I was running
+[853.52s] back then just in 
+
+general the transport
+[855.28s] ships to bring back and forth science
+[856.88s] was all using lasers as well, which
+[858.52s] we've completely changed over to using
+[860.72s] just just traditional turrets cuz
+[862.84s] they're just cheaper.
+[864.6s] And then since we're unloading right now
+[865.96s] some of the pink stuff, let's go talk
+[867.0s] about Fulgora. This design until I
+[869.6s] wanted adopting Klux's design has
+[871.56s] remained unchanged.
+[873.44s] This was at the time one of the first
+[876.4s] non-
+[877.96s] cheesy mechanics based version of Q2
+[880.72s] science. At the time you had wind up
+[882.68s] coming up with already a Q2 science
+[885.04s] version which used rail guns and biter
+[887.28s] eggs to avoid materials. And then over
+[890.36s] time that's obviously been significantly
+[893.32s] refined to it wind up creating a design
+[896.4s] that ultimately can use trains. But back
+[898.12s] then one of the big discoveries for me
+[900.92s] was that I realized that with the the
+[903.64s] the actual ratios and in case this case
+[905.96s] we're belting things in the future
+[907.52s] better designs wind up actually going to
+[909.12s] directly inserting and then voiding with
+[910.6s] trains. But back then this was the
+[912.56s] discovery that I realized that at ratio
+[914.48s] you actually produce enough materials by
+[917.0s] quality up-cycling
+[918.839s] to produce a constant amount for 330
+[922.68s] science per second of the
+[926.32s] beautiful pink stuff, the
+[927.28s] electromagnetic science packs.
+[930.0s] So, that was a at the time not something
+[932.56s] that we had really realized and it's
+[934.4s] interesting to see that the meta has
+[935.88s] completely shifted to now using quality
+[938.32s] science on other planets.
+[940.4s] Speaking of quality science other
+[941.72s] planets, Aquilo has was much larger than
+[945.12s] it is now because at the time I was
+[947.0s] really shooting for getting up the
+[949.44s] railgun shooting speed until you can see
+[951.08s] here that I stopped midway through when
+[952.84s] a bug fix came out to cap it at I think
+[955.2s] it's 12 now is the highest railgun
+[956.84s] shooting speed you have to realistically
+[958.32s] research.
+[959.76s] So, at the time I had optimized this for
+[962.48s] eight full lanes of Aquilo science, but
+[964.28s] I've gone down to four because we have
+[965.64s] no longer the need for that. But again,
+[967.68s] and I've touched this on this in other
+[968.96s] videos, the the last previous video
+[970.64s] where I did a complete redesign of this
+[972.2s] basically covers all my thoughts on
+[973.68s] there. So, this has stayed most of the
+[975.28s] same until I recently just refactored
+[977.24s] it.
+[978.84s] So, let's see. Uh Gleba I also talked
+[981.92s] about this was almost also identically
+[984.04s] unchanged until the recent uh in this
+[986.56s] series where I talked about the first
+[987.88s] episode where I talked about Gleba. So,
+[989.92s] check go check that out if you want my
+[991.28s] in-depth thoughts on why I changed what
+[992.8s] I changed and how I improve freshness
+[994.56s] over time.
+[995.76s] Um at that time as well, because we were
+[998.12s] only running two ships back and forth
+[999.96s] for Gleba science, we were not able to
+[1001.64s] actually run full speed Gleba science.
+[1003.6s] So, that was also a limitation which
+[1005.0s] we've fixed over time as well.
+[1007.72s] Pollution cloud-wise we've grown
+[1009.04s] definitely in terms of pollution cloud
+[1010.52s] on Gleba, but we utilize it a lot more.
+[1012.52s] So, that's also a net difference.
+[1015.2s] So, now the question that I would have
+[1016.6s] is, okay, so compared to this old base
+[1019.56s] and what we had back then,
+[1022.64s] how much of a UPS improvement have we
+[1024.36s] seen in all the tiny little changes that
+[1027.76s] I've shown on camera, off camera, all
+[1029.64s] the different changes that ultimately go
+[1031.28s] into making the base better? From the
+[1033.6s] lab redesign to the individual sciences
+[1035.88s] which are almost all completely
+[1037.28s] different since back then. All the
+[1039.16s] planet redesigns
+[1040.959s] with the exception of of actually with
+[1043.72s] without exception every single
+[1046.079s] planet has completely changed the way
+[1047.48s] that we make science. How much of an
+[1049.28s] improvement have we made to the overall
+[1052.2s] base and what our UPS numbers are before
+[1054.72s] and after?
+[1056.0s] So, with that I'm going to go and record
+[1058.44s] a whole bunch of background footage so I
+[1059.88s] can go and show all the results of the
+[1061.56s] overlay after I go run all those tests.
+[1063.2s] So, I'll be back in a second.
+[1067.0s] So, I was just going over the benchmark
+[1068.92s] results and I found like a really weird
+[1071.72s] inconsistency. So,
+[1074.2s] I'll show that now to y'all. So, when I
+[1075.92s] was going through these you can see that
+[1077.64s] there's
+[1079.12s] effectively I have like a save file for
+[1080.68s] each of these. So, mining productivity,
+[1082.32s] physical projectile damage, and that's
+[1084.52s] what those mean. The ASR is like
+[1086.6s] artillery shell range, etc.
+[1089.0s] So, when I was looking through those I
+[1090.32s] started to look at this and I said like,
+[1092.52s] "Okay, let's let's look at the whole
+[1094.48s] update time variant." So, this is the
+[1095.76s] 2025 base that I had.
+[1097.96s] Why is physical projectile damage, which
+[1100.6s] is a six second science research, better
+[1102.84s] than mining productivity?
+[1104.8s] So, I was like, "Okay, well, let's go
+[1106.24s] and look at the mining productivity
+[1108.4s] chart that we have." And oh, there's
+[1110.84s] this huge amount of entity update time
+[1114.04s] and that is just these huge waves that
+[1117.32s] are happening
+[1118.76s] here in the very beginning
+[1121.0s] and then it completely dies down and
+[1122.88s] then does absolutely nothing in the
+[1125.36s] So, I was like, "Ok
+
+ay, well, why is
+[1127.12s] that?" So, that's kind of like an
+[1128.32s] interesting metric. So, what's going on?
+[1129.96s] So, let's go look at that.
+[1131.84s] So, let's go open up this save file and
+[1134.72s] we'll talk about it.
+[1137.68s] So, my hunch is the only thing that is
+[1140.04s] an instability is gleba. And this is
+[1142.16s] back when I used to just let agriculture
+[1144.28s] science rot.
+[1146.0s] And so, if we go look at novice and we
+[1147.64s] go look at bot usage,
+[1149.64s] you there's a couple things that you'll
+[1151.48s] wind up noticing right now.
+[1153.6s] There is
+[1155.88s] If we look at spoilage,
+[1157.88s] there's a huge wave of 223,000 per
+[1161.24s] minute spoilage that's getting avoided.
+[1163.72s] And if we look down here,
+[1165.64s] here you're noticing this general trend
+[1167.72s] of there's a lot of spoilage in this
+[1169.28s] particular area.
+[1171.32s] Um So, what that means is
+[1174.92s] there's also
+[1176.2s] a giant kickoff over on Gleba that
+[1178.88s] happens to start right now as well. You
+[1181.2s] have all of the science that is getting
+[1183.52s] currently generated. And so, if we look
+[1185.76s] go look at agriculture science,
+[1188.8s] you're seeing that here over the last
+[1190.6s] like since we started the the the actual
+[1193.32s] benchmark, {quote} {unquote}, there's
+[1195.08s] these giant spikes of agriculture
+[1196.96s] science that's getting generated, which
+[1199.44s] for the past hour doesn't actually get
+[1201.72s] generated at all.
+[1204.12s] So, whereas on my
+[1206.12s] current base, I have constant
+[1208.2s] agriculture science that is constantly
+[1210.2s] getting created and it's kind of
+[1211.56s] minimizing the UPS updates over time.
+[1214.08s] So, it spreads it out over time and you
+[1215.6s] wind up just creating a little bit and
+[1216.88s] throwing it into space and we don't let
+[1218.56s] it actually rot on the planet.
+[1220.76s] What that means is you see this huge
+[1222.6s] amount of bot activity that is coming
+[1224.68s] kind of drawing in bots from literally
+[1226.92s] every single place on the map, and then
+[1230.28s] just absolutely massively bringing out
+[1233.24s] spoilage.
+[1234.72s] Yeah, that's actually what they're
+[1236.0s] doing. They're bringing from the hub and
+[1239.0s] they're bringing spoilage all the way to
+[1241.88s] the end here and requesting the 257,000
+[1246.32s] spoilage that is currently in the system
+[1249.16s] and slowly eradicating it.
+[1253.0s] Talk about a crazy amount of bot
+[1256.36s] activity flying around from all of the
+[1258.72s] map. We have bots coming from everywhere
+[1260.84s] to help out with us.
+[1263.6s] So, that's an interesting thing that I
+[1265.28s] discovered while benchmarking this and
+[1267.12s] trying to understand the difference.
+[1269.44s] I'm I could rerun the benchmark, but I
+[1272.64s] don't know when I should rerun the
+[1274.4s] benchmark
+[1275.84s] because you're going to have this happen
+[1277.96s] once an hour and it's I think kind of
+[1280.12s] fair. So, what I'll probably do is this.
+[1282.92s] We go back and look at this part.
+[1284.88s] What I'll do is I will create a I will
+[1287.88s] talk about the UPS like the update time
+[1290.52s] including the whole 36,000 ticks that I
+[1292.68s] measured,
+[1293.8s] but then I'll also include this portion
+[1296.12s] only, which should be a little bit more
+[1297.6s] representative of the the better update
+[1300.92s] time that comes from mining
+[1302.16s] productivity. So, I'll cut out this like
+[1304.52s] the first let's say I don't know
+[1306.96s] 16,000 ticks. We'll just cut down the
+[1308.48s] middle.
+[1310.24s] Eh, that's good enough. So, 16,000 to
+[1312.0s] 36,000
+[1314.04s] still should give us a good amount of
+[1315.16s] time to represent it, but then we can
+[1316.64s] compare that against the 20 26 design.
+[1319.24s] All right, that out of the way cuz I
+[1320.76s] thought that was kind of interesting.
+[1322.24s] That is a a side effect I didn't realize
+[1324.08s] that I used to do in my base that is uh
+[1326.88s] quite better now. So,
+[1329.12s] definitely void your agriculture science
+[1330.68s] somewhere so it doesn't all spoil all at
+[1332.32s] the exact same time and then you got to
+[1333.6s] go deal with massive amounts of
+[1334.72s] spoilage.
+[1336.68s] So, before I just go and show you the
+[1337.92s] results,
+[1339.12s] I want you to take a moment, think
+[1340.8s] through
+[1342.12s] what do you think the actual performance
+[1343.88s] improvement is? Do you think it's 20%
+[1346.24s] better?
+[1347.32s] Do you think it's 30% better? Tell you
+[1349.72s] what, when I was first doing this, I
+[1351.44s] thought like if I can get 30% I'm going
+[1353.8s] to be super satisfied with that score.
+[1356.28s] That's going to mean like we've we've
+[1357.48s] done a whole bunch of net improvements.
+[1359.6s] The base is doing a whole bunch better.
+[1362.08s] That would be fantastic.
+[1365.04s] You got the number in your head?
+[1367.76s] All right, so first off, we're going to
+[1369.52s] start with mining productivity.
+[1372.48s] So, for those that are not familiar with
+[1373.68s] these kind of charts, you're going to
+[1374.92s] see categories on the top for entity
+[1376.72s] update time, control behavior update
+[1378.24s] time, transfer line update time, etc.
+[1380.4s] Entity update time is the inserters and
+[1382.56s] assembly machines and what those are
+[1384.08s] those components are doing in the actual
+[1385.84s] factory. Your control behavior update
+[1387.64s] time is you interacting with and sending
+[1390.08s] circuit signals to entities and them
+[1391.92s] having to go make a decision off that.
+[1393.72s] Then there's transport line update time.
+[1395.24s] Those are the belts moving items. And
+[1397.0s] then electric heat fluid circuit update
+[1398.52s] time is all multi-threaded stuff and
+[1400.28s] that is for, you know, the general
+[1401.68s] electric consumption of the entities in
+[1403.84s] the game and
+
+ the the heat on aquillo for
+[1406.76s] the pipes, etc., right?
+[1408.8s] So,
+[1410.24s] the number that you see on the bottom
+[1411.56s] right-hand corner, that almost 50%
+[1414.76s] decrease,
+[1416.24s] that is the base of the factory from 9
+[1418.72s] months ago. So, what this means is that
+[1420.96s] 9 months ago, the base was since then we
+[1424.28s] have increased the performance of the
+[1426.0s] base by 50%. That's a huge deal. When I
+[1429.28s] first saw this number, my jaw kind of
+[1431.72s] hit the floor because I was saying that
+[1434.08s] that what that really means is that
+[1436.16s] effectively we can go and scale up the
+[1438.24s] base by 50% and we could be running at
+[1441.96s] the exact same UPS that we were running
+[1444.4s] 9 months ago, which means that we've
+[1447.32s] made some serious performance
+[1449.08s] improvements to the base four sciences
+[1451.56s] since then.
+[1454.0s] All right, so we just did a four science
+[1455.68s] research. Let's step it up to a six
+[1458.04s] science research and let's talk about
+[1460.2s] physical projectile damage.
+[1462.32s] So, here we see an actually a very
+[1463.88s] similar story. So, the 2026 factory is
+[1467.76s] now 47%
+[1470.36s] better than the 2025 factory.
+[1474.24s] This is kind of again just like we've
+[1476.76s] this is a very similar to mining
+[1478.36s] productivity. We've seen like a
+[1479.64s] definitely an increase, but we've like
+[1481.64s] gone down by maybe maybe 4% that isn't
+[1484.0s] as good as like the what we saw in
+[1485.36s] mining productivity.
+[1487.04s] That still is a is a huge number when
+[1489.48s] you look at that. Um I'm going to call a
+[1491.04s] couple things out. The control behavior
+[1493.12s] update time but across the board just
+[1494.8s] being better in every single one of
+[1496.32s] these is really interesting. So, getting
+[1498.76s] away from the direct circuit control and
+[1501.08s] having isolated networks and going down
+[1503.12s] to now a lot of the the better clocks
+[1505.04s] that we're using, especially from the
+[1506.16s] clock generator, and then other clocks
+[1507.64s] that people have come up with on their
+[1508.68s] own manually, are significantly better
+[1511.2s] than the clocking methods that I was
+[1513.32s] using before. And that really goes to
+[1515.88s] show with like that reduction of 636
+[1518.28s] microseconds down to 442. But, the
+[1520.24s] entity update time again is the big drop
+[1522.56s] that you're seeing across the board
+[1523.92s] here. So, leveraging direct insertion
+[1526.12s] more and some of the tweaks that we've
+[1528.12s] made for some of the the actual up or
+[1530.8s] the the voiding setups for the mining
+[1532.68s] drills has also kind of shown that
+[1534.36s] they've have improved things overall.
+[1536.88s] So, there's there's a lot. It's just
+[1538.8s] interesting to see holistically how much
+[1540.56s] better this has gotten.
+[1544.0s] All right, so that was a six science
+[1545.6s] research. Let's step it up to a seven.
+[1547.76s] Let's go and do artillery shell range.
+[1549.36s] Now, we're actually bringing in another
+[1550.68s] planet. We're going to start bringing in
+[1552.24s] orange science from Volcanus.
+[1554.72s] So, here we start to see that again,
+[1556.48s] it's 1% different, but it's about the
+[1558.4s] same net improvement. It's 45% better
+[1560.96s] across the board. So, again, huge
+[1563.16s] decrease control behavior update time.
+[1564.92s] Entity update time has the largest
+[1566.64s] differential, reducing from 4,600
+[1569.56s] microseconds down to 3,000. So, that's a
+[1571.6s] huge difference.
+[1573.12s] Then, in general, too, just transport
+[1575.16s] line time has gotten better as well. So,
+[1577.32s] and then electric fluid update time has
+[1579.32s] seen a huge
+[1580.8s] decrease as well. That's kind of biased
+[1583.12s] if though if you think about it cuz it's
+[1584.28s] not isolated to just these components.
+[1586.24s] That just means that we've reduced the
+[1587.76s] total number of things that we need to
+[1589.92s] be calculating stuff for the electric
+[1592.04s] network. So, just reducing entities,
+[1594.44s] cleaning stuff up, getting rid of them
+[1595.96s] that we don't need, and we we've seen
+[1597.96s] that. So, So, very very happy with these
+[1601.16s] results. That's a that's a huge
+[1602.52s] difference.
+[1605.48s] And finally, let's move on to the last
+[1607.28s] science, worker robot speed.
+[1610.12s] This is where we also saw again a 46%
+[1613.2s] improvement. The biggest improvement
+[1615.32s] that comes from this is the new designs
+[1618.24s] from Klux that he came out with with the
+[1620.88s] with train voiding on Fulgora.
+[1623.88s] That's uh that's that's so big kudos to
+[1626.56s] to him for for that new design that
+[1628.56s] wound up coming out. But again, huge
+[1630.96s] entity update time decrease, control
+[1633.16s] behavior time is also gone down across
+[1635.48s] the board. And electric update time and
+[1638.44s] like everything across the board has
+[1639.88s] gotten actually better. So, huge
+[1642.16s] improvement there again, a 46% reduction
+[1645.6s] while still running the exact same
+[1647.88s] amount of science.
+[1650.12s] Now, you might be saying at this point,
+[1651.52s] all right A bug, that's cool that you
+[1652.68s] got these 50% improvement. But what does
+[1654.76s] that actually mean in terms of the state
+[1656.68s] of your base? So, let me break that
+[1657.92s] down. Here's a chart that shows the
+[1660.12s] relative total entity update time along
+[1663.16s] with the raw numbers for each of the
+[1665.16s] different researches that we tested at
+[1667.24s] this new factory for 2026.
+[1670.4s] So, you're going to see that on the
+[1671.76s] bottom, we've got mining productivity.
+[1674.199s] [music] And so, on the right-hand side,
+[1677.32s] the second to last column, you're going
+[1678.72s] to see a UPS number. That means that is
+[1682.24s] in a benchmark, you're going to run it
+[1683.
+
+48s] at the absolute max speed you possibly
+[1685.64s] can for the game, and then we record the
+[1687.44s] average UPS that was taken during that
+[1689.52s] time. That means that currently when I'm
+[1691.88s] running mining productivity, I'm running
+[1693.52s] at a whopping 257 UPS. What that means
+[1697.72s] is practically, I could go and
+[1700.399s] >> [music]
+[1700.4s] >> in- increase the scale of my base
+[1702.48s] without changing any of the ways that I
+[1704.92s] any of the science designs by 4.3x.
+[1708.68s] That means that we could go from
+[1710.08s] effectively producing 5 million science
+[1712.68s] per minute with all the research
+[1714.8s] multipliers that we have to a 20 million
+[1718.04s] effective science per minute base
+[1720.28s] without changing or optimizing anything.
+[1722.8s] That's a pretty huge number. So, going
+[1724.96s] through the rest of them, we've got
+[1725.88s] physical projectile damage at 241 UPS.
+[1728.32s] That's a 4x that we still scaling factor
+[1730.6s] that we could go and get to. There's an
+[1732.36s] artillery shell range, which is going to
+[1734.4s] be 210 UPS. That's 3 and 1/2 x.
+[1737.4s] There's worker robot speed. That's at
+[1739.04s] 176. That's 2.93x that we could increase
+[1742.36s] the scale the base to. And then finally,
+[1744.12s] there's research productivity coming in
+[1745.84s] at 104 UPS, which means that we could
+[1749.32s] have a 1.7x increase from where we are
+[1753.16s] currently.
+[1754.48s] So, let's go and look at finally all the
+[1756.48s] numbers in total.
+[1758.16s] So, if you see these, you're going to
+[1760.04s] see always these constant jumps here now
+[1761.96s] to make it really real to everyone. So,
+[1763.72s] mining productivity went from 159 UPS up
+[1766.28s] to 257 UPS. Artillery shell range went
+[1770.0s] from 145 to 241. Worker robot speed went
+[1773.68s] from 120 all the way up to 176.
+[1777.48s] And then we don't have a research
+[1779.04s] productivity benchmark because until
+[1781.76s] this week, I haven't been able to run
+[1783.72s] research productivity non-stop. But,
+[1786.96s] overall, you can see just like how much
+[1789.04s] of an improvement there is when you're
+[1790.52s] looking at these raw like UPS numbers
+[1792.64s] and the average that we're getting
+[1794.16s] across them.
+[1795.56s] So, pretty remarkable difference over
+[1798.56s] over 9 months.
+[1806.08s] So, that's the end of today's video. I
+[1807.64s] hope you really enjoyed watching this as
+[1809.2s] much as I had fun benchmarking and
+[1810.96s] testing all of these things. Uh want to
+[1813.04s] say a special thank you to everyone on
+[1814.68s] my Discord that has been helping refine,
+[1817.56s] teaching me wonderful new things about
+[1820.2s] the world of Factorio.
+[1821.96s] I've learned a whole bunch in the last 9
+[1823.76s] months and it's been an absolute joy and
+[1826.24s] pleasure to be able to record videos and
+[1828.76s] have people comment on them and have any
+[1830.68s] remote interest in what I'm doing. It's
+[1832.92s] amazing that people are as interested in
+[1835.76s] this kind of stuff as I am.
+[1838.2s] And it's exciting to see just how far
+[1841.36s] we've been able to push Factorio in
+[1843.72s] these last 9 months. I'm excited for the
+[1846.2s] next 9 months and seeing where we're
+[1848.16s] going to get to from there and how the
+[1849.6s] meta will shift, especially once 2.1
+[1852.04s] eventually comes out. I'm expecting a
+[1854.2s] whole bunch of things to break in this
+[1855.96s] factory and I'm going to have a really
+[1857.84s] fun time going and completely fixing
+[1860.48s] everything all from scratch again. So,
+[1864.0s] these are all really, really exciting
+[1865.84s] stuff that we have in the future to plan
+[1867.6s] and do. What I want to do next is I want
+[1870.52s] to get back to some of the competitions.
+[1872.56s] I especially want to fix the annoying
+[1874.64s] utility science build that I currently
+[1876.36s] have in this base that I am constantly
+[1878.2s] having to kickstart again. And I am
+[1881.4s] excited for the the next rounds of
+[1884.04s] optimizations that we can continue to
+[1885.72s] make. Eventually, I will go ahead and
+[1888.76s] scale up the base, but for right now,
+[1891.56s] I'm going to put a pin in it. So, if
+[1893.8s] you're interested in the current save
+[1896.64s] file, I'll have that as a link in the
+[1898.12s] video description below, where you can
+[1900.24s] access it free of charge. I don't
+[1901.68s] believe in paywalls and never will, so
+[1903.56s] you can just have anything that I do and
+[1905.96s] I create is open source once I believe
+[1908.8s] that it is in a good enough spot to
+[1910.56s] share it. So, go check that out if
+[1912.88s] you're interested. Otherwise,
+[1915.92s] I'll see you in the next video. Thank
+[1917.64s] you so much for watching and your
+[1918.92s] attention span as always.
+

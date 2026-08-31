@@ -1,0 +1,1320 @@
+# Labs Finale (Part 1)
+# Channel: abucnasty
+# Video ID: GhdUm3fSGlw
+# Transcript length: 62131 chars
+# Fetched: 2026-08-31
+# Source: TranscriptAPI.com
+
+[0.08s] Hello and welcome back to Factorial. My
+[1.6s] name is Ava Nasty. In today's video,
+[3.2s] we're going to be talking through the
+[5.52s] how my whole lab setup works. I'm going
+[7.839s] to go in an in-depth guide on exactly
+[9.84s] how it works and all the different
+[11.44s] mechanisms and I'm going to explain it.
+[13.84s] This is going to be a two-part video.
+[15.519s] The first part here is me just giving
+[17.279s] you an overview. It's going to be about
+[19.279s] 30 minutes or so of me just explaining
+[20.96s] in depth how all the mechanisms work,
+[23.119s] how the new controller works, and
+[24.72s] sending you a blueprint. in the
+[26.64s] background. I've been running this test
+[28.48s] for about 4 days, transitioning between
+[30.64s] different sciences, and I've made also
+[32.239s] some optimizations to GABA, which I want
+[34.239s] to showcase. So, first, if you're
+[36.48s] interested in seeing just how the new
+[38.48s] labs work, so specifically how this new
+[41.44s] much more compact controller works and
+[43.6s] you're interested in the design
+[44.8s] philosophies and some of the decisions
+[46.239s] that I've made here for how I'm
+[49.039s] controlling the lead, how I have now a
+[50.96s] dedicated agriculture clock, and some of
+[52.879s] the different changes that I've made.
+[54.16s] I'm going to cover all that in this
+[55.52s] video and that's going to be an in-depth
+[57.76s] explanation on specifically how the new
+[59.68s] lab setup works. The next part to this
+[62.559s] will be a follow-up. I will show you in
+[64.72s] depth kind of all the testing that I've
+[66.479s] done, the small tweaks that I've made so
+[68.32s] that you can follow along with seeing
+[69.76s] how I've optimized some of the glaive
+[71.52s] transportation cuz I ran into some
+[72.96s] random issues with that. And then I'll
+[75.28s] also cover a little bit of a mod that
+[77.28s] I'm trying out right now to act as a
+[79.52s] band-aid for the Prometheium science. So
+[82.88s] stay tuned for that. U and so I'll
+[86.08s] explain some of the different things I'm
+[88.0s] doing in the next part of this. So it'll
+[89.6s] be two-part series. First episode, like
+[92.079s] I said, let's just get right into it and
+[94.079s] I'll start explaining how the entire lab
+[96.32s] setup here now works. Talked about this
+[98.799s] previously, but just as a recap, this is
+[100.56s] just a monitor that tells me how much
+[102.4s] science I currently have. And this is
+[104.079s] fed back into my science monitor that's
+[106.32s] over here. So these are going to get fed
+[109.119s] in. These are all in common. So instead
+[110.72s] of needing 16 lanes, I only need
+[112.72s] effectively or rather 24 lanes, I only
+[115.04s] need 12. And so these 12 lanes are fed
+[117.439s] in. They are priority split to the very
+[119.759s] first ones. And then I use basically
+[121.92s] double uh facing split turbo and uh
+[125.84s] splitters like this so that the green
+[128.0s] and red can then get split. And then
+[129.679s] sure, they go on opposite sides, but it
+[131.28s] doesn't matter for this setup. So they
+[133.28s] wind up getting split in like this. And
+[134.72s] they're all backbed. That is the
+[136.239s] decision that I made here for all of the
+[139.2s] science that is fed from novice. I
+[140.72s] wanted them to come into the back from
+[142.48s] some of the testing that I did that I
+[144.16s] talked about in the benchmark video uh
+[146.8s] on the tutorial on how to do it. So, I
+[148.959s] had some comments and thoughts
+[150.319s] specifically on that on how uh the
+[152.8s] timing is affected by when an inserter
+[155.599s] is staggered. So, this one moving then
+[158.72s] the next one four or basically eight
+[161.04s] ticks later it's going to go and get
+[162.48s] activated. they should always like to
+[164.64s] make the most optimal setup. You should
+[166.64s] always be going in the direction of
+[168.48s] travel of the belt. So that's the best
+[171.36s] scenario because then the insertters are
+[173.2s] always interacting with a non-moving
+[174.959s] belt. However, I can't truly do that
+[177.92s] because the core premise of this entire
+[179.68s] system, as you see the lights kind of
+[181.2s] flicker from the right to the left,
+[184.4s] is that effectively whenever you are
+[188.159s] inserting something into a lab, what I
+[190.159s] wanted to do was very explicitly say,
+[192.8s] hey, whenever like let's say this light
+[194.879s] turns green, I want all the insertters
+[196.879s] inserting exactly at the same time into
+[198.8s] the lab. I don't want dedicated timers
+[201.76s] for each of the different sciences, but
+[203.599s] rather have them synchronized around the
+[205.519s] lab. So that means that for staggering,
+[209.84s] in order to split the difference between
+[212.959s] being always optimal going with the
+[215.2s] direction of travel of the belt versus
+[217.599s] going against the travel of the belt,
+[220.0s] and that's the worst case staggering
+[221.599s] that you can do. The way that I'm doing
+[223.599s] it right now is I say, "Hey, you are a
+[226.159s] section here. you are the alphabetical A
+[229.92s] and the next one is B and then the next
+[232.64s] chunk is going to be C and so forth all
+[235.44s] the way until you eventually get to P
+[238.0s] right here. So P, you can see that's
+[241.84s] also the signal that is being sent to
+[243.439s] the individual insertters. And as you go
+[246.08s] through researching them, you're going
+[247.519s] to see this little shifting number
+[248.959s] that's going to be all the letters
+[250.72s] combined. Now what I've done is I've
+[252.959s] actually broken this up and said for the
+[255.36s] staggering pattern that I'm using if we
+[257.919s] go very beginning here to the very first
+[260.079s] ones that we have. So this is going to
+[262.32s] be your A section and this is your B
+[265.36s] section here. Then effectively the way
+[268.479s] that I am trying to model this is that
+[270.8s] you are all going to g
+
+et inserted at the
+[272.72s] same time and then you the next chunk of
+[275.44s] four are going to all insert at the same
+[277.28s] time. And through testing and some of
+[279.28s] the benchmarks that I've conducted, this
+[282.24s] is better to kind of balance inserter
+[285.28s] spikes with interacting with a belt and
+[289.759s] it moving. So
+[292.72s] overall, this was kind of a balanced
+[294.56s] approach because I am going to
+[296.16s] continuously insert things from the back
+[298.4s] and feed them this way because it's
+[299.759s] logistically a lot easier to feed all
+[301.68s] the signs from the back from novice than
+[304.0s] it is to route all these lanes.
+[306.0s] Especially if this was common, this
+[307.36s] would get really, really hard to route.
+[309.12s] You know, 24 lanes per, you know,
+[312.0s] quadrant like this all from the front
+[314.08s] cuz this is already relatively congested
+[316.08s] just to get all that science in there.
+[317.919s] So, I've made that decision. It's not as
+[320.96s] optimal for UPS. So, my suggestion would
+[322.639s] be if you can figure out a nicer way to
+[324.24s] route them. I didn't want to deal with
+[325.759s] that challenge. I rather just have them
+[327.6s] fed from the back cuz I like that
+[329.12s] aesthetically better and also
+[330.72s] organizationally better to do it this
+[332.88s] way.
+[334.24s] But if you are going to want to go for
+[335.6s] the most optimal design, the best
+[337.6s] staggering pattern that you can do is
+[339.84s] start from the front and have each of
+[342.0s] these inserters active for four ticks
+[344.639s] and then disabled uh and then the next
+[347.44s] one would start eight ticks after the
+[349.12s] first one to give enough spacing for all
+[351.52s] these inserters. So that would be my
+[352.8s] suggestion. I did do that for
+[355.12s] agriculture science. So agriculture
+[356.88s] science is now on its own clock and
+[358.72s] you'll see that it's actually using this
+[360.08s] uncommon s signal. Reason I just did
+[362.4s] that is because virtual signals like
+[364.319s] this can also be in quality. And that's
+[365.84s] just a really easy way to send a
+[367.6s] separate signal but still keep this
+[369.759s] really nicely blueprintable. Because if
+[372.08s] I take like a section like let's say
+[374.24s] over here and I held shift on it, I
+[377.44s] could go in here and I could see that
+[379.039s] this parameter is C and that could just
+[381.199s] now be generic and then all the values
+[384.08s] that this one this would be like C
+[385.919s] uncommon. That would now be in essence
+[389.199s] would automatically just keep that
+[391.039s] letter whatever letter you put in. So it
+[392.639s] makes it easier for me to tile it and
+[394.4s] place it to the right or to the left. So
+[396.72s] that's why I went for that design
+[398.16s] decision to work nice with parameters.
+[401.28s] So, these are on their own clock and
+[403.6s] they wind up going and getting fed down
+[405.44s] and they are perfectly staggered in the
+[406.96s] direction of travel. This drastically
+[409.12s] improved the performance when you're
+[410.56s] running something like stronger
+[411.68s] explosives like this to just be
+[414.0s] constantly picking up directly from the
+[416.16s] insertters here and having their own
+[418.319s] basically their own clock. So, this
+[420.08s] one's enabled for ticks because it's
+[422.0s] only needing to pick up for the one type
+[424.0s] of science and it's offset and staggered
+[426.16s] by eight. So, now those have their own
+[428.24s] clock and their own controller. the I'll
+[431.36s] just do a quick deep dive into how the
+[433.44s] new controller works. So, previously you
+[435.68s] wound up seeing that in the designs that
+[438.319s] we had for the labs. This was the
+[441.12s] original version and I had this
+[442.72s] controller. You can see that this
+[444.24s] controller was substantially bigger and
+[446.56s] you'll see that the majority of what was
+[448.72s] going on here was all these shift
+[450.08s] registers that existed. Right? So this
+[452.4s] was the shift register design that each
+[454.319s] time that the light would move over to
+[456.0s] the left, it would be sampling for a
+[458.8s] period of time what was being inserted
+[461.52s] into the science. And this would roll
+[463.36s] over and then eventually start again. So
+[465.919s] this was nice. The pro of this was that
+[468.0s] it would actually eventually turn off
+[469.599s] all the insurgters if the lead wasn't
+[471.36s] doing anything. The difference now is
+[474.0s] that this will always maintain the last
+[477.28s] inserted science for up to quote 24
+[480.639s] swings.
+[481.919s] So, and then it will start to remove
+[484.8s] science on a period if anything is over
+[487.36s] 24 to basically quickly handle
+[489.599s] transitions. So, the new setup
+[491.68s] transitions much faster, and I'll
+[493.44s] explain how that works. So, this was the
+[495.52s] old setup. It monitored everything. The
+[497.919s] core of everything that's on the right
+[499.36s] here is more or less the same. I've just
+[501.759s] basically taken all of these uh
+[504.24s] inserters here that were doing this
+[505.84s] shift register and they're now just
+[507.44s] three combinators instead of uh you know
+[510.639s] the 57 that are here. So the core of it
+[513.839s] now exists specifically just in this one
+[516.399s] memory cell. So all this is doing is
+[519.039s] just keeping a record of all the signs
+[520.719s] that has been inserted into it like
+[523.279s] this. Right? So you're seeing right now
+[525.44s] we're running red, green, gray, blue,
+[527.44s] yellow, white. And you're noticing
+[529.519s] specifically that we're not including
+[531.12s] agriculture in this. I filter out
+[533.2s] agriculture and I actually filter out
+[534.64s] spoilage because I don't care about
+[536.24s] either of those cases for memorizing
+[539.44s] which sciences were currently running.
+[542.24s] So what does this number mean? Well,
+
+ the
+[544.399s] number itself is just a multiplier. So
+[547.519s] we monitor the lead lab here. This lead
+[549.839s] lab is going to have a stack size of
+[551.839s] four. And that's just so that it can
+[553.36s] insert faster and we get faster sample
+[555.36s] rate coming back from it. and we set it
+[557.839s] to 16, we'd only get to see a tick of
+[560.959s] that in that particular science once
+[562.959s] every, you know, basically be at four
+[566.16s] times longer it would take for it to
+[568.0s] actually wind up seeing it. So, in order
+[571.36s] to improve the resolution, I've just set
+[573.12s] all the stack sizes to four across all
+[575.279s] of them.
+[577.2s] Then additionally what kind of comes in
+[578.8s] here is so those are all monitored and
+[580.56s] we're reading the hand contents and
+[582.08s] those will come in via the circuit
+[583.6s] network here and I just have a constant
+[585.2s] combinator to bridge the gap instead of
+[586.959s] needing another medium electric bolt
+[589.839s] that comes into this one. And this is
+[591.92s] all this is going to do here for
+[593.36s] agriculture science is it's just going
+[594.959s] to have a clock that just counts up
+[596.72s] every single time agriculture science is
+[598.72s] inserted. Whenever this clock is less
+[602.32s] than 259 ticks, it's going to say, "Hey,
+[604.88s] we're using agriculture science." So the
+[606.56s] moment you either run out of agriculture
+[608.0s] science, which you'll see later in the
+[609.279s] video, or you wind up having a case
+[611.44s] where you are no longer running
+[614.079s] agriculture science, then that clock,
+[617.04s] which is its own dedicated clock now,
+[619.76s] will stop getting the signal for
+[621.36s] agriculture science. And then these two
+[623.6s] stack inserters. This is just a clock
+[625.839s] and I just using a stack inserter here
+[627.92s] just for fun uh to to specify that's
+[630.48s] what they're controlling. But this is
+[631.839s] just a clock that counts up. So this is
+[635.12s] now going to continue to go up until it
+[637.36s] gets less than 128 ticks. So that's just
+[641.6s] basically for the wraparound condition.
+[644.0s] And that's because if you look at here,
+[647.839s] I have offset each of those signals that
+[650.079s] I talked about before that were for ABC
+[652.8s] D all the way to P. And that's for each
+[655.2s] individual lab segment that goes all the
+[657.519s] way across for the 32 that are there.
+[659.36s] You'll notice that there's only 16
+[660.88s] because I do them in chunks of two
+[662.56s] because I still wind up saying here that
+[666.079s] these two labs are A, these two labs are
+[669.279s] B, these two labs are C, and so forth.
+[672.8s] So you'll see these two insertters
+[674.64s] activate at the exact same time here
+[676.48s] whenever this comes around. And then
+[678.079s] these two inserters activate at the same
+[679.76s] time. And that's just mainly because I
+[681.68s] didn't want to have more letters to
+[683.2s] denote it and send even more signals
+[684.959s] across this network. So I've just kind
+[687.12s] of doing again a big compromise of how
+[689.68s] many signals am I sending across to all
+[691.68s] these different insertters and how many
+[693.519s] do they have to make a decision on at
+[695.04s] any point in time. And so the less
+[697.839s] signals you're sending in a network, the
+[700.48s] less decisions these individual
+[702.0s] insertters have to loop through to make
+[703.44s] their decision though. And then
+[706.0s] ultimately it's just going to be better
+[707.68s] for performance then too from a control
+[710.48s] network perspective. So just different
+[712.88s] things that I'm trying to balance as I
+[714.56s] go through this. So okay. So those are
+[717.519s] those signals. How does that work? You
+[719.279s] can see this little quote clock shifting
+[722.079s] between all these and you're just seeing
+[724.079s] that the numbers are counting down and
+[725.519s] negative whenever it's greater than zero
+[728.88s] in this combinator here. You're going to
+[730.639s] see it just pulse and send that
+[732.48s] particular letter over and over and over
+[734.16s] again. And that's that signal that is
+[736.56s] just going through this completely all
+[738.0s] the way through it. So it just cycles
+[739.6s] through sending four ticks on and then
+[742.0s] waits four ticks for the next one, four
+[744.079s] ticks on, four ticks for the next one.
+[746.399s] So, and then it sends a signal to each
+[747.92s] of those little chunks and then if they
+[749.839s] can insert, they will insert. And that's
+[751.76s] only for the dedicated
+[754.32s] insertters now that we have specifically
+[756.32s] for agriculture science. For the rest,
+[758.399s] the way that I've done them is I say
+[760.399s] that they're enabled for 20 ticks and
+[762.0s] then have a 20 tick spacing in between
+[763.839s] them. That gives them a chance for the
+[765.839s] belts to completely stop and then the
+[767.6s] next ones pick up and go again. So
+[770.32s] that's kind of the spacing that I've
+[772.399s] done to kind of help balance the
+[775.36s] staggering that we're doing between each
+[777.279s] of those different chunks of buildings
+[778.959s] that I said. So, you know, two labs, two
+[780.88s] labs, two labs, two labs, two labs, and
+[782.88s] we just run all four together. Then the
+[784.48s] next ones, we run all four together. And
+[786.079s] then this is the tick offset for the
+[788.399s] main clock that's calculating the
+[789.92s] offsets. So the same way that
+[791.12s] agriculture science works, that's
+[792.56s] exactly how these are going to work for
+[794.88s] the regular letters for all the other
+[796.72s] sciences that are being inserted. And
+[798.959s] then that is just calculating here. And
+[800.88s] you're going to see the output signals
+[802.0s] of A B C D and them going in chunks
+[804.399s] together. So A and B together, C and D
+[806.8s] together and so forth.
+[809.519s] Those are all then fed 
+
+in and those are
+[811.36s] those signals that are sent out and you
+[813.04s] can see them across the network here as
+[814.72s] they send all the different signals for
+[816.48s] all the different instorters. So
+[820.0s] the actual active running sciences are
+[821.92s] all sent over the red wire. So we have
+[823.76s] an extra one that is sent when
+[825.519s] Prometheium science is completely
+[827.04s] filtered out when they come into the
+[828.88s] full network of detecting which sciences
+[831.12s] are going to be in there. So we
+[832.32s] completely filter out spoilage
+[833.92s] completely figure out filter out
+[835.279s] agriculture science and then we have
+[837.04s] just an extra constant combinator here
+[838.639s] that just multiplies it by one just to
+[840.48s] have one tick delay so that when all the
+[843.519s] signals that are combined so for these
+[845.6s] three that it can actually subtract
+[847.76s] fully the agriculture science and the
+[849.92s] spoilage if it ever happens just so we
+[851.92s] can completely filter that out from the
+[853.519s] network once those are put in depending
+[855.68s] on the quality size. So if this is
+[857.36s] quality is normal, uncommon, rare, epic
+[861.04s] or legendary, they're then going to
+[863.36s] multiply by the effective value of that
+[865.44s] science. So common is going to be
+[866.959s] multiply by one. Rare is going to
+[868.8s] multiply by three. Legendary is going to
+[870.48s] multiply by six and so forth. That is
+[873.36s] sent for one tick and is sent back in to
+[877.519s] the main memory cell that's keeping
+[880.16s] track of everything. You'll see that
+[881.92s] this number goes up. It just captures
+[884.16s] anything that comes in and holds it. And
+[887.04s] then a separate thing, I've explained
+[889.6s] previously how this clock works, but the
+[891.519s] main thing is we're just going to be
+[892.72s] pulsing whenever normal science is ready
+[894.959s] to be inserted at stack 16 size. And
+[898.88s] this is an explicit clock that is
+[900.639s] perfectly clocked for it. I've also
+[902.48s] updated the clock, by the way, to be uh
+[904.72s] to make some corrections to it because
+[906.639s] someone in my discord pointed out that
+[908.399s] yes, the timings of my original subt
+[911.36s] clock were rounded. So, I had to change
+[913.76s] them in here to reflect that. So, every
+[916.24s] 230,000
+[918.16s] 400, this particular uh normal is going
+[922.0s] to get uh triggered. And then twice that
+[924.16s] would be for uncommon, three times it
+[926.079s] would be rare, and then six times it for
+[928.32s] legendary. You'll see this little ghost
+[930.399s] signal. that is a fourth of the normal
+[933.36s] rate. So normal is whenever the science
+[935.519s] would have to be inserted at stack size
+[938.0s] 16. So since I'm running the stack size
+[941.12s] at four on the lead lab, I want to have
+[943.76s] a ghost signal that is a quarter of the
+[946.56s] rate of normal science. And that ghost
+[950.079s] signal is what is fed in to basically
+[953.04s] saying, hey, anytime that the ghost
+[956.639s] signal is activated, for any value that
+[959.519s] is greater than 24, I want to subtract
+[962.24s] one. So what that's going to do is
+[964.959s] compared to the big shift register that
+[966.88s] you saw originally here, instead of it
+[969.279s] just holding the values for a cycle and
+[971.36s] then slowly rolling off, this will start
+[973.6s] to remove the values on this tick rate.
+[976.639s] So for legendary for example, every
+[978.399s] single time it swings and puts it in
+[980.0s] there, it's going to be added as six.
+[982.399s] Well, then for four cycles, uh it is
+[985.279s] going to subtract one every single time.
+[988.32s] So eventually after six swings or six
+[992.399s] clicks of this legendary should be
+[994.48s] inserted again.
+[996.639s] That's kind of how this whole premise
+[998.399s] works is that it's going to subtract
+[1000.24s] based on the clock over time this
+[1002.24s] science. So, if you ever stop using,
+[1004.079s] let's say, the legendary space science,
+[1006.56s] it's going to slowly roll off and it's
+[1008.8s] going to eventually go down to zero at
+[1011.92s] some point. It would never go down to a
+[1013.519s] negative number. It would always just go
+[1014.959s] down eventually to zero and go away
+[1017.12s] completely. So, that works really nicely
+[1019.68s] with the new transition mechanism. So,
+[1022.079s] the way that transitions are handled is
+[1023.839s] it basically says, hey, if any of these
+[1025.919s] numbers or any of the sciences, whatever
+[1028.4s] quality they are, is greater than six,
+[1031.12s] there's something. So let's say red and
+[1032.4s] green is greater than six and then
+[1034.64s] something is inserted once.
+[1037.36s] So let's say that is military science is
+[1040.319s] inserted cuz you're using purple science
+[1041.919s] before and you get a one tick pulse
+[1044.799s] where this inserter swings and puts
+[1047.199s] something into it. Whenever that
+[1049.6s] happens, it's going to immediately
+[1051.6s] trigger and say, "Okay, we need to
+[1053.679s] immediately wipe the memory." So, it's
+[1055.2s] going to send this delete signal and
+[1057.28s] that's going to get fed back in to the
+[1059.039s] main memory cell and then that will wipe
+[1060.96s] the memory the moment that this delete
+[1062.559s] signal is there. So, that way you can
+[1064.72s] instantly transition and then none of
+[1067.36s] them should ever in that situation be
+[1069.2s] satisfied that you would have a 6 and1
+[1071.679s] situation again because they would be
+[1074.32s] inserting perfectly red, green, gray,
+[1077.039s] blue, etc. and so it won't continue to
+[1079.6s] wipe the memory. The other case that I'm
+[1082.16s] doing as well is the reason I have this
+[1083.919s] greater than 30 and less than 16 is in
+[1086.0s] the case of going to Prometheium
+[1087.28s] science. This is a faster way to
+[1088.88s] transition into it. So what'll happen is
+[109
+
+2.0s] because of the the rate that Prometheium
+[1095.36s] science is being inserted is going to be
+[1099.76s] slower in nature because it's only
+[1102.72s] running at half the rate. So in that
+[1106.559s] case you're going to see that red and
+[1108.32s] green are going to go really high and
+[1110.72s] are going to get over effectively like
+[1113.84s] let's say 30 and you're going to have
+[1116.4s] promethium science that has been
+[1117.919s] inserted that's going to be less than 16
+[1120.48s] at that time. So a kind of a way to
+[1123.6s] think about and the way that I've
+[1124.48s] written this down is the only case where
+[1125.76s] the values in this combinator can go
+[1127.52s] over 30 is during the transition from
+[1129.84s] Prometheium to non-pometheium science
+[1132.16s] research due to the lead lab consuming
+[1134.24s] science faster than the than the quote
+[1138.4s] actual sciences being removed from the
+[1142.08s] clock because we're going to immediately
+[1144.48s] transition and we're going to transition
+[1146.72s] to a slower clock. So this is going to
+[1148.88s] be transitioning to a Prometheium clock
+[1151.12s] where we just add all the values in. So
+[1153.52s] the ghost signal is going to happen
+[1155.919s] basically instead of every 57,600 it's
+[1158.559s] going to be twice that atund and uh
+[1162.16s] 14,15,200
+[1164.64s] is whenever that's going to happen. The
+[1166.64s] numbers don't mean much. They're just
+[1167.919s] based on the subt clock. But it means
+[1169.6s] it's going to now sample twice the
+[1171.52s] period. That also means it's going to
+[1172.799s] remove science at half the rate.
+[1176.48s] So, because it's doing that, one of
+[1179.039s] these numbers are going to anyway go
+[1181.039s] over 24 because you're only removing
+[1183.28s] science at half the rate. So, then it's
+[1185.84s] going to immediately say, "Okay, hey,
+[1187.44s] cool. You have transition to
+[1188.88s] Prometheium. Let's just go ahead and
+[1190.16s] just just delete and wipe everything so
+[1192.24s] we can start the transition to
+[1193.52s] Prometheium early." I know that sounds
+[1196.4s] kind of complicated. Just trust me, this
+[1198.08s] works really well. But that's kind of my
+[1200.16s] crude explanation of like how I'm trying
+[1202.16s] to explain how this works. You can add
+[1204.32s] more transitions if you wanted to, but
+[1206.16s] it just works for the nature that the
+[1208.08s] the clock is effectively going to be
+[1211.36s] adding things faster than it's removing
+[1213.039s] it when you're first transitioning to
+[1214.96s] Prometheium Science because the
+[1217.76s] insertters are still swinging faster
+[1220.559s] than and then you're actually removing
+[1223.12s] it from the clock itself. So
+[1227.2s] hopefully that kind of makes sense.
+[1231.039s] other than that. So that really just
+[1232.48s] means that this huge section of shift
+[1234.64s] registers that were here are now just
+[1237.12s] really these three uh combinators. So we
+[1240.0s] removed 57 combinators completely. So
+[1242.72s] that means that just in essence instead
+[1244.48s] of it taking 1 and 1/2 minutes for a
+[1247.84s] transition to fully happen, it can now
+[1249.44s] happen in 40 seconds. So faster
+[1251.76s] transitions and they're just better in
+[1253.36s] general.
+[1255.039s] Otherwise, uh it keeps still the same
+[1257.039s] monitor so you can see which sciences
+[1258.72s] you're currently running as long as
+[1260.08s] which ones are currently active. And
+[1262.08s] then in my particular base, I have
+[1264.159s] hooked them all up to here. This is the
+[1266.0s] lead lab. Let me remove the time and
+[1268.159s] entity usage here. This is the lead lab
+[1271.28s] that is here. It is going to be the only
+[1273.36s] one that's monitored and the rest of all
+[1275.44s] of them are all controlled explicitly
+[1277.12s] off of the uh clocks that we set up in
+[1280.0s] the previous video. So all these are
+[1281.76s] exactly the same, but if you do
+[1283.36s] transition and you already started to
+[1284.799s] use the 1.0 design, this is considered
+[1286.96s] my 1.13 design. So, if you have already
+[1290.4s] done it, one thing you're going to have
+[1292.32s] to do is when you transition it is, and
+[1295.6s] you can choose to do this or not, but
+[1297.52s] I'd highly recommend that you just
+[1299.12s] basically delete all of the agriculture
+[1302.0s] science and the Prometheium science
+[1304.24s] inserters completely. And then just
+[1306.48s] repaste the new blueprints that I have,
+[1308.48s] which are under here. So, we go into the
+[1312.559s] labs, you'll see these. You're just
+[1314.32s] going to paste this one over top of it.
+[1317.039s] This one over top of it. And then just
+[1319.44s] if you delete these insertters and the
+[1322.32s] combinators, actually even constant
+[1324.159s] combinators completely once you paste it
+[1326.72s] down, it'll basically just override
+[1329.2s] that.
+[1330.799s] So probably the easiest way to
+[1332.24s] transition
+[1333.919s] would be delete this agriculture and
+[1336.32s] Prometheium science belt, delete the
+[1338.799s] insertters that are near it, and then
+[1341.28s] just paste the whole thing down on top
+[1342.799s] of it. and then it should be fine. And
+[1345.2s] then these are in the same position as
+[1347.44s] they were beforehand for the adapters
+[1349.52s] for that particular row. You'll just
+[1351.679s] again have to choose your uncommon
+[1353.36s] versus common ones that I talked about
+[1354.799s] in the last video about this. So these
+[1358.64s] should just automatically work, but
+[1361.12s] probably just easier to just delete all
+[1362.96s] of these, paste them down from the
+[1364.96s] blueprint, and then just make your
+[1366.32s] configuration changes again based on the
+[1368.72s] quality that you're inserting into it.
+[1370.32s] That's what I did when I set this up.
+[1372.799s] Okie dokie. So
+[1375.84s] that is effectively how this whole setup
+[1378.24s] works. Now when we
+
+ dump Prometheium
+[1380.88s] Science, the dumping is going to happen
+[1382.799s] by this inserter going to pick up
+[1384.4s] everything that was inside the lab
+[1385.919s] before. They're all going to travel down
+[1387.44s] these belts here, and all these four are
+[1390.88s] going to insert on the outside lane
+[1393.039s] here, transport down here, and then go
+[1395.36s] on the inside lane so that it unblocks
+[1397.679s] this the lanes for this. So really, this
+[1400.32s] has enough time in theory to completely
+[1402.799s] offload all of the science.
+[1405.44s] And then those are going to be split.
+[1407.2s] Now, they're going to sit on this belt
+[1408.48s] for a while because they have to do this
+[1410.24s] for all the 32 labs that are completely
+[1412.72s] across here. And they're all going to
+[1414.64s] feed slowly onto this export belt here.
+[1417.84s] This belt handles agriculture science
+[1420.48s] deletion uh and also handles the the
+[1424.88s] spoilage deletion and any other signs
+[1427.6s] that comes in. So spoilage immediately
+[1429.6s] will get filtered and brought into these
+[1431.84s] cuz that's going to immediately remove
+[1433.36s] them and destroy them in the heating
+[1434.72s] tower. Agriculture science is going to
+[1437.28s] wrap around and come into here where I
+[1439.2s] have a deletion method to basically
+[1441.2s] delete all the agriculture science and
+[1443.039s] then anything that happens to have
+[1444.72s] spoilage goes backwards again and goes
+[1447.2s] and gets fed back into this heating
+[1449.12s] tower where it will get removed that way
+[1451.12s] cuz that's the most at least on planet
+[1453.44s] most UPS efficient is to just put him in
+[1455.36s] a heating tower.
+[1457.36s] But this is mainly just using it so that
+[1459.44s] I can increase freshness when I still
+[1462.0s] have agriculture science lying around.
+[1465.12s] So then any of the science that is
+[1466.799s] ejected from them on the transition to
+[1468.88s] Prometheium, which I'll show later uh
+[1470.96s] more in depth of it actually running.
+[1472.88s] When that happens, it all the other
+[1475.679s] science will get fed into here. And then
+[1477.84s] these insertters here are just setting
+[1479.919s] the filters and they're reading their
+[1482.48s] own hand contents so that that way they
+[1484.559s] can continue to pick things up whenever
+[1486.4s] there's something on the belt. So they
+[1487.679s] just have a single wire that connects
+[1489.36s] here. It holds the contents of the belt.
+[1492.159s] This inserter is then going to read its
+[1493.919s] own hand contents and it's going to set
+[1495.76s] its filters. So what you'll see is
+[1497.12s] sometimes they'll pick up 12, 13, 16,
+[1499.36s] whatever. They're going to pick up
+[1500.559s] anything as fast as possible within the
+[1502.72s] lane in front of them. And then by
+[1506.08s] nature, all of these are going to have
+[1508.08s] their own filters that they're setting
+[1509.52s] cuz they're only monitoring the belt in
+[1511.2s] front of them. So, it's really quick at
+[1512.64s] picking everything up and throwing them
+[1514.0s] into these legendary chests. And they
+[1515.6s] just act as a buffer to quickly get as
+[1517.52s] much of this science thrown into chests
+[1519.679s] as possible. And then all of these
+[1522.32s] insertters are all wired up to the same
+[1524.159s] network. And this basically is going to
+[1528.159s] monitor the contents of every single one
+[1531.039s] of these chests. And then it's going to
+[1533.2s] basically say, hey, anything that's
+[1534.4s] greater than 24, we're going to go and
+[1536.0s] output that. We could even say greater
+[1538.24s] than or equal to 24 here. So you can see
+[1539.84s] it just real quick for a flick.
+[1541.36s] Basically remove stuff that's in there.
+[1544.96s] So, and you could even just make this
+[1549.6s] greater than zero just so you can see
+[1551.76s] it. Just slowly remove everything from
+[1553.279s] them. You see it cycles here through all
+[1555.679s] these different sciences.
+[1558.64s] And you're even seeing this one kick on
+[1560.159s] here for a little bit.
+[1562.799s] And so the way that this works is it
+[1564.48s] just basically is going to sort
+[1566.08s] descending. So from the highest amount
+[1568.159s] that's in these to the lowest amount.
+[1570.72s] And that way it kind of balances what
+[1572.559s] it's going to be throwing out of the
+[1573.84s] chests because it acts as one giant
+[1575.76s] buffer. And then all these inserters are
+[1577.84s] going to just set their signal and throw
+[1580.48s] things onto this lane. One inserter is
+[1582.48s] going to pick it up again using that
+[1583.76s] method of just reading the contents on
+[1586.24s] the belt in front of it directly. And
+[1588.799s] they're going to throw this in this
+[1589.919s] chest. And so what this is going to do
+[1592.32s] is it's only going to pick up additional
+[1593.919s] Prometheium if there's no Prometheium in
+[1595.84s] this chest. And then otherwise
+[1599.2s] everything this one is doesn't have a
+[1600.72s] clock, doesn't have anything inset onto
+[1602.4s] it. It's just fully wake lists. It will
+[1604.0s] just insert anything into this lab that
+[1605.679s] it can. And it will only here request
+[1609.84s] additional agriculture science cuz I
+[1611.919s] don't put agriculture science or
+[1613.279s] spoilage in here. I just delete it.
+[1615.52s] It'll only request additional
+[1617.12s] agriculture science if all of the
+[1619.919s] sciences are included in the main buffer
+[1623.919s] chest here. Now, I have one extra edge
+[1627.12s] case that can happen because you can't
+[1628.559s] really deterministically know what the
+[1630.64s] science research was before. So, you
+[1632.48s] might have in this case, you can see an
+[1634.32s] imbalance where we just have no reds,
+[1635.919s] but we have a little bit of green, we
+[1637.12s] have a little bit of other things in
+[1638.24s] here. If anything in here ever gets
+[1641.12s
+
+] greater than 2,000 and 2,000 is
+[1643.2s] specifically chosen cuz the stack size
+[1644.799s] is 200 on these. So, and then 200 and
+[1648.32s] 120 of these, right? You could basically
+[1650.88s] fit so for all the different 12
+[1653.279s] sciences, but you're not really putting
+[1654.72s] 12 sciences. You're only putting 11
+[1656.08s] sciences in here cuz agriculture
+[1657.52s] sciences in in there. So, 2,000. So,
+[1660.48s] that would be a full row across here,
+[1663.76s] right? So that means that for the 120
+[1666.24s] slots, you have 11 rows of science that
+[1669.2s] you can put in plus a little bit of
+[1670.799s] extra for wiggle room. So if anything
+[1672.559s] exceeds a full row of that science, it's
+[1675.84s] then going to set it's going to output
+[1678.24s] that set the filters on the stack
+[1680.08s] inserter and then it will go down here
+[1682.48s] for deletion. And then the that's just
+[1685.12s] so that anything that overflows or we
+[1687.12s] have too much of, we're going to
+[1688.159s] eventually delete. And then only we're
+[1690.32s] going to pull out of this chest whenever
+[1691.919s] something is greater than equal to 16.
+[1693.76s] And then this insertter is going to
+[1694.96s] swing once, bring it back into
+[1696.64s] circulation, and then it'll come back
+[1699.279s] into these chests and then come back in
+[1700.88s] here. That way, you're always dealing
+[1702.399s] with overflow in case you ever have too
+[1704.24s] much science in there.
+[1707.039s] That's basically my solution. So that
+[1708.48s] way, you're still using the science as
+[1710.559s] much as you can, but just knowing that
+[1712.24s] you're sometimes going to have a little
+[1713.84s] bit extra science just floating around,
+[1715.52s] sitting in here from a transition from
+[1717.6s] stronger explosives or whatever it is
+[1719.12s] back to Prometheian.
+[1721.2s] Okay, that's the overview of how this
+[1723.279s] whole system is going to work. And
+[1726.96s] one last thing to note, how do I deal
+[1729.279s] with removing agriculture science? Well,
+[1731.919s] I just have a timer here that is
+[1734.0s] effectively going to say, hey, cool. On
+[1736.72s] a timer, if agriculture science is
+[1739.919s] greater than 150,000 in the whole entire
+[1742.32s] uh logistics network, we're going to
+[1744.24s] start a timer. If it stays like this for
+[1747.76s] 20 minutes, we're at that point going to
+[1749.76s] start removing agriculture signs until
+[1752.159s] it goes below again 150k.
+[1755.76s] We could adjust the timer, adjust the
+[1757.6s] timing of how long it's going to do
+[1759.039s] this. But in practice, if you're
+[1761.6s] constantly consuming agriculture signs
+[1763.44s] cuz it is just in time bringing it here
+[1765.6s] from Gaba, you're not going to be really
+[1768.159s] over this limit for more than like 3 4
+[1770.08s] minutes. So
+[1773.039s] if that like usually it's probably about
+[1774.799s] like about a minute max that you're ever
+[1777.76s] going to stay over 150,000. So in
+[1780.399s] practice more like 30 seconds. So that's
+[1783.279s] always going to be slightly above that
+[1785.12s] value. So or just always below it. So
+[1788.08s] that just means you're constantly
+[1789.12s] consuming it. The moment that you stop
+[1790.399s] consuming agriculture science, it's
+[1791.76s] going to just sit over 150,000 because
+[1793.679s] we've requested for I think 280,000 or
+[1796.88s] 300,000 to be here on novice. So,
+[1802.08s] and then it will know eventually, okay,
+[1803.84s] I can remove it. And so, I have it right
+[1806.0s] now locked out because I haven't found
+[1807.679s] it to be useful. I just let it rot and
+[1809.52s] then slowly transition. And that's been
+[1811.6s] working fine. And I'll show you just
+[1813.919s] kind of some of the troubleshooting that
+[1815.039s] I've done to make sure that the whole
+[1816.24s] entire system works here in a second.
+[1819.6s] Okay. So
+[1822.399s] once this actually happens and that it
+[1824.559s] would actually want to delete science,
+[1826.72s] it'll send basically this skull signal
+[1829.6s] until agriculture science is greater
+[1832.72s] than or basically it's less than 10k.
+[1835.76s] And then at that point uh that will mean
+[1838.96s] that we've removed all the agriculture
+[1840.399s] science completely from the whole system
+[1842.159s] as fast as possible. And we can then uh
+[1845.52s] start cleaning up. we we can stop it and
+[1848.32s] then start waiting again for the timer
+[1850.32s] to hit 20 minutes. And you see this
+[1852.0s] countdown start to happen.
+[1854.88s] Once that skull signal is sent across
+[1856.799s] here, that's going to come over a wire
+[1859.52s] that comes here to this radar. The radar
+[1861.919s] is then going to set a signal and then
+[1863.52s] there's a small tiny little custom
+[1865.12s] controller here that basically says,
+[1866.88s] "Cool. Whenever the skull signal is
+[1868.64s] greater than zero, go and set the stack
+[1870.159s] size to four." And then during that
+[1873.2s] time, just have a clock that counts up
+[1875.039s] every 60 seconds. And then I want it to
+[1877.919s] cycle between spoilage and with
+[1880.88s] agriculture science. And you're going to
+[1882.159s] notice again that letter, that P letter.
+[1884.559s] That's because when this is active,
+[1887.919s] this inserter here is going to insert
+[1890.64s] science into this lab and then this
+[1894.32s] inserter is going to take it out. So,
+[1896.159s] they're just going to constantly run.
+[1897.36s] And this was just easier than me routing
+[1898.96s] an extra belt and routing them around.
+[1900.72s] I'm just abusing these two inserters to
+[1902.72s] pull and remove stuff from this lab
+[1905.36s] here. And then they're going to all go
+[1907.12s] down the same basically exhaust belt
+[1910.48s] that we have here. The same one that we
+[1912.32s] were using on the top to exhaust all the
+[1914.24s] science from Prometheium. When we do
+[1916.64s] that transition, those are all goi
+
+ng to
+[1918.32s] get fed in here. And then the
+[1919.84s] agriculture sign specifically is going
+[1921.36s] to go on its own belt and has its own
+[1922.96s] dedicated deletion mechanism. That way I
+[1925.519s] can increase freshness if I need to per
+[1928.559s] quadrant. And they're all identical
+[1930.559s] copies. All of these are all identical
+[1933.039s] copies, just mirrored, except for this
+[1935.36s] one that just happens to have the lead.
+[1936.96s] And you can see that it's the lead
+[1938.159s] because of the wake list that are on it.
+[1940.799s] Whereas the ones down here don't have
+[1942.559s] that. They're just regular followers.
+[1946.159s] Hopefully all that explanation made
+[1947.6s] sense. But that's kind of how this whole
+[1948.88s] entire system works. So I'm going to
+[1950.799s] demonstrate here for everyone kind of
+[1952.24s] how a transition to Prometheium science
+[1954.32s] works. So what I'm going to do is I'm
+[1957.039s] going to manually transition to research
+[1959.36s] productivity. I've turned off my mod
+[1961.679s] just so we can show this. What you're
+[1964.24s] going to notice here is right now it
+[1966.48s] just now detected with this alert that's
+[1968.48s] going off that Prometheium Science was
+[1971.039s] inserted. So just wipe the memory of
+[1973.679s] this main inserter and it's slowly
+[1975.76s] stacking these numbers up and it is now
+[1978.88s] waiting until we count for basically a
+[1983.76s] period of time. So if it's greater than
+[1985.12s] four, we're going to say cool, we are
+[1986.88s] now uh we wait first for the first four
+[1990.24s] to be inserted so that we don't
+[1992.72s] overreact if like Prometheium science
+[1994.72s] comes back into the network and we're
+[1996.24s] not consuming it. And then you're going
+[1998.32s] to notice here that we are running right
+[2000.799s] now all the science
+[2005.2s] basically at a stack size of still 16 to
+[2009.519s] try to get everything into these labs.
+[2011.679s] It is then going to after a period of
+[2014.159s] time here it's going to stop. It sends
+[2016.24s] this X signal which means and then it's
+[2018.799s] going to start dumping all the science
+[2020.48s] now. That means only insert into the
+[2022.72s] lead but the rest of them all get all
+[2024.559s] their science removed and it just
+[2026.0s] quickly cycles through all the different
+[2027.44s] sciences it ever seen. And then all of
+[2030.08s] that is going to get fed back into these
+[2031.76s] belts. You're going to see they're all
+[2033.12s] kinds of a jumbled mess. They're going
+[2034.799s] to have different stack sizes. They're
+[2036.48s] going to be stack size two one four. I
+[2038.72s] don't care. The point is just as long as
+[2040.559s] they get completely cleared from all
+[2041.919s] these labs, then that's fine. And then
+[2044.32s] these insertters are picking them up as
+[2046.32s] fast as the belt kind of moves here. So,
+[2048.32s] they're all coming in like this. And
+[2050.96s] then whichever one happens to be the
+[2052.48s] highest, it's going to go and grab that
+[2054.879s] one out first and take them out of the
+[2056.72s] chests. And then we'll afterwards
+[2059.359s] basically grab the other sciences until
+[2062.32s] it's basically emptied out everything
+[2063.919s] that's in these chests. And then this
+[2066.72s] will start the moment that we get some
+[2068.639s] red science back in here, which may take
+[2070.96s] a little bit because right now it is the
+[2073.359s] lowest and prometheium is the highest.
+[2075.2s] It just turns out that that's how it
+[2076.639s] happened to come in. And you're seeing
+[2078.639s] also the extra waste that we're not
+[2080.399s] using is getting removed from this this
+[2083.04s] chest here and is then getting dumped
+[2084.8s] and destroyed. I don't care what this is
+[2086.72s] cuz if you think about it like this has
+[2088.48s] sure this has destroyed about 120,000
+[2091.359s] products of varying quality varying
+[2093.919s] different types and you can see that
+[2095.76s] also in here all it's basically done
+[2097.76s] every single science that it's destroyed
+[2099.359s] over time so you might go look at this
+[2102.64s] and be like oh my god like 120,000 signs
+[2105.28s] that's a lot of science well it's not if
+[2107.92s] you look at like the last 250 hours of
+[2110.0s] like when I started this so if you look
+[2113.599s] at here this is 4 and half days ago when
+[2115.92s] I started this like we have in terms of
+[2118.72s] science we have consumed over
+[2123.44s] 132 million electromagnetic science
+[2125.76s] packs and then additionally on top of
+[2128.32s] that just the real one to really look at
+[2130.24s] is here 1.2 billion uncommon science for
+[2134.64s] for red science here. So multiply that
+[2136.96s] by you know take that in half. So
+[2138.72s] instead of one and a half 1.2 two
+[2140.8s] billion, right? You'd be talking about
+[2143.28s] like let's say 600 million science that
+[2145.599s] we've consumed during the time that I've
+[2146.96s] been testing this and we've and you can
+[2150.32s] multiply that then across all the
+[2151.839s] science that have been used, right? But
+[2153.28s] just look at that as a base. 600 million
+[2155.28s] compared to 120,000 that's been
+[2157.839s] destroyed.
+[2159.359s] That's peanuts. And really divide that
+[2161.44s] by 11 because that's how many sciences
+[2163.599s] are really in here. So you're really
+[2165.119s] you're not talking 121,000. you're
+[2166.8s] talking about maybe like 15,000 10 to
+[2169.04s] 15,000 per science. So that's nothing
+[2172.24s] that you're actually destroying compared
+[2173.92s] to the amount of science raw that has
+[2176.079s] been consumed. And this is just to get
+[2178.24s] around the edge case so that all the all
+[2180.32s] of these sciences can completely drain
+[2182.079s] and all be inserted at the same time to
+[2184.24s] all be 16 so that the stack sizes are
+[2186.96s] all exactly synchronized during the
+[2188.88s] entire tim
+
+e that this is running. That's
+[2190.8s] the whole reason that we're doing it.
+[2192.64s] Plus, it has the added benefit that
+[2194.079s] right now this one's going to continue
+[2195.44s] to run as long as there is some science
+[2198.88s] in here. And again, we always prioritize
+[2200.96s] the Prometheium from here before pulling
+[2203.2s] extra Prometheium from this belt.
+[2206.16s] So,
+[2208.4s] that is effectively how this one extra
+[2211.04s] lab runs. So, when we're running this,
+[2214.64s] and I will make sure to include here the
+[2218.24s] uh entity time usage so we can look at
+[2220.16s] that. You can see that right now we're
+[2222.4s] running all 140 labs. And then the
+[2226.56s] moment that these four labs on the
+[2229.2s] outside run out. So there's one 2 right
+[2234.16s] 3 four of these extra ones run out will
+[2236.32s] go down to 1,036. But really if you
+[2238.56s] think about like the consumption of all
+[2240.16s] these yes across all of these this is
+[2244.56s] going to be 32 and then there's three
+[2247.92s] extra. So 32 rows, four columns. So if
+[2250.72s] you look at the the consumption rate per
+[2253.359s] second times 32
+[2256.96s] and then 32 * whatever the number
+[2259.839s] actually winds up being, so 32 * 8 rows,
+[2263.2s] pull off three extra labs, so 259.
+[2268.079s] You're going to see then if you look at
+[2269.52s] like the transport lines of this, you
+[2272.56s] see that it's really really close to
+[2275.92s] effectively going to be fully eight
+[2278.64s] lanes of science that we're consuming.
+[2282.0s] And so at the faster rate at 60 um this
+[2286.72s] is even closer. But the point is like
+[2288.56s] this is effectively a rounding error for
+[2290.24s] me because if you think about like the
+[2291.92s] consumption here, this is going to be,
+[2294.24s] you know, per hour
+[2296.8s] or per second here is 479.7.
+[2300.64s] And really what I would need in order
+[2303.44s] for this to be consuming the full
+[2307.359s] lane would be 480
+[2310.48s] per second of each science.
+[2313.839s] So.3
+[2315.599s] per second delta to have a slight back
+[2317.92s] pressure is worth it for me in order to
+[2321.28s] maintain consistency. So yes, I'm
+[2323.599s] running kind of slightly underclocked
+[2325.04s] cuz I'd need technically 1,040 to fully
+[2327.68s] consume everything, but 140 would be
+[2329.68s] over the limit, right? Because that
+[2331.599s] would be uh 260 here of that, which is
+[2335.119s] 481.5. So then you wouldn't have back
+[2337.68s] pressure. So.3
+[2339.76s] per second or.3
+[2342.56s] * 60
+[2344.8s] or missing out on 18 science per minute.
+[2347.68s] It's a rounding error for me. I'm fine
+[2349.359s] with it. And that's how I deal with
+[2351.04s] having uh consistently back pressure
+[2353.68s] across the whole system is instead of
+[2355.359s] adding one extra lab per row of 32. So
+[2359.2s] instead of running 33, what I'm doing is
+[2361.599s] I'm taking each of these rows across all
+[2364.64s] of them, and I'm only adding three extra
+[2366.88s] labs down here to offset it. So instead
+[2369.52s] of having 65 labs here consistently, cuz
+[2373.52s] that's actually what you need to go over
+[2374.72s] the limit, what I'm doing is I'm just
+[2376.64s] adding these extra three and I'm dealing
+[2378.24s] with the rounding error. So that's how
+[2380.16s] that uh is is how I'm dealing with it.
+[2382.56s] Always have back pressure. The next
+[2384.48s] thing that I want to demonstrate is what
+[2385.92s] happens if you go from doing a for
+[2388.72s] science research like let's say mining
+[2390.32s] productivity and you switch over to
+[2392.72s] using let's say we go to bot speed for
+[2395.52s] example. I'll switch that over. You see
+[2398.24s] the alert is immediately recognized
+[2400.56s] which is good based on that little alert
+[2402.96s] signal that's coming out down there. And
+[2405.44s] then if we look at science consumption
+[2407.28s] you'll see that pretty much instantly
+[2408.88s] because all of these are wake lists for
+[2410.88s] that period of time. they immediately
+[2412.32s] start consuming the other science.
+[2414.32s] There's a slight dip as those other
+[2416.4s] sciences wind up having to
+[2418.48s] re-synchronize again, but eventually in
+[2422.079s] this case that was the entirety of the
+[2424.079s] transition is this period and we have uh
+[2427.76s] we dropped from 4.5 million a minute to
+[2429.76s] 4.4 million a minute. You can see that
+[2431.839s] by that slight consumption of pink
+[2434.48s] science which gets a little bit wonky
+[2436.72s] during that period of time but then it
+[2438.96s] starts to synchronize across legendary
+[2440.56s] science and it has a again like usually
+[2443.28s] like a slight dip if the size of the if
+[2447.76s] let's say one was at like let's say 24
+[2449.52s] and the other one was at four in terms
+[2450.96s] of their stack sizes and then eventually
+[2453.52s] after a period here of like I said about
+[2455.44s] 40 seconds you're going to get into a
+[2457.52s] full perfect transition. So, and and the
+[2459.839s] only difference is you're talking about
+[2461.76s] worst case here for some of these nicer
+[2463.92s] transitions like bot speed to uh going
+[2466.88s] and just removing one science and adding
+[2468.8s] two another science back in. So, adding
+[2471.44s] more sciences is always like really nice
+[2473.04s] and smooth like this. And it's only
+[2475.359s] about 40 second transition till you're
+[2476.96s] fully running all the labs again. I just
+[2479.28s] wanted to talk through some of the
+[2481.359s] benchmarks on the actual uh version 1.13
+[2485.28s] of the labs and the controller and all
+[2487.68s] that.
+[2489.04s] So,
+[2490.56s] basically the what I'm going to say is
+[2492.56s] this is from a version 1.9 test that I
+[2495.52s] wound up doing. But if you look at
+[2497.44s] overall the amount of time that this
+[2500.319s] test took to actually run, right, you're
+[2503.04s] looking at 594,000
+[2505.839s] ticks, right? So, wh
+
+at is that? That's
+[2508.24s] almost 10 minutes of run time. And these
+[2510.72s] were run for three consecutive runs
+[2513.2s] every single time, right? So this this
+[2515.52s] took a uh so just for this one map to
+[2518.48s] test it took me 30 minutes of a UPS
+[2520.64s] benchmark to run and then the rest of
+[2523.2s] these here are basically effectively the
+[2525.68s] same. So it was multiple hours of
+[2528.96s] running benchmarks. Since 1.9 to 1.13
+[2533.599s] was mainly bug fixes because there were
+[2535.76s] some wonderful people beta testing it
+[2537.359s] and testing it out. They wound up
+[2539.44s] finding a couple issues with some of the
+[2541.2s] loop conditions that I had that uh
+[2543.52s] affected just that you could deadlock.
+[2545.839s] So we we fixed those, but it didn't
+[2547.839s] impact at all the inserter timing. So we
+[2550.4s] effectively then 1.13 is stable now, but
+[2553.76s] should still have the same timing. So
+[2555.28s] should have the same benchmark in the
+[2556.72s] end. So
+[2559.359s] basically the result and what I was
+[2561.52s] looking for was an improvement in
+[2563.04s] explosives and we saw that. So having
+[2565.28s] the dedicated inserter also this is
+[2567.76s] stacking them in basically in pairs. So
+[2570.88s] instead of doing it from the front to
+[2572.56s] the back. I'll talk about this more in
+[2574.4s] depth at the end of the video. So watch
+[2576.4s] that. But basically there was some
+[2579.92s] changes to the timings of how they are
+[2583.119s] desyncted. So that also helps uh
+[2586.079s] minimize some of the transport line
+[2587.68s] time. So effectively this was the result
+[2591.2s] I was looking for was an improvement in
+[2592.8s] explosives because that was basically
+[2594.16s] the worst performance that we were
+[2595.76s] getting from that. So seeing that for Q2
+[2598.0s] there was an improvement and there's
+[2599.44s] also was Q1 and they kind of scale
+[2601.04s] respectively linearly. We had a good
+[2602.96s] standard distribution across all the
+[2604.56s] tests. So I'm pretty happy with that. So
+[2607.68s] it uh it seemed pretty normal by running
+[2610.079s] them sequentially and that was good
+[2611.839s] enough. So if you want more details on
+[2614.4s] that, go and look at my benchmarking
+[2615.839s] tutorial video go in depth on what I
+[2617.44s] think about it. But so otherwise then
+[2620.16s] just looking at percent improvements
+[2621.68s] from wake list and running explosives.
+[2624.88s] We now have compared to the version 1
+[2628.24s] that was released uh this a couple
+[2631.04s] weekends ago. This is now looking at
+[2634.079s] this. This was 67% improvement. This is
+[2636.16s] an 86% improvement. So about a 20%
+[2638.96s] relative delta between the two of them.
+[2640.88s] That's not 20% better than this version,
+[2642.64s] but that's 20% better effective
+[2645.92s] effectively related to the original Q1
+[2649.52s] with uh just stack wake lists and then
+[2653.599s] going to Q2. Yeah, you you see also
+[2655.76s] corresponding kind of linear jump, but
+[2658.64s] about half that relative percent
+[2660.88s] improvement because again it's weighted
+[2662.319s] based on the original one. So definitely
+[2665.04s] some improvements there. That's great.
+[2666.72s] That's what I'm currently running right
+[2668.16s] now in in uh my live base. So then
+[2671.599s] otherwise in terms of other updates that
+[2673.599s] wound up happening, if I go and look at
+[2676.24s] research productivity, we didn't see as
+[2678.56s] much of an improvement there, but that
+[2680.88s] also I wasn't expecting it. This is
+[2683.2s] noise to me at this point. Like if you
+[2685.119s] look at the variance here, this slightly
+[2687.04s] was better and slightly was worse at one
+[2688.8s] point. So they effectively are going to
+[2691.119s] be running about the same. And that's
+[2693.76s] completely fine. the
+[2696.24s] so but that was what I was hoping for
+[2697.92s] was just having one extra inserter
+[2700.079s] interacting with the labs while it's
+[2701.68s] running research productivity I was
+[2703.52s] hoping going to net out and be about the
+[2705.76s] same in terms of overall effective UPS
+[2708.16s] again take this with a grain of salt
+[2710.88s] like I've talked about before you can
+[2712.24s] have cash misses so the the game won't
+[2714.64s] be necessarily going to be corresponding
+[2717.28s] linearly to these improvements but the
+[2719.2s] point was I wanted to have an isolated
+[2721.44s] test that proved that running for
+[2723.599s] explosives specific specifically this
+[2725.119s] would get better. And then otherwise
+[2727.76s] looking at the
+[2730.64s] time that we had actually for running
+[2734.0s] specifically for steel productivity, we
+[2736.319s] had a slightly worse performance for
+[2738.8s] version 1.9.
+[2740.72s] And
+[2742.319s] that's okay because
+[2745.92s] effectively here again I'm okay with
+[2749.2s] compromising a little bit. And I think
+[2750.8s] the reason that steel prod is worse now
+[2752.96s] is because we are stamping down and
+[2756.48s] instead of going with the direction of
+[2758.4s] travel like we were before specifically
+[2760.96s] for steel prod because they were aligned
+[2762.96s] before with the purple and the blue,
+[2766.0s] we're now going the opposite direction
+[2767.52s] but then splitting the difference to
+[2769.04s] make it a little bit better for
+[2770.079s] agriculture sign so they always line up
+[2772.16s] exactly for all the insertters to insert
+[2774.079s] at the same time.
+[2776.64s] We've hurt a little bit running
+[2779.28s] basically our mining productivity
+[2782.079s] effectively, right? So you can see kind
+[2784.8s] of this difference of the slight step
+[2786.4s] down, but now it's a more balanced build
+[2788.48s] because also buying productivity is
+[2790.96s] using almost nothing anyway if you're
+[2792.8s] running it. So having the labs slightly
+[2794.56s] more elevated for it, not a big deal,
+[2796.48s] but then 
+
+having way better performance
+[2798.319s] for running actual agriculture science,
+[2800.64s] I'll take that anytime.
+[2803.599s] So that was the comparison there. And
+[2806.16s] then looking at bot speed, this one was
+[2808.56s] kind of interesting because my
+[2810.56s] expectation was it going to be about the
+[2812.96s] same. And it wound up actually
+[2816.4s] performing a little bit better. And that
+[2818.16s] was interesting to me because I would
+[2819.92s] have thought that. And again, maybe this
+[2822.16s] is just because I'm splitting the
+[2823.44s] difference. And now we're running
+[2825.52s] effectively now another science that's
+[2828.079s] coming from specifically from an
+[2831.2s] external planet. Maybe that one benefits
+[2833.119s] cuz it's going in the direction of
+[2834.56s] travel and is more staggered. I don't
+[2836.319s] really know the reason why it got
+[2837.839s] better, but it was a slight improvement
+[2841.04s] over the original design. So, bot speeds
+[2843.52s] a little bit better. And really, those
+[2846.72s] are going to be the ones that are going
+[2847.92s] to have the bigger UPS hit. So having a
+[2851.359s] more of an improvement in those
+[2852.88s] respective areas is ultimately going to
+[2855.28s] help you more than just doing it for
+[2857.119s] mining productivity which has almost no
+[2860.319s] real UPS draw whatsoever just running
+[2863.44s] for sciences. So again standard
+[2865.68s] distribution was pretty good. I'm going
+[2867.2s] to upload all these to my GitHub repo
+[2870.16s] here uh once the video comes out and
+[2872.72s] you'll be able to see all these along
+[2874.24s] with the test files if you're interested
+[2875.68s] in them and the conclusions will be
+[2877.68s] there as well as I'll update the read me
+[2879.44s] with that. So you can always look at
+[2880.72s] these.
+[2882.8s] Thank you very much for watching. Stick
+[2884.319s] around for part two where I go in a deep
+[2886.0s] dive of all the troubleshooting that I
+[2887.2s] was doing during the testing if you're
+[2888.64s] interested in that. Until next time, my
+[2892.88s] name is Apugnasty. See you.
+

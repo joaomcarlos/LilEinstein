@@ -1,0 +1,874 @@
+# Gleba Science Monitor
+# Channel: abucnasty
+# Video ID: xCeV0A8A5eU
+# Transcript length: 38456 chars
+# Fetched: 2026-08-31
+# Source: TranscriptAPI.com
+
+[0.48s] Hello and welcome back to Factorio. My
+[2.28s] name is Aavak Nashy. In today's video,
+[4.28s] we're going to be talking about how to
+[6.08s] slow down the production rate of gleba
+[8.56s] automatically.
+[10.48s] I'm taking a quick side tangent. This is
+[12.08s] going to be a relatively short video.
+[13.72s] The goal of this is to talk about
+[15.52s] something that I'm taking a small break
+[16.76s] from editing. I'm currently editing the
+[18.64s] purple science competition and I'm
+[20.8s] finally done with it. I've actually, if
+[22.44s] you want to go and get a sneak peek,
+[23.64s] that's already posted on my GitHub page
+[25.56s] and you can see all the wonderful
+[27.0s] breakdown and all my thoughts and
+[28.4s] conclusions there. I posted about my
+[30.04s] Discord, but just in case you're
+[31.32s] watching here for on YouTube, that is
+[33.08s] available and you can see the results
+[34.52s] finally after 4 months of production
+[36.04s] science. So, what are we doing today?
+[38.4s] We're not talking about production
+[39.28s] science, we're talking about gleba. So,
+[40.36s] I'm taking a little bit of a break. So,
+[41.84s] the idea here and the thing that I'm
+[43.96s] currently messing with is I'm trying to
+[46.2s] be able I have create a mechanism so I
+[48.12s] can throttle gleba's production. So,
+[51.12s] this has been some trial and error. I've
+[52.72s] had a lot of things blow up on gleba
+[55.16s] because of this and unfortunately I
+[56.44s] didn't record the footage of that, but
+[58.44s] uh
+[59.36s] there's there's I'll I'll post a little
+[61.04s] screenshots so you can see just some of
+[62.36s] the destruction here. Uh and I'll put
+[64.16s] that in an editing.
+[65.56s] So, what we're going to do is we're
+[67.16s] going to go to gleba and I'm going to
+[68.72s] show the new system that I've created.
+[84.24s] So,
+[85.16s] just as a reminder, what I wind up doing
+[86.84s] is I wind up running trains and the
+[88.44s] trains wind up actually bringing in the
+[89.8s] fruits that I wind up needing. Those
+[91.52s] trains come from two locations. They
+[93.52s] come from a general Yumaco production
+[95.44s] facility here and also one for the
+[98.04s] brains over here on the left. So, these
+[100.16s] two locations feed into the main
+[102.12s] productions facility and the trains wind
+[104.28s] up bringing in the items here. You're
+[106.0s] going to notice right away
+[107.8s] that the amount of trains activity is
+[110.4s] drastically reduced. If you watched my
+[112.84s] gleba overview video, you would have
+[114.76s] noticed that I have constantly at least
+[116.84s] one or two trains directly sitting in
+[118.92s] here when we're running at full speed.
+[121.04s] This has been now reduced so that we
+[122.96s] very occasionally and just in time bring
+[125.28s] just enough to keep the system alive and
+[127.68s] keep science production running and also
+[129.92s] the export of the wonderful what's it
+[132.76s] called here?
+[133.959s] The bioflux for it to continue continue
+[136.2s] to keep novice alive as well.
+[138.36s] But otherwise you're going to see that
+[139.28s] there's a a very very small amount of
+[141.52s] train activity. But how do we accomplish
+[143.44s] that?
+[144.92s] So this is the contraption that I've
+[147.0s] been kind of experimenting with the last
+[148.68s] few hours.
+[150.04s] What is this? So if you watch my lab
+[153.88s] overhaul video, you would have seen that
+[156.64s] in the labs I created a clocking
+[158.04s] mechanism that can detect which sciences
+[160.4s] were currently running. You're going to
+[161.56s] notice they're running work with robot
+[162.64s] speed so you're seeing that these are
+[164.08s] the sciences that we're currently
+[165.36s] running.
+[166.52s] The cool part is although yes, we can't
+[168.76s] run bio labs directly here on Gleba, we
+[171.48s] can put a normal lab.
+[173.4s] So this lab here is a normal quality
+[175.6s] lab. And this consumes 147 packs per
+[180.08s] hour or once every 72,000 over 49 ticks.
+[185.0s] So what I wind up going and creating
+[186.84s] here is a a mechanism here that is I've
+[190.16s] I've just adapted the already the the
+[193.08s] the clocking that I have here for all
+[194.88s] the labs and also the same display panel
+[198.08s] and I've adapted that for a much slower
+[199.92s] rate of this particular lab.
+[202.6s] So what we do is I import all the
+[205.12s] sciences that we can't produce here on
+[206.84s] Gleba and all the novice sciences we can
+[210.36s] produce here on Gleba so I wind up doing
+[212.32s] that through recipe switching. So what
+[214.12s] this does is it just monitors the
+[215.6s] contents of this chest and whenever
+[217.88s] those items wind up dropping below 16 of
+[221.16s] each of these different sciences it'll
+[223.2s] go and set the actual recipe here.
+[226.84s] And then it will go and quickly craft
+[228.36s] each of the individual sciences that we
+[229.84s] need so all six are produced here on
+[231.4s] Gleba.
+[232.92s] The intermediary materials are crafted
+[235.08s] here. Again, with recipe switching, we
+[236.84s] just use bots to bring them in.
+[239.0s] The consumption rate is so low that it
+[241.16s] doesn't even make sense to go and make
+[243.0s] it more complicated by bringing a whole
+[244.52s] bunch of more machines in. Bots are
+[246.68s] going to be perfectly fine for producing
+[248.16s] the couple items that we need. So, you
+[249.84s] can see here we just made a little bit
+[251.12s] of purple science, so that's why we just
+[252.44s] needed the two intermediary products for
+[254.04s] purple. So, here you're seeing the
+[255.92s] different recipes we're making the
+[257.16s] novice sciences. Cool.
+[258.88s] Those get inserted. We monitor the hand
+[260.72s] contents of this fast inserter set to
+[262.76s] stack size one, and it sets it to stack
+[265.0s] size one just so that we get a faster
+[267.16s] response because this is already such a
+[268.72s] slow slow lab. You can see that here.
+[271.16s] We're con
+
+suming per hour 147, and if you
+[274.64s] look at this in a per minute per
+[276.0s] standpoint, it's just like two per
+[277.48s] minute. This is a like two SPM, very
+[280.4s] small that we actually need to produce
+[281.8s] and and consume this. The big benefit of
+[283.919s] this is that now
+[285.88s] really we only need to monitor Gleba,
+[287.88s] but I've made it a little bit more
+[289.4s] complex because I wanted to know all the
+[291.36s] sciences that I'm currently running
+[293.12s] because why not? We already have all the
+[294.72s] sciences being imported, so we can get
+[296.12s] the same cool display panel here. But,
+[298.04s] the big benefit is that I also am
+[300.08s] monitoring and detecting whenever we're
+[301.68s] running Promethium science.
+[303.52s] The benefit of that is that now that we
+[305.36s] have a signal here, and you'll see here
+[307.32s] over the network we wind up sending a
+[309.08s] red wire signal here for each of the
+[310.84s] individual sciences we're running. We
+[312.68s] run that over this radar, and we also
+[315.36s] bring this in to the network here for
+[317.84s] this basically runs this red wire. So,
+[320.12s] anything that has a red wire is
+[321.48s] currently telling us which sciences
+[322.919s] we're running.
+[324.04s] That means now we can make a decision
+[326.28s] not only on the harvest rate, but also
+[328.84s] on all these blades to be running. So,
+[331.76s] when we're not running agriculture
+[333.36s] science, only this one is actually
+[335.6s] enabled.
+[336.96s] This whole entire section is disabled,
+[339.24s] and all of this section is disabled
+[341.2s] whenever that happens. We simply do that
+[342.96s] by just sending here. Cool. Agriculture
+[345.32s] science is not greater than zero,
+[347.04s] therefore do not send any of these
+[349.08s] intermediary signals.
+[351.2s] So, what that means is don't go and
+[353.56s] insert more pentapod eggs into this at
+[356.64s] you know, into the bio chamber. And also
+[359.08s] take the buffer chests that are here and
+[361.44s] dump them all whenever this is equal to
+[363.2s] zero, dump them all onto this belt so
+[365.52s] that they can be exhausted down here at
+[368.12s] the end of the line.
+[369.8s] So,
+[371.28s] that's currently and I'm realizing that
+[373.88s] I have a I've accidentally flipped that
+[375.72s] around. All right, let's fix good.
+[377.919s] Uh, I'm experimenting with a lot of
+[379.32s] things here.
+[380.44s] So, the the the whole concept then is
+[382.48s] also the inserters that would insert
+[385.24s] science into the rocket silos are also
+[387.52s] all disabled.
+[389.32s] So, now all the the actual ships that
+[391.24s] wind up going and coming back and forth
+[393.24s] between Novus,
+[394.84s] they wind up very very slowly going and
+[397.48s] filling up their actual inventories. So,
+[399.88s] that's not great for space platform
+[401.44s] update time. That's the one downside to
+[403.44s] this is because they're constantly
+[405.16s] requesting something from Gleba and I
+[407.6s] have four ships in order to actually
+[409.08s] deliver it because I do want to run
+[410.56s] Gleba at full speed, so 60-second
+[412.64s] research.
+[414.24s] But, the big benefit of that is that now
+[417.8s] Gleba itself can be more or less dormant
+[420.72s] with just the export of bio flux that's
+[422.8s] going to be needed occasionally here at
+[424.32s] the end of the line.
+[426.0s] So,
+[427.36s] let me fix all these little things here
+[429.72s] and fix the same thing there. I'll kick
+[431.919s] it.
+[433.12s] So,
+[434.36s] now that we have this signal, what do we
+[435.6s] do with this? We talked about it, we
+[436.84s] just turned these three things down, we
+[438.48s] turned these other two off and we just
+[440.08s] have one that's constantly producing.
+[442.76s] So, the next thing that we can do from
+[444.24s] this is we can now be very intelligent
+[447.8s] about the harvest rate at each of these
+[450.2s] different site locations. They're both
+[452.08s] exactly the same logic, so I'll talk
+[454.2s] just about the Yumaco here.
+[456.919s] So, this works. There we have that radar
+[458.64s] again.
+[459.8s] Radars are slightly worse for UPS.
+[462.56s] The main What you could do is you could
+[464.52s] run a a a whole bunch of power poles and
+[467.2s] bring that signal over. I'm lazy. I've
+[469.08s] been only working on this for a couple
+[470.16s] hours. I'm not going to do that. I'm
+[471.64s] going to run a radar, flap it down, and
+[473.36s] now you have a connection.
+[475.08s] Now we can monitor which sciences are
+[476.52s] running, and what we can do is now we
+[479.12s] can set specific conditions.
+[481.28s] So, what I want is I monitor here on
+[484.04s] this belt. Here's all of like I want to
+[486.44s] monitor how much do I currently have on
+[488.8s] the belt of Yomaco, and I also want to
+[491.2s] monitor the contents of this logistics
+[493.72s] network to and I want to combine both
+[495.52s] the signals. That will tell me how much
+[497.44s] Yomaco is currently in this network.
+[499.8s] So, when I'm not using agriculture
+[501.919s] science, I can just occasionally
+[504.84s] pulse a little bit of Yomaco. So, what I
+[508.28s] actually do is I turn on just this bank.
+[510.96s] In one pulse, this will produce 6,000
+[513.919s] Yomaco in an instant. So, all I'm doing
+[516.479s] here is I just go and I detect like,
+[518.159s] "Okay, whenever we drop below 1.5k,
+[520.64s] let's go bring some more into into the
+[522.64s] network here." So, you can see here,
+[524.36s] right now we're monitoring the contents
+[525.6s] of the belts, and we've got like 3,000,
+[527.72s] 2,000 coming down, 1.5k, boom, we spike
+[531.28s] up, and we get an additional 6,000 to
+[533.6s] come in. So, that happens because we
+[536.52s] also turn off this entire other bank
+[539.839s] here if we don't need it. So, we can do
+[542.88s] that simply by just detecting like,
+[544.64s] "Hey, is agriculture science greater
+[546.2s] than zero?" And we'll look at that over
+
+
+[548.12s] here. I'm just filtering it so I don't
+[549.4s] get all the signals.
+[551.16s] This winds up going and saying, "Hey,
+[552.52s] cool. Agriculture science is not greater
+[554.4s] than zero." Then, in this case, do not
+[557.28s] send the check mark that this would
+[559.52s] normally send to go and say, "Hey, turn
+[562.52s] on all of the inserters here to go and
+[565.2s] grab a couple more Yomaco." That's what
+[567.32s] that check mark does. That check mark
+[569.36s] comes across here, comes up across these
+[571.839s] wires, and connects to all of those
+[574.04s] inserters, and pulses it for a second
+[575.76s] here, just like you see here.
+[577.68s] This pulses, brings all the yamaka in,
+[579.88s] fantastic.
+[582.0s] So, when we now step this up, and let's
+[584.92s] say we're running Promethium science,
+[586.84s] then we wind up bringing we want 24,000
+[589.12s] into the network. And then if we're
+[590.56s] running full speed, no Promethium
+[592.4s] science and agriculture, well then we're
+[594.24s] going to want a 48,000 in the network.
+[596.84s] So, we can just set dynamically the
+[598.68s] demand of how much we want to keep at
+[600.6s] any point in time, and then we can also
+[602.6s] turn on and off each of these individual
+[604.6s] locomotive like basically locomotive
+[606.24s] signals saying like, "Hey, how much do
+[607.48s] we currently have in a buffer?" So, that
+[609.28s] we can turn on these other banks of the
+[612.56s] individual train stations where they can
+[614.16s] wind up coming in.
+[615.44s] So, here we only have one enabled, which
+[617.08s] is constantly enabled to continue to
+[618.4s] bring some more yamaka out, but it's
+[620.68s] very very slow, the harvest rate. And
+[622.92s] you can see that here, I was just
+[624.0s] running Promethium science a little bit
+[625.48s] ago, and you can see here that I was
+[627.8s] running at 30,000 jelly nut and 49,000,
+[630.92s] and the moment that I switched off
+[633.2s] Promethium science research, we
+[634.48s] immediately dropped down to 8.5k per
+[636.84s] minute.
+[637.92s] That's huge, because before, this is
+[640.56s] what I was running.
+[642.12s] This was a constant production rate,
+[644.16s] because I had no mechanism to say I
+[646.96s] don't need agriculture science anymore.
+[649.24s] And so, you can see that then here, too,
+[650.76s] is that there's this huge spike of like
+[652.12s] we were constantly making 70,000 a
+[653.64s] minute and destroying it back on Novus.
+[657.12s] So, now what we're doing is we're
+[658.96s] actually able to completely
+[661.76s] drain Novus of agriculture science and
+[664.12s] stop cycling on the other end as well.
+[666.8s] So, let's go look at that.
+[669.08s] So, you notice here on the belts that
+[670.4s] there is no agriculture science
+[672.56s] whatsoever on these belts. So, these are
+[674.76s] normally filled with agriculture
+[676.16s] science.
+[677.4s] So, what I wind up doing here is I just
+[679.24s] go again, because we have that red wire,
+[681.32s] which is the same kind of concept,
+[683.8s] telling us which sciences we're running.
+[685.8s] If we're not running agriculture science
+[687.8s] packs, then we don't add an additional
+[690.8s] 240,000 that we wind up requesting. So,
+[694.24s] all I do now is I'm saying, "Hey, I want
+[696.6s] 5,000 agriculture science packs in this
+[699.32s] network at any point in time." As you
+[701.4s] can see here that we've we're going to
+[703.0s] request just like just barely any any of
+[706.6s] the actual agriculture science packs.
+[708.12s] So, we're going to ask for like 5,000,
+[709.88s] just keep them in the network. And those
+[711.92s] are because I wind up requesting them
+[713.76s] via bots. So, this is the main one that
+[715.96s] I care about. This just tells me, "Hey,
+[717.76s] I'm running agriculture science." And
+[719.8s] whenever I wind up going and inserting
+[721.64s] that, that's going to come into this
+[723.12s] detection mechanism that feeds in here
+[724.84s] and lets me know I'm running agriculture
+[726.36s] science. So, if I am running ag, so
+[729.36s] we'll go ahead and switch to something
+[730.88s] that actually requires it. Let's just go
+[732.8s] ahead and run refining fluids cuz why
+[735.12s] not?
+[736.16s] So, you're going to notice here this is
+[737.4s] going to turn on and it's going to tell
+[739.08s] me research has transitioned. We're now
+[741.28s] going to have now detected that we're
+[742.76s] running agriculture science, and then
+[744.68s] that's going to immediately go and ask,
+[746.2s] "Hey, I need a lot more ag in here."
+[748.2s] Cool. This is going to have a delay. So,
+[750.44s] that's the downside of this design.
+[752.72s] But, what you're going to see here is we
+[754.88s] already know that we're running
+[756.32s] agriculture science. Boom, turns on. Now
+[758.88s] there is a lot more coming down the
+[761.64s] belts. So, now this whole entire other
+[763.36s] side turns on and then this other side
+[765.8s] turns on. You can see just how much more
+[767.16s] flow rate is coming through. Almost
+[768.8s] effectively immediately we have a lot
+[771.24s] more trains coming through. We have a
+[773.16s] huge impulse of extra agriculture
+[775.68s] science is getting created.
+[777.76s] This happens automatically.
+[779.76s] So,
+[781.0s] now what we're doing is we're keeping a
+[782.839s] much larger buffer to keep up with the
+[785.04s] demand of how much we're going to need
+[787.12s] now in this case. We can even just
+[788.72s] monitor this now. You're going to see it
+[790.76s] in an almost instantaneously we are
+[793.04s] pulsing at a huge 114k. Let's just catch
+[796.0s] up as fast as we possibly can. And
+[797.839s] you're seeing we're producing much much
+[799.32s] faster than we were before. Here is our
+[800.92s] normal rate. Here's the faster rate. And
+[803.08s] so now we've got just constantly just
+[805.2s] incoming more trains, more trains that
+[807.32s] in. They're they're stopped from their
+[808.76s] waiting zone over here. And n
+
+ow when we
+[811.04s] coming back over here, here's that back
+[812.92s] pressure that I was talking about. We
+[814.28s] immediately have the trains where they
+[815.76s] need to be going. Downside is it's going
+[817.92s] to take a little bit for agriculture
+[819.32s] science to actually arrive over at
+[822.04s] Novus. Now I've accounted for that
+[823.92s] because the clocking mechanism that I
+[825.64s] have over on Novus
+[828.48s] that goes and and has the clocking
+[830.36s] mechanism that I have can handle the
+[832.52s] loss of back pressure. So that's a
+[833.84s] really clear like a critical thing. If
+[836.04s] you can't handle like losing agriculture
+[838.16s] for a while on your clocking mechanism,
+[839.84s] then you're going to have a lot of
+[840.76s] problems, right? Cuz then you'd have to
+[842.4s] kill the the the clocks, restart them.
+[845.32s] But because it all handles it over over
+[847.12s] on Novus, we're fine.
+[849.16s] So what this is now doing is you're
+[850.56s] seeing all of these banks have turned
+[852.52s] on. Every single one of these are all
+[854.16s] crafting at max rate. And so now when
+[856.88s] we're looking at this and we look at
+[858.28s] like just the agriculture science, we've
+[860.36s] gone from here where we're doing nothing
+[862.6s] and after about 5 minutes or so, we're
+[865.12s] now almost at full production rate. Now
+[867.84s] it's going to still again take a little
+[869.24s] bit for these individual sciences to run
+[871.2s] back and forth, continue to bring sorry,
+[873.52s] these ships not sciences, continue to
+[875.68s] come back and bring everything in.
+[877.88s] And then when we look over here, cool.
+[881.8s] Now we're starting to get a lot more
+[883.76s] agriculture science kind of just flowing
+[885.48s] through. Everything is enabled, all the
+[887.32s] inserters are going. We're now
+[888.8s] requesting the full 245K that we want
+[891.4s] here on on Novus.
+[893.68s] And we're slowly coming up to the 5
+[896.32s] million mark that I want to be at.
+[898.76s] So this takes a little bit, right? To to
+[901.96s] kind of get up to speed. So in practice
+[904.2s] here and I'm running the game at a
+[905.92s] faster rate, right?
+[908.16s] In practice, the idea is yes, you're
+[911.2s] suffering from the fact that you don't
+[912.96s] get to go and run
+[915.16s] you don't get an instantaneous that you
+[917.36s] have agriculture science running. But
+[919.48s] when you're running any other science,
+[920.839s] like I've been running worker robot
+[922.12s] speed testing purple science for the
+[923.68s] past like probably like 150 hours.
+[927.48s] I don't care about 10 minutes, right?
+[930.08s] So, when you're doing 150 hour research
+[933.92s] So, this will slowly catch up as all the
+[938.0s] science starts to get produced and we
+[940.0s] start bringing in more and more and more
+[941.6s] agriculture science and if we get
+[943.08s] everything back up to the full speed.
+[944.76s] And so, you can see this here as each
+[946.12s] individual ship gets its buffer, syncs
+[948.84s] up with their speed, brings in more.
+[950.8s] Though, that's why there's these waves
+[952.8s] of incoming more science and more
+[954.92s] science because these ships are going to
+[956.68s] naturally stagger themselves, but it
+[959.0s] takes a little bit for them to do that.
+[960.96s] You're going to notice that there's a
+[961.88s] little bit of an extra little icon here.
+[964.88s] Um why is there that gauge? So, this
+[966.84s] ship is special.
+[968.32s] This ship will occasionally, again with
+[971.28s] recipe switching, sometimes it'll make
+[973.16s] firearm magazines and sometimes it makes
+[975.08s] space science. We barely need space
+[977.6s] science, so this ship is the perfect
+[980.4s] candidate to just make normal quality
+[982.0s] space science
+[983.52s] and just insert it directly into the
+[986.2s] space platform hub.
+[988.56s] So, you're also going to notice that
+[989.88s] this is bringing in the other sciences.
+[991.88s] So, orange, pink, uh
+[994.64s] cryo, and then uh prometheum. Where do
+[997.2s] those come from? So, I thought about
+[998.64s] this for a while. I said, "Okay, I could
+[1000.839s] have a transport ship. This is my
+[1003.2s] general freight transport ship that goes
+[1005.76s] and crafts all the wonderful things that
+[1007.16s] I wind up needing and then also bringing
+[1008.8s] in everything from all the different
+[1010.24s] planets. So, this has just a huge amount
+[1012.12s] of materials and all that. I could use
+[1014.24s] this because it is going to travel to
+[1016.2s] each of the individual
+[1017.88s] planets. I could request some science.
+[1020.36s] The problem is I also need to unload
+[1022.72s] stuff on Novus. So, it's going to wind
+[1024.76s] up anyway just dumping science on Novus
+[1027.48s] when I don't want it to. So, I don't
+[1029.959s] want that. So, the idea that I have
+[1032.76s] around this is I said, "Okay, the
+[1035.439s] easiest option
+[1037.92s] is
+[1039.319s] this is technically an extra transfer.
+[1041.6s] But at the end of the line here, I can
+[1043.4s] just have each of the individual planet
+[1045.319s] sciences and I can just ship them. These
+[1049.0s] will run like you can see here. This has
+[1050.92s] crafted two products. We've launched
+[1053.44s] effectively twice. That's that's that's
+[1056.36s] it, I think. So, you can see here this
+[1058.24s] has crafted a couple times.
+[1060.24s] I'm anyway running with back pressure,
+[1062.8s] so I'm not consuming the full 240 per
+[1065.16s] second across these belts.
+[1067.2s] So, and it's just a slight rounding
+[1069.12s] error. So, with the extra rounded error
+[1071.96s] that I'm not using, I can just ship them
+[1073.88s] up.
+[1074.84s] In theory, too, and I've laid this out,
+[1077.0s] another option that I've been exploring
+[1078.52s] is I could just launch directly all the
+[1080.44s] individual novice sciences up from here.
+[1082.72s] So, if I don't want to craft them on
+[1084.44s] Gleba anymore, I could hav
+
+e them just
+[1086.96s] ship from here. The benefit of this
+[1088.88s] strategy is then I don't act I could
+[1091.28s] actually completely shut down Gleba and
+[1093.92s] not required to send anything in anymore
+[1096.6s] at all. So, we could actually shut down
+[1098.44s] all of Gleba completely and then just
+[1100.72s] bring the sciences in here and monitor
+[1102.52s] whenever we need more Gleba science. And
+[1104.8s] then that would be it to basically say
+[1106.68s] we need something. So, that's something
+[1108.48s] that I can explore in the future. Right
+[1109.92s] now, I like this recipe switching. This
+[1111.4s] is plenty enough for what I need.
+[1114.16s] So, and just to explain like you're
+[1117.92s] seeing that there's a bunch of belts
+[1119.2s] here coming in with extra stuff. I just
+[1120.96s] made a very simple just rocket part
+[1122.76s] factory here on the edge near the water.
+[1125.28s] And then that just produces all the
+[1126.96s] individual intermediate intermediary
+[1129.16s] materials and belts in them.
+[1131.32s] So, now that we're running refined
+[1132.68s] flammables, you can see that okay, we're
+[1134.24s] getting up to the point where we're
+[1136.12s] almost completely at 5 million. I'm not
+[1138.04s] going to make you sit here and watch the
+[1139.36s] whole thing, but the main point of what
+[1141.16s] I want to do is I want to show that
+[1142.64s] okay, whenever we're like "Hey, we're
+[1145.2s] done. We no longer need refined
+[1147.12s] flammables." Um immediately on novice,
+[1150.08s] you're hearing this alert that's coming
+[1151.44s] off. that means that we no longer
+[1153.16s] require
+[1154.48s] Glayva science.
+[1155.92s] And you're going to see here that the
+[1157.04s] request has dropped down right now.
+[1158.96s] Boom, goes down to 5,000.
+[1161.28s] So, we no longer requesting it, and what
+[1163.88s] we're going to do now is the moment we
+[1165.28s] stop requesting it, you're going to see
+[1166.96s] that on this belt here, we're going to
+[1168.56s] go and get rid of all of that Glayva
+[1170.72s] science. We're going to remove all of it
+[1172.72s] from the belts.
+[1173.96s] So, that happens by just pulsing
+[1175.8s] occasionally here and flipping on and
+[1178.36s] off
+[1179.76s] a
+[1180.68s] uh a signal where my where am I at? Here
+[1182.64s] like this. This is just pulsing a signal
+[1185.16s] that's going to take some off of this
+[1186.72s] belt and bring in occasionally some
+[1189.4s] agriculture science and get it off of
+[1191.08s] here.
+[1191.96s] So, this is just going to get all that
+[1193.24s] Glayva science, completely get rid of
+[1194.88s] it, all the excess until we have just
+[1196.68s] exactly 5,000 in the actual hub.
+[1199.64s] And the moment that we drop below the
+[1201.44s] value that we want, so once I get to if
+[1204.64s] I can find my cursor in this beautiful
+[1207.52s] thing here,
+[1210.8s] where is the green wire coming from?
+[1213.0s] There we go. Okay, the moment that we
+[1214.8s] have
+[1216.76s] that we drop below the 5,000 for
+[1219.2s] agriculture science in here, we're going
+[1221.0s] to turn off these inserters, and then
+[1222.88s] we're going to have nothing on the belt
+[1224.2s] anymore.
+[1225.24s] Because in theory, we really just once
+[1226.6s] an hour we're going to need like 5,000
+[1228.12s] or so agriculture science, and that's
+[1229.6s] all we really wind up needing. This is
+[1231.32s] going to slowly drain. You're going to
+[1232.8s] notice immediately already on Glayva, we
+[1234.84s] have almost instantaneously here in the
+[1236.92s] last 2 minutes, completely dropped. We
+[1239.48s] are not producing anywhere near, and
+[1241.4s] this is very quick to shut down.
+[1244.12s] We're not producing almost anywhere near
+[1245.64s] the amount of jelly that we need or the
+[1247.12s] Imaco, so that's completely shutting
+[1248.68s] down. And the main key thing here is now
+[1251.52s] we're seeing that we're running worker
+[1252.92s] robot speed. Here's all the sciences
+[1254.6s] that we have. We transitioned and we're
+[1256.4s] no longer needing Glayva, but everything
+[1258.28s] goes down to its absolute slowest rate.
+[1260.64s] And again here,
+[1262.4s] very very idle. We don't have a lot of
+[1264.72s] uh
+[1265.64s] brains coming in.
+[1267.32s] So, you're going to notice here the only
+[1268.8s] downside to some things that I could
+[1270.44s] probably improve, I still have pentapod
+[1273.0s] eggs being held in here. So, in about 10
+[1275.88s] minutes I'm going to have a mass exodus
+[1278.24s] of all those I
+[1280.36s] It's sorry, the exodus. And I'm going to
+[1283.0s] have all the pentapod eggs expire.
+[1285.24s] That's what these are here for, the
+[1286.44s] Tesla turrets. Kill them all, whatever,
+[1288.72s] done. I'm not going to make this more
+[1290.2s] complicated. Uh because of that, this is
+[1292.88s] a the first time I'm ever going to say
+[1294.52s] that I I So, I have a particular hatred
+[1296.92s] for quality pipes because they have no
+[1299.24s] particular point to it. There's some
+[1300.88s] lore there, but the main point is just
+[1302.96s] like I don't like them. This is the one
+[1304.96s] instance where I'm going to say cool, I
+[1307.04s] will use legendary pipes because of the
+[1309.24s] slightly higher health bar that they
+[1311.28s] have, so then they don't die as often
+[1313.36s] whenever all of these uh pentapod eggs
+[1315.88s] wind up going and hatching.
+[1318.56s] I don't care about that. I'll just let
+[1319.92s] them just get destroyed. And then
+[1321.72s] eventually once they're all out of the
+[1323.04s] system, we still have this little pilot
+[1324.52s] light that is going to continue to bring
+[1326.52s] occasionally some extra pentapod eggs so
+[1328.68s] that whenever we're ready and we want to
+[1330.48s] go and start again, all these inserters
+[1332.68s] enable, bring in more pentapod eggs one
+[1335.44s] at a time staggered 1 2 3 4, bring them
+[1337.8s] all online, and then we're back to
+[1339.68s] running again.
+
+
+[1341.16s] You can see here that's kind of how this
+[1343.48s] system now works and it's
+[1345.48s] really great.
+[1346.76s] The really nice thing about this is that
+[1349.6s] one of the things that I was observing
+[1351.0s] is the max rate that I was getting for
+[1352.8s] worker robot speed, and I'm not going to
+[1354.32s] run a benchmark in today's video, this
+[1355.76s] is just purely observation. The max that
+[1357.92s] I was getting for UPS was around 170.
+[1360.88s] So, once this completely
+[1363.6s] runs out and we get rid of all of the
+[1365.68s] glaber science on novice and shut down
+[1368.12s] all of the ships that are going back and
+[1369.68s] forth, so you can see here where they're
+[1371.08s] all just parked very slowly getting
+[1373.52s] agriculture science packs.
+[1376.24s] Once this all shuts down, I've been
+[1378.92s] noticing that I'm getting up to in some
+[1381.16s] instances spikes up into the 200 UPS.
+[1383.52s] Like just there. I never hit this
+[1385.44s] before.
+[1386.56s] So, that's a huge thing. So, shutting
+[1388.12s] down gleba to this extent has a huge
+[1391.72s] benefit for UPS just purely by
+[1393.8s] observation.
+[1395.44s] And the other really nice thing is your
+[1397.68s] pollution.
+[1399.08s] If you look at your pollution cloud
+[1400.72s] here, this is when I was running
+[1402.68s] constantly just the agriculture science
+[1405.4s] and then voiding it back on novice. So,
+[1407.12s] we're doing 25,000 per minute. You can
+[1409.44s] see now that this brings us down to like
+[1411.64s] 13k.
+[1413.32s] And my pollution cloud as a result has
+[1415.48s] really shrunk. It used to be all the way
+[1417.44s] out here.
+[1418.8s] And now just because of this simple
+[1421.2s] change, this is still consistently going
+[1423.64s] down. I've only been running this for a
+[1424.88s] few hours now.
+[1426.48s] So, that's a really nice thing, too, is
+[1428.36s] I don't need to expand as much because
+[1429.88s] I'm I really only use agriculture
+[1431.72s] science for research productivity.
+[1434.76s] And that's the last thing I want to talk
+[1435.96s] about.
+[1437.0s] Research prod.
+[1438.36s] The really nice thing about this as well
+[1440.12s] is since I know that I'm running
+[1441.88s] research prod, I can shut down
+[1444.64s] all of this half. I don't need it at
+[1446.56s] all.
+[1447.44s] Now, I need a slight surplus, so
+[1449.2s] unfortunately because of the way that I
+[1450.52s] designed my individual blades,
+[1453.16s] I need one extra. So, I wind up running
+[1456.72s] this one and these three over here
+[1459.6s] whenever I am running for medium
+[1461.24s] science. That's also reduced and
+[1463.36s] actually increased the freshness because
+[1465.16s] now I'm producing exactly the amount via
+[1467.8s] the trains. Now, okay, in general mega
+[1470.76s] basing terms,
+[1472.52s] most people are not going to run trains.
+[1473.8s] I'm the one crazy guy who's running
+[1475.4s] trains.
+[1476.44s] But, most people what they're going to
+[1478.04s] wind up running
+[1479.56s] is they're going to run just directly a
+[1481.68s] bank like this and feed them directly
+[1483.52s] into their labs. Cool. So, just shut
+[1485.76s] them down. You don't need to harvest
+[1487.68s] anything anymore. So, the exact same
+[1489.52s] mechanism instead of having a train
+[1491.04s] delivery mechanism, it can just purely
+[1492.72s] be belts. The exact same concept would
+[1494.92s] work there as well.
+[1497.16s] So, this isn't like fully ready for me
+[1500.12s] to use it. I'll post a small BP on my
+[1502.28s] Discord, and I might actually include it
+[1504.28s] in the uh in the as a small link in the
+[1506.88s] video description if you want to look at
+[1508.16s] it. But, just in general, this concept
+[1510.12s] seems to be really, really good for
+[1512.28s] improving gleba and and effectively
+[1515.08s] reducing the amount that you're creating
+[1516.76s] cuz it's really quick to respond as you
+[1518.72s] can see here. It can really get down to
+[1520.92s] just running almost almost not at all.
+[1523.68s] Now, I may have a bug like why on earth
+[1525.84s] are we harvesting absolutely nothing
+[1527.8s] here?
+[1528.64s] And uh
+[1531.4s] Yeah, that might be an issue. And uh
+[1533.28s] hold on, let me see if I can quickly
+[1534.56s] figure out what's going on. This is
+[1535.8s] equal to zero, so that's fine. We are
+[1537.56s] requesting this is less than 7.5k. Why
+[1540.24s] are we not
+[1541.88s] getting anything? That's really weird.
+[1545.04s] Oh, boy.
+[1546.84s] Uh yeah, I messed something uh up. So,
+[1551.84s] okay. Look, the concept works. Um yeah,
+[1554.96s] we are we This This should be improved.
+[1558.88s] Or absolutely just carnage going on over
+[1561.64s] here.
+[1562.48s] Um
+[1564.158s] >> [laughter]
+[1565.52s] >> Okay.
+[1567.2s] What I think is going on is I have
+[1568.96s] somewhere uh a wire crossed that I must
+[1572.52s] have created a deadlock.
+[1574.2s] Um let me look at this. So, this needs
+[1576.52s] to be less than 1.5k.
+[1578.88s] We are currently reading somewhere an
+[1581.96s] excess amount. Oh, we're reading this
+[1584.24s] side. Yeah, that's an issue. Okay. We
+[1587.44s] are
+[1590.24s] That is
+[1591.64s] slightly problematic. So, I think I'm
+[1593.92s] reading the contents of this, so let's
+[1596.68s] ignore that. There
+[1599.08s] Um
+[1600.32s] I'll fix this deadlock situation, but
+[1603.28s] this will at least bring in uh the exit
+[1605.56s] uh and then take it into this one here.
+[1609.12s] What was going on is I'm reading the
+[1610.6s] contents of these requester chests, and
+[1613.12s] since this was over the 1.5k,
+[1616.96s] that's too low for this to be locomotive
+[1619.12s] to be greater than one. It needs to be
+[1620.96s] 8,000. That's how much we can bring in
+[1623.04s] one individual train.
+[1625.44s] And it was waiting for that, so it would
+[1627.12s] actually have to wait pretty much an
+[1628.68s] hour for all this to go away. And then
+[1631.28s] we can actually bring in the Yamak
+
+o.
+[1634.36s] And
+[1636.16s] Gosh, can you can you bring that?
+[1638.48s] Bring me more Yamako, please, so that
+[1640.32s] this can stop dying all the time.
+[1642.4s] Hopefully we don't lose pentapod eggs
+[1644.32s] here.
+[1646.2s] Let's see, we got some here. Let's bring
+[1647.76s] those out. Let's bring some pentapod
+[1650.0s] eggs in here. Let's kick-start this
+[1651.44s] again. There we go.
+[1654.72s] And then yeah, you can back to life a
+[1657.44s] little bit.
+[1659.789s] >> [laughter]
+[1661.76s] >> Uh gosh, this is
+[1665.8s] This is fun.
+[1667.52s] So, this is a fun experiment. I like I
+[1669.8s] said, this is an off-the-cuff video. I'm
+[1671.52s] trying to experiment with this, so you
+[1673.04s] can see here that I'm doing some trial
+[1674.4s] and error. So, this side looks like it's
+[1676.04s] good. This one has not recovered, so I
+[1678.44s] need to bring in some more pentapod eggs
+[1679.96s] in there. Let's see if we can just
+[1681.24s] kick-start it with a little bit.
+[1683.4s] And if we can, that would be great.
+[1686.2s] Let's get rid of that. Fantastic. And
+[1689.08s] can I bring that in? Great.
+[1691.4s] All right, that should be enough to get
+[1693.16s] this kick-started.
+[1700.48s] All right, there we go.
+[1701.76s] Back to life.
+[1704.984s] >> [laughter]
+[1707.44s] >> Uh boy.
+[1710.4s] The joys of trying things out on Gleba.
+[1712.36s] There's always something that's going to
+[1713.64s] go wrong.
+[1714.72s] Anyway, that's the whole point of the
+[1715.92s] video today. Thank you for watching the
+[1717.88s] last little bit of troubleshooting.
+[1720.04s] So,
+[1721.16s] whole point is this is a general
+[1722.84s] concept. There's some refinements that
+[1724.24s] can be made here, but the whole core
+[1726.44s] concept of being able to get down to
+[1728.2s] like
+[1729.64s] throttling things by just reading the
+[1731.12s] contents of the lab I think is going to
+[1733.92s] be really beneficial for us to be able
+[1735.8s] to control Glyba. And there's so many
+[1737.64s] more concepts that you can do after you
+[1739.44s] have a mechanism like this to go and
+[1741.68s] shut down more things on Glyba if you
+[1744.08s] want to. So, anyway, that's all that
+[1746.68s] I've got for today. Uh if you are if you
+[1749.64s] like this kind of stuff, uh
+[1751.76s] consider subscribing. Uh if not, that's
+[1754.76s] also cool. Do what you want. Anyway, my
+[1757.16s] name is Aibek Nastiy. Have a fantastic
+[1758.8s] day.
+
