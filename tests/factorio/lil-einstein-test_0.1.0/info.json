@@ -5,7 +5,7 @@
   "author": "LilEinstein",
   "factorio_version": "2.1",
   "dependencies": [
-    "base >= 2.1.7",
+    "base >= 2.1.0",
     "LilEinstein"
   ],
   "description": "Disposable runtime assertions for LilEinstein development."
