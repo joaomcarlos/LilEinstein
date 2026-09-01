@@ -53,7 +53,6 @@ The image above shows the main research control center in game.
 
 - Conflicts with `some-autoresearch`, `UltimateResearchQueue2`, and `paralell-lab`.
 - Optional support is available for `simultaneous-research` and `Ultracube`.
-- Factorio 2.1 requires a separately validated build with a 2.1 manifest.
 
 ## Related files
 
