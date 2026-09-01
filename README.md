@@ -1,6 +1,6 @@
 # LilEinstein
 
-> A science-aware research autopilot for Factorio 2.0.
+> A science-aware research autopilot for Factorio 2.1.
 > Strategy profiles, supply forecasting, lab-cluster scheduling, queue budgets, repeat policies, plan presets, and multiplayer controls.
 
 <p align="center">
@@ -8,8 +8,8 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Factorio-2.0.77%2B-f4c542?style=for-the-badge" alt="Factorio 2.0.77+" />
-  <img src="https://img.shields.io/badge/Version-1.4.0-2ea44f?style=for-the-badge" alt="Version 1.4.0" />
+  <img src="https://img.shields.io/badge/Factorio-2.1.0%2B-f4c542?style=for-the-badge" alt="Factorio 2.1.0+" />
+  <img src="https://img.shields.io/badge/Version-1.5.0-2ea44f?style=for-the-badge" alt="Version 1.5.0" />
   <img src="https://img.shields.io/badge/License-GPL--3.0-blue?style=for-the-badge" alt="GPL-3.0" />
 </p>
 
@@ -38,8 +38,8 @@ The image above shows the main research control center in game.
 
 | Item | Value |
 | --- | --- |
-| Version | 1.4.0 |
-| Factorio support | 2.0.77 and later 2.0 releases |
+| Version | 1.5.0 |
+| Factorio support | 2.1.0 and later 2.1 releases |
 | License | GPL-3.0 |
 | Optional integration | Parallel Research |
 
