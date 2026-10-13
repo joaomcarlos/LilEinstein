@@ -18,7 +18,7 @@ Data-stage prototype definitions, loaded via root `data.lua` in this order: `sty
 
 ## Work Guidance
 
-- Validate prototype fields against the Factorio 2.0 prototype API
+- Validate prototype fields against the Factorio 2.1 prototype API
 
 ## Verification
 

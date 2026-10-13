@@ -52,7 +52,7 @@ GUI layer for the LilEinstein mod: window lifecycle, layout construction, and pr
 ## Work Guidance
 
 - Follow `standard.md` naming and structure
-- Validate element properties against the Factorio 2.0 GUI API; use `builder` for element creation
+- Validate element properties against the Factorio 2.1 GUI API; use `builder` for element creation
 
 ## Verification
 

@@ -3,14 +3,14 @@
 ## Purpose
 
 Focused Lua 5.2 unit tests and disposable Factorio smoke tests for LilEinstein's
-runtime, data-stage, migration, queue, policy, lab, and GUI contracts.
+runtime, data-stage, queue, policy, lab, and GUI contracts.
 
 ## Ownership
 
 - `testlib.lua` — shared assertions, module isolation, and suite runner.
 - `run_all.lua` — canonical local suite entry point.
 - `*_spec.lua` — focused public-seam tests; queue, policy, lab, auto_switch, model,
-  view, data, migration, translation, and GUI guard contracts are kept in separate suites.
+  view, data-stage, translation, and GUI guard contracts are kept in separate suites.
 - `coverage.lua` — line-hit instrumentation used by `scripts/measure_coverage.ps1`.
 - `factorio/` — disposable test-only mod and its local DOX contract.
 
@@ -31,7 +31,7 @@ runtime, data-stage, migration, queue, policy, lab, and GUI contracts.
 - Debug-report tests cover deterministic report sections, the live GUI-details snapshot seam, and the copy-ready, selected text-box modal seam.
 - GUI crash regressions cover invalid report-text lifecycle access and label-only style writes on button elements.
 - GUI construction stubs require checkbox/radiobutton `state` to be a boolean in `add` property trees and may separately verify live-state synchronization.
-- Data-stage and migration tests execute against isolated `data`/`game` doubles.
+- Data-stage tests execute against an isolated `data` double.
 - In-game checks must use the disposable runner and must not open or mutate a
   player save.
 - The disposable runner advances its isolated save on a loopback-only ephemeral server with auto-pause disabled and asserts `LuaForce.current_research` switches from a singleton-queued pack-bound technology to an unqueued supplied alternate after bounded sampling of 275 labs, while 5 supplied labs prove the original research still made low but nonzero progress; it then continues through the target-recovery timeout and proves the undersupplied target is not restored.

@@ -111,7 +111,7 @@ The branch was checked with:
 - The Factorio mod linter from the local Factorio skill set.
 - A runtime smoke test against a live save.
 
-The mod targets Factorio 2.0.77 and later 2.0 releases. A separate 2.1-validated package should be treated as a distinct artifact because the manifest and API assumptions are not automatically interchangeable.
+The mod targets Factorio 2.1.0 and later 2.1 releases.
 
 ## Notes for Future Work
 

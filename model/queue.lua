@@ -82,7 +82,8 @@ local get = function(force_index, key)
 end
 
 ---------------------------------------------------------------------------
--- Warning helpers (ported from AutoSwitchTechs)
+-- Warning helpers ported from AutoSwitchTechs by StephenB (MIT):
+-- https://github.com/StephenBarnes/AutoSwitchTechs
 ---------------------------------------------------------------------------
 
 local make_science_icon_string = function(sciences)

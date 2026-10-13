@@ -1,8 +1,8 @@
 {
   "name": "LilEinstein",
-  "version": "1.5.0",
+  "version": "1.0.0",
   "title": "LilEinstein",
-  "author": "SilentW",
+  "author": "TheSilentWarrior",
   "factorio_version": "2.1",
   "dependencies": [
     "base >= 2.1.0",
@@ -12,5 +12,5 @@
     "! paralell-lab",
     "(?) Ultracube"
   ],
-  "description": "A science-aware research autopilot with strategy profiles, supply forecasting, lab-cluster scheduling, queue budgets, repeat policies, plan presets, multiplayer controls, and optional Parallel Research integration."
+  "description": "Runs the research queue for you: picks the next technology, watches your science supply, and switches research when a pack runs dry."
 }

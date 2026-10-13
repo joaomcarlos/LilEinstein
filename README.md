@@ -1,65 +1,20 @@
 # LilEinstein
 
-> A science-aware research autopilot for Factorio 2.1.
-> Strategy profiles, supply forecasting, lab-cluster scheduling, queue budgets, repeat policies, plan presets, and multiplayer controls.
+Runs the research queue for you: it picks the next technology, watches your science supply, and switches research when a pack runs dry.
 
-<p align="center">
-  <img src="website/assets/readme-screenshot.png" alt="LilEinstein research control center screenshot" />
-</p>
+- **Toolbar shortcut**: opens the control center beside your technology list.
+- **Strategy profiles**: cheapest first, unlock recipes, logistics, combat, space, spoilable science, productivity, and a few more.
+- **Per-science priorities**: hysteresis and flow forecasts, so the queue stops flip-flopping between technologies.
+- **Repeat policies**: per-technology rules and level caps for infinite research.
+- **Plan presets**: save a plan, export it as a string, paste it into another save.
+- **Multiplayer**: lock controls to server admins, with a shared history of every queue change.
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Factorio-2.1.0%2B-f4c542?style=for-the-badge" alt="Factorio 2.1.0+" />
-  <img src="https://img.shields.io/badge/Version-1.5.0-2ea44f?style=for-the-badge" alt="Version 1.5.0" />
-  <img src="https://img.shields.io/badge/License-GPL--3.0-blue?style=for-the-badge" alt="GPL-3.0" />
-</p>
+Queue a technology or target something you want built, and it keeps research pointed at that goal. It only counts science your labs can actually reach, across surfaces, logistic networks, and cargo still in transit. When a pack runs dry it switches to something you can research right now, then returns to your target once supply recovers.
 
-## Overview
+The control center shows where science is short: per-pack demand, stock, supply gap, and which labs are starving.
 
-LilEinstein turns research into a managed system instead of a manual queue.
-It chooses technologies, tracks science supply, manages repeat rules, and keeps the queue aligned with your current goals.
+Conflicts with `some-autoresearch`, `UltimateResearchQueue2`, and `paralell-lab`. Optional support for `simultaneous-research` and `Ultracube`.
 
-## Key features
+Requires Factorio 2.1.0 or later. Safe to add to an existing save.
 
-- Strategy profiles for cheapest-first, focused progression, logistics, combat, space, spoilable science, and productivity.
-- Per-science priorities with availability hysteresis, flow forecasts, and starvation prediction.
-- Surface- and logistic-network-aware lab supply clusters.
-- Queue-wide budgets, deficits, completion estimates, and limiting-science reporting.
-- Per-technology repeat policies for infinite research.
-- Named plan presets with compact import/export strings.
-- Manual trigger objectives, multiplayer administrator locking, and shared change history.
-- Native time-sliced parallel research, plus optional integration with Parallel Research.
-- Performance mode for large overhaul technology trees.
-
-## Screenshot
-
-The image above shows the main research control center in game.
-
-## Quick facts
-
-| Item | Value |
-| --- | --- |
-| Version | 1.5.0 |
-| Factorio support | 2.1.0 and later 2.1 releases |
-| License | GPL-3.0 |
-| Optional integration | Parallel Research |
-
-## Installation
-
-1. Install the mod from the Factorio mod portal, or download the release zip.
-2. Place the zip in your `mods` folder if you are installing manually.
-3. Enable `LilEinstein` in the mod manager and restart Factorio.
-
-## Compatibility
-
-- Conflicts with `some-autoresearch`, `UltimateResearchQueue2`, and `paralell-lab`.
-- Optional support is available for `simultaneous-research` and `Ultracube`.
-
-## Related files
-
-- [Implementation notes](./RESEARCH_AUTOPILOT_IMPLEMENTATION.md)
-- [Changelog](./changelog.txt)
-- [Mod metadata](./info.json)
-
-## Support
-
-If you run into an issue, include your mod list, save file, and a clear description of the current research setup.
+[Source on GitHub](https://github.com/joaomcarlos/LilEinstein)

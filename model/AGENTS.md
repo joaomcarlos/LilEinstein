@@ -56,13 +56,13 @@ Runtime data model and research-autopilot logic for the LilEinstein Factorio mod
 ## Work Guidance
 
 - Follow `standard.md` naming: `t`/`T` for tech/prototype, `meta`, `tech_state_ext`, `queue_names`, etc.
-- Validate all Factorio API usage against the 2.0 runtime API; guard nil (`storage`, invalid entities, missing forces)
+- Validate all Factorio API usage against the 2.1 runtime API; guard nil (`storage`, invalid entities, missing forces)
 
 ## Verification
 
 - Run `lua52 .\tests\run_all.lua` for model and cross-layer unit coverage.
 - Run `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\run_tests.ps1 -RequireInGame`
-  for disposable Factorio 2.0.77+ runtime verification.
+  for disposable Factorio 2.1.0+ runtime verification.
 
 ## Child DOX Index
 

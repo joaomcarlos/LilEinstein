@@ -90,20 +90,25 @@ When the user requests a durable behavior change, record it here or in the relev
 
 ## Project Overview
 
-LilEinstein is a Factorio 2.0 mod (base >= 2.0.77): a science-aware research autopilot with strategy profiles, supply forecasting, lab-cluster scheduling, queue budgets, repeat policies, plan presets, and multiplayer controls. Architecture is Control -> lib -> model -> view per `standard.md`.
+LilEinstein is a Factorio 2.1 mod (base >= 2.1.0): a science-aware research autopilot with strategy profiles, supply forecasting, lab-cluster scheduling, queue budgets, repeat policies, plan presets, and multiplayer controls. Architecture is Control -> lib -> model -> view per `standard.md`.
 
 Root-owned (no child doc):
 
   - `control.lua` — runtime entry point: inits `storage`/`storage.forces`/`storage.players`, wires lifecycle and lab-membership events, and advances bounded per-open-force display jobs plus lazy science-pack insight refreshes, a 2-minute background research-health snapshot refresh for all forces, and non-destructive Upcoming refreshes on staggered `on_nth_tick` schedules; it has no heavyweight `on_tick` work
-- `data.lua`, `settings.lua`, `info.json`, `changelog.txt`, `locale/` (de, en, fr, pt-PT), `migrations/` (version migration scripts)
+- `data.lua`, `settings.lua`, `info.json`, `changelog.txt`, `locale/` (de, en, fr, pt-PT)
 - `standard.md` — coding standard: naming, data model, module order; binding for all Lua edits
 - `RESEARCH_AUTOPILOT_IMPLEMENTATION.md` — maintainer/tester notes for the research-autopilot branch
+- `publish.json` — mod portal release whitelist: the exact files the release zip ships. Update it whenever a runtime module or shipped asset is added. Dev dirs (`tests/`, `scripts/`, `docs/`, `audit/`, `website/`, `output/`), `AGENTS.md` files, every `*.md` except `README.md`, and unreferenced graphics stay out
+- `publish/` — staging dir built by `factorio-prepare`; gitignored build artifact, never committed or whitelisted
+- `README.md` — the mod portal storefront page: hook, gestures, requirements, source link. Player-facing only: no `<img>`, install steps, or internals
+- `LICENSE` — MIT; ships in the release zip
+- `docs/FACTORIO_PUBLISHING.md` — mod portal packaging and publishing contract
 - `docs/_human/raw_request_log.md` — append-only verbatim record of user requests and project decisions
 - `docs/abucnasty/` — source transcripts of 13 abucnasty Factorio videos (ESPM, megabase tours, lab UPS, quality science, FFF-443) with a README index; primary source material for the `.devin/skills/factorio-abucnasty-*` and `factorio-fff443-*` skills
 - `audit/` — GUI mockup reference assets; `scripts/import_ui_slices.ps1` regenerates `lib/ui_slices.lua` from them
 - `scripts/run_tests.ps1` — canonical unit plus disposable Factorio runner; creates an isolated save, waits for creator shutdown, then advances the save in a hidden loopback-only headless server with an ephemeral port and auto-pause disabled
 - `scripts/clean_decision_console_assets.py` — deterministic cleanup/crop tool for the selected sprite-backed Research control center demo; it does not register runtime sprites or alter the live GUI
-- `graphics/` — mod icons and UI sprite assets
+- `graphics/` — mod icons and UI sprite assets referenced by `data/*.lua` and `lib/ui_slices.lua`; `graphics/mockup-reference*.png` and other unreferenced source art are dev-only and stay out of the whitelist
 - `output/` — generated output folder (`output/imagegen/` plus throwaway visual prototypes such as `output/science-throughput-demo/` and `output/research-control-center-demo/`)
 - `website/` — mod landing-page assets (`index.html`, `styles.css`, `script.js`, `assets/`)
 - `.devin/skills/` — project-level Devin skills:
@@ -112,6 +117,14 @@ Root-owned (no child doc):
   - `factorio-abucnasty-lab-design` — lab clocking methods, inserter patterns, 16-beacon layouts, buffer thresholds, UPS benchmarks (3 videos)
   - `factorio-abucnasty-megabase-logistics` — planet-specific strategy, spoilage management, ship design, production ratios, quality per pack (5 videos)
   - `factorio-fff443-research-control` — Factorio 2.1 circuit lab control (set research, read research cost), landing pad throughput, red/green wire split, worker-robot-speed de-prioritization (1 video)
+  - `factorio-2-1-migration` — Factorio 2.0 -> 2.1 mod migration reference from the official 2.1 changelog and Lua API docs: breaking Scripting/Modding changes, fluidbox removal, defines.inventory consolidation, recipe categories, quality rescaling, science-pack-as-plain-item, new circuit control behaviors, migration file requirements
+
+## Release Workflow
+
+- `factorio-prepare` stages the whitelist into `publish/`, runs the secrets scan, and prints the manifest; `factorio-publish` uploads only a staged, reviewed package and requires explicit user sign-off
+- Portal metadata for the first publish: category `utilities`, license `default_mit` (portal ID, not SPDX), `source_url` the GitHub repo
+- Bump `info.json` version and add the `changelog.txt` top entry before packaging; the entry states what the mod does now, never the dev process
+- First public release is `1.0.0`; the `0.1.0`/`1.4.0`/`1.5.0` numbers in git history were unpublished internal builds and are not in the shipped changelog
 
 ## Child DOX Index
 

@@ -22,7 +22,7 @@ Disposable Factorio test mod used to exercise LilEinstein's production runtime i
 ## Work Guidance
 
 - Keep the test save disposable and bounded.
-- Use Factorio 2.0.77+ runtime APIs and guard optional module-load paths with assertions that produce useful output.
+- Use Factorio 2.1.0+ runtime APIs and guard optional module-load paths with assertions that produce useful output.
 
 ## Verification
 

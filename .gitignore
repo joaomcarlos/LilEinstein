@@ -4,3 +4,4 @@ coverage-latest.txt
 luac.out
 output
 diagnostics
+publish/

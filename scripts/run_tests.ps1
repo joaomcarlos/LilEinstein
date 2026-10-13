@@ -54,7 +54,7 @@ try {
     New-Item -ItemType Directory -Force -Path $production, $testMod | Out-Null
     $productionItems = @(
         "control.lua", "data.lua", "settings.lua", "info.json", "changelog.txt",
-        "locale", "graphics", "lib", "model", "view", "data", "migrations"
+        "locale", "graphics", "lib", "model", "view", "data"
     )
     foreach ($item in $productionItems) {
         $source = Join-Path $root $item

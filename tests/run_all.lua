@@ -30,7 +30,7 @@ local specs = {
     "tests.gui_spec",
     "tests.component_guard_spec",
     "tests.foundation_spec",
-    "tests.data_migration_spec",
+    "tests.data_stage_spec",
     "tests.translate_spec",
     "tests.locale_spec",
     "tests.control_spec"
