@@ -81,11 +81,6 @@ local get = function(force_index, key)
     return force_state and force_state.queue and force_state.queue[key]
 end
 
----------------------------------------------------------------------------
--- Warning helpers ported from AutoSwitchTechs by StephenB (MIT):
--- https://github.com/StephenBarnes/AutoSwitchTechs
----------------------------------------------------------------------------
-
 local make_science_icon_string = function(sciences)
     if not sciences or next(sciences) == nil then return "(none)" end
     local r = ""

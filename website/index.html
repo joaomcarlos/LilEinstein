@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="LilEinstein — a science-aware research autopilot for Factorio 2.1 with strategy profiles, supply forecasting, lab-cluster scheduling, queue budgets, repeat policies, plan presets, and multiplayer controls." />
-  <title>LilEinstein — Research Autopilot for Factorio 2.1</title>
+  <meta name="description" content="LilEinstein runs the research queue for you in Factorio 2.1: picks the next technology, watches your science supply, and switches research when a pack runs dry." />
+  <meta name="author" content="TheSilentWarrior" />
+  <title>LilEinstein: Research Autopilot for Factorio 2.1</title>
   <link rel="icon" type="image/png" href="assets/shortcut-button.png" />
   <link rel="stylesheet" href="styles.css" />
 </head>
@@ -46,9 +47,8 @@
         <span class="accent">to rule them all.</span>
       </h1>
       <p class="hero-subtitle">
-        LilEinstein is a science-aware research autopilot for Factorio. Strategy profiles, supply
-        forecasting, lab-cluster scheduling, queue budgets, repeat policies, plan presets, and
-        multiplayer controls — all in one control center.
+        Pick a research goal and keep building. LilEinstein watches your science supply, switches
+        to research your labs can run, and returns to your target when supply recovers.
       </p>
       <div class="hero-cta">
         <a href="#install" class="btn btn-primary">Install now</a>
@@ -118,8 +118,8 @@
         </div>
         <h3>Lab-cluster scheduling</h3>
         <p>
-          Surface- and logistic-network-aware lab supply clusters. Each lab prototype's accepted
-          science packs are inspected so the right packs reach the right labs.
+          Checks which science packs your labs accept and can reach on each surface and logistic
+          network. Science in transit contributes to forecasts while deliveries are on their way.
         </p>
       </div>
       <div class="feature-card" data-icon="budget">
@@ -168,8 +168,8 @@
         </div>
         <h3>Multiplayer controls</h3>
         <p>
-          Manual trigger objectives, administrator locking, and a shared change history keep
-          everyone on the same page in cooperative campaigns.
+          Lock research controls to server administrators and share a history of recent recorded
+          plan changes. Track objectives that need a manual action.
         </p>
       </div>
       <div class="feature-card" data-icon="perf">
@@ -178,8 +178,8 @@
         </div>
         <h3>Performance mode</h3>
         <p>
-          A dedicated performance mode for large overhaul technology trees. Reduces policy scan
-          frequency so massive modpacks stay smooth.
+          Refresh research decisions less often with performance mode, useful for large factories
+          and overhaul technology trees.
         </p>
       </div>
     </div>
@@ -189,9 +189,9 @@
   <section class="section section-alt" id="strategies">
     <div class="section-header">
       <span class="section-tag">Strategies</span>
-      <h2 class="section-title">Nine ways to research</h2>
+      <h2 class="section-title">Ten ways to research</h2>
       <p class="section-desc">
-        Switch profiles on the fly to match your current priorities — from early-game cheapest-first
+        Switch profiles on the fly to match your current priorities, from early-game cheapest-first
         to late-game space progression.
       </p>
     </div>
@@ -205,6 +205,7 @@
       <div class="strategy-card"><span class="strategy-name">Spoilable</span><span class="strategy-desc">Consume spoilable science before it rots</span></div>
       <div class="strategy-card"><span class="strategy-name">Productivity</span><span class="strategy-desc">Maximize productivity bonuses</span></div>
       <div class="strategy-card"><span class="strategy-name">Focused</span><span class="strategy-desc">Only research your manually selected targets</span></div>
+      <div class="strategy-card"><span class="strategy-name">Megabase</span><span class="strategy-desc">Favor infinite research, with extra weight for logistics upgrades</span></div>
     </div>
   </section>
 
@@ -214,8 +215,8 @@
       <span class="section-tag">Showcase</span>
       <h2 class="section-title">The research control center</h2>
       <p class="section-desc">
-        A unified interface for strategy, science policies, budgets, presets, and multiplayer
-        controls — all accessible from a single shortcut.
+        Open strategy, science policies, budgets, presets, and multiplayer controls from a single
+        shortcut.
       </p>
     </div>
     <div class="showcase-frame">
@@ -232,7 +233,7 @@
       </div>
       <div class="showcase-item">
         <h4>Manual objectives</h4>
-        <p>Track trigger technologies that need a manual action — craft, mine, build, capture, or launch.</p>
+        <p>Track trigger technologies that need a manual action: craft, mine, build, capture, or launch.</p>
       </div>
       <div class="showcase-item">
         <h4>Plan exchange</h4>
@@ -314,9 +315,8 @@
         A Factorio 2.1 mod by TheSilentWarrior. Not affiliated with Wube Software. Factorio is a trademark of Wube Software.
       </p>
       <div class="footer-links">
-        <a href="#features">Features</a>
-        <a href="#install">Install</a>
-        <a href="#changelog">Changelog</a>
+        <a href="https://github.com/joaomcarlos/LilEinstein">Source on GitHub</a>
+        <a href="https://github.com/joaomcarlos/LilEinstein/blob/main/LICENSE">MIT license</a>
       </div>
     </div>
   </footer>

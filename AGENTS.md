@@ -88,6 +88,8 @@ Default section order:
 
 When the user requests a durable behavior change, record it here or in the relevant child AGENTS.md
 
+- Use `TheSilentWarrior` as the release author and MIT copyright holder, matching the `factorio-mod-publish` skill's author identity.
+
 ## Project Overview
 
 LilEinstein is a Factorio 2.1 mod (base >= 2.1.0): a science-aware research autopilot with strategy profiles, supply forecasting, lab-cluster scheduling, queue budgets, repeat policies, plan presets, and multiplayer controls. Architecture is Control -> lib -> model -> view per `standard.md`.
