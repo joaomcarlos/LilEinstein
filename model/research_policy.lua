@@ -3,7 +3,9 @@ local env = require("model.env")
 local policy = {}
 
 policy.strategy_order = {
+    "conservative",
     "balanced",
+    "aggressive",
     "cheapest",
     "unlocks",
     "logistics",
@@ -294,6 +296,14 @@ policy.get_strategy_adjustment = function(force_index, xcur, cost)
             end
             return bonus
         end
+    elseif strategy == "conservative" then
+        -- Lower-risk picks: mild pull toward cheaper technologies, weaker
+        -- than cheapest-first.
+        return math.floor(30 / math.max(1, math.log((cost or 1) + 2, 2)))
+    elseif strategy == "aggressive" then
+        -- Push progress: bonus scales with cost, favoring bigger,
+        -- higher-value technologies.
+        return math.min(45, math.floor(4 * math.log((cost or 1) + 2, 2)))
     end
     return 0
 end

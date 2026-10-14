@@ -367,7 +367,7 @@ Current file already follows the strict format (99-dash separator, `Version: `, 
 
 ### Portal Metadata (set on web UI or via API)
 
-- [ ] Category: `utilities` (research management tools) or `tweaks` (gameplay adjustment) — pick the better fit
+- [ ] Category: `utilities`
 - [ ] Tags: tick on the edit page. The portal tag vocabulary is a fixed list of slugs (visible as `/?tag=<slug>` links on any mod page); pick only what a player would filter by. Do not trust tag names written down here.
 - [ ] Long description in Markdown (`description=<README.md` on first publish)
 - [ ] `summary`: one spoken sentence, matching the `info.json` description
@@ -377,7 +377,9 @@ Current file already follows the strict format (99-dash separator, `Version: `, 
 
 ### Upload
 
-- [ ] Go to mods.factorio.com → "Submit mod"
+- [ ] Review the staged `publish/LilEinstein_1.0.0/` manifest file by file and confirm every entry is game or portal content
+- [ ] Get an explicit publication sign-off from the owner before any upload runs
+- [ ] Go to mods.factorio.com → "Submit mod" (or `factorio-publish` with the API key)
 - [ ] Upload `LilEinstein_1.0.0.zip`
 - [ ] Fill in description, category, tags, license, source URL
 - [ ] Upload gallery images

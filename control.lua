@@ -688,10 +688,11 @@ script.on_event(defines.events.on_gui_click, function(e)
         if not policy.can_edit(p) then
             p.print({"lil_einstein-msg.multiplayer-locked"})
         elseif t.strategy then
-            policy.set_setting(f.index, "strategy", t.strategy)
-            policy.record_action(f.index, p.index, "strategy", t.strategy)
-            policy.request_instant_switch(f.index, "strategy-change")
-            state.request_next_research(f)
+            if policy.set_setting(f.index, "strategy", t.strategy) then
+                policy.record_action(f.index, p.index, "strategy", t.strategy)
+                policy.request_instant_switch(f.index, "strategy-change")
+                state.request_next_research(f)
+            end
         end
     elseif h == "toggle_research_details" then
         gui.toggle_research_details(p.index)

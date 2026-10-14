@@ -7,9 +7,9 @@ Runs the research queue for you: it picks the next technology, watches your scie
 - **Per-science priorities**: hysteresis and flow forecasts, so the queue stops flip-flopping between technologies.
 - **Repeat policies**: per-technology rules and level caps for infinite research.
 - **Plan presets**: save a plan, export it as a string, paste it into another save.
-- **Multiplayer**: lock controls to server admins, with a shared history of every queue change.
+- **Multiplayer**: lock controls to server admins, with a shared history of recent plan changes.
 
-Queue a technology or target something you want built, and it keeps research pointed at that goal. It only counts science your labs can actually reach, across surfaces, logistic networks, and cargo still in transit. When a pack runs dry it switches to something you can research right now, then returns to your target once supply recovers.
+Queue a technology or target something you want built, and it keeps research pointed at that goal. Labs only count science they can actually reach on their surface or logistic network; cargo still in transit feeds the forecast, not the count. When a pack runs dry it switches to something you can research right now, then returns to your target once supply recovers.
 
 The control center shows where science is short: per-pack demand, stock, supply gap, and which labs are starving.
 

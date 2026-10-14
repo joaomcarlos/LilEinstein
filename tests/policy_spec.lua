@@ -145,6 +145,18 @@ tests[#tests + 1] = {"applies strategy-specific adjustments", function()
     t.assert_equal(policy.get_strategy_adjustment(1, xcur, 100), 0)
 end}
 
+tests[#tests + 1] = {"accepts and scores conservative and aggressive strategies", function()
+    reset_policy()
+    local xcur = {meta = {research_effects = {}}}
+    t.assert_true(policy.set_setting(1, "strategy", "conservative"))
+    t.assert_equal(policy.get_setting(1, "strategy"), "conservative")
+    t.assert_true(policy.get_strategy_adjustment(1, xcur, 100) > 0)
+    t.assert_true(policy.set_setting(1, "strategy", "aggressive"))
+    t.assert_equal(policy.get_setting(1, "strategy"), "aggressive")
+    t.assert_true(policy.get_strategy_adjustment(1, xcur, 100) > 0)
+    t.assert_true(policy.get_strategy_adjustment(1, xcur, 100) <= 45)
+end}
+
 tests[#tests + 1] = {"cycles and consumes repeat rules", function()
     reset_policy()
     local rule = policy.cycle_repeat_rule(1, "automation", 1)

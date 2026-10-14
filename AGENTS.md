@@ -134,4 +134,4 @@ Root-owned (no child doc):
 - `view/AGENTS.md` — GUI layer: gui entry, builder, analyzer, gutil, components
 - `lib/AGENTS.md` — foundation utilities: const, util, log, ui_slices
 - `data/AGENTS.md` — data-stage prototypes: style, shortcut, sprites, signals
-- `tests/AGENTS.md` — Lua unit, data/migration, GUI, and disposable in-game test contracts
+- `tests/AGENTS.md` — Lua unit, data-stage, GUI, and disposable in-game test contracts
