@@ -333,7 +333,7 @@ tests[#tests + 1] = {"renders state-based icon and switch branches", function()
     t.assert_equal(label.style.font_color.r, 0.5)
 end}
 
-tests[#tests + 1] = {"renders trigger variants, science density, and repeat controls", function()
+tests[#tests + 1] = {"renders trigger variants and science density without repeat controls", function()
     reset_fixture()
     order = {
         "craft-one", "craft-many", "mine", "fluid", "capture", "capture-any",
@@ -383,9 +383,7 @@ tests[#tests + 1] = {"renders trigger variants, science density, and repeat cont
     t.assert_true(science_flow.children[2].style.left_margin < 0)
     t.assert_equal(science_flow.children[12].sprite, "item/iron-plate")
     t.assert_equal(science_flow.children[12].tooltip[1], "technology-trigger.craft-item")
-    t.assert_equal(row_score_flow(rows[1]).children[2].caption[1], "lil_einstein-repeat.to_level")
-    t.assert_equal(row_score_flow(rows[1]).children[3].tags.delta, -1)
-    t.assert_equal(row_score_flow(rows[1]).children[4].tags.delta, 1)
+    t.assert_equal(#row_score_flow(rows[1]).children, 1, "infinite rows only show the score breakdown")
 
     local expected_sprites = {
         ["craft-many"] = "item/copper-plate",

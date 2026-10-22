@@ -528,8 +528,6 @@ local mutable_gui_handlers = {
     adjust_policy_setting = true,
     cycle_science_priority = true,
     adjust_science_threshold = true,
-    cycle_repeat_rule = true,
-    adjust_repeat_level = true,
     save_plan_preset = true,
     load_plan_preset = true,
     delete_plan_preset = true,
@@ -775,12 +773,6 @@ script.on_event(defines.events.on_gui_click, function(e)
         policy.adjust_science_threshold(f.index, t.science, t.threshold_name, t.delta or 0)
         queue.invalidate_science_cache(f.index)
         state.request_next_research(f)
-    elseif h == "cycle_repeat_rule" then
-        local technology = f.technologies[t.technology]
-        policy.cycle_repeat_rule(f.index, t.technology, technology and technology.level or 1)
-    elseif h == "adjust_repeat_level" then
-        local technology = f.technologies[t.technology]
-        policy.adjust_repeat_max_level(f.index, t.technology, t.delta or 0, technology and technology.level or 1)
     elseif h == "save_plan_preset" then
         local anchor = gui.get(p.index)
         local field = gutil.get_child(anchor, "policy_preset_name")

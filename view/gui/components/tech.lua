@@ -3,7 +3,6 @@ local util = require("lib.util")
 local state = require("model.state")
 local tech = require("model.tech")
 local queue = require("model.queue")
-local policy = require("model.research_policy")
 local lab = require("model.lab")
 local logger = require("lib.log")
 local analyzer = require("view.gui.analyzer")
@@ -230,49 +229,6 @@ local get_title = function(techtbl, xcur, enbl, player_index, force_index, score
             enabled = enbl,
             tooltip = {"lil_einstein-policy.score-breakdown"}
         })
-
-        if xcur.meta.is_infinite then
-            local rule = policy.get_repeat_rule(force_index, xcur.technology.name)
-            local repeat_button = wf.add({
-                type = "button",
-                style = "lil_einstein_button",
-                caption = {"lil_einstein-repeat." .. rule.mode, rule.max_level or ""},
-                tags = {
-                    lil_einstein_on_click = true,
-                    handler = "cycle_repeat_rule",
-                    technology = xcur.technology.name
-                },
-                tooltip = {"lil_einstein-policy.repeat-cycle"},
-                enabled = enbl
-            })
-            repeat_button.style.left_margin = 8
-            if rule.mode == "to_level" then
-                wf.add({
-                    type = "button",
-                    style = "lil_einstein_button",
-                    caption = "-",
-                    tags = {
-                        lil_einstein_on_click = true,
-                        handler = "adjust_repeat_level",
-                        technology = xcur.technology.name,
-                        delta = -1
-                    },
-                    enabled = enbl
-                })
-                wf.add({
-                    type = "button",
-                    style = "lil_einstein_button",
-                    caption = "+",
-                    tags = {
-                        lil_einstein_on_click = true,
-                        handler = "adjust_repeat_level",
-                        technology = xcur.technology.name,
-                        delta = 1
-                    },
-                    enabled = enbl
-                })
-            end
-        end
     end
 
 end
