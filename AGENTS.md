@@ -92,7 +92,7 @@ When the user requests a durable behavior change, record it here or in the relev
 
 ## Project Overview
 
-LilEinstein is a Factorio 2.1 mod (base >= 2.1.0): a science-aware research autopilot with strategy profiles, supply forecasting, lab-cluster scheduling, queue budgets, repeat policies, plan presets, and multiplayer controls. Architecture is Control -> lib -> model -> view per `standard.md`.
+LilEinstein is a Factorio 2.1 mod (base >= 2.1.0): a science-aware research autopilot with strategy profiles, supply forecasting, force-wide science selection, queue budgets, repeat policies, plan presets, and multiplayer controls. Architecture is Control -> lib -> model -> view per `standard.md`.
 
 Root-owned (no child doc):
 

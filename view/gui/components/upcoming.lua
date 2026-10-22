@@ -70,12 +70,6 @@ local format_wait_time = function(seconds)
 end
 
 local get_availability_tooltip = function(entry)
-    if entry.availability_reason == "science_not_together" then
-        return localize_with_fallback(
-            "lil_einstein-upcoming.science-not-together-tooltip",
-            "Not selected: the required science packs are not available together to one compatible lab cluster."
-        )
-    end
     if entry.availability_reason ~= "missing_science" then
         return nil
     end
@@ -339,15 +333,13 @@ local add_upcoming_row = function(parent, rank, entry, player_index)
         end
         first = false
     end
-    if entry.availability_reason then
-        local status_key = entry.availability_reason == "science_not_together" and
-            "science-not-together" or "missing-science"
+    if entry.availability_reason == "missing_science" then
         local status_label = sci_flow.add({
             type = "label",
             style = "lil_einstein_queue_subinfo",
             caption = localize_with_fallback(
-                "lil_einstein-upcoming." .. status_key,
-                status_key == "science-not-together" and "Packs not together" or "Missing packs"
+                "lil_einstein-upcoming.missing-science",
+                "Missing packs"
             ),
             tooltip = get_availability_tooltip(entry)
         })

@@ -17,7 +17,6 @@ local runtime = {}
 local tech_state = {}
 local policy_settings = {}
 local science_states = {}
-local cluster_states = {}
 local repeat_rules = {}
 local research_weights = {research_weights = {}, research_caps = {}, pack_difficulty = {}}
 local queued_updates = {}
@@ -72,15 +71,6 @@ t.install_module("model.research_policy", {
         return science_states[science] == nil and default or science_states[science]
     end,
     set_science_available_state = function(_, science, value) science_states[science] = value end,
-    get_cluster_science_available_state = function(_, cluster, science, default)
-        local states = cluster_states[cluster] or {}
-        return states[science] == nil and default or states[science]
-    end,
-    set_cluster_science_available_state = function(_, cluster, science, value)
-        cluster_states[cluster] = cluster_states[cluster] or {}
-        cluster_states[cluster][science] = value
-    end,
-    prune_cluster_science_states = function() end,
     get_repeat_rule = function(_, name) return repeat_rules[name] or {mode = "none"} end,
     copy_table = function(value)
         local copy = {}
@@ -193,7 +183,6 @@ local function reset(options)
     tech_state = options.tech_state or {}
     policy_settings = options.policy_settings or {}
     science_states = {}
-    cluster_states = {}
     repeat_rules = {}
     queued_updates = {}
     sanitize_valid = true
@@ -295,14 +284,14 @@ local tests = {
         queue.invalidate_science_cache(1)
         t.assert_equal(queue.get_science_counts(1)["automation-science-pack"], 32)
     end},
-    {"computes plain and cluster availability plus positive and negative forecasts", function()
+    {"computes force-wide availability plus positive and negative forecasts", function()
         local network = make_network(9, {['automation-science-pack'] = 50, ['logistic-science-pack'] = 0})
         local entity = make_lab(3, {network = network, inventory_contents = {}})
         reset({labs = {entity}, runtime = {[3] = {latest_tick = 100, latest_contents = {}}}})
         local availability = queue.get_science_availability(1)
         t.assert_true(availability["automation-science-pack"])
         t.assert_false(availability["logistic-science-pack"])
-        t.assert_false(availability.__cluster_mode)
+        t.assert_nil(availability.__cluster_mode)
         local forecast = queue.get_science_forecast(1)
         t.assert_equal(forecast["automation-science-pack"].net_per_minute, 8)
         t.assert_true(forecast["logistic-science-pack"].recovery_seconds ~= nil)
@@ -333,8 +322,8 @@ local tests = {
         t.assert_equal(queue.get_science_forecast(1)["automation-science-pack"].consumption_per_minute, 0)
         policy_settings.cluster_mode = true
         local clustered = queue.get_science_availability(1)
-        t.assert_true(clustered.__cluster_mode)
-        t.assert_true(clustered.__clusters ~= nil)
+        t.assert_nil(clustered.__cluster_mode)
+        t.assert_nil(clustered.__clusters)
     end},
     {"caches cargo-pod transit totals across science forecast entries", function()
         local current = make_current()
@@ -372,6 +361,11 @@ local tests = {
         }
 
         local forecast = queue.get_science_forecast(1)
+        -- The refresh is resumable: the first forecast drives its bounded
+        -- slices, publishes the fresh totals, and reuses them.
+        t.assert_equal(cargo_scans, 1)
+        game.tick = game.tick + 1
+        forecast = queue.get_science_forecast(1)
         t.assert_equal(forecast["automation-science-pack"].in_transit, 11)
         t.assert_equal(forecast["logistic-science-pack"].in_transit, 13)
         t.assert_equal(cargo_scans, 1)
@@ -410,7 +404,7 @@ local tests = {
         local diagnostic = queue.get_research_diagnostic(1)
         t.assert_equal(#diagnostic.clusters, 2)
     end},
-    {"reports science packs that cannot be supplied together", function()
+    {"uses force-wide packs across separate lab supply networks", function()
         local automation_network = make_network(31, {['automation-science-pack'] = 50})
         local logistic_network = make_network(32, {['logistic-science-pack'] = 50})
         local automation_lab = make_lab(111, {network = automation_network,
@@ -436,7 +430,8 @@ local tests = {
         tech_state = {['split-science'] = xcur}
         storage.forces[1].queue.queue = {"split-science"}
         local entries = queue.get_upcoming_research_display(1, 1)
-        t.assert_equal(entries[1].availability_reason, "science_not_together")
+        t.assert_nil(entries[1].availability_reason)
+        t.assert_true(queue.science_is_available(xcur, queue.get_science_availability(1)))
     end},
     {"classifies diagnostic causes and caches the result", function()
         reset()
@@ -1331,7 +1326,7 @@ local tests = {
         queue.set_tech_enabled(1, "a", true)
         queue.adjust_tech_ub(1, "a", 1)
     end},
-    {"stages availability across more clusters than one scheduler slice", function()
+    {"stages force-wide availability across many diagnostic lab groups", function()
         local many_labs = {}
         local many_runtime = {}
         for index = 1, 33 do
@@ -1482,7 +1477,7 @@ local tests = {
         process_network({all_sciences = {}}, {network = nil})
         process_forecast({force_index = 99, lab_input_counts = {}, counts = {}, forecast = {}}, "pack")
         process_availability({force_index = 1, all_sciences = {}, availability_index = 1,
-            cluster_mode = true, active_science_cluster_keys = {}})
+            availability = {}})
 
         t.assert_true(finish_health_snapshot())
         t.assert_false(queue.tick_research_health_snapshot(1))

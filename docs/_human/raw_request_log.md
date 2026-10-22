@@ -285,3 +285,17 @@ stack traceback:
 fix those, add the failed-pack reason to the report too
 
 yes, and also add the current settings to the log so its easier to debug
+
+---
+
+## My request:
+
+remove the cycle repeat policy
+
+Remove the per-technology controls
+
+---
+
+## My request:
+
+remove this cluster feature. The problem is that science research is always global so packs will sit idle, rotting away

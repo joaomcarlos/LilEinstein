@@ -63,9 +63,6 @@ t.install_module("model.research_policy", {
     get_science_policy = function() return {upper_threshold = 1, lower_threshold = 0.5} end,
     get_science_available_state = function() return false end,
     set_science_available_state = function() end,
-    get_cluster_science_available_state = function() return false end,
-    set_cluster_science_available_state = function() end,
-    prune_cluster_science_states = function() end,
     copy_table = function(value)
         local copy = {}
         for key, item in pairs(value or {}) do copy[key] = item end
@@ -198,7 +195,7 @@ local tests = {
         game.tick = game.tick + 3
         t.assert_false(queue.is_internal_research_queue_update(force))
     end},
-    {"checks plain and cluster science availability", function()
+    {"ignores legacy cluster metadata when checking force-wide science availability", function()
         reset_runtime()
         local item = xcur("a", {sciences = {"automation-science-pack"}})
         t.assert_false(queue.science_is_available(nil, {}))
@@ -212,9 +209,9 @@ local tests = {
         local clustered = {['automation-science-pack'] = true, __cluster_mode = true, __clusters = {cluster}}
         t.assert_true(queue.science_is_available(item, clustered))
         cluster.lab_input_sets = {{['logistic-science-pack'] = true}}
-        t.assert_false(queue.science_is_available(item, clustered))
+        t.assert_true(queue.science_is_available(item, clustered))
         cluster.available_sciences = {}
-        t.assert_false(queue.science_is_available(item, clustered))
+        t.assert_true(queue.science_is_available(item, clustered))
     end},
     {"counts lab and logistic-network stock with cached breakdowns", function()
         local force = reset_runtime()
@@ -316,59 +313,34 @@ local tests = {
         game.tick = game.tick + 1
         queue.invalidate_science_cache(1)
         local clustered = queue.get_science_availability(1)
-        t.assert_true(clustered.__cluster_mode)
+        t.assert_nil(clustered.__cluster_mode)
         t.assert_true(clustered["automation-science-pack"])
         _G.defines = nil
     end},
-    {"distinguishes attributable and shared cluster depletion", function()
+    {"projects force-wide stock and production for inactive research", function()
         reset_runtime()
         policy_settings.forecast_seconds = 60
         local old_availability = queue.get_science_availability
         local old_forecast = queue.get_science_forecast
         local old_speed = queue.get_research_speed
         queue.get_research_speed = function() return 1, true end
-        queue.get_science_forecast = function()
-            return {pack = {depletion_seconds = 1}}
-        end
-        queue.get_science_availability = function()
-            return {
-                pack = true,
-                __cluster_mode = true,
-                __clusters = {{
-                    lab_input_counts = {pack = 1},
-                    available_sciences = {pack = true},
-                    lab_input_sets = {{pack = true}}
-                }}
-            }
-        end
-        local candidate = xcur("candidate", {
-            sciences = {"pack"},
-            research_unit_count = 100,
-            research_unit_ingredients = {{name = "pack", amount = 1}}
-        })
-        t.assert_false(queue.science_is_sufficient(candidate, 1))
-        queue.get_science_availability = function()
-            return {
-                pack = true,
-                __cluster_mode = true,
-                __clusters = {
-                    {
-                        lab_input_counts = {pack = 1},
-                        available_sciences = {pack = true},
-                        lab_input_sets = {{pack = true}}
-                    },
-                    {
-                        lab_input_counts = {pack = 1},
-                        available_sciences = {pack = true},
-                        lab_input_sets = {{pack = true}}
-                    }
-                }
-            }
-        end
-        t.assert_true(queue.science_is_sufficient(candidate, 1))
+        queue.get_science_availability = function() return {pack = true} end
+        local forecast = {stock = 10, production_per_minute = 0}
+        queue.get_science_forecast = function() return {pack = forecast} end
+        local candidate = xcur("candidate", {sciences = {"pack"}, research_unit_count = 100,
+            research_unit_ingredients = {{name = "pack", amount = 1}}})
+        local short_stock = queue.science_is_sufficient(candidate, 1)
+        forecast.production_per_minute = 60
+        local sustained_production = queue.science_is_sufficient(candidate, 1)
+        forecast.production_per_minute = 0
+        forecast.stock = 60
+        local enough_stock = queue.science_is_sufficient(candidate, 1)
         queue.get_science_availability = old_availability
         queue.get_science_forecast = old_forecast
         queue.get_research_speed = old_speed
+        t.assert_false(short_stock)
+        t.assert_true(sustained_production)
+        t.assert_true(enough_stock)
     end},
     {"scores technology effects, caps, unavailable candidates, and formulas", function()
         reset_runtime()
@@ -444,7 +416,7 @@ local tests = {
                 }
             }
         end
-        t.assert_true(queue.science_is_sufficient(xscience, 1))
+        t.assert_false(queue.science_is_sufficient(xscience, 1))
 
         force.current_research = make_tech("science-tech")
         queue.get_active_missing_science_bottleneck = function() return {['automation-science-pack'] = true} end
@@ -1022,99 +994,56 @@ local tests = {
         t.assert_equal(requested, 0,
             "retaining the temporary technology must not request redundant reselection")
     end},
-    {"does not apply force-wide demand projection across isolated lab clusters", function()
+    {"restores a pinned target using force-wide production despite a legacy cluster setting", function()
         local force = reset_runtime()
         game.tick = 32700
-        science_names = {"target-pack", "alternate-pack"}
-        policy_settings.forecast_seconds = 120
-        defines = {inventory = {lab_input = 1}}
-
+        policy_settings.forecast_seconds = 30
+        policy_settings.cluster_mode = true
         local old_availability = queue.get_science_availability
         local old_forecast = queue.get_science_forecast
         local old_speed = queue.get_research_speed
-        local cluster_availability = {
-            ['target-pack'] = true,
-            ['alternate-pack'] = true,
-            __cluster_mode = true,
-            __clusters = {
-                {
-                    key = "1:network:1",
+        queue.get_science_availability = function()
+            return {['target-pack'] = true, ['alternate-pack'] = true,
+                __cluster_mode = true, __clusters = {{key = "1:network:1",
                     lab_input_counts = {['target-pack'] = 1},
                     lab_input_sets = {{['target-pack'] = true}},
                     available_sciences = {['target-pack'] = true},
-                    counts = {['target-pack'] = 5}
-                },
-                {
-                    key = "2:network:2",
-                    lab_input_counts = {['target-pack'] = 1},
-                    lab_input_sets = {{['target-pack'] = true}},
-                    available_sciences = {},
-                    counts = {['target-pack'] = 5}
-                },
-                {
-                    key = "3:network:3",
-                    lab_input_counts = {['alternate-pack'] = 1},
-                    lab_input_sets = {{['alternate-pack'] = true}},
-                    available_sciences = {['alternate-pack'] = true},
-                    counts = {['target-pack'] = 100000}
-                }
-            }
-        }
-        local target_forecast = {
-            stock = 100010,
-            production_per_minute = 0,
-            consumption_per_minute = 0,
-            net_per_minute = 0
-        }
-        queue.get_science_availability = function()
-            return cluster_availability
+                    counts = {['target-pack'] = 10}}}}
         end
         queue.get_science_forecast = function()
-            return {['target-pack'] = target_forecast}
+            return {['target-pack'] = {stock = 10, production_per_minute = 6000}}
         end
         queue.get_research_speed = function() return 100 end
-
-        local target = xcur("cluster-target", {
-            sciences = {"target-pack"},
+        local target = xcur("research-productivity", {sciences = {"target-pack"},
             research_unit_count = 100000,
-            research_unit_ingredients = {{name = "target-pack", amount = 1}}
-        })
+            research_unit_ingredients = {{name = "target-pack", amount = 1}}})
         target.technology.research_unit_energy = 60
+        target.queued = true
         local alternate = xcur("alternate", {sciences = {"alternate-pack"}})
         alternate.technology.research_unit_energy = 60
-        tech_state = {["cluster-target"] = target, alternate = alternate}
+        alternate.queued = true
+        tech_state = {["research-productivity"] = target, alternate = alternate}
+        force.technologies["research-productivity"] = target.technology
+        force.technologies.alternate = alternate.technology
         force.current_research = alternate.technology
+        storage.forces[1].queue.queue = {"research-productivity", "alternate"}
+        storage.forces[1].queue.target_tech = "research-productivity"
+        storage.forces[1].queue.temp_tech = "alternate"
+        storage.forces[1].queue.temp_tech_timeout = game.tick - 1
+        queue.set_pinned_tech(1, "research-productivity")
 
         local sufficient = queue.science_is_sufficient(target, 1)
-        cluster_availability.__clusters[1].key = "1:lab:1"
-        cluster_availability.__clusters[2].key = "1:lab:2"
-        target_forecast.production_per_minute = 100000
-        local direct_surface_sufficient = queue.science_is_sufficient(target, 1)
-        game.tick = game.tick + 600
-        cluster_availability.__clusters[1].counts['target-pack'] = 500
-        cluster_availability.__clusters[2].counts['target-pack'] = 500
-        target_forecast.stock = 101000
-        local burst_supply_sufficient = queue.science_is_sufficient(target, 1)
-        local burst_evidence = queue.get_research_recovery_evidence(1, "cluster-target")
-        game.tick = game.tick + 600
-        cluster_availability.__clusters[1].counts['target-pack'] = 50005
-        cluster_availability.__clusters[2].counts['target-pack'] = 50005
-        target_forecast.stock = 200010
-        local arrived_supply_sufficient = queue.science_is_sufficient(target, 1)
+        queue.check_and_switch_temp_research(force)
+        queue.start_next_research(force, true)
+        local selected = force.research_queue[1]
+        local temporary = storage.forces[1].queue.temp_tech
         queue.get_science_availability = old_availability
         queue.get_science_forecast = old_forecast
         queue.get_research_speed = old_speed
 
-        t.assert_true(sufficient,
-            "force-wide flow cannot reject a candidate when multiple isolated clusters consume its pack")
-        t.assert_false(direct_surface_sufficient,
-            "remote force production must not satisfy direct-fed recovery until reachable stock grows")
-        t.assert_false(burst_supply_sufficient,
-            "one partial delivery must not be extrapolated as sustained target supply; demand=" ..
-                tostring(burst_evidence.physical_demand_per_minute["target-pack"]) ..
-                ", horizon=" .. tostring(burst_evidence.horizon_seconds))
-        t.assert_true(arrived_supply_sufficient,
-            "enough stock already reachable by the labs must permit target recovery")
+        t.assert_true(sufficient, "ongoing production must cover the target's forecast demand")
+        t.assert_nil(temporary, "a supplied pinned target must end temporary research")
+        t.assert_equal(selected, "research-productivity")
     end},
     {"restores a supplied target when the temporary research becomes pack-bound", function()
         local force = reset_runtime()
@@ -2077,7 +2006,6 @@ local tests = {
         -- public queue operations intentionally guard before reaching.
         local candidate_guard = find_private(queue.reorder_queue_by_score, "tech_can_be_runtime_candidate")
         local horizon = find_private(queue.science_is_sufficient, "get_depletion_horizon_seconds")
-        local attributable = find_private(queue.science_is_sufficient, "science_depletion_is_attributable")
         local move = find_private(queue.promote, "move_research")
         local position = find_private(queue.promote, "get_queue_position")
         local average = find_private(queue.get_research_speed, "get_average_research_speed")
@@ -2098,7 +2026,6 @@ local tests = {
             "get_upcoming_display_candidate")
         t.assert_true(type(candidate_guard) == "function")
         t.assert_true(type(horizon) == "function")
-        t.assert_true(type(attributable) == "function")
         t.assert_true(type(find_runtime) == "function")
         t.assert_true(type(build_runtime_names) == "function")
         t.assert_true(type(display_candidate) == "function")
@@ -2122,7 +2049,6 @@ local tests = {
         force.current_research = make_tech("horizon")
         force.research_progress = 0.5
         t.assert_equal(horizon(xcur("horizon", {research_unit_count = 100}), 1, 200), 50)
-        t.assert_true(attributable({__cluster_mode = false}, "pack"))
         local no_candidate = {find_runtime(1, "missing", {}, {}, {})}
         t.assert_nil(no_candidate[1])
 

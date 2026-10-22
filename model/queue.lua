@@ -264,56 +264,6 @@ queue.apply_planning_pause = function(f)
     set_runtime_research_queue(f, paused_queue)
 end
 
-local build_cluster_supply_scopes = function(availability)
-    local scopes_by_science = {}
-    if not availability.__cluster_mode then
-        return scopes_by_science
-    end
-    for _, cluster in pairs(availability.__clusters or {}) do
-        for science, lab_count in pairs(cluster.lab_input_counts or {}) do
-            if lab_count > 0 then
-                local key = cluster.key or tostring(cluster)
-                local surface_index = key:match("^(.-):lab:")
-                if surface_index then
-                    key = surface_index .. ":direct"
-                end
-                local consuming_scopes = scopes_by_science[science]
-                if not consuming_scopes then
-                    consuming_scopes = {}
-                    scopes_by_science[science] = consuming_scopes
-                end
-                local scope = consuming_scopes[key]
-                if not scope then
-                    scope = {stock = 0}
-                    consuming_scopes[key] = scope
-                end
-                scope.stock = scope.stock + ((cluster.counts and cluster.counts[science]) or 0)
-            end
-        end
-    end
-    return scopes_by_science
-end
-
-local science_depletion_is_attributable = function(availability, science, cluster_supply_scopes)
-    if not availability.__cluster_mode then
-        return true, nil
-    end
-    -- Production statistics are force-wide across all loaded surfaces. In cluster mode
-    -- they can only be attributed safely when exactly one consuming scope exists.
-    local scopes = cluster_supply_scopes or build_cluster_supply_scopes(availability)
-    local consuming_scopes = scopes[science] or {}
-    local scope_count = 0
-    local attributable_stock
-    for _, scope in pairs(consuming_scopes) do
-        scope_count = scope_count + 1
-        attributable_stock = scope.stock
-    end
-    if scope_count == 1 then
-        return true, attributable_stock or 0
-    end
-    return false, nil
-end
-
 local get_estimated_research_capacity_per_minute = function(xcur, force_index)
     if not xcur or not xcur.technology then
         return nil
@@ -375,8 +325,7 @@ local science_supply_is_sufficient = function(
     xcur,
     force_index,
     supplied_availability,
-    supplied_forecast,
-    supplied_cluster_scopes
+    supplied_forecast
 )
     if not xcur or not xcur.meta or not force_index then
         return false
@@ -412,7 +361,6 @@ local science_supply_is_sufficient = function(
     local availability = supplied_availability or queue.get_science_availability(force_index)
     local forecast = supplied_forecast or
         (queue.get_science_forecast and queue.get_science_forecast(force_index)) or {}
-    local cluster_supply_scopes = supplied_cluster_scopes or build_cluster_supply_scopes(availability)
     local forecast_seconds = policy.get_setting(force_index, "forecast_seconds") or 0
     if not queue.science_is_available(xcur, availability) then
         return false
@@ -424,30 +372,15 @@ local science_supply_is_sufficient = function(
         for _, science in pairs(sciences) do
             local science_forecast = forecast[science]
             local demand_per_minute = inactive_demand[science] or 0
-            local attributable, attributable_stock = science_depletion_is_attributable(
-                availability,
-                science,
-                cluster_supply_scopes
-            )
-            if attributable and science_forecast and demand_per_minute > 0 and horizon > 0 then
-                local stock = availability.__cluster_mode and
-                    math.max(0, attributable_stock or 0) or
-                    math.max(0, science_forecast.stock or 0)
-                local production_per_minute
-                if availability.__cluster_mode then
-                    -- Force production includes remote surfaces and packs that may still
-                    -- be in transit. Require enough stock already reachable by these labs
-                    -- for the recovery horizon instead of extrapolating a delivery burst.
-                    production_per_minute = 0
-                else
-                    production_per_minute = math.max(0, science_forecast.production_per_minute or 0)
-                end
+            if science_forecast and demand_per_minute > 0 and horizon > 0 then
+                local stock = math.max(0, science_forecast.stock or 0)
+                local production_per_minute = math.max(0, science_forecast.production_per_minute or 0)
                 local projected_supply = stock + production_per_minute * horizon / 60
                 local projected_demand = demand_per_minute * horizon / 60
                 if projected_supply + 0.001 < projected_demand then
                     return false
                 end
-            elseif attributable and not availability.__cluster_mode and science_forecast and
+            elseif science_forecast and
                 science_forecast.depletion_seconds and
                 science_forecast.depletion_seconds < horizon then
                 return false
@@ -544,32 +477,6 @@ queue.science_is_available = function(xcur, lsci)
         end
     end
 
-    if lsci and lsci.__cluster_mode and next(xcur.meta.sciences or {}) ~= nil then
-        for _, cluster in pairs(lsci.__clusters or {}) do
-            local supplied = true
-            for _, science in pairs(xcur.meta.sciences or {}) do
-                if not cluster.available_sciences or not cluster.available_sciences[science] then
-                    supplied = false
-                    break
-                end
-            end
-            if supplied then
-                for _, lab_inputs in pairs(cluster.lab_input_sets or {}) do
-                    local compatible = true
-                    for _, science in pairs(xcur.meta.sciences or {}) do
-                        if not lab_inputs[science] then
-                            compatible = false
-                            break
-                        end
-                    end
-                    if compatible then
-                        return true
-                    end
-                end
-            end
-        end
-        return false
-    end
     return true
 end
 local science_is_available = queue.science_is_available
@@ -589,9 +496,6 @@ local get_science_block_details = function(xcur, lsci)
 
     if #missing_sciences > 0 then
         return "missing_science", missing_sciences
-    end
-    if lsci and lsci.__cluster_mode then
-        return "science_not_together", {}
     end
     return "missing_science", {}
 end
@@ -697,7 +601,6 @@ get_bounded_emergency_candidate = function(force_index, current_name, pinned, qu
     local raw_scanned = 0
     local candidates_scanned = 0
     local forecast
-    local cluster_supply_scopes
     while raw_scanned < emergency_raw_scan_budget and
         candidates_scanned < emergency_candidate_scan_budget do
         local technology_name = next(tsx, job.scan_key)
@@ -719,16 +622,14 @@ get_bounded_emergency_candidate = function(force_index, current_name, pinned, qu
                 not queued_names[candidate] and not seen_candidates[candidate] then
                 seen_candidates[candidate] = true
                 local xcandidate = tsx[candidate]
-                if xcandidate and not cluster_supply_scopes then
+                if xcandidate and not forecast then
                     forecast = queue.get_science_forecast and queue.get_science_forecast(force_index) or {}
-                    cluster_supply_scopes = build_cluster_supply_scopes(lsci)
                 end
                 if xcandidate and science_supply_is_sufficient(
                     xcandidate,
                     force_index,
                     lsci,
-                    forecast,
-                    cluster_supply_scopes
+                    forecast
                 ) then
                     local stored_ub = queue.get_tech_ub(force_index, candidate)
                     local score = queue.score_tech_detailed(
@@ -2087,15 +1988,18 @@ local active_bottleneck_cache = {}
 local inactive_science_demand_cache = {}
 local science_pack_insight_cache = {}
 local in_transit_science_cache = {}
+local in_transit_science_jobs = {}
 local research_health_snapshots = {}
 local research_health_jobs = {}
 local research_health_requests = {}
 local upcoming_display_jobs = {}
 local research_health_refresh_ticks = 300
 local in_transit_refresh_ticks = 300
+local in_transit_steps_per_tick = 4
+local in_transit_chunks_per_step = 4096
+local in_transit_cell_tiles = 512
 local research_health_lab_budget = 8
 local research_health_cluster_budget = 8
-local research_health_availability_budget = 32
 
 local has_invalid_ref = function(refs)
     for _, ref in pairs(refs or {}) do
@@ -2403,7 +2307,11 @@ queue.invalidate_science_cache = function(force_index)
     lab_observation_cache[force_index] = nil
     lab_network_cache[force_index] = nil
     active_bottleneck_cache[force_index] = nil
+    -- Drop transit totals entirely: callers get zero while the resumable
+    -- rebuild publishes a fresh snapshot, so lab churn can never trigger a
+    -- synchronous multi-surface rescan.
     in_transit_science_cache[force_index] = nil
+    in_transit_science_jobs[force_index] = nil
     science_demand_cache[force_index] = nil
     research_capacity_cache[force_index] = nil
     science_lost_spm_cache[force_index] = nil
@@ -3276,11 +3184,6 @@ local new_research_health_job = function(force_index)
         network_index = 1,
         availability = {},
         availability_index = 1,
-        availability_cluster_index = 1,
-        availability_current = false,
-        science_cluster_list = nil,
-        active_science_cluster_keys = nil,
-        cluster_mode = policy.get_setting(force_index, "cluster_mode") == true,
         forecast = {},
         forecast_index = 1,
         diagnostic = new_display_diagnostic(force_index, current),
@@ -3390,135 +3293,247 @@ end
 local process_research_health_availability = function(job)
     local science = job.all_sciences[job.availability_index]
     if not science then
-        if job.cluster_mode then
-            policy.prune_cluster_science_states(job.force_index, job.active_science_cluster_keys or {})
-        end
         return true
     end
 
     local science_policy = policy.get_science_policy(job.force_index, science)
-    if job.cluster_mode then
-        local last = math.min(
-            #job.science_cluster_list,
-            job.availability_cluster_index + research_health_availability_budget - 1
-        )
-        for index = job.availability_cluster_index, last do
-            local cluster = job.science_cluster_list[index]
-            cluster.available_sciences = cluster.available_sciences or {}
-            local previous =
-                policy.get_cluster_science_available_state(job.force_index, cluster.key, science, false)
-            local threshold = previous and science_policy.lower_threshold or science_policy.upper_threshold
-            local lab_count = cluster.lab_input_counts[science] or 0
-            local required_count = math.max(1, lab_count * science_reserve_per_lab * threshold)
-            local cluster_available = lab_count > 0 and (cluster.counts[science] or 0) >= required_count
-            policy.set_cluster_science_available_state(
-                job.force_index,
-                cluster.key,
-                science,
-                cluster_available
-            )
-            cluster.available_sciences[science] = cluster_available
-            job.availability_current = job.availability_current or cluster_available
-        end
-        job.availability_cluster_index = last + 1
-        if job.availability_cluster_index <= #job.science_cluster_list then
-            return false
-        end
-        job.availability[science] = job.availability_current
-        job.availability_index = job.availability_index + 1
-        job.availability_cluster_index = 1
-        job.availability_current = false
-    else
-        local previous = policy.get_science_available_state(job.force_index, science, false)
-        local threshold = previous and science_policy.lower_threshold or science_policy.upper_threshold
-        local lab_count = job.lab_input_counts[science] or 0
-        local required_count = math.max(1, lab_count * science_reserve_per_lab * threshold)
-        local available = lab_count > 0 and (job.counts[science] or 0) >= required_count
-        policy.set_science_available_state(job.force_index, science, available)
-        job.availability[science] = available
-        job.availability_index = job.availability_index + 1
-    end
+    local previous = policy.get_science_available_state(job.force_index, science, false)
+    local threshold = previous and science_policy.lower_threshold or science_policy.upper_threshold
+    local lab_count = job.lab_input_counts[science] or 0
+    local required_count = math.max(1, lab_count * science_reserve_per_lab * threshold)
+    local available = lab_count > 0 and (job.counts[science] or 0) >= required_count
+    policy.set_science_available_state(job.force_index, science, available)
+    job.availability[science] = available
+    job.availability_index = job.availability_index + 1
     return false
 end
 
 -- Transit stock is not part of lab/network counts yet, but it is already
 -- committed science. Include it in the player-facing runtime forecast so an
 -- incoming delivery extends the depletion runtime instead of showing a false
--- imminent starvation.
+-- imminent starvation. The refresh is a resumable job: the multi-surface
+-- cargo-pod scan dominates on large saves, so callers advance a bounded
+-- slice and keep the last published totals until the rebuild completes.
+local begin_in_transit_science_job = function(force_index)
+    local surfaces = {}
+    for _, surface in pairs(game.surfaces or {}) do
+        if surface and surface.valid then
+            surfaces[#surfaces + 1] = surface
+        end
+    end
+    table.sort(surfaces, function(a, b) return a.index < b.index end)
+    local by_science = {}
+    local known_sciences = {}
+    for _, science_name in pairs(env.get_all_sciences()) do
+        known_sciences[science_name] = true
+        by_science[science_name] = 0
+    end
+    return {
+        force_index = force_index,
+        surfaces = surfaces,
+        surface_index = 1,
+        hubs_done = false,
+        by_science = by_science,
+        known_sciences = known_sciences
+    }
+end
+
+local read_cargo_pod_science = function(pod, known_sciences, all_sciences, by_science)
+    if not (pod and pod.valid) then
+        return
+    end
+    local ok_inventory, inventory = pcall(function()
+        return pod.get_inventory(defines.inventory.cargo_unit)
+    end)
+    local ok_contents, contents = false, nil
+    if ok_inventory and inventory then
+        ok_contents, contents = pcall(function() return inventory.get_contents() end)
+    end
+    if ok_contents and type(contents) == "table" then
+        for _, item in pairs(contents) do
+            if item and known_sciences[item.name] and type(item.count) == "number" then
+                by_science[item.name] = by_science[item.name] + math.max(0, item.count)
+            end
+        end
+    elseif pod.get_item_count then
+        -- Defensive fallback for compatible cargo-pod implementations
+        -- that do not expose cargo_unit through get_inventory.
+        for _, science_name in pairs(all_sciences) do
+            local ok_count, count = pcall(function()
+                return pod.get_item_count(science_name)
+            end)
+            if ok_count and type(count) == "number" then
+                by_science[science_name] = by_science[science_name] + math.max(0, count)
+            end
+        end
+    end
+end
+
+local finish_in_transit_surface = function(job)
+    job.surface_open = nil
+    job.chunk_iter = nil
+    job.cell_x = nil
+    job.cell_y = nil
+    job.cell_end_x = nil
+    job.cell_end_y = nil
+    job.cell_origin_x = nil
+    job.surface_index = job.surface_index + 1
+end
+
+local step_in_transit_science_job = function(job)
+    -- Platform-hub cargo is the cheap slice; surface pod scans dominate, so
+    -- each surface is bounded twice: chunks enumerate a few thousand per step
+    -- to bound the search area, then pods are scanned one fixed-size cell per
+    -- step so even a planet-scale surface never stalls a tick.
+    if not job.hubs_done then
+        local force = game.forces[job.force_index]
+        local all_sciences = env.get_all_sciences()
+        for _, platform in pairs(force and force.platforms or {}) do
+            local ok_platform, connection, hub = pcall(function()
+                return platform and platform.valid and platform.space_connection, platform and platform.hub
+            end)
+            if ok_platform and connection and hub then
+                for _, science_name in pairs(all_sciences) do
+                    local ok_count, count = pcall(function() return hub.get_item_count(science_name) end)
+                    if ok_count and type(count) == "number" then
+                        job.by_science[science_name] = job.by_science[science_name] + math.max(0, count)
+                    end
+                end
+            end
+        end
+        job.hubs_done = true
+        return false
+    end
+    local all_sciences = env.get_all_sciences()
+    local surface = job.surfaces[job.surface_index]
+    while surface and not surface.valid do
+        finish_in_transit_surface(job)
+        surface = job.surfaces[job.surface_index]
+    end
+    if not surface then
+        return true
+    end
+    if not job.surface_open then
+        job.surface_open = true
+        local ok_iter, iter = pcall(function() return surface.get_chunks() end)
+        if not ok_iter or not iter then
+            -- Surfaces without a chunk iterator (pseudo-surfaces and narrow
+            -- test doubles) fall back to a single unbounded scan.
+            local ok_pods, pods = pcall(function()
+                return surface.find_entities_filtered({force = job.force_index, type = "cargo-pod"})
+            end)
+            if ok_pods and type(pods) == "table" then
+                for _, pod in pairs(pods) do
+                    read_cargo_pod_science(pod, job.known_sciences, all_sciences, job.by_science)
+                end
+            end
+            finish_in_transit_surface(job)
+            return false
+        end
+        job.chunk_iter = iter
+        job.chunk_min_x, job.chunk_min_y = math.huge, math.huge
+        job.chunk_max_x, job.chunk_max_y = -math.huge, -math.huge
+        job.chunks_seen = 0
+    end
+    if job.chunk_iter then
+        for _ = 1, in_transit_chunks_per_step do
+            local ok_chunk, chunk = pcall(function() return job.chunk_iter() end)
+            if not ok_chunk or not chunk then
+                job.chunk_iter = nil
+                break
+            end
+            local cx, cy = chunk.x, chunk.y
+            if cx < job.chunk_min_x then job.chunk_min_x = cx end
+            if cx > job.chunk_max_x then job.chunk_max_x = cx end
+            if cy < job.chunk_min_y then job.chunk_min_y = cy end
+            if cy > job.chunk_max_y then job.chunk_max_y = cy end
+            job.chunks_seen = job.chunks_seen + 1
+        end
+        if job.chunk_iter then
+            return false
+        end
+        -- Iterator exhausted: lay out the cell grid over generated chunks.
+        if job.chunks_seen == 0 then
+            finish_in_transit_surface(job)
+            return false
+        end
+        job.cell_x = job.chunk_min_x * 32
+        job.cell_y = job.chunk_min_y * 32
+        job.cell_end_x = (job.chunk_max_x + 1) * 32
+        job.cell_end_y = (job.chunk_max_y + 1) * 32
+        job.cell_origin_x = job.cell_x
+        return false
+    end
+    -- Cell slice: scan one bounded area of the current surface.
+    if job.cell_y >= job.cell_end_y then
+        finish_in_transit_surface(job)
+        return false
+    end
+    local area = {
+        left_top = {x = job.cell_x, y = job.cell_y},
+        right_bottom = {
+            x = math.min(job.cell_x + in_transit_cell_tiles, job.cell_end_x),
+            y = math.min(job.cell_y + in_transit_cell_tiles, job.cell_end_y)
+        }
+    }
+    local ok_pods, pods = pcall(function()
+        return surface.find_entities_filtered({force = job.force_index, type = "cargo-pod", area = area})
+    end)
+    if ok_pods and type(pods) == "table" then
+        for _, pod in pairs(pods) do
+            read_cargo_pod_science(pod, job.known_sciences, all_sciences, job.by_science)
+        end
+    end
+    job.cell_x = job.cell_x + in_transit_cell_tiles
+    if job.cell_x >= job.cell_end_x then
+        job.cell_x = job.cell_origin_x
+        job.cell_y = job.cell_y + in_transit_cell_tiles
+    end
+    return false
+end
+
+local publish_in_transit_science_job = function(job)
+    in_transit_science_jobs[job.force_index] = nil
+    in_transit_science_cache[job.force_index] = {
+        expires_tick = game.tick + in_transit_refresh_ticks,
+        by_science = job.by_science
+    }
+end
+
+-- Every refresh path is bounded: a job advances at most `in_transit_steps_per_tick`
+-- slices per tick so a batch of same-tick readers can never stack the whole
+-- multi-surface rescan back into a stall.
+local advance_in_transit_science_job = function(job)
+    if job.steps_tick ~= game.tick then
+        job.steps_tick = game.tick
+        job.steps_this_tick = 0
+    end
+    while job.steps_this_tick < in_transit_steps_per_tick do
+        job.steps_this_tick = job.steps_this_tick + 1
+        if step_in_transit_science_job(job) then
+            publish_in_transit_science_job(job)
+            return true
+        end
+    end
+    return false
+end
+
 get_in_transit_science_total = function(force_index, science)
     local cached = in_transit_science_cache[force_index]
     if cached and cached.expires_tick > game.tick then
         return cached.by_science[science] or 0
     end
 
-    local force = game.forces[force_index]
-    local by_science = {}
-    local all_sciences = env.get_all_sciences()
-    local known_sciences = {}
-    for _, science_name in pairs(all_sciences) do
-        known_sciences[science_name] = true
-        by_science[science_name] = 0
+    -- Callers keep the last published totals, or zero before the first publish,
+    -- while the rebuild advances.
+    local job = in_transit_science_jobs[force_index]
+    if not job then
+        job = begin_in_transit_science_job(force_index)
+        in_transit_science_jobs[force_index] = job
     end
-
-    for _, platform in pairs(force and force.platforms or {}) do
-        local ok_platform, connection, hub = pcall(function()
-            return platform and platform.valid and platform.space_connection, platform and platform.hub
-        end)
-        if ok_platform and connection and hub then
-            for _, science_name in pairs(all_sciences) do
-                local ok_count, count = pcall(function() return hub.get_item_count(science_name) end)
-                if ok_count and type(count) == "number" then
-                    by_science[science_name] = by_science[science_name] + math.max(0, count)
-                end
-            end
-        end
-    end
-
-    -- One surface query per refresh, then read all science packs from each pod's
-    -- cargo inventory. The old per-science filter multiplied surface scans by the
-    -- number of installed science packs and allocated a result table for each scan.
-    for _, surface in pairs(game.surfaces or {}) do
-        local ok_pods, pods = pcall(function()
-            return surface.find_entities_filtered({force = force_index, type = "cargo-pod"})
-        end)
-        if ok_pods and type(pods) == "table" then
-            for _, pod in pairs(pods) do
-                if pod and pod.valid then
-                    local ok_inventory, inventory = pcall(function()
-                        return pod.get_inventory(defines.inventory.cargo_unit)
-                    end)
-                    local ok_contents, contents = false, nil
-                    if ok_inventory and inventory then
-                        ok_contents, contents = pcall(function() return inventory.get_contents() end)
-                    end
-                    if ok_contents and type(contents) == "table" then
-                        for _, item in pairs(contents) do
-                            if item and known_sciences[item.name] and type(item.count) == "number" then
-                                by_science[item.name] = by_science[item.name] + math.max(0, item.count)
-                            end
-                        end
-                    elseif pod.get_item_count then
-                        -- Defensive fallback for compatible cargo-pod implementations
-                        -- that do not expose cargo_unit through get_inventory.
-                        for _, science_name in pairs(all_sciences) do
-                            local ok_count, count = pcall(function()
-                                return pod.get_item_count(science_name)
-                            end)
-                            if ok_count and type(count) == "number" then
-                                by_science[science_name] = by_science[science_name] + math.max(0, count)
-                            end
-                        end
-                    end
-                end
-            end
-        end
-    end
-
-    in_transit_science_cache[force_index] = {
-        expires_tick = game.tick + in_transit_refresh_ticks,
-        by_science = by_science
-    }
-    return by_science[science] or 0
+    advance_in_transit_science_job(job)
+    cached = in_transit_science_cache[force_index]
+    return (cached and cached.by_science[science]) or 0
 end
 
 local process_research_health_forecast = function(job, science)
@@ -3642,13 +3657,6 @@ queue.tick_research_health_snapshot = function(force_index)
             job.network_index = job.network_index + 1
             return false
         end
-        job.science_cluster_list = map_values(job.science_clusters)
-        job.active_science_cluster_keys = {}
-        for _, cluster in ipairs(job.science_cluster_list) do
-            job.active_science_cluster_keys[cluster.key] = true
-        end
-        job.availability.__cluster_mode = job.cluster_mode
-        job.availability.__clusters = job.science_clusters
         job.availability.__force_index = job.force_index
         job.phase = "availability"
     end
@@ -4047,6 +4055,18 @@ end
 -- triggering a new 5-second-expiry rebuild on forces that have no pending
 -- 2-minute background request.
 queue.tick_background_research_health = function(force_index)
+    -- Start and advance the transit-stock rebuild here so expired callers
+    -- rarely rebuild inside their own call: the job opens before the cache
+    -- expires and steps one bounded slice per maintenance tick.
+    local transit_job = in_transit_science_jobs[force_index]
+    local transit_cache = in_transit_science_cache[force_index]
+    if not transit_job and (not transit_cache or transit_cache.expires_tick <= game.tick) then
+        transit_job = begin_in_transit_science_job(force_index)
+        in_transit_science_jobs[force_index] = transit_job
+    end
+    if transit_job then
+        advance_in_transit_science_job(transit_job)
+    end
     if not research_health_jobs[force_index] and not research_health_requests[force_index] then
         return false
     end
@@ -4266,50 +4286,23 @@ end
 queue.get_science_availability = function(force_index)
     local counts = get_science_counts(force_index)
     local clusters = queue.get_science_clusters(force_index)
-    local cluster_mode = policy.get_setting(force_index, "cluster_mode")
-    local res = {}
-    local active_cluster_keys = {}
-    if cluster_mode then
-        for _, cluster in pairs(clusters) do
-            active_cluster_keys[cluster.key] = true
-            cluster.available_sciences = {}
+    local lab_input_counts = {}
+    for _, cluster in pairs(clusters) do
+        for science, count in pairs(cluster.lab_input_counts or {}) do
+            lab_input_counts[science] = (lab_input_counts[science] or 0) + count
         end
     end
+    local res = {}
     for _, science in pairs(env.get_all_sciences()) do
         local science_policy = policy.get_science_policy(force_index, science)
-        local available = false
-
-        if cluster_mode then
-            for _, cluster in pairs(clusters) do
-                local previous = policy.get_cluster_science_available_state(force_index, cluster.key, science, false)
-                local threshold = previous and science_policy.lower_threshold or science_policy.upper_threshold
-                local lab_count = (cluster.lab_input_counts and cluster.lab_input_counts[science]) or 0
-                local required_count = math.max(1, lab_count * science_reserve_per_lab * threshold)
-                local cluster_available = lab_count > 0 and (cluster.counts[science] or 0) >= required_count
-                policy.set_cluster_science_available_state(force_index, cluster.key, science, cluster_available)
-                cluster.available_sciences[science] = cluster_available
-                available = available or cluster_available
-            end
-        else
-            local previous = policy.get_science_available_state(force_index, science, false)
-            local threshold = previous and science_policy.lower_threshold or science_policy.upper_threshold
-            local relevant_lab_count = 0
-            for _, cluster in pairs(clusters) do
-                relevant_lab_count = relevant_lab_count +
-                    ((cluster.lab_input_counts and cluster.lab_input_counts[science]) or 0)
-            end
-            local required_count = math.max(1, relevant_lab_count * science_reserve_per_lab * threshold)
-            available = relevant_lab_count > 0 and (counts[science] or 0) >= required_count
-        end
-
+        local previous = policy.get_science_available_state(force_index, science, false)
+        local threshold = previous and science_policy.lower_threshold or science_policy.upper_threshold
+        local lab_count = lab_input_counts[science] or 0
+        local required_count = math.max(1, lab_count * science_reserve_per_lab * threshold)
+        local available = lab_count > 0 and (counts[science] or 0) >= required_count
         policy.set_science_available_state(force_index, science, available)
         res[science] = available
     end
-    if cluster_mode then
-        policy.prune_cluster_science_states(force_index, active_cluster_keys)
-    end
-    res.__cluster_mode = cluster_mode == true
-    res.__clusters = clusters
     res.__force_index = force_index
     return res
 end

@@ -35,6 +35,28 @@ local function reset_policy()
     policy.init_force(1)
 end
 
+tests[#tests + 1] = {"retires saved cluster mode and rejects it in portable settings", function()
+    reset_policy()
+    local store = storage.forces[1].research_policy
+    store.settings.cluster_mode = true
+    store.cluster_science_available = {old = {['automation-science-pack'] = true}}
+    t.assert_nil(policy.get_setting(1, "cluster_mode"))
+    t.assert_nil(policy.export_settings(1).settings.cluster_mode)
+    policy.init_force(1)
+    t.assert_nil(store.settings.cluster_mode)
+    t.assert_nil(store.cluster_science_available)
+    t.assert_false(policy.set_setting(1, "cluster_mode", true))
+    local sanitized = policy.sanitize_settings({settings = {cluster_mode = true, forecast_seconds = 30}})
+    t.assert_nil(sanitized.settings.cluster_mode)
+    t.assert_equal(sanitized.settings.forecast_seconds, 30)
+    store.settings.cluster_mode = true
+    store.cluster_science_available = {old = {}}
+    t.assert_true(policy.import_settings(1, {settings = {cluster_mode = true, forecast_seconds = 30}}))
+    t.assert_nil(store.settings.cluster_mode)
+    t.assert_nil(store.cluster_science_available)
+    t.assert_equal(policy.get_setting(1, "forecast_seconds"), 30)
+end}
+
 tests[#tests + 1] = {"initializes defaults and science policies", function()
     reset_policy()
     t.assert_equal(policy.get_setting(1, "strategy"), "balanced")
@@ -238,16 +260,12 @@ tests[#tests + 1] = {"sanitizes and imports portable settings", function()
     t.assert_equal(policy.get_setting(1, "strategy"), "productivity")
 end}
 
-tests[#tests + 1] = {"stores force and cluster science availability", function()
+tests[#tests + 1] = {"stores force-wide science availability", function()
     reset_policy()
     t.assert_equal(policy.get_science_available_state(1, "automation-science-pack", true), true)
     policy.set_science_available_state(1, "automation-science-pack", false)
     t.assert_false(policy.get_science_available_state(1, "automation-science-pack", true))
-    policy.set_cluster_science_available_state(1, "surface:network", "automation-science-pack", true)
-    t.assert_true(policy.get_cluster_science_available_state(1, "surface:network", "automation-science-pack", false))
-    policy.set_cluster_science_available_state(1, "old", "automation-science-pack", true)
-    policy.prune_cluster_science_states(1, {['surface:network'] = true})
-    t.assert_nil(storage.forces[1].research_policy.cluster_science_available.old)
+
 end}
 
 tests[#tests + 1] = {"detects optional parallel research support", function()

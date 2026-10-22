@@ -36,12 +36,12 @@ It calculates:
 
 - Science present in labs.
 - Science moving through logistic networks.
-- Science available by cluster when multiple labs share the same usable input network.
+- Force-wide science availability from registered labs and their logistic networks.
 - Forecasts for production, consumption, and depletion.
 
-Cluster mode is important here. A technology is only treated as supplied when the required science packs exist together in the same usable cluster and at least one lab in that cluster can accept all required packs. That avoids overestimating supply when packs are spread across unrelated inputs.
+Research selection is force-wide. Required science packs do not have to be present together in one lab supply group. Lab groups remain available for throughput diagnostics and affected-lab inspection, but cannot block research selection.
 
-The implementation also keeps a separate limitation in mind: Factorio does not expose belt or chest connectivity as a real lab supply graph. Direct-fed labs are therefore evaluated individually until packs are actually in the lab input inventories. Production and consumption data is aggregated across all loaded force surfaces, which means science produced on other planets and shipped back in is counted. Projected-starvation switching only uses those rates when cluster enforcement is disabled.
+Production and consumption data is aggregated across all loaded force surfaces. Inactive research forecasts use total counted stock, cached transit totals, and ongoing production over the configured horizon. Existing saved cluster-mode settings are retired during force initialization and ignored on import.
 
 ## Queue Budgets and Repeat Rules
 
@@ -117,8 +117,7 @@ The mod targets Factorio 2.1.0 and later 2.1 releases.
 
 The branch is now in a good place for testing and iteration, but the following assumptions still matter:
 
-- Cluster mode depends on the limits of the Factorio API for lab supply visibility.
-- Force-wide flow data is not enough to attribute production to a specific lab cluster.
+- Force-wide supply does not prove delivery to every lab; active starvation detection and lab-group diagnostics still report actual missing packs.
 - Large overhaul trees may still need performance mode enabled if the player wants slower but lighter policy scans.
 
 If you need the exact implementation history, the git branch and commit log are still the source of truth. This document is the human-readable summary.

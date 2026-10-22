@@ -1401,6 +1401,7 @@ local tests = {
         t.assert_true(find_by_tag(general, "setting_name", "reserve_for_type") ~= nil)
         t.assert_true(find_by_tag(general, "setting_name", "plan_horizon_minutes") ~= nil)
         t.assert_equal(find_by_tag(general, "setting_name", "finish_current_threshold"), nil)
+        t.assert_nil(find_by_tag(general, "setting_name", "cluster_mode"))
 
         local science_flow = find_element(anchor, "policy_science_flow")
         t.assert_equal(#science_flow.children, 2)

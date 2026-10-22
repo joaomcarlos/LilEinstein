@@ -36,7 +36,6 @@ local default_settings = {
     plan_horizon_minutes = 30,
     science_lower_threshold = 0.25,
     science_upper_threshold = 0.80,
-    cluster_mode = true,
     multiplayer_lock = false,
     performance_mode = false,
     parallel_slots = 5,
@@ -134,7 +133,9 @@ policy.init_force = function(force_index)
     store.history = store.history or {}
     store.presets = store.presets or {}
     store.science_available = store.science_available or {}
-    store.cluster_science_available = store.cluster_science_available or {}
+    -- Research selection is force-wide; retire the former cluster policy on upgrade.
+    store.settings.cluster_mode = nil
+    store.cluster_science_available = nil
     -- pending plan-demand instant switch override; save-safe (strings/numbers only)
     store.pending_instant_switch = store.pending_instant_switch or nil
 
@@ -154,6 +155,9 @@ policy.init_force = function(force_index)
 end
 
 policy.get_setting = function(force_index, key)
+    if default_settings[key] == nil then
+        return nil
+    end
     local store = get_store(force_index)
     if store and store.settings[key] ~= nil then
         return store.settings[key]
@@ -545,8 +549,10 @@ policy.export_settings = function(force_index)
     if not store then
         return {}
     end
+    local settings = copy_table(store.settings)
+    settings.cluster_mode = nil
     return {
-        settings = copy_table(store.settings),
+        settings = settings,
         sciences = copy_table(store.sciences),
         repeat_rules = copy_table(store.repeat_rules)
     }
@@ -610,6 +616,8 @@ policy.import_settings = function(force_index, value)
     if not store or not sanitized then
         return false
     end
+    store.settings.cluster_mode = nil
+    store.cluster_science_available = nil
     for key, item in pairs(sanitized.settings) do
         store.settings[key] = item
     end
@@ -637,40 +645,6 @@ policy.set_science_available_state = function(force_index, science, value)
     local store = get_store(force_index)
     if store then
         store.science_available[science] = value == true
-    end
-end
-
-policy.get_cluster_science_available_state = function(force_index, cluster_key, science, default_value)
-    local store = get_store(force_index)
-    if not store then
-        return default_value
-    end
-    store.cluster_science_available[cluster_key] = store.cluster_science_available[cluster_key] or {}
-    local states = store.cluster_science_available[cluster_key]
-    if states[science] == nil then
-        states[science] = default_value
-    end
-    return states[science]
-end
-
-policy.set_cluster_science_available_state = function(force_index, cluster_key, science, value)
-    local store = get_store(force_index)
-    if not store then
-        return
-    end
-    store.cluster_science_available[cluster_key] = store.cluster_science_available[cluster_key] or {}
-    store.cluster_science_available[cluster_key][science] = value == true
-end
-
-policy.prune_cluster_science_states = function(force_index, active_keys)
-    local store = get_store(force_index)
-    if not store then
-        return
-    end
-    for cluster_key, _ in pairs(store.cluster_science_available) do
-        if not active_keys[cluster_key] then
-            store.cluster_science_available[cluster_key] = nil
-        end
     end
 end
 

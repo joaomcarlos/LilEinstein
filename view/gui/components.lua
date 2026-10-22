@@ -3078,8 +3078,6 @@ local populate_policy_general = function(player_index, anchor)
     add_policy_toggle(flow, p.force.index, "parallel_research", {"lil_einstein-policy.parallel-research"},
         policy.parallel_mod_available() and {"lil_einstein-policy.parallel-research-integration"} or
             {"lil_einstein-policy.parallel-research-description"})
-    add_policy_toggle(flow, p.force.index, "cluster_mode", {"lil_einstein-policy.cluster-mode"},
-        {"lil_einstein-policy.cluster-mode-description"})
     add_policy_toggle(flow, p.force.index, "performance_mode", {"lil_einstein-policy.performance-mode"},
         {"lil_einstein-policy.performance-mode-description"})
     add_policy_number(flow, p.force.index, "min_switch_seconds", {"lil_einstein-policy.minimum-switch-time"}, 5, "s")
@@ -3697,11 +3695,9 @@ local populate_decision_automation = function(player_index, anchor)
     behavior.add({type = "line"})
     local pause = policy.get_setting(force_index, "planning_paused") == true
     local parallel = policy.get_setting(force_index, "parallel_research") == true
-    local cluster = policy.get_setting(force_index, "cluster_mode") == true
     for _, item in ipairs({
         {"planning_paused", "Pause after current research", pause},
-        {"parallel_research", "Enable parallel research", parallel},
-        {"cluster_mode", "Require a usable lab cluster", cluster}
+        {"parallel_research", "Enable parallel research", parallel}
     }) do
         local row = behavior.add({type = "flow", direction = "horizontal"})
         row.style.height = 27

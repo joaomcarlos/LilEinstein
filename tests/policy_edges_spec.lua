@@ -157,9 +157,6 @@ local tests = {
         t.assert_equal(policy.get_history(1)[1].player, "system")
         t.assert_false(policy.set_preset(1, string.rep("x", 41), {}))
         t.assert_false(policy.set_preset(99, "x", {}))
-        policy.set_cluster_science_available_state(1, "stale", "automation-science-pack", true)
-        policy.prune_cluster_science_states(1, {})
-        t.assert_nil(storage.forces[1].research_policy.cluster_science_available.stale)
         policy.set_science_available_state(1, "automation-science-pack", true)
         t.assert_true(policy.get_science_available_state(1, "automation-science-pack", false))
         t.assert_true(policy.parallel_mod_available() == false)
@@ -168,10 +165,9 @@ local tests = {
         local saved = storage
         storage = {forces = {}}
         t.assert_true(policy.parallel_mod_available())
-        policy.prune_cluster_science_states(1, {})
         storage = saved
     end}
-    ,{"covers portable exports and missing-store cluster guards", function()
+    ,{"covers portable exports and missing-store guards", function()
         reset()
         local exported = policy.export_settings(1)
         t.assert_true(exported.settings ~= nil)
@@ -181,10 +177,7 @@ local tests = {
         storage = {forces = {}}
         t.assert_equal(policy.export_settings(1).settings, nil)
         t.assert_equal(policy.get_repeat_rule(1, "missing").mode, "default")
-        t.assert_equal(policy.get_cluster_science_available_state(1, "missing", "science", true), true)
-        policy.set_cluster_science_available_state(1, "missing", "science", true)
         storage = saved
-        t.assert_equal(policy.get_cluster_science_available_state(1, "cluster", "science", true), true)
         policy.record_action(99, nil, nil, nil)
     end}
     ,{"covers megabase adjustment, new sanitizers, and structured history edges", function()

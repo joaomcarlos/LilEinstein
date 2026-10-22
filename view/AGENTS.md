@@ -48,6 +48,9 @@ GUI layer for the LilEinstein mod: window lifecycle, layout construction, and pr
 - Debug reports also include the live Research Health details subtree: outer row caption states, inspect-button visibility, and nested pack-table child counts
 - Debug-report technology tables distinguish globally present packs (`packs_available`) from the switcher's live/forecast decision (`switch_sufficient`)
 - Debug-report focus and selection calls must guard the element's validity inside the protected call; research-detail row controls may only receive properties supported by their native element style type
+- Available technology rows omit per-technology repeat-policy cycling and level-target controls; global infinite-research behavior and saved repeat rules remain model-owned.
+
+- Automation settings omit cluster mode; Upcoming reports missing force-wide packs without a packs-not-together state. Lab-group throughput and affected-lab inspection remain diagnostic displays.
 
 ## Work Guidance
 

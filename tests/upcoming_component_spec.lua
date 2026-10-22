@@ -387,7 +387,7 @@ tests[#tests + 1] = {"re-renders when the row structure changes", function()
     local clear_count = flow.clear_count
     tick_results = {{true, {make_entry("logistics", {
         duration = 20,
-        availability_reason = "science_not_together"
+        availability_reason = "missing_science"
     })}}}
 
     upcoming.request_populate(1, anchor)
