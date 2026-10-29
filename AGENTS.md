@@ -94,6 +94,8 @@ When the user requests a durable behavior change, record it here or in the relev
 
 LilEinstein is a Factorio 2.1 mod (base >= 2.1.0): a science-aware research autopilot with strategy profiles, supply forecasting, force-wide science selection, queue budgets, repeat policies, plan presets, and multiplayer controls. Architecture is Control -> lib -> model -> view per `standard.md`.
 
+- Research callbacks defer forces whose model modules are not initialized: other mods can raise nested research events before LilEinstein's `on_force_created` handler runs. Initial force setup captures live technology state and schedules synchronization of an existing live queue; reconfiguration preserves an initialized force's stored plan.
+
 Root-owned (no child doc):
 
   - `control.lua` — runtime entry point: inits `storage`/`storage.forces`/`storage.players`, wires lifecycle and lab-membership events, and advances bounded per-open-force display jobs plus lazy science-pack insight refreshes, a 2-minute background research-health snapshot refresh for all forces, and non-destructive Upcoming refreshes on staggered `on_nth_tick` schedules; it has no heavyweight `on_tick` work

@@ -122,11 +122,12 @@ local init_player = function(player_index)
     gui.init_player(player_index)
 end
 local init_force = function(force_index)
-    if not storage then
+    if not storage or not storage.forces then
         return
     end
     -- Init storage
-    if not storage.forces[force_index] then
+    local is_new_force = not storage.forces[force_index]
+    if is_new_force then
         storage.forces[force_index] = {}
     end
 
@@ -136,6 +137,11 @@ local init_force = function(force_index)
     policy.init_force(force_index)
     queue.init_force(force_index)
     lab.init_force(force_index)
+
+    local f = game.forces[force_index]
+    if is_new_force and f and f.research_queue and #f.research_queue > 0 then
+        state.request_queue_sync(f)
+    end
 end
 
 local init = function()
@@ -355,9 +361,19 @@ end)
 -- RESEARCH
 ----------------------------------------------------------------------------------------------------
 
+-- Other mods can raise research events before our on_force_created handler runs.
+-- Force initialization captures those changes from the live technologies.
+local has_force_state = function(f)
+    local sf = f and storage and storage.forces and storage.forces[f.index]
+    return sf and sf.state and sf.tech and sf.research_policy and sf.queue
+end
+
 script.on_event(defines.events.on_research_finished, function(e)
     -- Use the force, luke
     local f = e.research.force
+    if not has_force_state(f) then
+        return
+    end
     tech.update_researched(f.index, e.research.name)
     queue.requeue_finished(f, e.research)
     policy.record_action(f.index, nil, "research_finished", e.research.name)
@@ -379,6 +395,9 @@ end
 script.on_event({defines.events.on_research_queued, defines.events.on_research_moved}, function(e)
     -- When ingame research queue gets modified we need to sync that to our modqueue
     local f = e.force
+    if not has_force_state(f) then
+        return
+    end
     if queue.is_internal_research_queue_update(f) then
         return
     end
@@ -391,6 +410,9 @@ script.on_event({defines.events.on_research_queued, defines.events.on_research_m
 end)
 script.on_event(defines.events.on_research_cancelled, function(e)
     local f = e.force
+    if not has_force_state(f) then
+        return
+    end
     if queue.is_internal_research_queue_update(f) then
         return
     end
@@ -409,6 +431,9 @@ script.on_event(defines.events.on_research_reversed, function(e)
     -- When a tech gets reversed we need to request a next research
     -- Because the one we are researching right now might no longer be available
     local f = e.research.force
+    if not has_force_state(f) then
+        return
+    end
 
     tech.update_researched(f.index, e.research.name)
     state.request_next_research(f)
