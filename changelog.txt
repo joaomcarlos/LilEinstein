@@ -1,4 +1,11 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.1.1
+Date: 29-10-2026
+  Bugfixes:
+    - Fixed a crash when other mods complete research while creating a new force, including Dynamic Rain with Even Distribution.
+    - Research queued during force creation is retained after initialization.
+
+---------------------------------------------------------------------------------------------------
 Version: 1.1.0
 Date: 22-10-2026
   Changes:
